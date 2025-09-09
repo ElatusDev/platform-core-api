@@ -10,7 +10,7 @@ datamodel/target/
 utilities/target/
 ca-service/target/
 mock-data-service/target/
-
+etl-service/target/
 ### docker related ###
 .env
 
@@ -29,4 +29,4 @@ datamodel/*.iml
 utilities/*.iml
 ca-service/*.iml
 mock-data-service/*.iml
-
+etl-service/*.iml
