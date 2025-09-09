@@ -4,16 +4,19 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
 import com.makani.utilities.exceptions.ErrorNormalizationException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 import java.util.NoSuchElementException;
 
+
+@PropertySource("classpath:utilities.properties")
 @Component
 public class PiiNormalizer {
     private final PhoneNumberUtil phoneUtil;
     private final String defaultRegionCode;
 
-    public PiiNormalizer(PhoneNumberUtil phoneUtil, @Value("${app.phone.default-region:US}")
+    public PiiNormalizer(PhoneNumberUtil phoneUtil, @Value("${app.phone.default-region}")
     String defaultRegionCode) {
         this.phoneUtil = phoneUtil;
         this.defaultRegionCode = defaultRegionCode;

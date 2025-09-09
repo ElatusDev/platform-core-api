@@ -17,19 +17,17 @@ import org.springframework.security.config.annotation.web.configurers.AuthorizeH
 @PropertySource("classpath:mock-data-service.properties")
 @Configuration
 public class MockDataServiceModuleSecurityConfiguration implements ModuleSecurityConfigurator {
-    private final String mockDataServicePath;
     private final String mockDataServicePathVars;
 
     public MockDataServiceModuleSecurityConfiguration(@Value("${api.mock.data.service.base-uri}") String mockDataServicePath) {
         String anyPathVar = "/**";
-        this.mockDataServicePath = mockDataServicePath;
         this.mockDataServicePathVars = mockDataServicePath + anyPathVar;
     }
 
     @Override
     public void configure(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) throws Exception {
         auth
-                .requestMatchers(HttpMethod.POST, mockDataServicePathVars)
-                .permitAll();
+            .requestMatchers(HttpMethod.POST, mockDataServicePathVars)
+            .permitAll();
     }
 }

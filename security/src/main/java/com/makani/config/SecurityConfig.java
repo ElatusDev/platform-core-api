@@ -78,8 +78,7 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSourceForMockDataService()))
             .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/infra/v1/mock-data/generate/all").permitAll()
-                        .anyRequest().authenticated())
+                        .anyRequest().permitAll())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .formLogin(AbstractHttpConfigurer::disable)
             .httpBasic(AbstractHttpConfigurer::disable);
@@ -97,17 +96,7 @@ public class SecurityConfig {
         defaultCorsConfig.setAllowedHeaders(List.of("*"));
         defaultCorsConfig.setAllowCredentials(false);
 
-        CorsConfiguration loginCorsConfig = new CorsConfiguration();
-        loginCorsConfig.setAllowedOriginPatterns(List.of("http://localhost:*", "https://localhost:*"));
-        loginCorsConfig.setAllowedMethods(List.of("POST"));
-        loginCorsConfig.setAllowedHeaders(List.of("Content-Type"));
-        loginCorsConfig.setAllowCredentials(false);
-
+        source.registerCorsConfiguration("/infra/v1/mock-data/generate/**", defaultCorsConfig);
         return source;
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 }

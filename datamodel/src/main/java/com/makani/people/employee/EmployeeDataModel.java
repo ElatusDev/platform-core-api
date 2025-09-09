@@ -33,7 +33,7 @@ public class EmployeeDataModel extends AbstractPerson implements Serializable {
     @Column(name = "employee_type", nullable = false, length = 50)
     private String employeeType;
 
-    @OneToOne(optional = false, cascade =  CascadeType.PERSIST, orphanRemoval = true)
+    @OneToOne(optional = false, cascade = CascadeType.PERSIST, orphanRemoval = true)
     @JoinColumn(name = "internal_auth_id")
     private InternalAuthDataModel internalAuth;
 } 

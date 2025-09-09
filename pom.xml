@@ -78,6 +78,7 @@
         <module>utilities</module>
         <module>ca-service</module>
         <module>mock-data-service</module>
+        <module>etl-service</module>
     </modules>
 
     <profiles>

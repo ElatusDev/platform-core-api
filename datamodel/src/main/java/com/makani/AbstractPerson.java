@@ -18,7 +18,7 @@ import java.sql.Date;
 @MappedSuperclass
 public abstract class AbstractPerson {
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(optional = false, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "person_pii_id")
     private PersonPIIDataModel personPII;
 

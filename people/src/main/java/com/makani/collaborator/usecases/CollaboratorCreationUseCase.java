@@ -7,8 +7,10 @@
  */
 package com.makani.collaborator.usecases;
 
+import com.makani.PersonPIIDataModel;
 import com.makani.people.collaborator.CollaboratorDataModel;
 import com.makani.collaborator.interfaceadapters.CollaboratorRepository;
+import com.makani.security.user.InternalAuthDataModel;
 import com.makani.utilities.security.HashingService;
 import com.makani.utilities.security.PiiNormalizer;
 import openapi.makani.domain.people.dto.CollaboratorCreationRequestDTO;
@@ -17,15 +19,16 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Service
 public class CollaboratorCreationUseCase {
-
-
     private final CollaboratorRepository repository;
     private final ModelMapper modelMapper;
     private final HashingService hashingService;
     private final PiiNormalizer piiNormalizer;
-
+    private final Set<InternalAuthDataModel> set;
     public static final String TYPE_MAP = "collaboratorMap";
 
     public CollaboratorCreationUseCase(CollaboratorRepository repository,
@@ -36,18 +39,30 @@ public class CollaboratorCreationUseCase {
         this.modelMapper = modelMapper;
         this.hashingService = hashingService;
         this.piiNormalizer = piiNormalizer;
+        this.set = new HashSet<>();
     }
 
     @Transactional
     public CollaboratorCreationResponseDTO create(CollaboratorCreationRequestDTO dto) {
-        CollaboratorDataModel received =  modelMapper.map(dto, CollaboratorDataModel.class, TYPE_MAP);
+        return modelMapper.map(repository.save(transform(dto)), CollaboratorCreationResponseDTO.class);
+    }
 
-        String normalizedEmail = piiNormalizer.normalizeEmail(received.getPersonPII().getEmail());
-        received.getPersonPII().setEmailHash(hashingService.generateHash(normalizedEmail));
+    public CollaboratorDataModel transform(CollaboratorCreationRequestDTO dto) {
+        final InternalAuthDataModel internalAuthDataModel= modelMapper.map(dto.getInternalAuth(), InternalAuthDataModel.class);
+        final PersonPIIDataModel personPIIDataModel = modelMapper.map(dto, PersonPIIDataModel.class);
+        CollaboratorDataModel model =  modelMapper.map(dto, CollaboratorDataModel.class, TYPE_MAP);
 
-        String normalizedPhone = piiNormalizer.normalizePhoneNumber(received.getPersonPII().getPhone());
-        received.getPersonPII().setPhoneHash(hashingService.generateHash(normalizedPhone));
+        model.setPersonPII(personPIIDataModel);
+        model.setInternalAuth(internalAuthDataModel);
 
-        return modelMapper.map(repository.save(received), CollaboratorCreationResponseDTO.class);
+        String normalizedEmail = piiNormalizer.normalizeEmail(model.getPersonPII().getEmail());
+        model.getPersonPII().setEmailHash(hashingService.generateHash(normalizedEmail));
+
+        String normalizedPhone = piiNormalizer.normalizePhoneNumber(model.getPersonPII().getPhone());
+        model.getPersonPII().setPhoneHash(hashingService.generateHash(normalizedPhone));
+
+        internalAuthDataModel.setUsernameHash(hashingService.generateHash(internalAuthDataModel.getUsername()));
+
+        return model;
     }
 }

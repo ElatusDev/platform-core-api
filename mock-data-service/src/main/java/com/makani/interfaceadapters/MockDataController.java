@@ -7,7 +7,7 @@
  */
 package com.makani.interfaceadapters;
 
-import com.makani.usecases.GeneratePeopleMockDataUseCase;
+import com.makani.people.usecases.LoadPeopleMockDataUseCase;
 import openapi.makani.domain.mock_data_service.api.MockDataApi;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,15 +17,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/v1")
 public class MockDataController implements MockDataApi {
-    private final GeneratePeopleMockDataUseCase generatePeopleMockDataUseCase;
+    private final LoadPeopleMockDataUseCase loadPeopleMockDataUseCase;
 
-    public MockDataController(GeneratePeopleMockDataUseCase generatePeopleMockDataUseCase) {
-        this.generatePeopleMockDataUseCase = generatePeopleMockDataUseCase;
+    public MockDataController(LoadPeopleMockDataUseCase loadPeopleMockDataUseCase) {
+        this.loadPeopleMockDataUseCase = loadPeopleMockDataUseCase;
     }
 
     @Override
     public ResponseEntity<String> generateAllMockData() {
-        generatePeopleMockDataUseCase.create();
+        loadPeopleMockDataUseCase.load();
         return ResponseEntity.status(HttpStatus.CREATED).body("mock data ready!");
     }
 

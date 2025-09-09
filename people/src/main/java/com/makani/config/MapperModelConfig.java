@@ -31,34 +31,6 @@ public class MapperModelConfig {
         addLocalDateToSqlDateConverter(modelMapper);
         addSqlDateToLocalDateConverter(modelMapper);
 
-        PropertyMap<EmployeeCreationRequestDTO, EmployeeDataModel> employeeMap = new PropertyMap<>() {
-            protected void configure() {
-                map(source.getBirthDate(), destination.getBirthDate());
-
-                assert source.getInternalAuth() != null;
-                map(source.getInternalAuth().getUsername(), destination.getInternalAuth().getUsername());
-                map(source.getInternalAuth().getPassword(), destination.getInternalAuth().getPassword());
-            }
-        };
-
-        PropertyMap<EmployeeDataModel, GetEmployeeResponseDTO> getEmployeeMap = new PropertyMap<>() {
-            protected void configure() {
-                map(source.getBirthDate(), destination.getBirthDate());
-            }
-        };
-
-        PropertyMap<CollaboratorCreationRequestDTO, CollaboratorDataModel> collaboratorMap = new PropertyMap<>() {
-            protected void configure() {
-                map(source.getBirthDate(), destination.getBirthDate());
-
-                assert source.getInternalAuth() != null;
-                map(source.getInternalAuth().getUsername(), destination.getInternalAuth().getUsername());
-                map(source.getInternalAuth().getPassword(), destination.getInternalAuth().getPassword());
-            }
-        };
-
-        modelMapper.addMappings(employeeMap);
-        modelMapper.addMappings(collaboratorMap);
         return modelMapper;
     }
 

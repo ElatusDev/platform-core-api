@@ -10,8 +10,10 @@ package com.makani;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.PropertySource;
 
 @Profile("mock-data-service")
+@PropertySource("classpath:mock-data-service.properties")
 @SpringBootApplication(scanBasePackages = {"com.makani"})
 public class MockDataApp {
     public static void main(String[] args) {

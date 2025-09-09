@@ -60,10 +60,10 @@ CREATE TABLE customer_auth (
 
 CREATE TABLE internal_auth (
     internal_auth_id INT AUTO_INCREMENT PRIMARY KEY,
-    encrypted_username VARCHAR(500) NOT NULL UNIQUE,
+    encrypted_username VARCHAR(500) NOT NULL,
     encrypted_password VARCHAR(500) NOT NULL,
     encrypted_role VARCHAR(500) NOT NULL,
-    username_hash VARCHAR(64) NOT NULL
+    username_hash VARCHAR(64) NOT NULL UNIQUE
 );
 
 CREATE TABLE compensation (
