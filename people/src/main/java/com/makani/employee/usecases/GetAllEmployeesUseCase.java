@@ -28,7 +28,7 @@ public class GetAllEmployeesUseCase {
        return employeeRepository.findAll().stream()
                 .map(dataModel -> {
                     GetEmployeeResponseDTO dto = modelMapper.map(dataModel.getPersonPII(), GetEmployeeResponseDTO.class);
-                     modelMapper.map(dataModel, dto, "getEmployeeMap");
+                     modelMapper.map(dataModel, dto);
                     return dto;
                 })
                 .toList();

@@ -4,6 +4,7 @@ import com.makani.exceptions.InvalidLoginException;
 import com.makani.security.user.InternalAuthDataModel;
 import com.makani.internal.interfaceadapters.InternalAuthRepository;
 import com.makani.internal.interfaceadapters.jwt.JwtTokenProvider;
+import com.makani.utilities.security.HashingService;
 import openapi.makani.domain.security.dto.AuthTokenResponseDTO;
 import openapi.makani.domain.security.dto.LoginRequestDTO;
 import org.springframework.stereotype.Service;
@@ -15,15 +16,19 @@ import java.util.Map;
 public class InternalAuthenticationUseCase {
     private final InternalAuthRepository repository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final HashingService hashingService;
 
     public InternalAuthenticationUseCase(InternalAuthRepository repository,
-                                         JwtTokenProvider jwtTokenProvider) {
+                                         JwtTokenProvider jwtTokenProvider,
+                                         HashingService hashingService) {
         this.repository = repository;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.hashingService = hashingService;
     }
 
     public AuthTokenResponseDTO login(LoginRequestDTO dto) {
-        InternalAuthDataModel auth = repository.findByUsername(dto.getUsername())
+        String usernameHash = hashingService.generateHash(dto.getUsername());
+        InternalAuthDataModel auth = repository.findByUsernameHash(usernameHash)
                 .filter(user -> dto.getPassword().equals(user.getPassword()))
                 .orElseThrow(InvalidLoginException::new);
 

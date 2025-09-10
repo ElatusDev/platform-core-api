@@ -29,7 +29,10 @@ public class GetEmployeeByIdUseCase {
     public GetEmployeeResponseDTO get(Integer employeeId) {
           Optional<EmployeeDataModel> queryResult = employeeRepository.findByEmployeeId(employeeId);
           if(queryResult.isPresent()) {
-              return modelMapper.map(queryResult.get(), GetEmployeeResponseDTO.class, "getEmployeeResponseDtoMap");
+              EmployeeDataModel found = queryResult.get();
+              GetEmployeeResponseDTO dto = modelMapper.map(found, GetEmployeeResponseDTO.class);
+              modelMapper.map(found.getPersonPII() , dto);
+              return dto;
           } else {
               throw new EmployeeNotFoundException(String.valueOf(employeeId));
           }

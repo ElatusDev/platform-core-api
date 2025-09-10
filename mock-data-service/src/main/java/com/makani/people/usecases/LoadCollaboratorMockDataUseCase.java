@@ -1,7 +1,7 @@
 package com.makani.people.usecases;
 
 import com.makani.collaborator.interfaceadapters.CollaboratorRepository;
-import com.makani.collaborator.usecases.CollaboratorCreationBatchUseCase;
+import com.makani.collaborator.usecases.CollaboratorCreationUseCase;
 import com.makani.people.collaborator.CollaboratorDataModel;
 import com.makani.util.AbstractLoadMockData;
 import com.makani.util.DataCleanUp;
@@ -15,11 +15,11 @@ import org.springframework.stereotype.Service;
 public class LoadCollaboratorMockDataUseCase extends AbstractLoadMockData<CollaboratorCreationRequestDTO, CollaboratorDataModel, Integer> {
 
     public LoadCollaboratorMockDataUseCase(@Value("${collaborator.mock.data.location}") String collaboratorMockDataLocation,
-                                           CollaboratorCreationBatchUseCase collaboratorCreationBatchUseCase,
+                                           CollaboratorCreationUseCase collaboratorCreationUseCase,
                                            CollaboratorRepository collaboratorRepository,
-                                           DataLoader<CollaboratorCreationRequestDTO> dataLoader,
+                                           DataLoader<CollaboratorCreationRequestDTO, CollaboratorDataModel, Integer> dataLoader,
                                            DataCleanUp<CollaboratorDataModel, Integer> dataCleanUp) {
-       super(collaboratorMockDataLocation, collaboratorCreationBatchUseCase, CollaboratorCreationRequestDTO.class,
+       super(collaboratorMockDataLocation, collaboratorCreationUseCase::transform, CollaboratorCreationRequestDTO.class,
                collaboratorRepository, CollaboratorDataModel.class, dataLoader, dataCleanUp);
     }
 }

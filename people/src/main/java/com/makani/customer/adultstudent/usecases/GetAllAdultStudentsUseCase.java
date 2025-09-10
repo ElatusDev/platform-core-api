@@ -21,7 +21,11 @@ public class GetAllAdultStudentsUseCase {
 
     public List<GetAdultStudentResponseDTO> getAll() {
         return adultStudentRepository.findAll() .stream()
-                .map(dataModel -> modelMapper.map(dataModel, GetAdultStudentResponseDTO.class))
+                .map(dataModel -> {
+                    GetAdultStudentResponseDTO dto =  modelMapper.map(dataModel, GetAdultStudentResponseDTO.class);
+                    modelMapper.map(dataModel.getPersonPII(), dto);
+                    return dto;
+                })
                 .toList();
     }
 }

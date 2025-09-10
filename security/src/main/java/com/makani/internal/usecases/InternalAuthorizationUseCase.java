@@ -2,6 +2,7 @@ package com.makani.internal.usecases;
 
 import com.makani.internal.interfaceadapters.InternalAuthRepository;
 import com.makani.security.user.InternalAuthDataModel;
+import com.makani.utilities.security.HashingService;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -17,14 +18,19 @@ import java.util.Optional;
 @Component
 public class InternalAuthorizationUseCase implements UserDetailsService {
     private final InternalAuthRepository repository;
+    private final HashingService hashingService;
 
-    public InternalAuthorizationUseCase(InternalAuthRepository repository) {
+    public InternalAuthorizationUseCase(InternalAuthRepository repository,
+                                        HashingService hashingService) {
         this.repository = repository;
+        this.hashingService = hashingService;
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<InternalAuthDataModel> result =  repository.findByUsername(username);
+        String usernameHash = hashingService.generateHash(username);
+        Optional<InternalAuthDataModel> result =  repository.findByUsernameHash(usernameHash);
+
         if(result.isPresent()) {
             InternalAuthDataModel internalAuth = result.get();
             String role = internalAuth.getRole();

@@ -30,7 +30,10 @@ public class GetAdultStudentByIdUseCase {
     public GetAdultStudentResponseDTO get(Integer adultStudentId) {
         Optional<AdultStudentDataModel> result = adultStudentRepository.findById(adultStudentId);
         if(result.isPresent()) {
-            return modelMapper.map(result.get(), GetAdultStudentResponseDTO.class);
+            AdultStudentDataModel found = result.get();
+            GetAdultStudentResponseDTO dto = modelMapper.map(found, GetAdultStudentResponseDTO.class);
+            modelMapper.map(found.getPersonPII(), dto);
+            return dto;
         } else {
             throw new AdultStudentNotFoundException(String.valueOf(adultStudentId));
         }

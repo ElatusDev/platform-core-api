@@ -8,7 +8,7 @@
 package com.makani.people.usecases;
 
 import com.makani.employee.interfaceadapters.EmployeeRepository;
-import com.makani.employee.usecases.EmployeeCreationBatchUseCase;
+import com.makani.employee.usecases.EmployeeCreationUseCase;
 import com.makani.people.employee.EmployeeDataModel;
 import com.makani.util.AbstractLoadMockData;
 import com.makani.util.DataCleanUp;
@@ -21,11 +21,11 @@ import org.springframework.stereotype.Service;
 public class LoadEmployeeMockDataUseCase extends AbstractLoadMockData<EmployeeCreationRequestDTO, EmployeeDataModel, Integer> {
 
     public LoadEmployeeMockDataUseCase(@Value("${employee.mock.data.location}") String employeeMockDataLocation,
-                                       EmployeeCreationBatchUseCase employeeCreationBatchUseCase,
+                                       EmployeeCreationUseCase employeeCreationUseCase,
                                        EmployeeRepository employeeRepository,
-                                       DataLoader<EmployeeCreationRequestDTO> dataLoader,
+                                       DataLoader<EmployeeCreationRequestDTO, EmployeeDataModel, Integer> dataLoader,
                                        DataCleanUp<EmployeeDataModel, Integer> dataCleanup) {
-        super(employeeMockDataLocation, employeeCreationBatchUseCase, EmployeeCreationRequestDTO.class,
+        super(employeeMockDataLocation, employeeCreationUseCase::transform, EmployeeCreationRequestDTO.class,
                 employeeRepository, EmployeeDataModel.class, dataLoader, dataCleanup);
     }
 }

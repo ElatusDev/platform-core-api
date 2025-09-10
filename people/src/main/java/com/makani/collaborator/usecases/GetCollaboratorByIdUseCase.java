@@ -29,7 +29,10 @@ public class GetCollaboratorByIdUseCase {
     public GetCollaboratorResponseDTO get(Integer collaboratorId) {
           Optional<CollaboratorDataModel> queryResult = repository.findById(collaboratorId);
           if(queryResult.isPresent()) {
-              return modelMapper.map(queryResult.get(), GetCollaboratorResponseDTO.class);
+              CollaboratorDataModel found = queryResult.get();
+              GetCollaboratorResponseDTO dto = modelMapper.map(found, GetCollaboratorResponseDTO.class);
+              modelMapper.map(found.getPersonPII(), dto);
+              return dto;
           } else {
               throw new CollaboratorNotFoundException(String.valueOf(collaboratorId));
           }

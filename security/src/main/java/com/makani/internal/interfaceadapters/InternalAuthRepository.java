@@ -11,10 +11,6 @@ import java.util.Optional;
 
 @Repository
 public interface InternalAuthRepository extends JpaRepository<InternalAuthDataModel, Integer> {
-    Optional<InternalAuthDataModel> findByUsername(String username);
+    Optional<InternalAuthDataModel> findByUsernameHash(String usernameHash);
 
-    @Modifying
-    @Transactional
-    @Query(value = "ALTER TABLE internal_auth AUTO_INCREMENT = 1", nativeQuery = true)
-    void restIdCounter();
 }

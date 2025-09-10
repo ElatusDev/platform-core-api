@@ -27,7 +27,11 @@ public class GetAllCollaboratorsUseCase {
 
     public List<GetCollaboratorResponseDTO> getAll(){
         return repository.findAll() .stream()
-                .map(dataModel -> modelMapper.map(dataModel, GetCollaboratorResponseDTO.class))
+                .map(dataModel -> {
+                    GetCollaboratorResponseDTO dto = modelMapper.map(dataModel, GetCollaboratorResponseDTO.class);
+                    modelMapper.map(dataModel.getPersonPII(), dto);
+                    return dto;
+                })
                 .toList();
     }
 }

@@ -7,8 +7,10 @@
  */
 package com.makani.customer.adultstudent.usecases;
 
+import com.makani.PersonPIIDataModel;
 import com.makani.people.customer.AdultStudentDataModel;
 import com.makani.customer.adultstudent.interfaceadapters.AdultStudentRepository;
+import com.makani.people.employee.EmployeeDataModel;
 import com.makani.utilities.security.HashingService;
 import com.makani.utilities.security.PiiNormalizer;
 import openapi.makani.domain.people.dto.AdultStudentCreationRequestDTO;
@@ -36,14 +38,20 @@ public class AdultStudentCreationUseCase {
 
     @Transactional
     public AdultStudentCreationResponseDTO create(AdultStudentCreationRequestDTO dto) {
-        AdultStudentDataModel received = modelMapper.map(dto, AdultStudentDataModel.class);
+        return modelMapper.map(adultStudentRepository.save(transform((dto))), AdultStudentCreationResponseDTO.class);
+    }
 
-        String normalizedEmail = piiNormalizer.normalizeEmail(received.getPersonPII().getEmail());
-        received.getPersonPII().setEmailHash(hashingService.generateHash(normalizedEmail));
+    public AdultStudentDataModel transform(AdultStudentCreationRequestDTO dto) {
+        AdultStudentDataModel model = modelMapper.map(dto, AdultStudentDataModel.class);
 
-        String normalizedPhone = piiNormalizer.normalizePhoneNumber(received.getPersonPII().getPhone());
-        received.getPersonPII().setPhoneHash(hashingService.generateHash(normalizedPhone));
+        final PersonPIIDataModel personPIIDataModel = modelMapper.map(dto, PersonPIIDataModel.class);
+        model.setPersonPII(personPIIDataModel);
 
-        return modelMapper.map(adultStudentRepository.save(received), AdultStudentCreationResponseDTO.class);
+        String normalizedEmail = piiNormalizer.normalizeEmail(model.getPersonPII().getEmail());
+        model.getPersonPII().setEmailHash(hashingService.generateHash(normalizedEmail));
+
+        String normalizedPhone = piiNormalizer.normalizePhoneNumber(model.getPersonPII().getPhone());
+        model.getPersonPII().setPhoneHash(hashingService.generateHash(normalizedPhone));
+        return model;
     }
 }
