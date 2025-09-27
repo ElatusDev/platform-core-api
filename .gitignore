@@ -1,16 +1,18 @@
 
 ### maven modules ###
 application/target/
-communication/target/
-coordination/target/
-people/target/
-treasury/target/
-security/target/
-datamodel/target/
-utilities/target/
+audit-service/target/
+billing/target/
 ca-service/target/
-mock-data-service/target/
+course-management/target/
 etl-service/target/
+mock-data-service/target/
+multi-tenant-data/target/
+notification-service/target/
+security/target/
+tenant-management/target/
+user-management/target/
+utilities/target/
 ### docker related ###
 .env
 
@@ -20,13 +22,15 @@ etl-service/target/
 #intelliJ
 .idea/
 application/*.iml
-communication/*.iml
-coordination/*.iml
-people/*.iml
-treasury/*.iml
-security/*.iml
-datamodel/*.iml
-utilities/*.iml
+audit-service/*.iml
+billing/*.iml
 ca-service/*.iml
-mock-data-service/*.iml
+course-management/*.iml
 etl-service/*.iml
+mock-data-service/*.iml
+multi-tenant-data/*.iml
+notification-service/*.iml
+security/*.iml
+tenant-management/*.iml
+user-management/*.iml
+utilities/*.iml

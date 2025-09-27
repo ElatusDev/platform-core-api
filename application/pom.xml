@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.makani</groupId>
-        <artifactId>makani-helpdesk-api</artifactId>
+        <groupId>com.akademiaplus</groupId>
+        <artifactId>platform-core-api</artifactId>
         <version>1.0</version>
     </parent>
 
@@ -18,37 +18,37 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.makani</groupId>
-            <artifactId>people</artifactId>
+            <groupId>com.akademiaplus</groupId>
+            <artifactId>user-management</artifactId>
             <version>${module.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.makani</groupId>
-            <artifactId>coordination</artifactId>
+            <groupId>com.akademiaplus</groupId>
+            <artifactId>course-management</artifactId>
             <version>${module.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.makani</groupId>
-            <artifactId>communication</artifactId>
+            <groupId>com.akademiaplus</groupId>
+            <artifactId>notification-service</artifactId>
             <version>${module.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.makani</groupId>
-            <artifactId>treasury</artifactId>
+            <groupId>com.akademiaplus</groupId>
+            <artifactId>billing</artifactId>
             <version>${module.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.makani</groupId>
-            <artifactId>datamodel</artifactId>
+            <groupId>com.akademiaplus</groupId>
+            <artifactId>multi-tenant-data</artifactId>
             <version>${module.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.makani</groupId>
+            <groupId>com.akademiaplus</groupId>
             <artifactId>security</artifactId>
             <version>${module.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.makani</groupId>
+            <groupId>com.akademiaplus</groupId>
             <artifactId>utilities</artifactId>
             <version>${module.version}</version>
         </dependency>

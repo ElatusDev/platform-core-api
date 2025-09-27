@@ -1,0 +1,395 @@
+openapi: 3.0.0
+info:
+  title:   Membership Associations API
+  version: '1.0.0'
+  description: API for managing membership associations (adult students and tutors)
+components:
+  schemas:
+    MembershipAssociationBase:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+          description: Start date of the association
+        dueDate:
+          type: string
+          format: date
+          description: Due date of the association
+        membershipId:
+          type: integer
+          description: ID of the associated membership
+        courseId:
+          type: integer
+          description: ID of the associated course
+      required:
+        - startDate
+        - dueDate
+        - membershipId
+        - courseId
+    MembershipAdultStudentCreationRequest:
+      allOf:
+        - $ref: '#/components/schemas/MembershipAssociationBase'
+        - type: object
+          properties:
+            adultStudentId:
+              type: integer
+              description: ID of the associated adult student
+          required:
+            - adultStudentId
+    MembershipAdultStudentCreationResponse:
+      type: object
+      properties:
+        membershipAdultStudentId:
+          type: integer
+          readOnly: true
+          description: Adult student membership ID
+      required:
+        - membershipAdultStudentId
+    GetMembershipAdultStudentResponse:
+      allOf:
+        - $ref: '#/components/schemas/MembershipAssociationBase'
+        - type: object
+          properties:
+            membershipAdultStudentId:
+              type: integer
+              readOnly: true
+              description: Adult student membership ID
+            adultStudentId:
+              type: integer
+              description: ID of the associated adult student
+          required:
+            - membershipAdultStudentId
+            - startDate
+            - dueDate
+            - membershipId
+            - courseId
+            - adultStudentId
+    MembershipTutorCreationRequest:
+      allOf:
+        - $ref: '#/components/schemas/MembershipAssociationBase'
+        - type: object
+          properties:
+            tutorId:
+              type: integer
+              description: ID of the associated tutor
+          required:
+            - tutorId
+    MembershipTutorCreationResponse:
+      type: object
+      properties:
+        membershipTutorId:
+          type: integer
+          readOnly: true
+          description: Tutor membership ID
+      required:
+        - membershipTutorId
+    GetMembershipTutorResponse:
+      allOf:
+        - $ref: '#/components/schemas/MembershipAssociationBase'
+        - type: object
+          properties:
+            membershipTutorId:
+              type: integer
+              readOnly: true
+              description: Tutor membership ID
+            tutorId:
+              type: integer
+              description: ID of the associated tutor
+          required:
+            - membershipTutorId
+            - startDate
+            - dueDate
+            - membershipId
+            - courseId
+            - tutorId
+    ErrorResponse:
+      type: object
+
+paths:
+  '/membershipAdultStudents':
+    post:
+      summary: Create a new adult student membership association
+      operationId: createMembershipAdultStudent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MembershipAdultStudentCreationRequest'
+      responses:
+        '201':
+          description: Adult student membership association created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembershipAdultStudentCreationResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: Get all adult student membership associations
+      operationId: getMembershipAdultStudents
+      responses:
+        '200':
+          description: List of adult student membership associations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetMembershipAdultStudentResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/membershipAdultStudents/{membershipAdultStudentId}':
+    get:
+      summary: Get an adult student membership association by ID
+      operationId: getMembershipAdultStudentById
+      parameters:
+        - name: membershipAdultStudentId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the adult student membership association to retrieve
+      responses:
+        '200':
+          description: Adult student membership association details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetMembershipAdultStudentResponse'
+        '404':
+          description: Adult student membership association not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update an adult student membership association
+      operationId: updateMembershipAdultStudent
+      parameters:
+        - name: membershipAdultStudentId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the adult student membership association to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MembershipAdultStudentCreationRequest'
+      responses:
+        '200':
+          description: Adult student membership association updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembershipAdultStudentCreationResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Adult student membership association not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete an adult student membership association
+      operationId: deleteMembershipAdultStudent
+      parameters:
+        - name: membershipAdultStudentId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the adult student membership association to delete
+      responses:
+        '204':
+          description: Adult student membership association deleted successfully
+        '404':
+          description: Adult student membership association not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/membershipTutors':
+    post:
+      summary: Create a new tutor membership association
+      operationId: createMembershipTutor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MembershipTutorCreationRequest'
+      responses:
+        '201':
+          description: Tutor membership association created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembershipTutorCreationResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: Get all tutor membership associations
+      operationId: getMembershipTutors
+      responses:
+        '200':
+          description: List of tutor membership associations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetMembershipTutorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/membershipTutors/{membershipTutorId}':
+    get:
+      summary: Get a tutor membership association by ID
+      operationId: getMembershipTutorById
+      parameters:
+        - name: membershipTutorId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the tutor membership association to retrieve
+      responses:
+        '200':
+          description: Tutor membership association details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetMembershipTutorResponse'
+        '404':
+          description: Tutor membership association not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update a tutor membership association
+      operationId: updateMembershipTutor
+      parameters:
+        - name: membershipTutorId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the tutor membership association to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MembershipTutorCreationRequest'
+      responses:
+        '200':
+          description: Tutor membership association updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembershipTutorCreationResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Tutor membership association not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete a tutor membership association
+      operationId: deleteMembershipTutor
+      parameters:
+        - name: membershipTutorId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the tutor membership association to delete
+      responses:
+        '204':
+          description: Tutor membership association deleted successfully
+        '404':
+          description: Tutor membership association not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'

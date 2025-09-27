@@ -1,0 +1,69 @@
+components:
+  schemas:
+    BasePerson:
+      type: object
+      description: 'Base schema for Person, used for referencing only. Do not generate a class for this schema.'
+      properties:
+        firstName:
+          type: string
+          maxLength: 30
+          description: Employee's first name
+        lastName:
+          type: string
+          maxLength: 30
+          description: Employee's last name
+        birthDate:
+          type: string
+          format: date
+          description: Employee's birthdate
+        email:
+          type: string
+          format: email
+          maxLength: 50
+          description: Employee's email address
+        phone:
+          type: string
+          maxLength: 15
+          description: Employee's phone number
+        address:
+          type: string
+          maxLength: 50
+          description: Employee's address
+        zipCode:
+          type: string
+          maxLength: 8
+          description: Employee's zip code
+        employeeType:
+          type: string
+          description: Type of employees
+      required:
+        - firstName
+        - lastName
+        - birthDate
+        - email
+        - phone
+        - address
+        - zipCode
+        - employeeType
+    InternalAuth:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Username for authentication
+        password:
+          type: string
+          description: Password for authentication
+        role:
+          type: string
+          description: authorization role
+      required:
+        - usernameToken
+        - passwordToken
+        - role
+    # Import the common schemas from utilities module
+    # These will be resolved via import mappings in Maven
+    ErrorResponse:
+      # This is a placeholder that will be replaced by import mapping
+      # The actual implementation comes from utilities module
+      type: object

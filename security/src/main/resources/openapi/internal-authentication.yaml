@@ -26,12 +26,6 @@ components:
         - token
     ErrorResponse:
       type: object
-      properties:
-        message:
-          type: string
-          description: Error message
-      required:
-        - message
 paths:
   /login/internal:
     post:

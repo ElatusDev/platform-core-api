@@ -3,10 +3,10 @@
 # --- Configuration ---
 COMPOSE_FILE="docker-compose.dev.yml"
 DB_INIT_DIR="./db_init"
-APP_SERVICE_NAME="makani-helpdesk-api"
-DB_SERVICE_NAME="makani-mariadb"
-REDIS_SERVICE_NAME="redis"
-CA_SERVICE_NAME="makani-ca"
+APP_SERVICE_NAME="platform-core-api"
+DB_SERVICE_NAME="multi_tenant_db"
+REDIS_SERVICE_NAME="platform-core-redis"
+CA_SERVICE_NAME="ca-service"
 ENV_FILE=".env";
 
 # --- Functions ---

@@ -1,0 +1,205 @@
+openapi: 3.0.0
+info:
+  title:   Course Event Entity
+  version: '1.0.0'
+paths:
+  '/course-events':
+    post:
+      operationId: createCourseEvent
+      summary: Create a new course event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseEventCreateRequest'
+      responses:
+        '201':
+          description: Course event created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseEventCreateResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: Get all course events
+      operationId: getAllCourseEvent
+      responses:
+        '200':
+          description: List of course events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetCourseEventResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/course-events/{courseEventId}':
+    get:
+      operationId: getCourseEventById
+      summary: Get a course event by ID
+      parameters:
+        - name: courseEventId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Course event details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetCourseEventResponse'
+        '404':
+          description: Course event not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update a course event
+      operationId: updateCourseEvent
+      parameters:
+        - name: courseEventId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseEventCreateRequest'
+      responses:
+        '200':
+          description: Course event updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseEventCreateResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Course event not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete a course event
+      operationId: deleteCourseEventById
+      parameters:
+        - name: courseEventId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Course event deleted successfully
+        '404':
+          description: Course event not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    BaseCourseEvent:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        title:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+          maxLength: 200
+        scheduleId:
+          type: integer
+        courseId:
+          type: integer
+        instructorId:
+          type: integer
+        adultAttendeeIds:
+          type: array
+          items:
+            type: integer
+        minorAttendeeIds:
+          type: array
+          items:
+            type: integer
+      required:
+        - date
+        - title
+        - description
+        - scheduleId
+        - courseId
+        - instructorId
+        - adultAttendeeIds
+        - minorAttendeeIds
+    CourseEventCreateRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseCourseEvent'
+    CourseEventCreateResponse:
+      type: object
+      properties:
+        courseEventId:
+          type: integer
+          readOnly: true
+      required:
+        - courseEventId
+    GetCourseEventResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseCourseEvent'
+        - type: object
+          properties:
+            courseEventId:
+              type: integer
+              readOnly: true
+          required:
+            - courseEventId
+    ErrorResponse:
+      type: object

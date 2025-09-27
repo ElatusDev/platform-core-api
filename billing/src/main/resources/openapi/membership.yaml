@@ -1,0 +1,199 @@
+openapi: 3.0.0
+info:
+  title:   Membership API
+  version: '1.0.0'
+  description: API for managing memberships
+components:
+  schemas:
+    BaseMembership:
+      type: object
+      properties:
+        membershipType:
+          type: string
+          maxLength: 10
+          description: Type of membership (e.g., monthly, annual)
+        fee:
+          type: number
+          format: double
+          description: Membership fee
+        description:
+          type: string
+          maxLength: 100
+          description: Membership description
+      required:
+        - membershipType
+        - fee
+        - description
+    MembershipCreationRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseMembership'
+    MembershipCreationResponse:
+      type: object
+      properties:
+        membershipId:
+          type: integer
+          readOnly: true
+          description: Membership ID
+      required:
+        - membershipId
+    GetMembershipResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseMembership'
+        - type: object
+          properties:
+            membershipId:
+              type: integer
+              readOnly: true
+              description: Membership ID
+          required:
+            - membershipId
+            - membershipType
+            - fee
+            - description
+    ErrorResponse:
+      type: object
+
+paths:
+  '/memberships':
+    post:
+      summary: Create a new membership
+      operationId: createMembership
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MembershipCreationRequest'
+      responses:
+        '201':
+          description: Membership created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembershipCreationResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: Get all memberships
+      operationId: getMemberships
+      responses:
+        '200':
+          description: List of memberships
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetMembershipResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/memberships/{membershipId}':
+    get:
+      summary: Get a membership by ID
+      operationId: getMembershipById
+      parameters:
+        - name: membershipId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the membership to retrieve
+      responses:
+        '200':
+          description: Membership details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetMembershipResponse'
+        '404':
+          description: Membership not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update a membership
+      operationId: updateMembership
+      parameters:
+        - name: membershipId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the membership to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MembershipCreationRequest'
+      responses:
+        '200':
+          description: Membership updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MembershipCreationResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Membership not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete a membership
+      operationId: deleteMembership
+      parameters:
+        - name: membershipId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the membership to delete
+      responses:
+        '204':
+          description: Membership deleted successfully
+        '404':
+          description: Membership not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'

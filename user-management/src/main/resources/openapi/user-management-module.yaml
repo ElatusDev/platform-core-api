@@ -1,0 +1,36 @@
+openapi: 3.0.0
+info:
+  title: User Management API
+  version: 1.0.0
+  description: User Management API for managing users in Akademia Plus system
+
+paths:
+  /employees:
+    $ref: "./employee.yaml#/paths/~1employees"
+  /employees/{employeeId}:
+    $ref: "./employee.yaml#/paths/~1employees~1{employeeId}"
+  /collaborators:
+    $ref: "./collaborator.yaml#/paths/~1collaborators"
+  /collaborators/{collaboratorId}:
+    $ref: "./collaborator.yaml#/paths/~1collaborators~1{collaboratorId}"
+  /adultStudents:
+    $ref: './customer.yaml#/paths/~1adult-students'
+  /adultStudents/{adultStudentId}:
+    $ref: './customer.yaml#/paths/~1adult-students~1{adultStudentId}'
+  /minorStudents:
+    $ref: './customer.yaml#/paths/~1minor-students'
+  /minorStudents/{minorStudentId}:
+    $ref: './customer.yaml#/paths/~1minor-students~1{minorStudentId}'
+  /tutors: # Add Tutor paths
+    $ref: './customer.yaml#/paths/~1tutors'
+  /tutors/{tutorId}: # Add Tutor paths
+    $ref: './customer.yaml#/paths/~1tutors~1{tutorId}'
+
+components:
+  schemas:
+    Employee:
+      $ref: './employee.yaml#/components/schemas'
+    collaborator:
+      $ref: './collaborator.yaml#/components/schemas'
+    Customer:
+      $ref: './customer.yaml#/components/schemas'

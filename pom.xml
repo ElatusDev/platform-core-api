@@ -11,8 +11,8 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.makani</groupId>
-    <artifactId>makani-helpdesk-api</artifactId>
+    <groupId>com.akademiaplus</groupId>
+    <artifactId>platform-core-api</artifactId>
     <version>1.0</version>
     <packaging>pom</packaging>
 
@@ -68,17 +68,19 @@
 
 
     <modules>
-        <module>communication</module>
-        <module>coordination</module>
-        <module>people</module>
-        <module>treasury</module>
+        <module>notification-service</module>
+        <module>course-management</module>
+        <module>user-management</module>
+        <module>billing</module>
         <module>application</module>
         <module>security</module>
-        <module>datamodel</module>
+        <module>multi-tenant-data</module>
         <module>utilities</module>
         <module>ca-service</module>
         <module>mock-data-service</module>
         <module>etl-service</module>
+        <module>tenant-management</module>
+        <module>audit-service</module>
     </modules>
 
     <profiles>
@@ -93,24 +95,24 @@
             <id>mock-data-service</id>
             <modules>
                 <module>mock-data-service</module>
-                <module>datamodel</module>
+                <module>multi-tenant-data</module>
                 <module>utilities</module>
             </modules>
         </profile>
 
         <profile>
-            <id>makani-helpdesk-api</id>
+            <id>platform-core-api</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
-                <module>communication</module>
-                <module>coordination</module>
-                <module>people</module>
-                <module>treasury</module>
+                <module>notification-service</module>
+                <module>course-management</module>
+                <module>user-management</module>
+                <module>billing</module>
                 <module>application</module>
                 <module>security</module>
-                <module>datamodel</module>
+                <module>multi-tenant-data</module>
                 <module>utilities</module>
             </modules>
         </profile>
@@ -155,8 +157,13 @@
                 <version>${junit-jupiter.version}</version>
                 <type>pom</type>
             </dependency>
-
-            <!-- OpenAPI -->
+            <!--    Integration Testing -->
+            <dependency>
+                <groupId>net.datafaker</groupId>
+                <artifactId>datafaker</artifactId>
+                <version>2.5.0</version>
+            </dependency>
+            <!--      OpenAPI        -->
             <dependency>
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
@@ -449,8 +456,8 @@
                             </goals>
                             <configuration>
                                 <inputSpec>${project.basedir}/src/main/resources/openapi/${project.artifactId}-module.yaml</inputSpec>
-                                <apiPackage>openapi.makani.domain.${project.artifactId}.api</apiPackage>
-                                <modelPackage>openapi.makani.domain.${project.artifactId}.dto</modelPackage>
+                                <apiPackage>openapi.akademiaplus.domain.${project.artifactId}.api</apiPackage>
+                                <modelPackage>openapi.akademiaplus.domain.${project.artifactId}.dto</modelPackage>
                                 <modelNameSuffix>DTO</modelNameSuffix>
                                 <generatorName>spring</generatorName>
                                 <configOptions>
@@ -508,7 +515,7 @@
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <version>${spring-boot-maven-plugin.version}</version>
                     <configuration>
-                        <mainClass>com.makani.Main</mainClass>
+                        <mainClass>com.akademiaplus.Main</mainClass>
                     </configuration>
                     <executions>
                         <execution>

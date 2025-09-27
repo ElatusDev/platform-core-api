@@ -1,273 +1,513 @@
-USE makani_db;
+USE multi_tenant_db;
 
-CREATE TABLE store_product (
-    product_id INT AUTO_INCREMENT PRIMARY KEY,
-    product_name VARCHAR(100) NOT NULL UNIQUE,
+-- Updated schema with INT tenant_id instead of VARCHAR(36)
+
+CREATE TABLE tenant_organizations (
+    tenant_id INT PRIMARY KEY AUTO_INCREMENT,
+    organization_name VARCHAR(200) NOT NULL,
+    legal_name VARCHAR(200),
+    website_url VARCHAR(255),
+    email VARCHAR(200) NOT NULL,
+    address VARCHAR(200) NOT NULL,
+    phone VARCHAR(20),
+    landline VARCHAR(20),
+    description TEXT,
+    tax_id VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    INDEX idx_org_name (organization_name, deleted_at)
+);
+
+CREATE TABLE tenant_sequences (
+    tenant_id INT NOT NULL,
+    table_name VARCHAR(64) NOT NULL,
+    current_value INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (tenant_id, table_name),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    INDEX idx_tenant_sequences_tenant (tenant_id)
+);
+
+CREATE TABLE tenant_subscriptions (
+    tenant_id INT NOT NULL,
+    subscription_id INT NOT NULL,
+    type VARCHAR(30) NOT NULL,
+    max_users INT DEFAULT NULL,
+    billing_date DATE NOT NULL,
+    rate_per_student DECIMAL(10,2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+
+    PRIMARY KEY (tenant_id, subscription_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    INDEX idx_tenant_subscription_type (tenant_id, type, deleted_at),
+    INDEX idx_subscription_billing_date (billing_date, deleted_at),
+    INDEX idx_tenant_subscription_active (tenant_id, deleted_at)
+);
+
+CREATE TABLE tenant_billing_cycles (
+    tenant_id INT NOT NULL,
+    billing_cycle_id INT NOT NULL,
+    billing_month YEAR_MONTH NOT NULL,
+    calculation_date DATE NOT NULL,
+    user_count INT NOT NULL,
+    total_amount DECIMAL(12,2) NOT NULL,
+    billing_status ENUM('pending', 'billed', 'paid', 'failed', 'cancelled') DEFAULT 'pending',
+    billed_at TIMESTAMP NULL,
+    paid_at TIMESTAMP NULL,
+    notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+
+    PRIMARY KEY (tenant_id, billing_cycle_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    UNIQUE KEY uk_tenant_billing_month (tenant_id, billing_month, deleted_at),
+    INDEX idx_tenant_billing_status (tenant_id, billing_status, deleted_at),
+    INDEX idx_billing_calculation_date (calculation_date, billing_status),
+    INDEX idx_billing_month_status (billing_month, billing_status, deleted_at)
+);
+
+CREATE TABLE store_products (
+    tenant_id INT NOT NULL,
+    product_id INT AUTO_INCREMENT,
+    product_name VARCHAR(100) NOT NULL,
     description VARCHAR(500),
     price DOUBLE PRECISION NOT NULL,
-    stock_quantity INT NOT NULL
+    stock_quantity INT NOT NULL,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, product_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    UNIQUE KEY uk_store_product_name_tenant (tenant_id, product_name, deleted_at),
+    INDEX idx_tenant_active_product (tenant_id, deleted_at),
+    INDEX idx_tenant_active_price (tenant_id, deleted_at, price)
 );
 
-CREATE TABLE card_payment_info (
-  card_payment_info_id INT AUTO_INCREMENT PRIMARY KEY,
-  payment_id BIGINT NOT NULL,
-  token TEXT NOT NULL,
-  card_type VARCHAR(20) NOT NULL
+CREATE TABLE card_payment_infos (
+    tenant_id INT NOT NULL,
+    card_payment_info_id INT AUTO_INCREMENT,
+    payment_id BIGINT NOT NULL,
+    token TEXT NOT NULL,
+    card_type VARCHAR(20) NOT NULL,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, card_payment_info_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    INDEX idx_tenant_active_card_payment (tenant_id, deleted_at)
 );
 
-CREATE TABLE email (
-    email_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE emails (
+    tenant_id INT NOT NULL,
+    email_id INT AUTO_INCREMENT,
     subject VARCHAR(255) NOT NULL,
     body TEXT NOT NULL,
-    sender VARCHAR(150) NOT NULL
+    sender VARCHAR(150) NOT NULL,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, email_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    INDEX idx_tenant_active_email (tenant_id, deleted_at),
+    INDEX idx_tenant_active_sender (tenant_id, deleted_at, sender)
 );
 
 CREATE TABLE email_recipients (
+    tenant_id INT NOT NULL,
     email_id INT NOT NULL,
     recipient_email VARCHAR(150) NOT NULL,
-    PRIMARY KEY (email_id, recipient_email),
-    FOREIGN KEY (email_id) REFERENCES email(email_id)
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, email_id, recipient_email),
+    FOREIGN KEY (tenant_id, email_id) REFERENCES emails(tenant_id, email_id),
+    INDEX idx_tenant_active_email_recipients (tenant_id, deleted_at)
 );
 
 CREATE TABLE email_attachments (
+    tenant_id INT NOT NULL,
     email_id INT NOT NULL,
     attachment_url TEXT NOT NULL,
-    PRIMARY KEY (email_id, attachment_url(255)),
-    FOREIGN KEY (email_id) REFERENCES email(email_id)
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, email_id, attachment_url(255)),
+    FOREIGN KEY (tenant_id, email_id) REFERENCES emails(tenant_id, email_id),
+    INDEX idx_tenant_active_email_attachments (tenant_id, deleted_at)
 );
 
-CREATE TABLE course (
-    course_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE courses (
+    tenant_id INT NOT NULL,
+    course_id INT AUTO_INCREMENT,
     course_name VARCHAR(100) NOT NULL,
     course_description VARCHAR(500) NOT NULL,
-    max_capacity INT NOT NULL
+    max_capacity INT NOT NULL,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, course_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    INDEX idx_tenant_active_course (tenant_id, deleted_at),
+    INDEX idx_tenant_active_course_name (tenant_id, deleted_at, course_name)
 );
 
-CREATE TABLE schedule (
-    schedule_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE schedules (
+    tenant_id INT NOT NULL,
+    schedule_id INT AUTO_INCREMENT,
     schedule_day VARCHAR(9) NOT NULL,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
-    course_id INT,
-    FOREIGN KEY (course_id) REFERENCES course(course_id)
+    course_id INT NOT NULL,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, schedule_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    FOREIGN KEY (tenant_id, course_id) REFERENCES courses(tenant_id, course_id),
+    INDEX idx_tenant_active_schedule (tenant_id, deleted_at),
+    INDEX idx_tenant_active_course_schedule (tenant_id, course_id, deleted_at)
 );
 
-CREATE TABLE customer_auth (
-    customer_auth_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE customer_auths (
+    tenant_id INT NOT NULL,
+    customer_auth_id INT AUTO_INCREMENT,
     provider VARCHAR(50) NOT NULL,
-    token TEXT NOT NULL
+    token TEXT NOT NULL,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, customer_auth_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    INDEX idx_tenant_active_customer_auth (tenant_id, deleted_at)
 );
 
-CREATE TABLE internal_auth (
-    internal_auth_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE internal_auths (
+    tenant_id INT NOT NULL,
+    internal_auth_id INT AUTO_INCREMENT,
     encrypted_username VARCHAR(500) NOT NULL,
     encrypted_password VARCHAR(500) NOT NULL,
     encrypted_role VARCHAR(500) NOT NULL,
-    username_hash VARCHAR(64) NOT NULL UNIQUE
+    username_hash VARCHAR(64) NOT NULL,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, internal_auth_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    UNIQUE KEY uk_internal_auth_username_tenant (tenant_id, username_hash, deleted_at),
+    INDEX idx_tenant_active_internal_auth (tenant_id, deleted_at)
 );
 
-CREATE TABLE compensation (
-    compensation_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE compensations (
+    tenant_id INT NOT NULL,
+    compensation_id INT AUTO_INCREMENT,
     compensation_type VARCHAR(50) NOT NULL,
-    amount DOUBLE PRECISION NOT NULL
+    amount DOUBLE PRECISION NOT NULL,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, compensation_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    INDEX idx_tenant_active_compensation (tenant_id, deleted_at)
 );
 
-CREATE TABLE person_pii (
-    person_pii_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE person_piis (
+    tenant_id INT NOT NULL,
+    person_pii_id INT AUTO_INCREMENT,
     encrypted_first_name VARCHAR(500) NOT NULL,
     encrypted_last_name VARCHAR(500) NOT NULL,
     encrypted_phone_number VARCHAR(500) NOT NULL,
     encrypted_email VARCHAR(500) NOT NULL,
     encrypted_address VARCHAR(500) NOT NULL,
     encrypted_zip_code VARCHAR(500) NOT NULL,
-    phone_number_hash VARCHAR(64) NOT NULL UNIQUE,
-    email_hash VARCHAR(64) NOT NULL UNIQUE
+    phone_number_hash VARCHAR(64) NOT NULL,
+    email_hash VARCHAR(64) NOT NULL,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, person_pii_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    UNIQUE KEY uk_person_pii_phone_tenant (tenant_id, phone_number_hash, deleted_at),
+    UNIQUE KEY uk_person_pii_email_tenant (tenant_id, email_hash, deleted_at),
+    INDEX idx_tenant_active_person_pii (tenant_id, deleted_at)
 );
 
-CREATE TABLE employee (
-    employee_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE employees (
+    tenant_id INT NOT NULL,
+    employee_id INT AUTO_INCREMENT,
     employee_type VARCHAR(50) NOT NULL,
     birthdate DATE NOT NULL,
-    internal_auth_id INT NOT NULL UNIQUE,
-    person_pii_id INT NOT NULL UNIQUE,
+    entry_date DATE NOT NULL,
+    internal_auth_id INT NOT NULL,
+    person_pii_id INT NOT NULL,
+    encrypted_profile_picture MEDIUMBLOB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (person_pii_id) REFERENCES person_pii(person_pii_id),
-    FOREIGN KEY (internal_auth_id) REFERENCES internal_auth(internal_auth_id)
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, employee_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    UNIQUE KEY uk_employee_internal_auth_tenant (tenant_id, internal_auth_id, deleted_at),
+    UNIQUE KEY uk_employee_person_pii_tenant (tenant_id, person_pii_id, deleted_at),
+    FOREIGN KEY (tenant_id, person_pii_id) REFERENCES person_piis(tenant_id, person_pii_id),
+    FOREIGN KEY (tenant_id, internal_auth_id) REFERENCES internal_auths(tenant_id, internal_auth_id),
+    INDEX idx_tenant_active_employee (tenant_id, deleted_at),
+    INDEX idx_tenant_active_employee_type (tenant_id, deleted_at, employee_type),
+    INDEX idx_tenant_employee_anniversary (tenant_id, entry_date, deleted_at)
 );
 
-CREATE TABLE store_transaction (
-    transaction_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE store_transactions (
+    tenant_id INT NOT NULL,
+    transaction_id INT AUTO_INCREMENT,
     transaction_datetime DATETIME NOT NULL,
     transaction_type VARCHAR(50) NOT NULL,
     total_amount DOUBLE PRECISION NOT NULL,
     payment_method VARCHAR(50) NOT NULL,
     employee_id INT,
-    FOREIGN KEY (employee_id) REFERENCES employee(employee_id)
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, transaction_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    FOREIGN KEY (tenant_id, employee_id) REFERENCES employees(tenant_id, employee_id),
+    INDEX idx_tenant_active_store_transaction (tenant_id, deleted_at),
+    INDEX idx_tenant_active_transaction_date (tenant_id, deleted_at, transaction_datetime)
 );
 
-CREATE TABLE store_sale_item (
-    sale_item_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE store_sale_items (
+    tenant_id INT NOT NULL,
+    sale_item_id INT AUTO_INCREMENT,
     transaction_id INT NOT NULL,
     product_id INT NOT NULL,
     quantity INT NOT NULL,
     unit_price_at_sale DOUBLE PRECISION NOT NULL,
     item_total DOUBLE PRECISION NOT NULL,
-    FOREIGN KEY (transaction_id) REFERENCES store_transaction(transaction_id),
-    FOREIGN KEY (product_id) REFERENCES store_product(product_id)
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, sale_item_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    FOREIGN KEY (tenant_id, transaction_id) REFERENCES store_transactions(tenant_id, transaction_id),
+    FOREIGN KEY (tenant_id, product_id) REFERENCES store_products(tenant_id, product_id),
+    INDEX idx_tenant_active_sale_item (tenant_id, deleted_at),
+    INDEX idx_tenant_active_transaction_items (tenant_id, transaction_id, deleted_at)
 );
 
-CREATE TABLE collaborator (
-    collaborator_id INT AUTO_INCREMENT PRIMARY KEY,
-    internal_auth_id INT NOT NULL UNIQUE,
+CREATE TABLE collaborators (
+    tenant_id INT NOT NULL,
+    collaborator_id INT AUTO_INCREMENT,
+    internal_auth_id INT NOT NULL,
     encrypted_profile_picture MEDIUMBLOB,
     skills VARCHAR(100) NOT NULL,
     birthdate DATE NOT NULL,
-    person_pii_id INT NOT NULL UNIQUE,
+    entry_date DATE NOT NULL,
+    person_pii_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (person_pii_id) REFERENCES person_pii(person_pii_id),
-    FOREIGN KEY (internal_auth_id) REFERENCES internal_auth(internal_auth_id)
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, collaborator_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    UNIQUE KEY uk_collaborator_internal_auth_tenant (tenant_id, internal_auth_id, deleted_at),
+    UNIQUE KEY uk_collaborator_person_pii_tenant (tenant_id, person_pii_id, deleted_at),
+    FOREIGN KEY (tenant_id, person_pii_id) REFERENCES person_piis(tenant_id, person_pii_id),
+    FOREIGN KEY (tenant_id, internal_auth_id) REFERENCES internal_auths(tenant_id, internal_auth_id),
+    INDEX idx_tenant_active_collaborator (tenant_id, deleted_at),
+    INDEX idx_tenant_active_collaborator_skills (tenant_id, deleted_at, skills),
+    INDEX idx_tenant_collaborator_anniversary (tenant_id, entry_date, deleted_at)
 );
 
-CREATE TABLE membership (
-    membership_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE memberships (
+    tenant_id INT NOT NULL,
+    membership_id INT AUTO_INCREMENT,
     membership_type VARCHAR(50) NOT NULL,
     fee DOUBLE PRECISION NOT NULL,
-    description VARCHAR(255) NOT NULL
+    description VARCHAR(255) NOT NULL,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, membership_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    INDEX idx_tenant_active_membership (tenant_id, deleted_at),
+    INDEX idx_tenant_active_membership_type (tenant_id, deleted_at, membership_type)
 );
 
 CREATE TABLE course_available_collaborators (
+    tenant_id INT NOT NULL,
     course_id INT NOT NULL,
     collaborator_id INT NOT NULL,
-    FOREIGN KEY (course_id) REFERENCES course(course_id),
-    FOREIGN KEY (collaborator_id) REFERENCES collaborator(collaborator_id),
-    PRIMARY KEY (course_id, collaborator_id)
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, course_id, collaborator_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    FOREIGN KEY (tenant_id, course_id) REFERENCES courses(tenant_id, course_id),
+    FOREIGN KEY (tenant_id, collaborator_id) REFERENCES collaborators(tenant_id, collaborator_id),
+    INDEX idx_tenant_active_course_collaborators (tenant_id, deleted_at)
 );
 
-CREATE TABLE adult_student (
-    adult_student_id INT AUTO_INCREMENT PRIMARY KEY,
-    customer_auth_id INT NOT NULL UNIQUE,
+CREATE TABLE adult_students (
+    tenant_id INT NOT NULL,
+    adult_student_id INT AUTO_INCREMENT,
+    customer_auth_id INT NOT NULL,
     birthdate DATE NOT NULL,
     encrypted_profile_picture MEDIUMBLOB,
-    person_pii_id INT NOT NULL UNIQUE,
+    person_pii_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (person_pii_id) REFERENCES person_pii(person_pii_id),
-    FOREIGN KEY (customer_auth_id) REFERENCES customer_auth(customer_auth_id)
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, adult_student_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    UNIQUE KEY uk_adult_student_customer_auth_tenant (tenant_id, customer_auth_id, deleted_at),
+    UNIQUE KEY uk_adult_student_person_pii_tenant (tenant_id, person_pii_id, deleted_at),
+    FOREIGN KEY (tenant_id, person_pii_id) REFERENCES person_piis(tenant_id, person_pii_id),
+    FOREIGN KEY (tenant_id, customer_auth_id) REFERENCES customer_auths(tenant_id, customer_auth_id),
+    INDEX idx_tenant_active_adult_student (tenant_id, deleted_at)
 );
 
-CREATE TABLE tutor (
-    tutor_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE tutors (
+    tenant_id INT NOT NULL,
+    tutor_id INT AUTO_INCREMENT,
     birthdate DATE NOT NULL,
     customer_auth_id INT,
-    person_pii_id INT NOT NULL UNIQUE,
+    person_pii_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (person_pii_id) REFERENCES person_pii(person_pii_id),
-    FOREIGN KEY (customer_auth_id) REFERENCES customer_auth(customer_auth_id)
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, tutor_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    UNIQUE KEY uk_tutor_person_pii_tenant (tenant_id, person_pii_id, deleted_at),
+    FOREIGN KEY (tenant_id, person_pii_id) REFERENCES person_piis(tenant_id, person_pii_id),
+    FOREIGN KEY (tenant_id, customer_auth_id) REFERENCES customer_auths(tenant_id, customer_auth_id),
+    INDEX idx_tenant_active_tutor (tenant_id, deleted_at)
 );
 
-CREATE TABLE minor_student (
-    minor_student_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE minor_students (
+    tenant_id INT NOT NULL,
+    minor_student_id INT AUTO_INCREMENT,
     birthdate DATE NOT NULL,
     encrypted_profile_picture MEDIUMBLOB,
-    customer_auth_id INT NOT NULL UNIQUE,
+    customer_auth_id INT NOT NULL,
     tutor_id INT NOT NULL,
-    person_pii_id INT NOT NULL UNIQUE,
+    person_pii_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (person_pii_id) REFERENCES person_pii(person_pii_id),
-    FOREIGN KEY (customer_auth_id) REFERENCES customer_auth(customer_auth_id),
-    FOREIGN KEY (tutor_id) REFERENCES tutor(tutor_id)
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, minor_student_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    UNIQUE KEY uk_minor_student_customer_auth_tenant (tenant_id, customer_auth_id, deleted_at),
+    UNIQUE KEY uk_minor_student_person_pii_tenant (tenant_id, person_pii_id, deleted_at),
+    FOREIGN KEY (tenant_id, person_pii_id) REFERENCES person_piis(tenant_id, person_pii_id),
+    FOREIGN KEY (tenant_id, customer_auth_id) REFERENCES customer_auths(tenant_id, customer_auth_id),
+    FOREIGN KEY (tenant_id, tutor_id) REFERENCES tutors(tenant_id, tutor_id),
+    INDEX idx_tenant_active_minor_student (tenant_id, deleted_at)
 );
 
-CREATE TABLE adult_student_course (
+CREATE TABLE adult_student_courses (
+    tenant_id INT NOT NULL,
     adult_student_id INT NOT NULL,
     course_id INT NOT NULL,
-    FOREIGN KEY (adult_student_id) REFERENCES adult_student(adult_student_id),
-    FOREIGN KEY (course_id) REFERENCES course(course_id),
-    PRIMARY KEY (adult_student_id, course_id)
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, adult_student_id, course_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    FOREIGN KEY (tenant_id, adult_student_id) REFERENCES adult_students(tenant_id, adult_student_id),
+    FOREIGN KEY (tenant_id, course_id) REFERENCES courses(tenant_id, course_id),
+    INDEX idx_tenant_active_adult_student_course (tenant_id, deleted_at)
 );
 
-CREATE TABLE minor_student_course (
+CREATE TABLE minor_student_courses (
+    tenant_id INT NOT NULL,
     minor_student_id INT NOT NULL,
     course_id INT NOT NULL,
-    FOREIGN KEY (minor_student_id) REFERENCES minor_student(minor_student_id),
-    FOREIGN KEY (course_id) REFERENCES course(course_id),
-    PRIMARY KEY (minor_student_id, course_id)
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, minor_student_id, course_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    FOREIGN KEY (tenant_id, minor_student_id) REFERENCES minor_students(tenant_id, minor_student_id),
+    FOREIGN KEY (tenant_id, course_id) REFERENCES courses(tenant_id, course_id),
+    INDEX idx_tenant_active_minor_student_course (tenant_id, deleted_at)
 );
 
-CREATE TABLE course_event (
-    course_event_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE course_events (
+    tenant_id INT NOT NULL,
+    course_event_id INT AUTO_INCREMENT,
     course_id INT NOT NULL,
     collaborator_id INT NOT NULL,
     schedule_id INT NOT NULL,
     event_date DATE NOT NULL,
     event_title VARCHAR(100) NOT NULL,
     event_description VARCHAR(500) NOT NULL,
-    FOREIGN KEY (course_id) REFERENCES course(course_id),
-    FOREIGN KEY (collaborator_id) REFERENCES collaborator(collaborator_id),
-    FOREIGN KEY (schedule_id) REFERENCES schedule(schedule_id)
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, course_event_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    FOREIGN KEY (tenant_id, course_id) REFERENCES courses(tenant_id, course_id),
+    FOREIGN KEY (tenant_id, collaborator_id) REFERENCES collaborators(tenant_id, collaborator_id),
+    FOREIGN KEY (tenant_id, schedule_id) REFERENCES schedules(tenant_id, schedule_id),
+    INDEX idx_tenant_active_course_event (tenant_id, deleted_at),
+    INDEX idx_tenant_active_event_date (tenant_id, deleted_at, event_date)
 );
 
-CREATE TABLE membership_adult_student (
-    membership_adult_student_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE membership_adult_students (
+    tenant_id INT NOT NULL,
+    membership_adult_student_id INT AUTO_INCREMENT,
     membership_id INT NOT NULL,
     adult_student_id INT NOT NULL,
     start_date DATE NOT NULL,
     due_date DATE NOT NULL,
     course_id INT,
-    FOREIGN KEY (membership_id) REFERENCES membership(membership_id),
-    FOREIGN KEY (course_id) REFERENCES course(course_id),
-    FOREIGN KEY (adult_student_id) REFERENCES adult_student(adult_student_id)
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, membership_adult_student_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    FOREIGN KEY (tenant_id, membership_id) REFERENCES memberships(tenant_id, membership_id),
+    FOREIGN KEY (tenant_id, course_id) REFERENCES courses(tenant_id, course_id),
+    FOREIGN KEY (tenant_id, adult_student_id) REFERENCES adult_students(tenant_id, adult_student_id),
+    INDEX idx_tenant_active_membership_adult_student (tenant_id, deleted_at),
+    INDEX idx_tenant_active_membership_dates (tenant_id, deleted_at, due_date)
 );
 
-CREATE TABLE membership_tutor (
-    membership_tutor_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE membership_tutors (
+    tenant_id INT NOT NULL,
+    membership_tutor_id INT AUTO_INCREMENT,
     membership_id INT NOT NULL,
     tutor_id INT NOT NULL,
     start_date DATE NOT NULL,
     due_date DATE NOT NULL,
     course_id INT,
-    FOREIGN KEY (membership_id) REFERENCES membership(membership_id),
-    FOREIGN KEY (course_id) REFERENCES course(course_id),
-    FOREIGN KEY (tutor_id) REFERENCES tutor(tutor_id)
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, membership_tutor_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    FOREIGN KEY (tenant_id, membership_id) REFERENCES memberships(tenant_id, membership_id),
+    FOREIGN KEY (tenant_id, course_id) REFERENCES courses(tenant_id, course_id),
+    FOREIGN KEY (tenant_id, tutor_id) REFERENCES tutors(tenant_id, tutor_id),
+    INDEX idx_tenant_active_membership_tutor (tenant_id, deleted_at),
+    INDEX idx_tenant_active_tutor_membership_dates (tenant_id, deleted_at, due_date)
 );
 
-CREATE TABLE payment_adult_student (
-    payment_adult_student_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE payment_adult_students (
+    tenant_id INT NOT NULL,
+    payment_adult_student_id INT AUTO_INCREMENT,
     payment_date DATE NOT NULL,
     amount DOUBLE PRECISION NOT NULL,
     payment_method VARCHAR(50) NOT NULL,
     membership_adult_student_id INT NOT NULL,
-    FOREIGN KEY (membership_adult_student_id) REFERENCES membership_adult_student(membership_adult_student_id)
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, payment_adult_student_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    FOREIGN KEY (tenant_id, membership_adult_student_id) REFERENCES membership_adult_students(tenant_id, membership_adult_student_id),
+    INDEX idx_tenant_active_payment_adult_student (tenant_id, deleted_at),
+    INDEX idx_tenant_active_payment_date (tenant_id, deleted_at, payment_date)
 );
 
-CREATE TABLE payment_tutor (
-    payment_tutor_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE payment_tutors (
+    tenant_id INT NOT NULL,
+    payment_tutor_id INT AUTO_INCREMENT,
     payment_date DATE NOT NULL,
     amount DOUBLE PRECISION NOT NULL,
     payment_method VARCHAR(50) NOT NULL,
     membership_tutor_id INT NOT NULL,
-    FOREIGN KEY (membership_tutor_id) REFERENCES membership_tutor(membership_tutor_id)
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, payment_tutor_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    FOREIGN KEY (tenant_id, membership_tutor_id) REFERENCES membership_tutors(tenant_id, membership_tutor_id),
+    INDEX idx_tenant_active_payment_tutor (tenant_id, deleted_at),
+    INDEX idx_tenant_active_tutor_payment_date (tenant_id, deleted_at, payment_date)
 );
 
 CREATE TABLE course_event_adult_student_attendees (
+    tenant_id INT NOT NULL,
     course_event_id INT NOT NULL,
     adult_student_id INT NOT NULL,
-    PRIMARY KEY (course_event_id, adult_student_id),
-    FOREIGN KEY (course_event_id) REFERENCES course_event(course_event_id),
-    FOREIGN KEY (adult_student_id) REFERENCES adult_student(adult_student_id)
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, course_event_id, adult_student_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    FOREIGN KEY (tenant_id, course_event_id) REFERENCES course_events(tenant_id, course_event_id),
+    FOREIGN KEY (tenant_id, adult_student_id) REFERENCES adult_students(tenant_id, adult_student_id),
+    INDEX idx_tenant_active_course_event_adult_attendees (tenant_id, deleted_at)
 );
 
 CREATE TABLE course_event_minor_student_attendees (
+    tenant_id INT NOT NULL,
     course_event_id INT NOT NULL,
     minor_student_id INT NOT NULL,
-    PRIMARY KEY (course_event_id, minor_student_id),
-    FOREIGN KEY (course_event_id) REFERENCES course_event(course_event_id),
-    FOREIGN KEY (minor_student_id) REFERENCES minor_student(minor_student_id)
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, course_event_id, minor_student_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    FOREIGN KEY (tenant_id, course_event_id) REFERENCES course_events(tenant_id, course_event_id),
+    FOREIGN KEY (tenant_id, minor_student_id) REFERENCES minor_students(tenant_id, minor_student_id),
+    INDEX idx_tenant_active_course_event_minor_attendees (tenant_id, deleted_at)
 );
 
-CREATE TABLE membership_course (
+CREATE TABLE membership_courses (
+    tenant_id INT NOT NULL,
     membership_id INT NOT NULL,
     course_id INT NOT NULL,
-    FOREIGN KEY (membership_id) REFERENCES membership(membership_id),
-    FOREIGN KEY (course_id) REFERENCES course(course_id),
-    PRIMARY KEY (membership_id, course_id)
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, membership_id, course_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenant_organizations(tenant_id),
+    FOREIGN KEY (tenant_id, membership_id) REFERENCES memberships(tenant_id, membership_id),
+    FOREIGN KEY (tenant_id, course_id) REFERENCES courses(tenant_id, course_id),
+    INDEX idx_tenant_active_membership_course (tenant_id, deleted_at)
 );

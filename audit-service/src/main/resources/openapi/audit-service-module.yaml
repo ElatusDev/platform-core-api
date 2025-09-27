@@ -1,0 +1,533 @@
+openapi: 3.0.3
+info:
+  title: Audit Service API
+  description: Service for managing audit trails, change tracking, and compliance logging across the multi-tenant platform
+  version: 1.0.0
+  contact:
+    name: Platform Team
+    email: platform@company.com
+
+servers:
+  - url: http://localhost:8080/api/v1/audit
+    description: Local development server
+  - url: https://api.platform.com/v1/audit
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+paths:
+  /events:
+    post:
+      summary: Create audit event
+      description: Record a new audit event for tracking changes and user actions
+      operationId: createAuditEvent
+      tags:
+        - Audit Events
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAuditEventRequest'
+      responses:
+        '201':
+          description: Audit event created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEventResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    get:
+      summary: Query audit events
+      description: Retrieve audit events with filtering and pagination
+      operationId: queryAuditEvents
+      tags:
+        - Audit Events
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/TableName'
+        - $ref: '#/components/parameters/RecordId'
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/ActionType'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Audit events retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEventPageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /events/{auditId}:
+    get:
+      summary: Get audit event by ID
+      description: Retrieve a specific audit event by its ID
+      operationId: getAuditEventById
+      tags:
+        - Audit Events
+      parameters:
+        - name: auditId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier of the audit event
+      responses:
+        '200':
+          description: Audit event retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEventResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /events/bulk:
+    post:
+      summary: Create multiple audit events
+      description: Record multiple audit events in a single request for batch operations
+      operationId: createBulkAuditEvents
+      tags:
+        - Audit Events
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkAuditEventRequest'
+      responses:
+        '201':
+          description: Bulk audit events created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkAuditEventResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /reports/activity:
+    get:
+      summary: Generate activity report
+      description: Generate summary reports of audit activity for compliance and monitoring
+      operationId: generateActivityReport
+      tags:
+        - Reports
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - name: groupBy
+          in: query
+          schema:
+            type: string
+            enum: [user, table, action, day, week, month]
+          description: Group results by specified field
+      responses:
+        '200':
+          description: Activity report generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityReportResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /compliance/export:
+    get:
+      summary: Export compliance data
+      description: Export audit data in various formats for compliance requirements
+      operationId: exportComplianceData
+      tags:
+        - Compliance
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [json, csv, pdf]
+            default: json
+          description: Export format
+      responses:
+        '200':
+          description: Compliance data exported successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplianceExportResponse'
+            text/csv:
+              schema:
+                type: string
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TenantId:
+      name: tenantId
+      in: query
+      schema:
+        type: string
+      description: Filter by tenant ID
+    TableName:
+      name: tableName
+      in: query
+      schema:
+        type: string
+      description: Filter by table name
+    RecordId:
+      name: recordId
+      in: query
+      schema:
+        type: string
+      description: Filter by record ID
+    UserId:
+      name: userId
+      in: query
+      schema:
+        type: string
+      description: Filter by user ID who performed the action
+    ActionType:
+      name: actionType
+      in: query
+      schema:
+        type: string
+        enum: [CREATE, UPDATE, DELETE, RESTORE, LOGIN, LOGOUT, ACCESS]
+      description: Filter by action type
+    DateFrom:
+      name: dateFrom
+      in: query
+      schema:
+        type: string
+        format: date-time
+      description: Filter events from this date (ISO 8601)
+    DateTo:
+      name: dateTo
+      in: query
+      schema:
+        type: string
+        format: date-time
+      description: Filter events until this date (ISO 8601)
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      description: Page number (0-based)
+    Size:
+      name: size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: Page size
+
+  schemas:
+    CreateAuditEventRequest:
+      type: object
+      required:
+        - tenantId
+        - tableName
+        - recordId
+        - actionType
+        - userId
+      properties:
+        tenantId:
+          type: string
+          description: Tenant identifier
+        tableName:
+          type: string
+          description: Name of the table affected
+        recordId:
+          type: string
+          description: ID of the record affected
+        actionType:
+          $ref: '#/components/schemas/ActionType'
+        userId:
+          type: string
+          description: ID of the user who performed the action
+        oldValues:
+          type: object
+          description: Previous values before the change (JSON)
+        newValues:
+          type: object
+          description: New values after the change (JSON)
+        ipAddress:
+          type: string
+          description: IP address of the user
+        userAgent:
+          type: string
+          description: User agent string
+        sessionId:
+          type: string
+          description: Session identifier
+        metadata:
+          type: object
+          description: Additional metadata (JSON)
+
+    AuditEventResponse:
+      type: object
+      properties:
+        auditId:
+          type: string
+          description: Unique audit event identifier
+        tenantId:
+          type: string
+          description: Tenant identifier
+        tableName:
+          type: string
+          description: Name of the table affected
+        recordId:
+          type: string
+          description: ID of the record affected
+        actionType:
+          $ref: '#/components/schemas/ActionType'
+        userId:
+          type: string
+          description: ID of the user who performed the action
+        oldValues:
+          type: object
+          description: Previous values before the change
+        newValues:
+          type: object
+          description: New values after the change
+        ipAddress:
+          type: string
+          description: IP address of the user
+        userAgent:
+          type: string
+          description: User agent string
+        sessionId:
+          type: string
+          description: Session identifier
+        metadata:
+          type: object
+          description: Additional metadata
+        timestamp:
+          type: string
+          format: date-time
+          description: When the event occurred
+        createdAt:
+          type: string
+          format: date-time
+          description: When the audit record was created
+
+    ActionType:
+      type: string
+      enum:
+        - CREATE
+        - UPDATE
+        - DELETE
+        - RESTORE
+        - LOGIN
+        - LOGOUT
+        - ACCESS
+        - EXPORT
+        - IMPORT
+        - BULK_UPDATE
+        - BULK_DELETE
+      description: Type of action performed
+
+    BulkAuditEventRequest:
+      type: object
+      required:
+        - events
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateAuditEventRequest'
+          minItems: 1
+          maxItems: 100
+
+    BulkAuditEventResponse:
+      type: object
+      properties:
+        created:
+          type: integer
+          description: Number of audit events created
+        failed:
+          type: integer
+          description: Number of audit events that failed to create
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+
+    AuditEventPageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEventResponse'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+
+    PageInfo:
+      type: object
+      properties:
+        number:
+          type: integer
+          description: Current page number (0-based)
+        size:
+          type: integer
+          description: Page size
+        totalElements:
+          type: integer
+          format: int64
+          description: Total number of elements
+        totalPages:
+          type: integer
+          description: Total number of pages
+        first:
+          type: boolean
+          description: Whether this is the first page
+        last:
+          type: boolean
+          description: Whether this is the last page
+
+    ActivityReportResponse:
+      type: object
+      properties:
+        period:
+          type: object
+          properties:
+            from:
+              type: string
+              format: date-time
+            to:
+              type: string
+              format: date-time
+        tenantId:
+          type: string
+        summary:
+          type: object
+          properties:
+            totalEvents:
+              type: integer
+              format: int64
+            uniqueUsers:
+              type: integer
+            tablesAffected:
+              type: integer
+            actionBreakdown:
+              type: object
+              additionalProperties:
+                type: integer
+        data:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
+    ComplianceExportResponse:
+      type: object
+      properties:
+        exportId:
+          type: string
+          description: Unique export identifier
+        format:
+          type: string
+          description: Export format
+        recordCount:
+          type: integer
+          description: Number of records exported
+        generatedAt:
+          type: string
+          format: date-time
+        downloadUrl:
+          type: string
+          description: URL to download the export file
+        expiresAt:
+          type: string
+          format: date-time
+          description: When the download link expires
+
+    ValidationError:
+      type: object
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+        code:
+          type: string
+
+    ErrorResponse:
+      type: object
+
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.makani</groupId>
-        <artifactId>makani-helpdesk-api</artifactId>
+        <groupId>com.akademiaplus</groupId>
+        <artifactId>platform-core-api</artifactId>
         <version>1.0</version>
     </parent>
 
@@ -13,12 +13,12 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.makani</groupId>
-            <artifactId>datamodel</artifactId>
+            <groupId>com.akademiaplus</groupId>
+            <artifactId>multi-tenant-data</artifactId>
             <version>1.0</version>
         </dependency>
         <dependency>
-            <groupId>com.makani</groupId>
+            <groupId>com.akademiaplus</groupId>
             <artifactId>utilities</artifactId>
             <version>1.0</version>
         </dependency>
@@ -30,6 +30,16 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
+
+        <!-- OAuth2 Client (if you need to integrate with external providers) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-client</artifactId>
         </dependency>
 
         <dependency>

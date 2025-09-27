@@ -1,0 +1,1166 @@
+openapi: 3.0.3
+info:
+  title: Tenant Management Service API
+  description: Service for managing tenant organizations, subscriptions, billing, and multi-tenant platform administration
+  version: 1.0.0
+  contact:
+    name: Platform Team
+    email: platform@company.com
+
+servers:
+  - url: http://localhost:8080/api/v1/tenant-management
+    description: Local development server
+  - url: https://api.platform.com/v1/tenant-management
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+paths:
+  /tenants:
+    post:
+      summary: Create tenant organization
+      description: Create a new tenant organization with initial configuration
+      operationId: createTenant
+      tags:
+        - Tenant Organizations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTenantRequest'
+      responses:
+        '201':
+          description: Tenant created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Tenant already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      summary: List tenant organizations
+      description: Retrieve list of tenant organizations with filtering and pagination
+      operationId: listTenants
+      tags:
+        - Tenant Organizations
+      parameters:
+        - name: organizationName
+          in: query
+          schema:
+            type: string
+          description: Filter by organization name (partial match)
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, suspended, trial, cancelled]
+          description: Filter by tenant status
+        - name: subscriptionType
+          in: query
+          schema:
+            type: string
+          description: Filter by subscription type
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Tenants retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantPageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /tenants/{tenantId}:
+    get:
+      summary: Get tenant details
+      description: Retrieve detailed information about a specific tenant
+      operationId: getTenant
+      tags:
+        - Tenant Organizations
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier of the tenant
+      responses:
+        '200':
+          description: Tenant details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    put:
+      summary: Update tenant organization
+      description: Update tenant organization information
+      operationId: updateTenant
+      tags:
+        - Tenant Organizations
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier of the tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTenantRequest'
+      responses:
+        '200':
+          description: Tenant updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    delete:
+      summary: Delete tenant organization
+      description: Soft delete a tenant organization and all associated data
+      operationId: deleteTenant
+      tags:
+        - Tenant Organizations
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier of the tenant
+      responses:
+        '204':
+          description: Tenant deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /tenants/{tenantId}/suspend:
+    post:
+      summary: Suspend tenant
+      description: Suspend a tenant organization and restrict access
+      operationId: suspendTenant
+      tags:
+        - Tenant Organizations
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier of the tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SuspendTenantRequest'
+      responses:
+        '200':
+          description: Tenant suspended successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /tenants/{tenantId}/reactivate:
+    post:
+      summary: Reactivate tenant
+      description: Reactivate a suspended tenant organization
+      operationId: reactivateTenant
+      tags:
+        - Tenant Organizations
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier of the tenant
+      responses:
+        '200':
+          description: Tenant reactivated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /tenants/{tenantId}/subscriptions:
+    post:
+      summary: Create subscription
+      description: Create a new subscription for a tenant
+      operationId: createSubscription
+      tags:
+        - Subscriptions
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier of the tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSubscriptionRequest'
+      responses:
+        '201':
+          description: Subscription created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    get:
+      summary: List tenant subscriptions
+      description: Retrieve subscription history for a tenant
+      operationId: listTenantSubscriptions
+      tags:
+        - Subscriptions
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier of the tenant
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Subscriptions retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionPageResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /tenants/{tenantId}/subscriptions/{subscriptionId}:
+    get:
+      summary: Get subscription details
+      description: Retrieve detailed information about a specific subscription
+      operationId: getSubscription
+      tags:
+        - Subscriptions
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: subscriptionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Subscription details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Update subscription
+      description: Update subscription details (upgrade/downgrade)
+      operationId: updateSubscription
+      tags:
+        - Subscriptions
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: subscriptionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSubscriptionRequest'
+      responses:
+        '200':
+          description: Subscription updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /tenants/{tenantId}/billing-cycles:
+    get:
+      summary: List billing cycles
+      description: Retrieve billing cycle history for a tenant
+      operationId: listBillingCycles
+      tags:
+        - Billing
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, billed, paid, failed, cancelled]
+          description: Filter by billing status
+        - name: year
+          in: query
+          schema:
+            type: integer
+          description: Filter by year
+        - name: month
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+          description: Filter by month
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Billing cycles retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingCyclePageResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      summary: Create billing cycle
+      description: Manually create a billing cycle for a tenant
+      operationId: createBillingCycle
+      tags:
+        - Billing
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBillingCycleRequest'
+      responses:
+        '201':
+          description: Billing cycle created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingCycleResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /tenants/{tenantId}/billing-cycles/{cycleId}/process:
+    post:
+      summary: Process billing cycle
+      description: Process billing for a specific cycle (calculate charges, generate invoice)
+      operationId: processBillingCycle
+      tags:
+        - Billing
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cycleId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Billing cycle processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingCycleResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /tenants/{tenantId}/usage:
+    get:
+      summary: Get tenant usage statistics
+      description: Retrieve current usage statistics for a tenant
+      operationId: getTenantUsage
+      tags:
+        - Usage & Metrics
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [current, daily, weekly, monthly]
+            default: current
+          description: Usage period to retrieve
+      responses:
+        '200':
+          description: Usage statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantUsageResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /tenants/{tenantId}/sequences:
+    get:
+      summary: List tenant sequences
+      description: Retrieve sequence counters for a tenant
+      operationId: listTenantSequences
+      tags:
+        - Sequences
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: tableName
+          in: query
+          schema:
+            type: string
+          description: Filter by specific table name
+      responses:
+        '200':
+          description: Sequences retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SequenceListResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      summary: Initialize sequence
+      description: Initialize or reset a sequence for a tenant table
+      operationId: initializeSequence
+      tags:
+        - Sequences
+      parameters:
+        - name: tenantId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InitializeSequenceRequest'
+      responses:
+        '201':
+          description: Sequence initialized successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SequenceResponse'
+
+  /platform/statistics:
+    get:
+      summary: Get platform statistics
+      description: Retrieve overall platform statistics and metrics
+      operationId: getPlatformStatistics
+      tags:
+        - Platform Admin
+      responses:
+        '200':
+          description: Platform statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformStatisticsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /platform/health:
+    get:
+      summary: Platform health check
+      description: Check the health status of the tenant management system
+      operationId: getPlatformHealth
+      tags:
+        - Platform Admin
+      responses:
+        '200':
+          description: Platform is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+        '503':
+          description: Platform is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      description: Page number (0-based)
+    Size:
+      name: size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: Page size
+
+  schemas:
+    CreateTenantRequest:
+      type: object
+      required:
+        - organizationName
+        - email
+        - address
+      properties:
+        organizationName:
+          type: string
+          maxLength: 200
+          description: Name of the organization
+        legalName:
+          type: string
+          maxLength: 200
+          description: Legal name if different from organization name
+        websiteUrl:
+          type: string
+          format: uri
+          description: Organization website URL
+        email:
+          type: string
+          format: email
+          maxLength: 200
+          description: Primary organization email
+        address:
+          type: string
+          maxLength: 200
+          description: Organization address
+        phone:
+          type: string
+          maxLength: 20
+          description: Primary phone number
+        landline:
+          type: string
+          maxLength: 20
+          description: Landline phone number
+        description:
+          type: string
+          description: Organization description
+        taxId:
+          type: string
+          maxLength: 50
+          description: Tax identification number
+        initialSubscription:
+          $ref: '#/components/schemas/InitialSubscriptionRequest'
+
+    UpdateTenantRequest:
+      type: object
+      properties:
+        organizationName:
+          type: string
+          maxLength: 200
+        legalName:
+          type: string
+          maxLength: 200
+        websiteUrl:
+          type: string
+          format: uri
+        email:
+          type: string
+          format: email
+          maxLength: 200
+        address:
+          type: string
+          maxLength: 200
+        phone:
+          type: string
+          maxLength: 20
+        landline:
+          type: string
+          maxLength: 20
+        description:
+          type: string
+        taxId:
+          type: string
+          maxLength: 50
+
+    TenantResponse:
+      type: object
+      properties:
+        tenantId:
+          type: string
+          description: Unique tenant identifier
+        organizationName:
+          type: string
+        legalName:
+          type: string
+        websiteUrl:
+          type: string
+        email:
+          type: string
+        address:
+          type: string
+        phone:
+          type: string
+        landline:
+          type: string
+        description:
+          type: string
+        taxId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          format: date-time
+        currentSubscription:
+          $ref: '#/components/schemas/SubscriptionSummary'
+
+    TenantDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/TenantResponse'
+        - type: object
+          properties:
+            usage:
+              $ref: '#/components/schemas/TenantUsageSummary'
+            sequences:
+              type: array
+              items:
+                $ref: '#/components/schemas/SequenceResponse'
+            recentBillingCycles:
+              type: array
+              items:
+                $ref: '#/components/schemas/BillingCycleResponse'
+
+    SuspendTenantRequest:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          description: Reason for suspension
+        notes:
+          type: string
+          description: Additional notes
+
+    CreateSubscriptionRequest:
+      type: object
+      required:
+        - type
+        - ratePerStudent
+        - billingDate
+      properties:
+        type:
+          type: string
+          maxLength: 30
+          description: Subscription type/plan
+        maxUsers:
+          type: integer
+          description: Maximum number of users (null for unlimited)
+        ratePerStudent:
+          type: number
+          format: decimal
+          description: Rate charged per student
+        billingDate:
+          type: string
+          format: date
+          description: Next billing date
+
+    UpdateSubscriptionRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          maxLength: 30
+        maxUsers:
+          type: integer
+        ratePerStudent:
+          type: number
+          format: decimal
+        billingDate:
+          type: string
+          format: date
+
+    SubscriptionResponse:
+      type: object
+      properties:
+        subscriptionId:
+          type: string
+        tenantId:
+          type: string
+        type:
+          type: string
+        maxUsers:
+          type: integer
+        ratePerStudent:
+          type: number
+          format: decimal
+        billingDate:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          format: date-time
+
+    SubscriptionDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/SubscriptionResponse'
+        - type: object
+          properties:
+            usage:
+              $ref: '#/components/schemas/SubscriptionUsage'
+            billingHistory:
+              type: array
+              items:
+                $ref: '#/components/schemas/BillingCycleResponse'
+
+    SubscriptionSummary:
+      type: object
+      properties:
+        subscriptionId:
+          type: string
+        type:
+          type: string
+        maxUsers:
+          type: integer
+        ratePerStudent:
+          type: number
+          format: decimal
+        billingDate:
+          type: string
+          format: date
+
+    SubscriptionUsage:
+      type: object
+      properties:
+        currentUsers:
+          type: integer
+        maxUsers:
+          type: integer
+        utilizationPercentage:
+          type: number
+          format: float
+        lastBilledAmount:
+          type: number
+          format: decimal
+
+    InitialSubscriptionRequest:
+      type: object
+      required:
+        - type
+        - ratePerStudent
+      properties:
+        type:
+          type: string
+          maxLength: 30
+        maxUsers:
+          type: integer
+        ratePerStudent:
+          type: number
+          format: decimal
+
+    CreateBillingCycleRequest:
+      type: object
+      required:
+        - billingMonth
+        - calculationDate
+        - userCount
+      properties:
+        billingMonth:
+          type: string
+          pattern: '^\d{4}-\d{2}$'
+          description: Billing month in YYYY-MM format
+        calculationDate:
+          type: string
+          format: date
+          description: Date when user count was calculated
+        userCount:
+          type: integer
+          minimum: 0
+          description: Number of active users
+        notes:
+          type: string
+          description: Additional notes for this billing cycle
+
+    BillingCycleResponse:
+      type: object
+      properties:
+        billingCycleId:
+          type: string
+        tenantId:
+          type: string
+        billingMonth:
+          type: string
+        calculationDate:
+          type: string
+          format: date
+        userCount:
+          type: integer
+        totalAmount:
+          type: number
+          format: decimal
+        billingStatus:
+          type: string
+          enum: [pending, billed, paid, failed, cancelled]
+        billedAt:
+          type: string
+          format: date-time
+        paidAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          format: date-time
+
+    TenantUsageResponse:
+      type: object
+      properties:
+        tenantId:
+          type: string
+        period:
+          type: string
+        metrics:
+          $ref: '#/components/schemas/UsageMetrics'
+        limits:
+          $ref: '#/components/schemas/UsageLimits'
+        calculatedAt:
+          type: string
+          format: date-time
+
+    TenantUsageSummary:
+      type: object
+      properties:
+        currentUsers:
+          type: integer
+        maxUsers:
+          type: integer
+        currentCourses:
+          type: integer
+        utilizationPercentage:
+          type: number
+          format: float
+
+    UsageMetrics:
+      type: object
+      properties:
+        activeUsers:
+          type: integer
+        totalCourses:
+          type: integer
+        totalStudents:
+          type: integer
+        totalTransactions:
+          type: integer
+        storageUsedMB:
+          type: number
+          format: decimal
+
+    UsageLimits:
+      type: object
+      properties:
+        maxUsers:
+          type: integer
+        maxCourses:
+          type: integer
+        maxStorageMB:
+          type: integer
+
+    InitializeSequenceRequest:
+      type: object
+      required:
+        - tableName
+        - initialValue
+      properties:
+        tableName:
+          type: string
+          maxLength: 64
+          description: Name of the table
+        initialValue:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Starting value for the sequence
+
+    SequenceResponse:
+      type: object
+      properties:
+        tenantId:
+          type: string
+        tableName:
+          type: string
+        currentValue:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    SequenceListResponse:
+      type: object
+      properties:
+        sequences:
+          type: array
+          items:
+            $ref: '#/components/schemas/SequenceResponse'
+
+    PlatformStatisticsResponse:
+      type: object
+      properties:
+        totalTenants:
+          type: integer
+        activeTenants:
+          type: integer
+        totalUsers:
+          type: integer
+        totalSubscriptions:
+          type: integer
+        monthlyRevenue:
+          type: number
+          format: decimal
+        averageUsersPerTenant:
+          type: number
+          format: float
+        topSubscriptionTypes:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              count:
+                type: integer
+        recentActivity:
+          $ref: '#/components/schemas/RecentActivity'
+
+    RecentActivity:
+      type: object
+      properties:
+        newTenantsThisMonth:
+          type: integer
+        cancelledTenantsThisMonth:
+          type: integer
+        upgradesThisMonth:
+          type: integer
+        downgrades ThisMonth:
+          type: integer
+
+    HealthCheckResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        timestamp:
+          type: string
+          format: date-time
+        services:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              status:
+                type: string
+                enum: [up, down, degraded]
+              responseTime:
+                type: integer
+                description: Response time in milliseconds
+              message:
+                type: string
+
+    TenantPageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/TenantResponse'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+
+    SubscriptionPageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubscriptionResponse'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+
+    BillingCyclePageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/BillingCycleResponse'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+
+    PageInfo:
+      type: object
+      properties:
+        number:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+        first:
+          type: boolean
+        last:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        path:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

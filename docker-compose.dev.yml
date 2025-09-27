@@ -1,10 +1,10 @@
 services:
-  makani-helpdesk-api:
+  platform-core-api:
     image: elatusdevops/makani-helpdesk-api:dev
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: makani-helpdesk-api
+    container_name: platform-core-api
     ports:
       - "8080:8080"
     environment:
@@ -29,9 +29,9 @@ services:
       -Djavax.net.ssl.trustStorePassword=$KEYSTORE_PASS \
       -jar /app.jar
       "
-  makani-mariadb:
+  multi_tenant_db:
     image: mariadb:latest
-    container_name: makani-mariadb
+    container_name: multi_tenant_db
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
@@ -50,18 +50,18 @@ services:
       --slow-query-log-file=/var/lib/mysql/mariadb-slow.log
       --long-query-time=2
 
-  redis:
+  platform-core-redis:
     image: redis:6-alpine
-    container_name: makani-redis
+    container_name: platform-core-redis
     restart: always
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
 
-  makani-ca:
+  ca-service:
     image: alpine:3.18
-    container_name: makani-ca
+    container_name: ca-service
     ports:
       - "8081:8081"
     build:
