@@ -14,7 +14,6 @@ import java.util.function.Function;
 public abstract class AbstractLoadMockData<D, M, I> {
     private final DataLoader<D, M, I> dataLoader;
     private final DataCleanUp<M, I> dataCleanUp;
-
     protected AbstractLoadMockData(String location,
                                    Function<D,M> transformer,
                                    Class<D> dtoClass,
@@ -32,8 +31,8 @@ public abstract class AbstractLoadMockData<D, M, I> {
         this.dataCleanUp.setRepository(repository);
     }
 
-    public void load() {
-        dataLoader.load();
+    public void load(int count) {
+        dataLoader.load(count);
     }
 
     public void clean() {

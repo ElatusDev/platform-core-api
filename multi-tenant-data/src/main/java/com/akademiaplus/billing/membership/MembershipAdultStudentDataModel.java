@@ -16,28 +16,75 @@ import lombok.Setter;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.io.Serial;
-import java.io.Serializable;
-
-
-@NoArgsConstructor
-@AllArgsConstructor
+/**
+ * Entity representing the association between a membership and an adult student
+ * in the multi-tenant platform. This junction table maintains the many-to-many
+ * relationship while ensuring proper tenant isolation and inheriting common
+ * membership association properties like dates and course references.
+ * <p>
+ * Each association is uniquely identified by the combination of adult student ID
+ * and tenant ID, with membership information inherited from the base class.
+ */
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Scope("prototype")
 @Component
 @Entity
 @Table(name = "membership_adult_student")
-public class MembershipAdultStudentDataModel extends MembershipAssociationBase implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 1L;
+@IdClass(MembershipAdultStudentDataModel.MembershipAdultStudentCompositeId.class)
+public class MembershipAdultStudentDataModel extends MembershipAssociationBase {
 
+    /**
+     * Unique identifier for the membership-adult student association within the tenant.
+     * Auto-incremented per tenant for better performance and serves as part of the composite key.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "membership_adult_student_id")
     private Integer membershipAdultStudentId;
 
-    @ManyToOne
-    @JoinColumn(name = "adult_student_id")
+    /**
+     * Reference to the adult student associated with this membership.
+     * Part of the composite primary key and uses tenant-aware join.
+     */
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id")
+    @JoinColumn(name = "adult_student_id", referencedColumnName = "adult_student_id")
     private AdultStudentDataModel adultStudent;
+
+    /**
+     * Composite primary key class for MembershipAdultStudent entity.
+     * Combines tenant ID and membership-adult student ID for uniqueness.
+     */
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class MembershipAdultStudentCompositeId {
+
+        private Integer tenantId;
+        private Integer membershipAdultStudentId;
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof MembershipAdultStudentCompositeId that)) return false;
+            return tenantId.equals(that.tenantId) &&
+                    membershipAdultStudentId.equals(that.membershipAdultStudentId);
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(tenantId, membershipAdultStudentId);
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getSimpleName() +
+                    "{tenantId=" + tenantId +
+                    ", membershipAdultStudentId=" + membershipAdultStudentId + "}";
+        }
+    }
 }

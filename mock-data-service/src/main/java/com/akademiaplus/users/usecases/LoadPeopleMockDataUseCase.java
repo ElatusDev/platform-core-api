@@ -45,9 +45,9 @@ public class LoadPeopleMockDataUseCase {
 
     public void load() {
         cleanUp();
-        loadEmployeeMockDataUseCase.load();
-        loadCollaboratorMockDataUseCase.load();
-        loadAdultStudentMockDataUseCase.load();
+        loadEmployeeMockDataUseCase.load(50);
+        loadCollaboratorMockDataUseCase.load(50);
+        loadAdultStudentMockDataUseCase.load(500);
     }
 
     private void cleanUp() {

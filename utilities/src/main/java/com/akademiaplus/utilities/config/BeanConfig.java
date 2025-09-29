@@ -26,12 +26,12 @@ public class BeanConfig {
         messageSource.setBasenames(
                 "classpath:messages/user_management_messages",
                 "classpath:messages/security_messages",
-                "classpath:messages/coordination_messages",
+                "classpath:messages/course_management_messages",
                 "classpath:messages/utilities_messages"
         );
         messageSource.setDefaultEncoding("UTF-8");
         messageSource.setCacheSeconds(-1);
-        messageSource.setDefaultLocale(Locale.forLanguageTag(LOCALE_LANGUAGE));
+        messageSource.setDefaultLocale();
         return messageSource;
     }
 

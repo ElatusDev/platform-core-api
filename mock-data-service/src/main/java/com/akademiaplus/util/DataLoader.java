@@ -30,21 +30,16 @@ public class DataLoader<D, M, I> {
     private Function<D, M> transformer;
     @Setter
     private Class<D> dtoClass;
+    @Setter
+    private DataFactory<D> factory;
 
     @Transactional
-    public void load() {
+    public void load(int count) {
         try {
-
-            List<M> employeeDataModels = getDTOMockData().stream().map(transformer).toList();
+            List<M> employeeDataModels = factory.generate(count).stream().map(transformer).toList();
             repository.saveAll(employeeDataModels);
         } catch (Exception e) {
             throw new FailToGenerateMockDataException(e);
         }
-    }
-
-    private List<D> getDTOMockData() {
-        List<D> list = new ArrayList<>();
-
-        return list;
     }
 }

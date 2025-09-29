@@ -66,7 +66,7 @@ public class CourseValidator {
 
         List<String> occupiedScheduleIds = foundSchedules.stream()
                 .filter(this::isAssigned)
-                .map(model -> model.getCourse().getName())
+                .map(model -> model.getCourse().getCourseName())
                 .toList();
 
         if (!occupiedScheduleIds.isEmpty()) {

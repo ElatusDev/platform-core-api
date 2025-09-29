@@ -1,0 +1,523 @@
+openapi: 3.0.3
+info:
+  title: Push Notification API
+  description: |
+    Multi-tenant push notification delivery system for iOS and Android devices.
+    Supports both persistent notification tracking and immediate delivery capabilities.
+  version: 1.0.0
+  contact:
+    name: ElatusDev
+    email: dev@elatusdev.com
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.akademiaplus.com/v1/push
+    description: Production server
+  - url: https://staging-api.akademiaplus.com/v1/push
+    description: Staging server
+
+security:
+  - BearerAuth: []
+  - TenantAuth: []
+
+paths:
+  /notifications/{notificationId}/deliveries:
+    post:
+      summary: Create push notification delivery
+      description: Creates push notification deliveries for an existing notification
+      operationId: createPushDelivery
+      tags:
+        - Push Delivery
+      parameters:
+        - $ref: '#/components/parameters/NotificationId'
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePushDeliveryRequest'
+      responses:
+        '201':
+          description: Push delivery created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushDeliveryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    get:
+      summary: List push notification deliveries
+      description: Retrieves all push delivery attempts for a specific notification
+      operationId: getPushDeliveries
+      tags:
+        - Push Delivery
+      parameters:
+        - $ref: '#/components/parameters/NotificationId'
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: platform
+          in: query
+          schema:
+            $ref: '#/components/schemas/DevicePlatform'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/DeliveryStatus'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: Push deliveries retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushDeliveryListResponse'
+
+  /deliveries/{deliveryId}:
+    get:
+      summary: Get push delivery details
+      operationId: getPushDeliveryById
+      tags:
+        - Push Delivery
+      parameters:
+        - $ref: '#/components/parameters/DeliveryId'
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Push delivery details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushDeliveryDetailResponse'
+
+    patch:
+      summary: Update push delivery status
+      description: Updates push delivery status, typically from provider webhooks
+      operationId: updatePushDeliveryStatus
+      tags:
+        - Push Delivery
+      parameters:
+        - $ref: '#/components/parameters/DeliveryId'
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePushDeliveryStatusRequest'
+      responses:
+        '200':
+          description: Push delivery status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushDeliveryResponse'
+
+  /deliveries/{deliveryId}/retry:
+    post:
+      summary: Retry failed push delivery
+      operationId: retryPushDelivery
+      tags:
+        - Push Delivery
+      parameters:
+        - $ref: '#/components/parameters/DeliveryId'
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Push delivery retry initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushDeliveryResponse'
+
+  /send:
+    post:
+      summary: Send immediate push notification
+      description: Sends push notifications immediately without persisting content
+      operationId: sendImmediatePushNotification
+      tags:
+        - Immediate Push
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImmediatePushNotificationRequest'
+      responses:
+        '202':
+          description: Push notification sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImmediatePushDeliveryResponse'
+
+  /devices/{deviceToken}/test:
+    post:
+      summary: Send test push notification
+      description: Sends a test notification to verify device token validity
+      operationId: sendTestPushNotification
+      tags:
+        - Device Management
+      parameters:
+        - name: deviceToken
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TestPushNotificationRequest'
+      responses:
+        '200':
+          description: Test notification sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestPushNotificationResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    TenantAuth:
+      type: apiKey
+      in: header
+      name: X-Tenant-ID
+
+  parameters:
+    TenantHeader:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    NotificationId:
+      name: notificationId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    DeliveryId:
+      name: deliveryId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    SizeParam:
+      name: size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  schemas:
+    CreatePushDeliveryRequest:
+      type: object
+      required:
+        - deviceTokens
+      properties:
+        deviceTokens:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 1000
+        platform:
+          $ref: '#/components/schemas/DevicePlatform'
+        config:
+          $ref: '#/components/schemas/PushDeliveryConfig'
+
+    PushDeliveryConfig:
+      type: object
+      properties:
+        badgeCount:
+          type: integer
+          minimum: 0
+          maximum: 999
+        sound:
+          type: string
+          maxLength: 50
+          default: "default"
+        highPriority:
+          type: boolean
+          default: false
+        ttl:
+          type: integer
+          minimum: 60
+          maximum: 2419200
+          description: Time to live in seconds
+        customData:
+          type: object
+          additionalProperties: true
+          description: Custom payload data for the app
+        collapseKey:
+          type: string
+          maxLength: 50
+          description: Android collapse key for message grouping
+        channelId:
+          type: string
+          maxLength: 50
+          description: Android notification channel ID
+
+    ImmediatePushNotificationRequest:
+      type: object
+      required:
+        - title
+        - body
+        - deviceTokens
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        body:
+          type: string
+          maxLength: 500
+        deviceTokens:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 1000
+        platform:
+          $ref: '#/components/schemas/DevicePlatform'
+        config:
+          $ref: '#/components/schemas/PushDeliveryConfig'
+
+    TestPushNotificationRequest:
+      type: object
+      required:
+        - platform
+      properties:
+        platform:
+          $ref: '#/components/schemas/DevicePlatform'
+        title:
+          type: string
+          default: "Test Notification"
+        body:
+          type: string
+          default: "This is a test notification to verify device connectivity"
+
+    UpdatePushDeliveryStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/DeliveryStatus'
+        deliveredAt:
+          type: string
+          format: date-time
+        acknowledgedAt:
+          type: string
+          format: date-time
+        failureReason:
+          type: string
+          maxLength: 500
+        externalId:
+          type: string
+          maxLength: 255
+        providerResponse:
+          type: object
+          additionalProperties: true
+
+    PushDeliveryResponse:
+      type: object
+      properties:
+        deliveryId:
+          type: integer
+        notificationId:
+          type: integer
+        deviceToken:
+          type: string
+        platform:
+          $ref: '#/components/schemas/DevicePlatform'
+        status:
+          $ref: '#/components/schemas/DeliveryStatus'
+        sentAt:
+          type: string
+          format: date-time
+        deliveredAt:
+          type: string
+          format: date-time
+        acknowledgedAt:
+          type: string
+          format: date-time
+        retryCount:
+          type: integer
+        failureReason:
+          type: string
+        externalId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    PushDeliveryDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/PushDeliveryResponse'
+        - type: object
+          properties:
+            notification:
+              $ref: '#/components/schemas/NotificationSummary'
+            config:
+              $ref: '#/components/schemas/PushDeliveryConfig'
+
+    PushDeliveryListResponse:
+      type: object
+      properties:
+        deliveries:
+          type: array
+          items:
+            $ref: '#/components/schemas/PushDeliveryResponse'
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    ImmediatePushDeliveryResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Push notifications sent successfully"
+        deliveryResults:
+          type: array
+          items:
+            type: object
+            properties:
+              deviceToken:
+                type: string
+              status:
+                type: string
+                enum: [SUCCESS, FAILED]
+              externalId:
+                type: string
+              errorMessage:
+                type: string
+
+    TestPushNotificationResponse:
+      type: object
+      properties:
+        deviceToken:
+          type: string
+        platform:
+          $ref: '#/components/schemas/DevicePlatform'
+        status:
+          type: string
+          enum: [SUCCESS, FAILED, INVALID_TOKEN]
+        message:
+          type: string
+        sentAt:
+          type: string
+          format: date-time
+
+    NotificationSummary:
+      type: object
+      properties:
+        notificationId:
+          type: integer
+        title:
+          type: string
+        notificationType:
+          type: string
+        priority:
+          type: string
+
+    PaginationInfo:
+      type: object
+      properties:
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    DevicePlatform:
+      type: string
+      enum: [IOS, ANDROID, WEB]
+
+    DeliveryStatus:
+      type: string
+      enum: [PENDING, SENT, DELIVERED, ACKNOWLEDGED, FAILED, EXPIRED]
+
+    DeliveryChannel:
+      type: string
+      enum:
+        - EMAIL
+        - SMS
+        - PUSH
+        - IN_APP
+        - WEBHOOK
+      description: The channel through which the notification is delivered
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: Push Delivery
+    description: Operations for managing push notification deliveries
+  - name: Immediate Push
+    description: Operations for sending immediate push notifications
+  - name: Device Management
+    description: Operations for device token management and testing

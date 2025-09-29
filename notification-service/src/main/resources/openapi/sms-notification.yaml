@@ -1,0 +1,776 @@
+openapi: 3.0.3
+info:
+  title: SMS Notification API
+  description: |
+    Multi-tenant SMS notification delivery system supporting various message types,
+    international delivery, delivery receipts, and comprehensive tracking.
+  version: 1.0.0
+  contact:
+    name: ElatusDev
+    email: dev@elatusdev.com
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.akademiaplus.com/v1/sms
+    description: Production server
+  - url: https://staging-api.akademiaplus.com/v1/sms
+    description: Staging server
+
+security:
+  - BearerAuth: []
+  - TenantAuth: []
+
+paths:
+  /notifications/{notificationId}/deliveries:
+    post:
+      summary: Create SMS notification delivery
+      description: Creates SMS deliveries for an existing notification
+      operationId: createSmsDelivery
+      tags:
+        - SMS Delivery
+      parameters:
+        - $ref: '#/components/parameters/NotificationId'
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSmsDeliveryRequest'
+      responses:
+        '201':
+          description: SMS delivery created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsDeliveryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    get:
+      summary: List SMS notification deliveries
+      description: Retrieves all SMS delivery attempts for a specific notification
+      operationId: getSmsDeliveries
+      tags:
+        - SMS Delivery
+      parameters:
+        - $ref: '#/components/parameters/NotificationId'
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/DeliveryStatus'
+        - name: phoneNumber
+          in: query
+          schema:
+            type: string
+        - name: messageType
+          in: query
+          schema:
+            $ref: '#/components/schemas/SmsType'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: SMS deliveries retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsDeliveryListResponse'
+
+  /deliveries/{deliveryId}:
+    get:
+      summary: Get SMS delivery details
+      operationId: getSmsDeliveryById
+      tags:
+        - SMS Delivery
+      parameters:
+        - $ref: '#/components/parameters/DeliveryId'
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: SMS delivery details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsDeliveryDetailResponse'
+
+    patch:
+      summary: Update SMS delivery status
+      description: Updates SMS delivery status, typically from SMS provider webhooks
+      operationId: updateSmsDeliveryStatus
+      tags:
+        - SMS Delivery
+      parameters:
+        - $ref: '#/components/parameters/DeliveryId'
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSmsDeliveryStatusRequest'
+      responses:
+        '200':
+          description: SMS delivery status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsDeliveryResponse'
+
+  /deliveries/{deliveryId}/retry:
+    post:
+      summary: Retry failed SMS delivery
+      operationId: retrySmsDelivery
+      tags:
+        - SMS Delivery
+      parameters:
+        - $ref: '#/components/parameters/DeliveryId'
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: SMS delivery retry initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsDeliveryResponse'
+
+  /send:
+    post:
+      summary: Send immediate SMS notification
+      description: Sends SMS notifications immediately without persisting content
+      operationId: sendImmediateSmsNotification
+      tags:
+        - Immediate SMS
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImmediateSmsNotificationRequest'
+      responses:
+        '202':
+          description: SMS notification sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImmediateSmsDeliveryResponse'
+
+  /send/bulk:
+    post:
+      summary: Send bulk SMS notifications
+      description: Sends SMS notifications to multiple recipients efficiently
+      operationId: sendBulkSmsNotifications
+      tags:
+        - Bulk SMS
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkSmsNotificationRequest'
+      responses:
+        '202':
+          description: Bulk SMS notifications initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkSmsDeliveryResponse'
+
+  /send/otp:
+    post:
+      summary: Send OTP SMS
+      description: Sends one-time password via SMS with enhanced security
+      operationId: sendOtpSms
+      tags:
+        - OTP SMS
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpSmsRequest'
+      responses:
+        '202':
+          description: OTP SMS sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtpSmsResponse'
+
+  /validate/phone:
+    post:
+      summary: Validate phone number
+      description: Validates phone number format and deliverability
+      operationId: validatePhoneNumber
+      tags:
+        - Phone Validation
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhoneValidationRequest'
+      responses:
+        '200':
+          description: Phone number validation completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhoneValidationResponse'
+
+  /delivery-receipts:
+    get:
+      summary: Get delivery receipts
+      description: Retrieves delivery receipts for SMS messages
+      operationId: getSmsDeliveryReceipts
+      tags:
+        - Delivery Receipts
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: fromDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: toDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/DeliveryStatus'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: Delivery receipts retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeliveryReceiptListResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    TenantAuth:
+      type: apiKey
+      in: header
+      name: X-Tenant-ID
+
+  parameters:
+    TenantHeader:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    NotificationId:
+      name: notificationId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    DeliveryId:
+      name: deliveryId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    SizeParam:
+      name: size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  schemas:
+    CreateSmsDeliveryRequest:
+      type: object
+      required:
+        - phoneNumbers
+      properties:
+        phoneNumbers:
+          type: array
+          items:
+            type: string
+            pattern: '^\+[1-9]\d{1,14}$'
+            description: Phone number in E.164 format
+          minItems: 1
+          maxItems: 1000
+        config:
+          $ref: '#/components/schemas/SmsDeliveryConfig'
+
+    SmsDeliveryConfig:
+      type: object
+      properties:
+        senderId:
+          type: string
+          maxLength: 15
+          description: Sender ID or short code
+        messageType:
+          $ref: '#/components/schemas/SmsType'
+        encoding:
+          $ref: '#/components/schemas/SmsEncoding'
+        priority:
+          $ref: '#/components/schemas/SmsPriority'
+        validityPeriod:
+          type: integer
+          minimum: 5
+          maximum: 1440
+          description: Message validity in minutes
+        deliveryReceipt:
+          type: boolean
+          default: true
+          description: Request delivery receipt
+        flashMessage:
+          type: boolean
+          default: false
+          description: Send as flash/class 0 message
+        unicode:
+          type: boolean
+          default: false
+          description: Force Unicode encoding
+        route:
+          type: string
+          enum: [PROMOTIONAL, TRANSACTIONAL, DND]
+          description: SMS route for regulatory compliance
+
+    ImmediateSmsNotificationRequest:
+      type: object
+      required:
+        - message
+        - phoneNumbers
+      properties:
+        message:
+          type: string
+          maxLength: 1600
+          description: SMS message content
+        phoneNumbers:
+          type: array
+          items:
+            type: string
+            pattern: '^\+[1-9]\d{1,14}$'
+          minItems: 1
+          maxItems: 100
+        config:
+          $ref: '#/components/schemas/SmsDeliveryConfig'
+
+    BulkSmsNotificationRequest:
+      type: object
+      required:
+        - recipients
+      properties:
+        recipients:
+          type: array
+          items:
+            $ref: '#/components/schemas/BulkSmsRecipient'
+          minItems: 1
+          maxItems: 10000
+        config:
+          $ref: '#/components/schemas/SmsDeliveryConfig'
+
+    BulkSmsRecipient:
+      type: object
+      required:
+        - phoneNumber
+        - message
+      properties:
+        phoneNumber:
+          type: string
+          pattern: '^\+[1-9]\d{1,14}$'
+        message:
+          type: string
+          maxLength: 1600
+        personalization:
+          type: object
+          additionalProperties:
+            type: string
+          description: Variables for message personalization
+
+    OtpSmsRequest:
+      type: object
+      required:
+        - phoneNumber
+        - otpLength
+      properties:
+        phoneNumber:
+          type: string
+          pattern: '^\+[1-9]\d{1,14}$'
+        otpLength:
+          type: integer
+          minimum: 4
+          maximum: 8
+          default: 6
+        messageTemplate:
+          type: string
+          maxLength: 500
+          description: Message template with {otp} placeholder
+          default: "Your verification code is {otp}. Valid for 10 minutes."
+        expiryMinutes:
+          type: integer
+          minimum: 1
+          maximum: 60
+          default: 10
+        config:
+          $ref: '#/components/schemas/SmsDeliveryConfig'
+
+    PhoneValidationRequest:
+      type: object
+      required:
+        - phoneNumber
+      properties:
+        phoneNumber:
+          type: string
+          description: Phone number to validate
+        countryCode:
+          type: string
+          pattern: '^[A-Z]{2}$'
+          description: ISO 3166-1 alpha-2 country code
+
+    UpdateSmsDeliveryStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/DeliveryStatus'
+        deliveredAt:
+          type: string
+          format: date-time
+        failureReason:
+          type: string
+          maxLength: 500
+        errorCode:
+          type: string
+          maxLength: 20
+        externalId:
+          type: string
+          maxLength: 255
+        providerResponse:
+          type: object
+          additionalProperties: true
+        cost:
+          type: number
+          format: decimal
+          description: Delivery cost in credits or currency
+        parts:
+          type: integer
+          minimum: 1
+          description: Number of SMS parts sent
+
+    SmsDeliveryResponse:
+      type: object
+      properties:
+        deliveryId:
+          type: integer
+        notificationId:
+          type: integer
+        phoneNumber:
+          type: string
+        status:
+          $ref: '#/components/schemas/DeliveryStatus'
+        sentAt:
+          type: string
+          format: date-time
+        deliveredAt:
+          type: string
+          format: date-time
+        retryCount:
+          type: integer
+        failureReason:
+          type: string
+        errorCode:
+          type: string
+        externalId:
+          type: string
+        cost:
+          type: number
+          format: decimal
+        parts:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    SmsDeliveryDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/SmsDeliveryResponse'
+        - type: object
+          properties:
+            notification:
+              $ref: '#/components/schemas/NotificationSummary'
+            config:
+              $ref: '#/components/schemas/SmsDeliveryConfig'
+            messageContent:
+              type: string
+              description: The actual message content sent
+
+    SmsDeliveryListResponse:
+      type: object
+      properties:
+        deliveries:
+          type: array
+          items:
+            $ref: '#/components/schemas/SmsDeliveryResponse'
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    ImmediateSmsDeliveryResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "SMS notifications sent successfully"
+        deliveryResults:
+          type: array
+          items:
+            type: object
+            properties:
+              phoneNumber:
+                type: string
+              status:
+                type: string
+                enum: [SUCCESS, FAILED]
+              externalId:
+                type: string
+              errorMessage:
+                type: string
+              cost:
+                type: number
+                format: decimal
+              parts:
+                type: integer
+
+    BulkSmsDeliveryResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Bulk SMS notifications initiated successfully"
+        batchId:
+          type: string
+          description: Batch identifier for tracking
+        totalRecipients:
+          type: integer
+        estimatedCost:
+          type: number
+          format: decimal
+        deliveryResults:
+          type: array
+          items:
+            type: object
+            properties:
+              phoneNumber:
+                type: string
+              status:
+                type: string
+                enum: [ACCEPTED, REJECTED]
+              externalId:
+                type: string
+              errorMessage:
+                type: string
+
+    OtpSmsResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "OTP sent successfully"
+        otpId:
+          type: string
+          description: Unique identifier for OTP verification
+        phoneNumber:
+          type: string
+        expiryTime:
+          type: string
+          format: date-time
+        deliveryId:
+          type: integer
+        cost:
+          type: number
+          format: decimal
+
+    PhoneValidationResponse:
+      type: object
+      properties:
+        phoneNumber:
+          type: string
+          description: Standardized phone number in E.164 format
+        isValid:
+          type: boolean
+        country:
+          type: string
+          description: Detected country name
+        countryCode:
+          type: string
+          description: ISO 3166-1 alpha-2 country code
+        carrier:
+          type: string
+          description: Mobile carrier name
+        lineType:
+          type: string
+          enum: [MOBILE, LANDLINE, VOIP, TOLL_FREE, UNKNOWN]
+        isReachable:
+          type: boolean
+          description: Whether number can receive SMS
+        riskScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Risk score for fraud detection
+        formatting:
+          type: object
+          properties:
+            international:
+              type: string
+            national:
+              type: string
+            e164:
+              type: string
+
+    DeliveryReceiptListResponse:
+      type: object
+      properties:
+        receipts:
+          type: array
+          items:
+            $ref: '#/components/schemas/SmsDeliveryResponse'
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+        summary:
+          type: object
+          properties:
+            totalMessages:
+              type: integer
+            deliveredCount:
+              type: integer
+            failedCount:
+              type: integer
+            pendingCount:
+              type: integer
+            totalCost:
+              type: number
+              format: decimal
+
+    NotificationSummary:
+      type: object
+      properties:
+        notificationId:
+          type: integer
+        title:
+          type: string
+        notificationType:
+          type: string
+        priority:
+          type: string
+
+    PaginationInfo:
+      type: object
+      properties:
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    SmsType:
+      type: string
+      enum: [TRANSACTIONAL, PROMOTIONAL, OTP, ALERT, MARKETING]
+
+    SmsEncoding:
+      type: string
+      enum: [GSM7, UCS2, AUTO]
+
+    SmsPriority:
+      type: string
+      enum: [LOW, NORMAL, HIGH, URGENT]
+
+    DeliveryStatus:
+      type: string
+      enum: [PENDING, SENT, DELIVERED, FAILED, EXPIRED, REJECTED]
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: SMS Delivery
+    description: Operations for managing SMS notification deliveries
+  - name: Immediate SMS
+    description: Operations for sending immediate SMS notifications
+  - name: Bulk SMS
+    description: Operations for sending bulk SMS campaigns
+  - name: OTP SMS
+    description: Operations for sending one-time password SMS
+  - name: Phone Validation
+    description: Operations for validating phone numbers
+  - name: Delivery Receipts
+    description: Operations for tracking SMS delivery receipts

@@ -8,7 +8,7 @@ package com.akademiaplus.internal.interfaceadapters;
  * Unauthorized copying, distribution, or modification is strictly prohibited.
  */
 
-import com.akademiaplus.TenantContextHolder;
+import com.akademiaplus.infra.TenantContextHolder;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

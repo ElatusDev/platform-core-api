@@ -1,27 +1,218 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
-  title: Communication Module API
+  title: Notification Service Module API
+  description: |
+    Aggregated API specification for the notification module that encompasses
+    all notification delivery channels including push notifications, email, and SMS.
+    
+    This specification serves as an aggregator that references three separate
+    channel-specific APIs for comprehensive notification management.
   version: 1.0.0
-components:
-  schemas:
-    BaseEmail:
-      $ref: './email.yaml#/components/schemas/BaseEmail'
-    EmailCreationRequest:
-      $ref: './email.yaml#/components/schemas/EmailCreationRequest'
-    EmailCreationResponse:
-      $ref: './email.yaml#/components/schemas/EmailCreationResponse'
-    GetEmailResponse:
-      $ref: './email.yaml#/components/schemas/GetEmailResponse'
-    ErrorResponse:
-      $ref: './email.yaml#/components/schemas/ErrorResponse'
+  contact:
+    name: ElatusDev
+    email: dev@elatusdev.com
+  license:
+    name: Proprietary
+
+externalDocs:
+  description: Notification Module Documentation
+  url: https://docs.akademiaplus.com/notifications
+
+servers:
+  - url: https://api.akademiaplus.com/v1
+    description: Production server
+  - url: https://staging-api.akademiaplus.com/v1
+    description: Staging server
+
+security:
+  - BearerAuth: []
+  - TenantAuth: []
+
 paths:
-  /emails:
-    $ref: './email.yaml#/paths/~1emails'
-  /emails/{emailId}:
-    $ref: './email.yaml#/paths/~1emails~1{emailId}'
-  /emails/bySubject/{subject}:
-    $ref: './email.yaml#/paths/~1emails~1bySubject~1{subject}'
-  /emails/byRecipient/{recipient}:
-    $ref: './email.yaml#/paths/~1emails~1byRecipient~1{recipient}'
-  /emails/send:
-    $ref: './email.yaml#/paths/~1emails~1send'
+  # ===== PUSH NOTIFICATION ENDPOINTS =====
+  /push:
+    $ref: './push-notification.yaml#/paths'
+    description: |
+      Push notification delivery endpoints for iOS and Android devices.
+      Handles device tokens, platform-specific configurations, badges, and custom payloads.
+
+  # ===== EMAIL NOTIFICATION ENDPOINTS =====
+  /email:
+    $ref: './email-notification.yaml#/paths'
+    description: |
+      Email notification delivery endpoints with template management.
+      Supports HTML emails, attachments, CC/BCC, tracking, and personalization.
+
+  # ===== SMS NOTIFICATION ENDPOINTS =====
+  /sms:
+    $ref: './sms-notification.yaml#/paths'
+    description: |
+      SMS notification delivery endpoints with international support.
+      Includes OTP delivery, bulk messaging, phone validation, and carrier routing.
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for API authentication
+    TenantAuth:
+      type: apiKey
+      in: header
+      name: X-Tenant-ID
+      description: Tenant identifier for multi-tenant isolation
+
+  # ===== SHARED SCHEMAS =====
+  schemas:
+    # Reference shared schemas from individual APIs
+    DeliveryChannel:
+      $ref: './push-notification.yaml#/components/schemas/DeliveryChannel'
+
+    DeliveryStatus:
+      $ref: './email-notification.yaml#/components/schemas/DeliveryStatus'
+
+    ErrorResponse:
+      $ref: './sms-notification.yaml#/components/schemas/ErrorResponse'
+
+    # Aggregated notification overview schemas
+    NotificationOverview:
+      type: object
+      description: High-level overview of notification delivery across all channels
+      properties:
+        notificationId:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        deliveryChannels:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChannelDeliverySummary'
+
+    ChannelDeliverySummary:
+      type: object
+      description: Summary of deliveries for a specific channel
+      properties:
+        channel:
+          $ref: '#/components/schemas/DeliveryChannel'
+        totalDeliveries:
+          type: integer
+        successfulDeliveries:
+          type: integer
+        failedDeliveries:
+          type: integer
+        pendingDeliveries:
+          type: integer
+        lastDeliveryAt:
+          type: string
+          format: date-time
+
+  # ===== SHARED PARAMETERS =====
+  parameters:
+    TenantHeader:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      description: Tenant identifier for multi-tenant isolation
+      schema:
+        type: integer
+        minimum: 1
+
+  # ===== SHARED RESPONSES =====
+  responses:
+    BadRequest:
+      description: Bad request - invalid input parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Unauthorized - invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: Forbidden - insufficient permissions for tenant
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+# ===== API CHANNEL SPECIFICATIONS =====
+x-channel-apis:
+  push-notifications:
+    title: Push Notification API
+    description: iOS and Android push notification delivery
+    specification: './push-notification.yaml'
+    baseUrl: '/push'
+    features:
+      - Device token management
+      - Platform-specific configurations
+      - Badge counts and sounds
+      - Custom payload data
+      - Test notifications
+
+  email-notifications:
+    title: Email Notification API
+    description: Email delivery with templates and tracking
+    specification: './email-notification.yaml'
+    baseUrl: '/email'
+    features:
+      - HTML email templates
+      - Attachment support
+      - CC/BCC recipients
+      - Delivery tracking
+      - Template previews
+
+  sms-notifications:
+    title: SMS Notification API
+    description: Text message delivery with international support
+    specification: './sms-notification.yaml'
+    baseUrl: '/sms'
+    features:
+      - International SMS delivery
+      - OTP generation and validation
+      - Bulk messaging campaigns
+      - Phone number validation
+      - Delivery receipts
+
+tags:
+  - name: Push Notifications
+    description: iOS and Android push notification operations
+    externalDocs:
+      url: './push-notification.yaml'
+
+  - name: Email Notifications
+    description: Email delivery and template management operations
+    externalDocs:
+      url: './email-notification.yaml'
+
+  - name: SMS Notifications
+    description: Text message delivery and validation operations
+    externalDocs:
+      url: './sms-notification.yaml'
+
+  - name: Multi-Channel
+    description: Operations that span multiple notification channels

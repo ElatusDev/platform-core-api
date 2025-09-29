@@ -1,0 +1,392 @@
+openapi: 3.0.3
+info:
+  title: User Management Base Components
+  description: Base schemas for User Management module DTOs
+  version: 1.0.0
+
+paths: {}  # No paths in base components file, only reusable schemas
+
+components:
+  schemas:
+    # ===== BASE PERSON PII FIELDS =====
+    PersonPiiFields:
+      type: object
+      properties:
+        firstName:
+          type: string
+          maxLength: 500
+          example: "John"
+        lastName:
+          type: string
+          maxLength: 500
+          example: "Doe"
+        email:
+          type: string
+          format: email
+          maxLength: 500
+          example: "john.doe@example.com"
+        phoneNumber:
+          type: string
+          maxLength: 500
+          example: "+1-555-123-4567"
+        address:
+          type: string
+          maxLength: 500
+          example: "123 Main St, Apt 4B"
+        zipCode:
+          type: string
+          maxLength: 500
+          example: "12345"
+
+    # ===== BASE INTERNAL AUTH FIELDS =====
+    InternalAuthFields:
+      type: object
+      properties:
+        username:
+          type: string
+          maxLength: 500
+          example: "john.doe"
+        password:
+          type: string
+          format: password
+          maxLength: 500
+          example: "SecurePassword123!"
+        role:
+          type: string
+          maxLength: 500
+          example: "EMPLOYEE"
+
+    InternalAuthResponseFields:
+      type: object
+      properties:
+        username:
+          type: string
+        role:
+          type: string
+        internalAuthId:
+          type: integer
+          format: int32
+
+    # ===== BASE CUSTOMER AUTH FIELDS =====
+    CustomerAuthFields:
+      type: object
+      properties:
+        provider:
+          type: string
+          maxLength: 50
+          example: "GOOGLE"
+        token:
+          type: string
+          example: "oauth_token_abc123"
+
+    CustomerAuthResponseFields:
+      type: object
+      properties:
+        provider:
+          type: string
+        customerAuthId:
+          type: integer
+          format: int32
+
+    # ===== AUDIT FIELDS =====
+    AuditFields:
+      type: object
+      properties:
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    # ===== BASE ID RESPONSE =====
+    BaseIdResponse:
+      type: object
+      properties:
+        personPiiId:
+          type: integer
+          format: int32
+
+    # ===== EMPLOYEE BASE SCHEMAS =====
+    EmployeeBaseFields:
+      type: object
+      properties:
+        employeeType:
+          type: string
+          maxLength: 50
+          example: "INSTRUCTOR"
+        birthdate:
+          type: string
+          format: date
+          example: "1990-05-15"
+        entryDate:
+          type: string
+          format: date
+          example: "2025-01-15"
+        profilePicture:
+          type: string
+          format: byte
+          description: Base64 encoded profile picture
+          nullable: true
+
+    EmployeeCreationResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseIdResponse'
+        - type: object
+          properties:
+            employeeId:
+              type: integer
+              format: int32
+            internalAuthId:
+              type: integer
+              format: int32
+
+    GetEmployeeResponse:
+      allOf:
+        - $ref: '#/components/schemas/EmployeeBaseFields'
+        - $ref: '#/components/schemas/PersonPiiFields'
+        - $ref: '#/components/schemas/InternalAuthResponseFields'
+        - $ref: '#/components/schemas/AuditFields'
+        - $ref: '#/components/schemas/EmployeeCreationResponse'
+        - type: object
+          properties:
+            profilePictureUrl:
+              type: string
+              format: uri
+              nullable: true
+
+    GetAllEmployeeResponse:
+      $ref: '#/components/schemas/GetEmployeeResponse'
+
+    # ===== COLLABORATOR BASE SCHEMAS =====
+    CollaboratorBaseFields:
+      type: object
+      properties:
+        skills:
+          type: string
+          maxLength: 100
+          example: "Mathematics, Physics, Chemistry"
+        birthdate:
+          type: string
+          format: date
+          example: "1985-03-10"
+        entryDate:
+          type: string
+          format: date
+          example: "2025-01-15"
+        profilePicture:
+          type: string
+          format: byte
+          description: Base64 encoded profile picture
+          nullable: true
+
+    CollaboratorCreationResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseIdResponse'
+        - type: object
+          properties:
+            collaboratorId:
+              type: integer
+              format: int32
+            internalAuthId:
+              type: integer
+              format: int32
+
+    GetCollaboratorResponse:
+      allOf:
+        - $ref: '#/components/schemas/CollaboratorBaseFields'
+        - $ref: '#/components/schemas/PersonPiiFields'
+        - $ref: '#/components/schemas/InternalAuthResponseFields'
+        - $ref: '#/components/schemas/AuditFields'
+        - $ref: '#/components/schemas/CollaboratorCreationResponse'
+        - type: object
+          properties:
+            profilePictureUrl:
+              type: string
+              format: uri
+              nullable: true
+
+    GetAllCollaboratorResponse:
+      $ref: '#/components/schemas/GetCollaboratorResponse'
+
+    # ===== ADULT STUDENT BASE SCHEMAS =====
+    AdultStudentBaseFields:
+      type: object
+      properties:
+        birthdate:
+          type: string
+          format: date
+          example: "1995-08-20"
+        profilePicture:
+          type: string
+          format: byte
+          description: Base64 encoded profile picture
+          nullable: true
+
+    AdultStudentCreationResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseIdResponse'
+        - type: object
+          properties:
+            adultStudentId:
+              type: integer
+              format: int32
+            customerAuthId:
+              type: integer
+              format: int32
+
+    GetAdultStudentResponse:
+      allOf:
+        - $ref: '#/components/schemas/AdultStudentBaseFields'
+        - $ref: '#/components/schemas/PersonPiiFields'
+        - $ref: '#/components/schemas/CustomerAuthResponseFields'
+        - $ref: '#/components/schemas/AuditFields'
+        - $ref: '#/components/schemas/AdultStudentCreationResponse'
+        - type: object
+          properties:
+            profilePictureUrl:
+              type: string
+              format: uri
+              nullable: true
+
+    GetAllAdultStudentResponse:
+      $ref: '#/components/schemas/GetAdultStudentResponse'
+
+    # ===== MINOR STUDENT BASE SCHEMAS =====
+    MinorStudentBaseFields:
+      type: object
+      properties:
+        birthdate:
+          type: string
+          format: date
+          example: "2010-06-15"
+        tutorId:
+          type: integer
+          format: int32
+          example: 101
+        profilePicture:
+          type: string
+          format: byte
+          description: Base64 encoded profile picture
+          nullable: true
+
+    MinorStudentCreationResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseIdResponse'
+        - type: object
+          properties:
+            minorStudentId:
+              type: integer
+              format: int32
+            customerAuthId:
+              type: integer
+              format: int32
+
+    GetMinorStudentResponse:
+      allOf:
+        - $ref: '#/components/schemas/MinorStudentBaseFields'
+        - $ref: '#/components/schemas/PersonPiiFields'
+        - $ref: '#/components/schemas/CustomerAuthResponseFields'
+        - $ref: '#/components/schemas/AuditFields'
+        - $ref: '#/components/schemas/MinorStudentCreationResponse'
+        - type: object
+          properties:
+            profilePictureUrl:
+              type: string
+              format: uri
+              nullable: true
+            tutorName:
+              type: string
+              nullable: true
+
+    GetAllMinorStudentResponse:
+      $ref: '#/components/schemas/GetMinorStudentResponse'
+
+    # ===== TUTOR BASE SCHEMAS =====
+    TutorBaseFields:
+      type: object
+      properties:
+        birthdate:
+          type: string
+          format: date
+          example: "1980-04-25"
+
+    TutorCreationResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseIdResponse'
+        - type: object
+          properties:
+            tutorId:
+              type: integer
+              format: int32
+            customerAuthId:
+              type: integer
+              format: int32
+              nullable: true
+
+    GetTutorResponse:
+      allOf:
+        - $ref: '#/components/schemas/TutorBaseFields'
+        - $ref: '#/components/schemas/PersonPiiFields'
+        - $ref: '#/components/schemas/CustomerAuthResponseFields'
+        - $ref: '#/components/schemas/AuditFields'
+        - $ref: '#/components/schemas/TutorCreationResponse'
+        - type: object
+          properties:
+            studentCount:
+              type: integer
+              example: 3
+
+    GetAllTutorResponse:
+      $ref: '#/components/schemas/GetTutorResponse'
+
+    # ===== UPDATE RESPONSE =====
+    EmployeeUpdateResponse:
+      type: object
+      properties:
+        employeeId:
+          type: integer
+          format: int32
+        message:
+          type: string
+          example: "Employee updated successfully"
+
+    CollaboratorUpdateResponse:
+      type: object
+      properties:
+        collaboratorId:
+          type: integer
+          format: int32
+        message:
+          type: string
+          example: "Collaborator updated successfully"
+
+    AdultStudentUpdateResponse:
+      type: object
+      properties:
+        adultStudentId:
+          type: integer
+          format: int32
+        message:
+          type: string
+          example: "Adult student updated successfully"
+
+    MinorStudentUpdateResponse:
+      type: object
+      properties:
+        minorStudentId:
+          type: integer
+          format: int32
+        message:
+          type: string
+          example: "Minor student updated successfully"
+
+    TutorUpdateResponse:
+      type: object
+      properties:
+        tutorId:
+          type: integer
+          format: int32
+        message:
+          type: string
+          example: "Tutor updated successfully"

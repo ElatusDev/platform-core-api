@@ -1,0 +1,767 @@
+openapi: 3.0.3
+info:
+  title: Email Notification API
+  description: |
+    Multi-tenant email notification delivery system supporting templated emails,
+    attachments, multiple recipients, and comprehensive delivery tracking.
+  version: 1.0.0
+  contact:
+    name: ElatusDev
+    email: dev@elatusdev.com
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.akademiaplus.com/v1/email
+    description: Production server
+  - url: https://staging-api.akademiaplus.com/v1/email
+    description: Staging server
+
+security:
+  - BearerAuth: []
+  - TenantAuth: []
+
+paths:
+  /notifications/{notificationId}/deliveries:
+    post:
+      summary: Create email notification delivery
+      description: Creates email deliveries for an existing notification
+      operationId: createEmailDelivery
+      tags:
+        - Email Delivery
+      parameters:
+        - $ref: '#/components/parameters/NotificationId'
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEmailDeliveryRequest'
+      responses:
+        '201':
+          description: Email delivery created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailDeliveryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    get:
+      summary: List email notification deliveries
+      description: Retrieves all email delivery attempts for a specific notification
+      operationId: getEmailDeliveries
+      tags:
+        - Email Delivery
+      parameters:
+        - $ref: '#/components/parameters/NotificationId'
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/DeliveryStatus'
+        - name: recipientEmail
+          in: query
+          schema:
+            type: string
+            format: email
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: Email deliveries retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailDeliveryListResponse'
+
+  /deliveries/{deliveryId}:
+    get:
+      summary: Get email delivery details
+      operationId: getEmailDeliveryById
+      tags:
+        - Email Delivery
+      parameters:
+        - $ref: '#/components/parameters/DeliveryId'
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Email delivery details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailDeliveryDetailResponse'
+
+    patch:
+      summary: Update email delivery status
+      description: Updates email delivery status, typically from email provider webhooks
+      operationId: updateEmailDeliveryStatus
+      tags:
+        - Email Delivery
+      parameters:
+        - $ref: '#/components/parameters/DeliveryId'
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEmailDeliveryStatusRequest'
+      responses:
+        '200':
+          description: Email delivery status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailDeliveryResponse'
+
+  /deliveries/{deliveryId}/retry:
+    post:
+      summary: Retry failed email delivery
+      operationId: retryEmailDelivery
+      tags:
+        - Email Delivery
+      parameters:
+        - $ref: '#/components/parameters/DeliveryId'
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Email delivery retry initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailDeliveryResponse'
+
+  /send:
+    post:
+      summary: Send immediate email notification
+      description: Sends email notifications immediately without persisting content
+      operationId: sendImmediateEmailNotification
+      tags:
+        - Immediate Email
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImmediateEmailNotificationRequest'
+      responses:
+        '202':
+          description: Email notification sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImmediateEmailDeliveryResponse'
+
+  /templates:
+    get:
+      summary: List email templates
+      description: Retrieves available email templates for the tenant
+      operationId: listEmailTemplates
+      tags:
+        - Email Templates
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: category
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: Email templates retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplateListResponse'
+
+    post:
+      summary: Create email template
+      description: Creates a new email template for the tenant
+      operationId: createEmailTemplate
+      tags:
+        - Email Templates
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEmailTemplateRequest'
+      responses:
+        '201':
+          description: Email template created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplateResponse'
+
+  /templates/{templateId}:
+    get:
+      summary: Get email template
+      operationId: getEmailTemplateById
+      tags:
+        - Email Templates
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Email template retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplateResponse'
+
+    put:
+      summary: Update email template
+      operationId: updateEmailTemplate
+      tags:
+        - Email Templates
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateEmailTemplateRequest'
+      responses:
+        '200':
+          description: Email template updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplateResponse'
+
+  /templates/{templateId}/preview:
+    post:
+      summary: Preview email template
+      description: Generates a preview of the email template with provided data
+      operationId: previewEmailTemplate
+      tags:
+        - Email Templates
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailTemplatePreviewRequest'
+      responses:
+        '200':
+          description: Email template preview generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplatePreviewResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    TenantAuth:
+      type: apiKey
+      in: header
+      name: X-Tenant-ID
+
+  parameters:
+    TenantHeader:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    NotificationId:
+      name: notificationId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    DeliveryId:
+      name: deliveryId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    SizeParam:
+      name: size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  schemas:
+    CreateEmailDeliveryRequest:
+      type: object
+      required:
+        - recipients
+      properties:
+        recipients:
+          $ref: '#/components/schemas/EmailRecipients'
+        config:
+          $ref: '#/components/schemas/EmailDeliveryConfig'
+
+    EmailRecipients:
+      type: object
+      required:
+        - to
+      properties:
+        to:
+          type: array
+          items:
+            type: string
+            format: email
+          minItems: 1
+          maxItems: 100
+        cc:
+          type: array
+          items:
+            type: string
+            format: email
+          maxItems: 50
+        bcc:
+          type: array
+          items:
+            type: string
+            format: email
+          maxItems: 50
+
+    EmailDeliveryConfig:
+      type: object
+      properties:
+        fromEmail:
+          type: string
+          format: email
+        fromName:
+          type: string
+          maxLength: 100
+        replyTo:
+          type: string
+          format: email
+        priority:
+          $ref: '#/components/schemas/EmailPriority'
+        templateId:
+          type: string
+          maxLength: 50
+        templateData:
+          type: object
+          additionalProperties: true
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailAttachment'
+          maxItems: 10
+        customHeaders:
+          type: object
+          additionalProperties:
+            type: string
+        trackingEnabled:
+          type: boolean
+          default: true
+
+    EmailAttachment:
+      type: object
+      required:
+        - filename
+        - url
+      properties:
+        filename:
+          type: string
+          maxLength: 255
+        url:
+          type: string
+          format: uri
+        contentType:
+          type: string
+          maxLength: 100
+        size:
+          type: integer
+          minimum: 1
+          maximum: 25000000  # 25MB limit
+
+    ImmediateEmailNotificationRequest:
+      type: object
+      required:
+        - subject
+        - recipients
+      properties:
+        subject:
+          type: string
+          maxLength: 255
+        body:
+          type: string
+          description: Email body content (can be HTML)
+        bodyText:
+          type: string
+          description: Plain text version of email body
+        recipients:
+          $ref: '#/components/schemas/EmailRecipients'
+        config:
+          $ref: '#/components/schemas/EmailDeliveryConfig'
+
+    UpdateEmailDeliveryStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/DeliveryStatus'
+        deliveredAt:
+          type: string
+          format: date-time
+        openedAt:
+          type: string
+          format: date-time
+        clickedAt:
+          type: string
+          format: date-time
+        bouncedAt:
+          type: string
+          format: date-time
+        failureReason:
+          type: string
+          maxLength: 500
+        externalId:
+          type: string
+          maxLength: 255
+        providerResponse:
+          type: object
+          additionalProperties: true
+
+    CreateEmailTemplateRequest:
+      type: object
+      required:
+        - name
+        - subject
+        - bodyHtml
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        category:
+          type: string
+          maxLength: 50
+        subject:
+          type: string
+          maxLength: 255
+        bodyHtml:
+          type: string
+          description: HTML template content with variables
+        bodyText:
+          type: string
+          description: Plain text template content with variables
+        variables:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemplateVariable'
+        isActive:
+          type: boolean
+          default: true
+
+    UpdateEmailTemplateRequest:
+      allOf:
+        - $ref: '#/components/schemas/CreateEmailTemplateRequest'
+
+    TemplateVariable:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          maxLength: 50
+        type:
+          type: string
+          enum: [STRING, NUMBER, BOOLEAN, DATE, CURRENCY]
+        description:
+          type: string
+          maxLength: 200
+        required:
+          type: boolean
+          default: false
+        defaultValue:
+          type: string
+
+    EmailTemplatePreviewRequest:
+      type: object
+      properties:
+        templateData:
+          type: object
+          additionalProperties: true
+        recipientEmail:
+          type: string
+          format: email
+          description: Email to use for preview
+
+    EmailDeliveryResponse:
+      type: object
+      properties:
+        deliveryId:
+          type: integer
+        notificationId:
+          type: integer
+        recipientEmail:
+          type: string
+          format: email
+        status:
+          $ref: '#/components/schemas/DeliveryStatus'
+        sentAt:
+          type: string
+          format: date-time
+        deliveredAt:
+          type: string
+          format: date-time
+        openedAt:
+          type: string
+          format: date-time
+        clickedAt:
+          type: string
+          format: date-time
+        bouncedAt:
+          type: string
+          format: date-time
+        retryCount:
+          type: integer
+        failureReason:
+          type: string
+        externalId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    EmailDeliveryDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/EmailDeliveryResponse'
+        - type: object
+          properties:
+            notification:
+              $ref: '#/components/schemas/NotificationSummary'
+            config:
+              $ref: '#/components/schemas/EmailDeliveryConfig'
+            tracking:
+              $ref: '#/components/schemas/EmailTrackingInfo'
+
+    EmailDeliveryListResponse:
+      type: object
+      properties:
+        deliveries:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailDeliveryResponse'
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    ImmediateEmailDeliveryResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Email notifications sent successfully"
+        deliveryResults:
+          type: array
+          items:
+            type: object
+            properties:
+              recipientEmail:
+                type: string
+                format: email
+              status:
+                type: string
+                enum: [SUCCESS, FAILED]
+              externalId:
+                type: string
+              errorMessage:
+                type: string
+
+    EmailTemplateResponse:
+      type: object
+      properties:
+        templateId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        subject:
+          type: string
+        bodyHtml:
+          type: string
+        bodyText:
+          type: string
+        variables:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemplateVariable'
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    EmailTemplateListResponse:
+      type: object
+      properties:
+        templates:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailTemplateResponse'
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    EmailTemplatePreviewResponse:
+      type: object
+      properties:
+        subject:
+          type: string
+        bodyHtml:
+          type: string
+        bodyText:
+          type: string
+        previewUrl:
+          type: string
+          format: uri
+
+    EmailTrackingInfo:
+      type: object
+      properties:
+        opens:
+          type: integer
+        clicks:
+          type: integer
+        lastOpenedAt:
+          type: string
+          format: date-time
+        lastClickedAt:
+          type: string
+          format: date-time
+        userAgent:
+          type: string
+        ipAddress:
+          type: string
+
+    NotificationSummary:
+      type: object
+      properties:
+        notificationId:
+          type: integer
+        title:
+          type: string
+        notificationType:
+          type: string
+        priority:
+          type: string
+
+    PaginationInfo:
+      type: object
+      properties:
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    EmailPriority:
+      type: string
+      enum: [LOW, NORMAL, HIGH, URGENT]
+
+    DeliveryStatus:
+      type: string
+      enum: [PENDING, SENT, DELIVERED, OPENED, CLICKED, BOUNCED, FAILED, EXPIRED]
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: Email Delivery
+    description: Operations for managing email notification deliveries
+  - name: Immediate Email
+    description: Operations for sending immediate email notifications
+  - name: Email Templates
+    description: Operations for managing email templates

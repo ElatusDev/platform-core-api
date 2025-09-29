@@ -7,6 +7,7 @@
  */
 package com.akademiaplus.billing.membership;
 
+import com.akademiaplus.infra.TenantScoped;
 import com.akademiaplus.courses.program.CourseDataModel;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -16,10 +17,15 @@ import lombok.Setter;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * Entity representing membership types in the multi-tenant platform.
+ * Defines membership plans with associated fees, descriptions, and
+ * course access permissions for different user types.
+ */
 @Getter
 @Setter
 @AllArgsConstructor
@@ -27,23 +33,84 @@ import java.util.List;
 @Scope("prototype")
 @Component
 @Entity
-@Table(name = "membership")
-public class MembershipDataModel implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 1L;
+@Table(name = "memberships")
+@IdClass(MembershipDataModel.MembershipCompositeId.class)
+public class MembershipDataModel extends TenantScoped {
 
+    /**
+     * Unique identifier for the membership within the tenant.
+     * Auto-incremented per tenant for better performance.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "membership_id")
     private Integer membershipId;
-    @Column(name = "membership_type", nullable = false, length = 10)
+
+    /**
+     * Type classification of the membership.
+     * Defines the category or level of membership.
+     */
+    @Column(name = "membership_type", nullable = false, length = 50)
     private String membershipType;
-    @Column(nullable = false)
-    private Double fee;
-    @Column(nullable = false, length = 100)
+
+    /**
+     * Fee charged for this membership type.
+     * Using BigDecimal for precise financial calculations.
+     */
+    @Column(name = "fee", nullable = false, precision = 10, scale = 2)
+    private BigDecimal fee;
+
+    /**
+     * Description of the membership benefits and features.
+     * Used for marketing and enrollment information.
+     */
+    @Column(name = "description", nullable = false, length = 255)
     private String description;
 
-    @OneToMany
-    @JoinColumn(name = "course_id")
-    private List<CourseDataModel> course;
+    /**
+     * List of courses included in this membership.
+     * Many-to-many relationship managed through membership_courses table.
+     */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "membership_courses",
+            joinColumns = {
+                    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id"),
+                    @JoinColumn(name = "membership_id", referencedColumnName = "membership_id")
+            },
+            inverseJoinColumns = {
+                    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id"),
+                    @JoinColumn(name = "course_id", referencedColumnName = "course_id")
+            }
+    )
+    private List<CourseDataModel> courses;
+
+    /**
+     * Composite primary key class for Membership entity.
+     */
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class MembershipCompositeId implements Serializable {
+        private Integer tenantId;
+        private Integer membershipId;
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof MembershipCompositeId that)) return false;
+            return tenantId.equals(that.tenantId) && membershipId.equals(that.membershipId);
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(tenantId, membershipId);
+        }
+
+        @Override
+        public String toString() {
+            return "MembershipCompositeId{tenantId=" + tenantId + ", membershipId=" + membershipId + "}";
+        }
+    }
 }

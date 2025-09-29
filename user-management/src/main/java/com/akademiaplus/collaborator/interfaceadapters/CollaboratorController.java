@@ -11,6 +11,7 @@ import com.akademiaplus.collaborator.usecases.CollaboratorCreationUseCase;
 import com.akademiaplus.collaborator.usecases.DeleteCollaboratorUseCase;
 import com.akademiaplus.collaborator.usecases.GetAllCollaboratorsUseCase;
 import com.akademiaplus.collaborator.usecases.GetCollaboratorByIdUseCase;
+
 import openapi.akademiaplus.domain.user_management.api.CollaboratorsApi;
 import openapi.akademiaplus.domain.user_management.dto.CollaboratorCreationRequestDTO;
 import openapi.akademiaplus.domain.user_management.dto.CollaboratorCreationResponseDTO;
@@ -49,18 +50,14 @@ public class CollaboratorController implements CollaboratorsApi {
     }
 
     @Override
-    public ResponseEntity<Void> deleteCollaboratorById(Integer collaboratorId) {
+    public ResponseEntity<Void> deleteCollaborator(Integer collaboratorId) {
         deleteCollaboratorUseCase.delete(collaboratorId);
         return ResponseEntity.noContent().build();
     }
 
     @Override
-    public ResponseEntity<GetCollaboratorResponseDTO> getCollaboratorById(Integer collaboratorId) {
+    public ResponseEntity<GetCollaboratorResponseDTO> getCollaborator(Integer collaboratorId) {
         return ResponseEntity.ok(getCollaboratorByIdUseCase.get(collaboratorId));
     }
 
-    @Override
-    public ResponseEntity<List<GetCollaboratorResponseDTO>> getCollaborators() {
-        return ResponseEntity.ok(getAllCollaboratorsUseCase.getAll());
-    }
 }

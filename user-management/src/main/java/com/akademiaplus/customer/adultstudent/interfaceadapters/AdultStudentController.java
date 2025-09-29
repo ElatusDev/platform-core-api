@@ -53,12 +53,8 @@ public class AdultStudentController implements AdultStudentsApi {
     }
 
     @Override
-    public ResponseEntity<GetAdultStudentResponseDTO> getAdultStudentById(Integer adultStudentId){
+    public ResponseEntity<GetAdultStudentResponseDTO> getAdultStudent(Integer adultStudentId){
         return ResponseEntity.ok(getAdultStudentByIdUseCase.get(adultStudentId));
     }
 
-    @Override
-    public ResponseEntity<List<GetAdultStudentResponseDTO>> getAdultStudents() {
-        return ResponseEntity.ok(getAllAdultStudentsUseCase.getAll());
-    }
 }

@@ -5,11 +5,13 @@
  * This code is proprietary and confidential.
  * Unauthorized copying, distribution, or modification is strictly prohibited.
  */
-package com.akademiaplus;
+package com.akademiaplus.infra;
 
 import lombok.Getter;
 import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.util.Objects;
 
@@ -20,7 +22,7 @@ import java.util.Objects;
 
 @Getter
 @Component
-@Scope("request")
+@Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
 public final class TenantContextHolder {
 
     private final Integer tenantId;
@@ -31,7 +33,7 @@ public final class TenantContextHolder {
      *
      * @param tenantId The tenant ID for the current request. Must not be null.
      */
-    private TenantContextHolder(Integer tenantId) {
+    public TenantContextHolder(Integer tenantId) {
         Objects.requireNonNull(tenantId, "Tenant ID cannot be null.");
         this.tenantId = tenantId;
     }

@@ -13,12 +13,21 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.io.Serial;
 import java.io.Serializable;
 
+/**
+ * Entity representing a tutor in the multi-tenant platform.
+ * Extends AbstractUser to inherit common user functionality and adds
+ * tutor-specific attributes such as optional customer authentication.
+ * <p>
+ * Tutors are responsible guardians who manage minor student accounts and enrollments.
+ * They may have customer authentication for self-service capabilities but can also
+ * be managed directly by platform administrators.
+ */
 @Getter
 @Setter
 @AllArgsConstructor
@@ -26,17 +35,58 @@ import java.io.Serializable;
 @Scope("prototype")
 @Component
 @Entity
-@Table(name = "tutor")
-public class TutorDataModel extends AbstractUser implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 1L;
+@Table(name = "tutors")
+@SQLDelete(sql = "UPDATE tutors SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@IdClass(TutorDataModel.TutorCompositeId.class)
+public class TutorDataModel extends AbstractUser {
 
+    /**
+     * Unique identifier for the tutor within the tenant.
+     * Auto-incremented per tenant for better performance.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "tutor_id")
     private Integer tutorId;
 
-    @OneToOne(optional = true, cascade =  CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "customer_auth_id")
+    /**
+     * Reference to the tutor's customer authentication credentials.
+     * Uses composite foreign key to maintain tenant isolation.
+     * <p>
+     * Optional field as tutors may be managed directly by administrators
+     * without requiring self-service authentication capabilities.
+     */
+    @OneToOne(optional = true, cascade = CascadeType.PERSIST, orphanRemoval = true)
+    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id")
+    @JoinColumn(name = "customer_auth_id", referencedColumnName = "customer_auth_id")
     private CustomerAuthDataModel customerAuth;
+
+    /**
+     * Composite primary key class for Tutor entity.
+     */
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class TutorCompositeId implements Serializable {
+        protected Integer tenantId;
+        protected Integer tutorId;
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof TutorCompositeId that)) return false;
+            return tenantId.equals(that.tenantId) && tutorId.equals(that.tutorId);
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(tenantId, tutorId);
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getSimpleName() + "{tenantId=" + tenantId + ", tutorId=" + tutorId + "}";
+        }
+    }
 }

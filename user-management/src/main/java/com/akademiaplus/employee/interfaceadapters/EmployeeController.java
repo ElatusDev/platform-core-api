@@ -41,14 +41,8 @@ public class EmployeeController implements EmployeesApi {
     }
 
     @Override
-    public ResponseEntity<GetEmployeeResponseDTO> getEmployeeById(Integer employeeId) {
+    public ResponseEntity<GetEmployeeResponseDTO> getEmployee(Integer employeeId) {
         return ResponseEntity.ok(getEmployeeByIdUseCase.get(employeeId));
-    }
-
-    @Override
-    public ResponseEntity<List<GetEmployeeResponseDTO>> getEmployees() {
-        List<GetEmployeeResponseDTO> list = getAllEmployeesUseCase.getAll();
-        return ResponseEntity.ok(list);
     }
 
     @Override
@@ -59,7 +53,7 @@ public class EmployeeController implements EmployeesApi {
     }
 
     @Override
-    public ResponseEntity<String> deleteEmployeeById(Integer employeeId) {
+    public ResponseEntity<Void> deleteEmployee(Integer employeeId) {
          deleteEmployeeUseCase.delete(employeeId);
          return ResponseEntity.noContent().build();
     }

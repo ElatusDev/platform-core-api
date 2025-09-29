@@ -43,7 +43,7 @@ public class EmployeeCreationUseCase {
     }
 
     public EmployeeDataModel transform(EmployeeCreationRequestDTO dto) {
-        final InternalAuthDataModel internalAuthDataModel= modelMapper.map(dto.getInternalAuth(), InternalAuthDataModel.class);
+        final InternalAuthDataModel internalAuthDataModel= modelMapper.map(dto, InternalAuthDataModel.class);
         final PersonPIIDataModel personPIIDataModel = modelMapper.map(dto, PersonPIIDataModel.class);
         final EmployeeDataModel model =  modelMapper.map(dto, EmployeeDataModel.class, MAP_NAME);
         model.setPersonPII(personPIIDataModel);

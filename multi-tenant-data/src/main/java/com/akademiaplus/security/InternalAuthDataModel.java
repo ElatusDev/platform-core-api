@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.security;
 
-import com.akademiaplus.TenantAndSoftDeleteAwareEntity;
+import com.akademiaplus.infra.TenantScoped;
 import com.akademiaplus.utilities.security.StringEncryptor;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -17,9 +17,16 @@ import lombok.Setter;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.io.Serial;
 import java.io.Serializable;
 
+/**
+ * Entity representing internal authentication credentials for platform users.
+ * Stores encrypted authentication data for employees and collaborators who
+ * require internal system access.
+ * <p>
+ * All sensitive authentication fields are encrypted at rest for security compliance.
+ * Username hashes are used for indexing and uniqueness checks without decryption.
+ */
 @Getter
 @Setter
 @AllArgsConstructor
@@ -27,28 +34,84 @@ import java.io.Serializable;
 @Scope("prototype")
 @Component
 @Entity
-@Table(name = "internal_auth")
-public class InternalAuthDataModel extends TenantAndSoftDeleteAwareEntity implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 1L;
+@Table(name = "internal_auths")
+@IdClass(InternalAuthDataModel.InternalAuthCompositeId.class)
+public class InternalAuthDataModel extends TenantScoped {
 
+    /**
+     * Unique identifier for the internal authentication within the tenant.
+     * Auto-incremented per tenant for better performance.
+     */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "internal_auth_id")
     private Integer internalAuthId;
 
+    /**
+     * Encrypted username for internal authentication.
+     * Automatically encrypted/decrypted using StringEncryptor.
+     * <p>
+     * Used for login identification along with password verification.
+     */
     @Convert(converter = StringEncryptor.class)
-    @Column(name = "encrypted_username",nullable = false)
+    @Column(name = "encrypted_username", nullable = false, length = 500)
     private String username;
 
+    /**
+     * Encrypted password for internal authentication.
+     * Automatically encrypted/decrypted using StringEncryptor.
+     * <p>
+     * Should be properly hashed before encryption for security best practices.
+     */
     @Convert(converter = StringEncryptor.class)
-    @Column(name = "encrypted_password",nullable = false)
+    @Column(name = "encrypted_password", nullable = false, length = 500)
     private String password;
 
+    /**
+     * Encrypted role information for authorization.
+     * Automatically encrypted/decrypted using StringEncryptor.
+     * <p>
+     * Defines access permissions and system capabilities for the user.
+     */
     @Convert(converter = StringEncryptor.class)
-    @Column(name ="encrypted_role", nullable = false)
+    @Column(name = "encrypted_role", nullable = false, length = 500)
     private String role;
 
-    @Column(name = "username_hash", length = 64, nullable = false, unique = true)
+    /**
+     * Hash of the username for indexing and uniqueness checks.
+     * Allows searching and ensuring uniqueness without decrypting the actual username.
+     * <p>
+     * Used in database constraints and login lookups for performance.
+     */
+    @Column(name = "username_hash", length = 64, nullable = false)
     private String usernameHash;
+
+    /**
+     * Composite primary key class for InternalAuth entity.
+     */
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class InternalAuthCompositeId implements Serializable {
+        private Integer tenantId;
+        private Integer internalAuthId;
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof InternalAuthCompositeId that)) return false;
+            return tenantId.equals(that.tenantId) && internalAuthId.equals(that.internalAuthId);
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(tenantId, internalAuthId);
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getSimpleName() + "{tenantId=" + tenantId + ", internalAuthId=" + internalAuthId + "}";
+        }
+    }
 }

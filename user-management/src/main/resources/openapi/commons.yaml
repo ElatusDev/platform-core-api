@@ -1,69 +1,674 @@
+openapi: 3.0.3
+info:
+  title: User Management Common Components
+  description: |
+    Shared components, schemas, and parameters for all user management APIs.
+    This specification defines common data structures, enums, and reusable
+    components used across Employee, Collaborator, Adult Student, Minor Student,
+    Tutor, and Customer Authentication APIs.
+  version: 1.0.0
+  contact:
+    name: ElatusDev
+    email: dev@elatusdev.com
+  license:
+    name: Proprietary
+
 components:
+  # ===== SECURITY SCHEMES =====
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for API authentication
+    TenantAuth:
+      type: apiKey
+      in: header
+      name: X-Tenant-ID
+      description: Tenant identifier for multi-tenant isolation
+
+  # ===== COMMON PARAMETERS =====
+  parameters:
+    TenantHeader:
+      name: X-Tenant-ID
+      in: header
+      required: true
+      description: Tenant identifier for multi-tenant isolation
+      schema:
+        type: integer
+        minimum: 1
+        example: 123
+
+    PageParam:
+      name: page
+      in: query
+      description: Page number for pagination (0-based)
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+        example: 0
+
+    SizeParam:
+      name: size
+      in: query
+      description: Number of items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+        example: 20
+
+    ActiveFilter:
+      name: active
+      in: query
+      description: Filter by active/inactive status
+      schema:
+        type: boolean
+        example: true
+
+    FromDateParam:
+      name: fromDate
+      in: query
+      description: Start date for date range filtering
+      schema:
+        type: string
+        format: date
+        example: "2025-01-01"
+
+    ToDateParam:
+      name: toDate
+      in: query
+      description: End date for date range filtering
+      schema:
+        type: string
+        format: date
+        example: "2025-12-31"
+
+  # ===== SHARED SCHEMAS =====
   schemas:
-    BasePerson:
+    # ===== PERSONAL INFORMATION =====
+    PersonalInfoRequest:
       type: object
-      description: 'Base schema for Person, used for referencing only. Do not generate a class for this schema.'
-      properties:
-        firstName:
-          type: string
-          maxLength: 30
-          description: Employee's first name
-        lastName:
-          type: string
-          maxLength: 30
-          description: Employee's last name
-        birthDate:
-          type: string
-          format: date
-          description: Employee's birthdate
-        email:
-          type: string
-          format: email
-          maxLength: 50
-          description: Employee's email address
-        phone:
-          type: string
-          maxLength: 15
-          description: Employee's phone number
-        address:
-          type: string
-          maxLength: 50
-          description: Employee's address
-        zipCode:
-          type: string
-          maxLength: 8
-          description: Employee's zip code
-        employeeType:
-          type: string
-          description: Type of employees
+      description: Personal information for user creation/update
       required:
         - firstName
         - lastName
-        - birthDate
         - email
-        - phone
+        - phoneNumber
         - address
         - zipCode
-        - employeeType
-    InternalAuth:
+      properties:
+        firstName:
+          type: string
+          maxLength: 100
+          example: "John"
+        lastName:
+          type: string
+          maxLength: 100
+          example: "Doe"
+        email:
+          type: string
+          format: email
+          maxLength: 200
+          example: "john.doe@example.com"
+        phoneNumber:
+          type: string
+          maxLength: 20
+          pattern: '^\+?[\d\s\-\(\)]+$'
+          example: "+1-555-123-4567"
+        address:
+          type: string
+          maxLength: 300
+          example: "123 Main St, Apt 4B"
+        zipCode:
+          type: string
+          maxLength: 10
+          example: "12345"
+
+    PersonalInfoResponse:
       type: object
+      description: Personal information in API responses
+      properties:
+        firstName:
+          type: string
+          example: "John"
+        lastName:
+          type: string
+          example: "Doe"
+        fullName:
+          type: string
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        phoneNumber:
+          type: string
+          example: "+1-555-123-4567"
+        address:
+          type: string
+          example: "123 Main St, Apt 4B"
+        zipCode:
+          type: string
+          example: "12345"
+
+    # ===== AUTHENTICATION =====
+    InternalAuthRequest:
+      type: object
+      description: Internal authentication credentials for employees/collaborators
+      required:
+        - username
+        - password
+        - role
       properties:
         username:
           type: string
-          description: Username for authentication
+          maxLength: 50
+          pattern: '^[a-zA-Z0-9_\-\.]+$'
+          example: "john.doe"
         password:
           type: string
-          description: Password for authentication
+          minLength: 8
+          maxLength: 128
+          format: password
+          example: "SecurePassword123!"
         role:
-          type: string
-          description: authorization role
-      required:
-        - usernameToken
-        - passwordToken
-        - role
-    # Import the common schemas from utilities module
-    # These will be resolved via import mappings in Maven
-    ErrorResponse:
-      # This is a placeholder that will be replaced by import mapping
-      # The actual implementation comes from utilities module
+          $ref: '#/components/schemas/UserRole'
+
+    InternalAuthResponse:
       type: object
+      description: Internal authentication details in responses
+      properties:
+        internalAuthId:
+          type: integer
+          example: 456
+        username:
+          type: string
+          example: "john.doe"
+        role:
+          $ref: '#/components/schemas/UserRole'
+        lastLoginAt:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:30:00Z"
+        passwordLastChanged:
+          type: string
+          format: date-time
+          example: "2025-01-01T00:00:00Z"
+        requirePasswordChange:
+          type: boolean
+          example: false
+        isActive:
+          type: boolean
+          example: true
+
+    InternalAuthSummary:
+      type: object
+      description: Brief authentication summary
+      properties:
+        username:
+          type: string
+          example: "john.doe"
+        role:
+          $ref: '#/components/schemas/UserRole'
+        isActive:
+          type: boolean
+          example: true
+
+    CustomerAuthRequest:
+      type: object
+      description: Customer authentication for students
+      required:
+        - provider
+        - token
+      properties:
+        provider:
+          $ref: '#/components/schemas/AuthProvider'
+        token:
+          type: string
+          description: OAuth token or authentication credential
+          example: "oauth_token_abc123"
+
+    CustomerAuthResponse:
+      type: object
+      description: Customer authentication details
+      properties:
+        customerAuthId:
+          type: integer
+          example: 789
+        provider:
+          $ref: '#/components/schemas/AuthProvider'
+        isActive:
+          type: boolean
+          example: true
+        lastLoginAt:
+          type: string
+          format: date-time
+          example: "2025-01-15T14:22:00Z"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-01-01T00:00:00Z"
+
+    CustomerAuthSummary:
+      type: object
+      description: Brief customer authentication summary
+      properties:
+        provider:
+          $ref: '#/components/schemas/AuthProvider'
+        isActive:
+          type: boolean
+          example: true
+        lastLoginAt:
+          type: string
+          format: date-time
+          example: "2025-01-15T14:22:00Z"
+
+    # ===== COURSE & ENROLLMENT =====
+    EnrollmentRequest:
+      type: object
+      description: Course enrollment request
+      required:
+        - courseId
+      properties:
+        courseId:
+          type: integer
+          example: 101
+        enrollmentDate:
+          type: string
+          format: date
+          example: "2025-02-01"
+        notes:
+          type: string
+          maxLength: 500
+          example: "Student requested accelerated track"
+
+    EnrollmentResponse:
+      type: object
+      description: Course enrollment details
+      properties:
+        enrollmentId:
+          type: integer
+          example: 1001
+        studentId:
+          type: integer
+          example: 501
+        courseId:
+          type: integer
+          example: 101
+        courseName:
+          type: string
+          example: "Advanced Mathematics"
+        enrollmentDate:
+          type: string
+          format: date
+          example: "2025-02-01"
+        status:
+          $ref: '#/components/schemas/EnrollmentStatus'
+        completionDate:
+          type: string
+          format: date
+          nullable: true
+          example: null
+        grade:
+          type: string
+          nullable: true
+          example: null
+        notes:
+          type: string
+          example: "Student requested accelerated track"
+
+    EnrollmentListResponse:
+      type: object
+      description: List of enrollments with pagination
+      properties:
+        enrollments:
+          type: array
+          items:
+            $ref: '#/components/schemas/EnrollmentResponse'
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    EnrollmentSummary:
+      type: object
+      description: Brief enrollment information
+      properties:
+        courseId:
+          type: integer
+          example: 101
+        courseName:
+          type: string
+          example: "Advanced Mathematics"
+        status:
+          $ref: '#/components/schemas/EnrollmentStatus'
+        enrollmentDate:
+          type: string
+          format: date
+          example: "2025-02-01"
+
+    CourseInfo:
+      type: object
+      description: Basic course information
+      properties:
+        courseId:
+          type: integer
+          example: 101
+        courseName:
+          type: string
+          example: "Advanced Mathematics"
+        courseDescription:
+          type: string
+          example: "Advanced concepts in calculus and linear algebra"
+        maxCapacity:
+          type: integer
+          example: 30
+
+    # ===== COMPENSATION & PAYMENTS =====
+    CompensationResponse:
+      type: object
+      description: Compensation details
+      properties:
+        compensationId:
+          type: integer
+          example: 201
+        compensationType:
+          $ref: '#/components/schemas/CompensationType'
+        amount:
+          type: number
+          format: decimal
+          example: 2500.00
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          default: "USD"
+          example: "USD"
+        effectiveDate:
+          type: string
+          format: date
+          example: "2025-01-01"
+        isActive:
+          type: boolean
+          example: true
+
+    PaymentResponse:
+      type: object
+      description: Payment transaction details
+      properties:
+        paymentId:
+          type: integer
+          example: 301
+        amount:
+          type: number
+          format: decimal
+          example: 150.00
+        paymentMethod:
+          $ref: '#/components/schemas/PaymentMethod'
+        paymentDate:
+          type: string
+          format: date
+          example: "2025-01-15"
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        transactionId:
+          type: string
+          example: "txn_abc123def456"
+        notes:
+          type: string
+          example: "Monthly membership fee"
+
+    PaymentListResponse:
+      type: object
+      description: List of payments with pagination
+      properties:
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentResponse'
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+        summary:
+          type: object
+          properties:
+            totalPaid:
+              type: number
+              format: decimal
+              example: 1500.00
+            pendingAmount:
+              type: number
+              format: decimal
+              example: 300.00
+            lastPaymentDate:
+              type: string
+              format: date
+              example: "2025-01-15"
+
+    # ===== COMMON RESPONSE STRUCTURES =====
+    PaginationInfo:
+      type: object
+      description: Pagination metadata
+      properties:
+        page:
+          type: integer
+          description: Current page number (0-based)
+          example: 0
+        size:
+          type: integer
+          description: Number of items per page
+          example: 20
+        totalElements:
+          type: integer
+          description: Total number of items
+          example: 150
+        totalPages:
+          type: integer
+          description: Total number of pages
+          example: 8
+        hasNext:
+          type: boolean
+          description: Whether there are more pages
+          example: true
+        hasPrevious:
+          type: boolean
+          description: Whether there are previous pages
+          example: false
+
+    ErrorResponse:
+      type: object
+      description: Standard error response format
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code or type
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid request parameters"
+        details:
+          type: array
+          description: Additional error details
+          items:
+            type: string
+          example: ["Field 'email' is required", "Field 'phoneNumber' must be valid"]
+        timestamp:
+          type: string
+          format: date-time
+          description: When the error occurred
+          example: "2025-01-15T10:30:00Z"
+        path:
+          type: string
+          description: API endpoint where error occurred
+          example: "/api/v1/employees"
+
+    # ===== AUDIT & METADATA =====
+    AuditInfo:
+      type: object
+      description: Standard audit information
+      properties:
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-01-01T00:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:30:00Z"
+        createdBy:
+          type: string
+          example: "admin_user"
+        updatedBy:
+          type: string
+          example: "manager_user"
+
+    # ===== ENUMERATIONS =====
+    UserRole:
+      type: string
+      description: User roles in the system
+      enum: [ADMIN, PRINCIPAL, CSR, COLLABORATOR, USER]
+      example: "USER"
+
+    AuthProvider:
+      type: string
+      description: Authentication provider types
+      enum: [GOOGLE, FACEBOOK, APPLE, EMAIL, PHONE, MICROSOFT]
+      example: "GOOGLE"
+
+    EmployeeType:
+      type: string
+      description: Types of employees
+      enum: [MANAGER, INSTRUCTOR, ADMIN, CLERK, SUPERVISOR, COORDINATOR]
+      example: "INSTRUCTOR"
+
+    EnrollmentStatus:
+      type: string
+      description: Course enrollment status
+      enum: [ENROLLED, COMPLETED, WITHDRAWN, SUSPENDED, PENDING, TRANSFERRED]
+      example: "ENROLLED"
+
+    MembershipStatus:
+      type: string
+      description: Membership status
+      enum: [ACTIVE, EXPIRED, SUSPENDED, CANCELLED, PENDING, GRACE_PERIOD]
+      example: "ACTIVE"
+
+    PaymentStatus:
+      type: string
+      description: Payment transaction status
+      enum: [COMPLETED, PENDING, FAILED, REFUNDED, CANCELLED, PROCESSING]
+      example: "COMPLETED"
+
+    PaymentMethod:
+      type: string
+      description: Payment method types
+      enum: [CASH, CREDIT_CARD, DEBIT_CARD, BANK_TRANSFER, CHECK, DIGITAL_WALLET, ACH]
+      example: "CREDIT_CARD"
+
+    CompensationType:
+      type: string
+      description: Types of compensation structures
+      enum: [HOURLY, SALARY, PROJECT_BASED, COMMISSION, BONUS, CONTRACT]
+      example: "SALARY"
+
+  # ===== COMMON RESPONSES =====
+  responses:
+    BadRequest:
+      description: Bad request - invalid input parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "VALIDATION_ERROR"
+            message: "Invalid request parameters"
+            details: ["Field 'email' is required"]
+            timestamp: "2025-01-15T10:30:00Z"
+
+    Unauthorized:
+      description: Unauthorized - invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "UNAUTHORIZED"
+            message: "Authentication required"
+            timestamp: "2025-01-15T10:30:00Z"
+
+    Forbidden:
+      description: Forbidden - insufficient permissions for tenant or resource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "FORBIDDEN"
+            message: "Insufficient permissions for this resource"
+            timestamp: "2025-01-15T10:30:00Z"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "NOT_FOUND"
+            message: "Resource not found"
+            timestamp: "2025-01-15T10:30:00Z"
+
+    Conflict:
+      description: Conflict - resource already exists or conflicting state
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "CONFLICT"
+            message: "Resource already exists"
+            timestamp: "2025-01-15T10:30:00Z"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "INTERNAL_SERVER_ERROR"
+            message: "An unexpected error occurred"
+            timestamp: "2025-01-15T10:30:00Z"
+
+# ===== USAGE EXAMPLES =====
+x-common-patterns:
+  pagination:
+    description: "Standard pagination pattern used across all APIs"
+    example:
+      page: 0
+      size: 20
+      totalElements: 150
+      totalPages: 8
+
+  filtering:
+    description: "Common filtering patterns"
+    examples:
+      - name: "Date range filtering"
+        parameters: ["fromDate", "toDate"]
+      - name: "Status filtering"
+        parameters: ["active", "status"]
+      - name: "Entity filtering"
+        parameters: ["courseId", "tutorId"]
+
+  authentication:
+    description: "Multi-tenant authentication pattern"
+    headers:
+      - "Authorization: Bearer {jwt_token}"
+      - "X-Tenant-ID: {tenant_id}"
+
+  audit_trail:
+    description: "Standard audit information included in responses"
+    fields: ["createdAt", "updatedAt", "createdBy", "updatedBy"]

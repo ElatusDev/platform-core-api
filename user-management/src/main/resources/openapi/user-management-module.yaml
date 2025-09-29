@@ -1,36 +1,92 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
-  title: User Management API
+  title: User Management Module API
+  description: |
+    Aggregated API specification for the User Management module.
+    Manages Employees, Collaborators, Adult Students, Minor Students, and Tutors.
+    All entities are tenant-scoped with soft delete support.
   version: 1.0.0
-  description: User Management API for managing users in Akademia Plus system
+  contact:
+    name: ElatusDev
+    email: dev@elatusdev.com
+
+servers:
+  - url: https://api.akademiaplus.com/v1
+    description: Production server
+  - url: https://staging-api.akademiaplus.com/v1
+    description: Staging server
+  - url: http://localhost:8080/v1
+    description: Development server
+
+tags:
+  - name: Employees
+    description: Employee management operations
+  - name: Collaborators
+    description: Collaborator management operations
+  - name: AdultStudents
+    description: Adult student management operations
+  - name: MinorStudents
+    description: Minor student management operations
+  - name: Tutors
+    description: Tutor management operations
 
 paths:
+  # Employee endpoints
   /employees:
-    $ref: "./employee.yaml#/paths/~1employees"
+    $ref: './employee-api.yaml#/paths/~1employees'
+
   /employees/{employeeId}:
-    $ref: "./employee.yaml#/paths/~1employees~1{employeeId}"
+    $ref: './employee-api.yaml#/paths/~1employees~1{employeeId}'
+
+  # Collaborator endpoints
   /collaborators:
-    $ref: "./collaborator.yaml#/paths/~1collaborators"
+    $ref: './collaborator-api.yaml#/paths/~1collaborators'
+
   /collaborators/{collaboratorId}:
-    $ref: "./collaborator.yaml#/paths/~1collaborators~1{collaboratorId}"
-  /adultStudents:
-    $ref: './customer.yaml#/paths/~1adult-students'
-  /adultStudents/{adultStudentId}:
-    $ref: './customer.yaml#/paths/~1adult-students~1{adultStudentId}'
-  /minorStudents:
-    $ref: './customer.yaml#/paths/~1minor-students'
-  /minorStudents/{minorStudentId}:
-    $ref: './customer.yaml#/paths/~1minor-students~1{minorStudentId}'
-  /tutors: # Add Tutor paths
-    $ref: './customer.yaml#/paths/~1tutors'
-  /tutors/{tutorId}: # Add Tutor paths
-    $ref: './customer.yaml#/paths/~1tutors~1{tutorId}'
+    $ref: './collaborator-api.yaml#/paths/~1collaborators~1{collaboratorId}'
+
+  /collaborators/by-skills:
+    $ref: './collaborator-api.yaml#/paths/~1collaborators~1by-skills'
+
+  # Adult Student endpoints
+  /adult-students:
+    $ref: './adult-student-api.yaml#/paths/~1adult-students'
+
+  /adult-students/{adultStudentId}:
+    $ref: './adult-student-api.yaml#/paths/~1adult-students~1{adultStudentId}'
+
+  # Minor Student endpoints
+  /minor-students:
+    $ref: './minor-student-api.yaml#/paths/~1minor-students'
+
+  /minor-students/{minorStudentId}:
+    $ref: './minor-student-api.yaml#/paths/~1minor-students~1{minorStudentId}'
+
+  /minor-students/by-tutor/{tutorId}:
+    $ref: './minor-student-api.yaml#/paths/~1minor-students~1by-tutor~1{tutorId}'
+
+  # Tutor endpoints
+  /tutors:
+    $ref: './tutor-api.yaml#/paths/~1tutors'
+
+  /tutors/{tutorId}:
+    $ref: './tutor-api.yaml#/paths/~1tutors~1{tutorId}'
+
+  /tutors/{tutorId}/students:
+    $ref: './tutor-api.yaml#/paths/~1tutors~1{tutorId}~1students'
 
 components:
-  schemas:
-    Employee:
-      $ref: './employee.yaml#/components/schemas'
-    collaborator:
-      $ref: './collaborator.yaml#/components/schemas'
-    Customer:
-      $ref: './customer.yaml#/components/schemas'
+  # Reference all common components from commons.yaml
+  securitySchemes:
+    BearerAuth:
+      $ref: './commons.yaml#/components/securitySchemes/BearerAuth'
+    TenantAuth:
+      $ref: './commons.yaml#/components/securitySchemes/TenantAuth'
+
+security:
+  - BearerAuth: []
+    TenantAuth: []
+
+externalDocs:
+  description: User Management Module Documentation
+  url: https://docs.akademiaplus.com/api/user-management

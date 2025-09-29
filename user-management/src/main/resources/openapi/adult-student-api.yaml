@@ -1,0 +1,159 @@
+openapi: 3.0.3
+info:
+  title: Adult Student API
+  description: API for managing adult students with customer authentication
+  version: 1.0.0
+
+paths:
+  /adult-students:
+    get:
+      tags:
+        - AdultStudents
+      summary: List all adult students
+      operationId: getAllAdultStudents
+      parameters:
+        - $ref: './commons.yaml#/components/parameters/PageParam'
+        - $ref: './commons.yaml#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: './base-components.yaml#/components/schemas/GetAllAdultStudentResponse'
+                  pagination:
+                    $ref: './commons.yaml#/components/schemas/PaginationInfo'
+        '400':
+          $ref: './commons.yaml#/components/responses/BadRequest'
+        '401':
+          $ref: './commons.yaml#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - AdultStudents
+      summary: Create new adult student
+      operationId: createAdultStudent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdultStudentCreationRequest'
+      responses:
+        '201':
+          description: Adult student created successfully
+          content:
+            application/json:
+              schema:
+                $ref: './base-components.yaml#/components/schemas/AdultStudentCreationResponse'
+        '400':
+          $ref: './commons.yaml#/components/responses/BadRequest'
+        '401':
+          $ref: './commons.yaml#/components/responses/Unauthorized'
+        '409':
+          $ref: './commons.yaml#/components/responses/Conflict'
+
+  /adult-students/{adultStudentId}:
+    get:
+      tags:
+        - AdultStudents
+      summary: Get adult student by ID
+      operationId: getAdultStudent
+      parameters:
+        - name: adultStudentId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: './base-components.yaml#/components/schemas/GetAdultStudentResponse'
+        '401':
+          $ref: './commons.yaml#/components/responses/Unauthorized'
+        '404':
+          $ref: './commons.yaml#/components/responses/NotFound'
+
+    put:
+      tags:
+        - AdultStudents
+      summary: Update adult student
+      operationId: updateAdultStudent
+      parameters:
+        - name: adultStudentId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdultStudentUpdateRequest'
+      responses:
+        '200':
+          description: Adult student updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: './base-components.yaml#/components/schemas/AdultStudentUpdateResponse'
+        '400':
+          $ref: './commons.yaml#/components/responses/BadRequest'
+        '401':
+          $ref: './commons.yaml#/components/responses/Unauthorized'
+        '404':
+          $ref: './commons.yaml#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - AdultStudents
+      summary: Soft delete adult student
+      operationId: deleteAdultStudent
+      parameters:
+        - name: adultStudentId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '204':
+          description: Adult student deleted successfully
+        '401':
+          $ref: './commons.yaml#/components/responses/Unauthorized'
+        '404':
+          $ref: './commons.yaml#/components/responses/NotFound'
+
+components:
+  schemas:
+    AdultStudentCreationRequest:
+      allOf:
+        - $ref: './base-components.yaml#/components/schemas/AdultStudentBaseFields'
+        - $ref: './base-components.yaml#/components/schemas/PersonPiiFields'
+        - $ref: './base-components.yaml#/components/schemas/CustomerAuthFields'
+      required:
+        - birthdate
+        - provider
+        - token
+        - firstName
+        - lastName
+        - email
+        - phoneNumber
+        - address
+        - zipCode
+
+    AdultStudentUpdateRequest:
+      allOf:
+        - $ref: './base-components.yaml#/components/schemas/AdultStudentBaseFields'
+        - $ref: './base-components.yaml#/components/schemas/PersonPiiFields'

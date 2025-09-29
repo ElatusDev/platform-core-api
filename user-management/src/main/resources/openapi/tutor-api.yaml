@@ -1,0 +1,216 @@
+openapi: 3.0.3
+info:
+  title: Tutor API
+  description: API for managing tutors and their relationships with minor students
+  version: 1.0.0
+
+paths:
+  /tutors:
+    get:
+      tags:
+        - Tutors
+      summary: List all tutors
+      operationId: getAllTutors
+      parameters:
+        - $ref: './commons.yaml#/components/parameters/PageParam'
+        - $ref: './commons.yaml#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: './base-components.yaml#/components/schemas/GetAllTutorResponse'
+                  pagination:
+                    $ref: './commons.yaml#/components/schemas/PaginationInfo'
+        '400':
+          $ref: './commons.yaml#/components/responses/BadRequest'
+        '401':
+          $ref: './commons.yaml#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Tutors
+      summary: Create new tutor
+      operationId: createTutor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TutorCreationRequest'
+      responses:
+        '201':
+          description: Tutor created successfully
+          content:
+            application/json:
+              schema:
+                $ref: './base-components.yaml#/components/schemas/TutorCreationResponse'
+        '400':
+          $ref: './commons.yaml#/components/responses/BadRequest'
+        '401':
+          $ref: './commons.yaml#/components/responses/Unauthorized'
+        '409':
+          $ref: './commons.yaml#/components/responses/Conflict'
+
+  /tutors/{tutorId}:
+    get:
+      tags:
+        - Tutors
+      summary: Get tutor by ID
+      operationId: getTutor
+      parameters:
+        - name: tutorId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: './base-components.yaml#/components/schemas/GetTutorResponse'
+        '401':
+          $ref: './commons.yaml#/components/responses/Unauthorized'
+        '404':
+          $ref: './commons.yaml#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Tutors
+      summary: Update tutor
+      operationId: updateTutor
+      parameters:
+        - name: tutorId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TutorUpdateRequest'
+      responses:
+        '200':
+          description: Tutor updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: './base-components.yaml#/components/schemas/TutorUpdateResponse'
+        '400':
+          $ref: './commons.yaml#/components/responses/BadRequest'
+        '401':
+          $ref: './commons.yaml#/components/responses/Unauthorized'
+        '404':
+          $ref: './commons.yaml#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Tutors
+      summary: Soft delete tutor
+      description: Soft delete tutor. Note that tutor cannot be deleted if they have active minor students.
+      operationId: deleteTutor
+      parameters:
+        - name: tutorId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '204':
+          description: Tutor deleted successfully
+        '400':
+          description: Cannot delete tutor with active students
+          content:
+            application/json:
+              schema:
+                $ref: './commons.yaml#/components/schemas/ErrorResponse'
+        '401':
+          $ref: './commons.yaml#/components/responses/Unauthorized'
+        '404':
+          $ref: './commons.yaml#/components/responses/NotFound'
+
+  /tutors/{tutorId}/students:
+    get:
+      tags:
+        - Tutors
+      summary: Get tutor's minor students
+      operationId: getTutorStudents
+      parameters:
+        - name: tutorId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: './base-components.yaml#/components/schemas/GetAllMinorStudentResponse'
+                  totalStudents:
+                    type: integer
+                    example: 3
+        '401':
+          $ref: './commons.yaml#/components/responses/Unauthorized'
+        '404':
+          $ref: './commons.yaml#/components/responses/NotFound'
+
+components:
+  schemas:
+    TutorCreationRequest:
+      allOf:
+        - $ref: './base-components.yaml#/components/schemas/TutorBaseFields'
+        - $ref: './base-components.yaml#/components/schemas/PersonPiiFields'
+        - type: object
+          properties:
+            provider:
+              type: string
+              maxLength: 50
+              description: Optional authentication provider
+              nullable: true
+            token:
+              type: string
+              description: Optional authentication token
+              nullable: true
+      required:
+        - birthdate
+        - firstName
+        - lastName
+        - email
+        - phoneNumber
+        - address
+        - zipCode
+
+    TutorUpdateRequest:
+      allOf:
+        - $ref: './base-components.yaml#/components/schemas/TutorBaseFields'
+        - $ref: './base-components.yaml#/components/schemas/PersonPiiFields'
+        - type: object
+          properties:
+            provider:
+              type: string
+              maxLength: 50
+              nullable: true
+            token:
+              type: string
+              nullable: true
