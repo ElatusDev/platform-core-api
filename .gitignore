@@ -9,6 +9,7 @@ etl-service/target/
 mock-data-service/target/
 multi-tenant-data/target/
 notification-service/target/
+pos-system/target/
 security/target/
 tenant-management/target/
 user-management/target/
@@ -30,6 +31,7 @@ etl-service/*.iml
 mock-data-service/*.iml
 multi-tenant-data/*.iml
 notification-service/*.iml
+pos-system/*.iml
 security/*.iml
 tenant-management/*.iml
 user-management/*.iml
