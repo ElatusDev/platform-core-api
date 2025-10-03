@@ -8,11 +8,13 @@
 package com.akademiaplus.tenancy;
 
 import com.akademiaplus.infra.Auditable;
+import com.akademiaplus.infra.SoftDeletable;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -31,14 +33,14 @@ import org.springframework.stereotype.Component;
 @Component
 @Entity
 @Table(name = "tenants")
-public class TenantDataModel extends Auditable {
+@SQLDelete(sql = "UPDATE tenants SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+public class TenantDataModel extends SoftDeletable {
 
     /**
      * Unique identifier for the tenant organization.
      * This ID is used as tenant_id in all other tenant-scoped entities.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "tenant_id")
     private Integer tenantId;
 

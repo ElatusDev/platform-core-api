@@ -10,14 +10,13 @@ package com.akademiaplus.billing.store;
 import com.akademiaplus.infra.TenantScoped;
 import com.akademiaplus.users.employee.EmployeeDataModel;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -36,7 +35,8 @@ import java.util.List;
 @Scope("prototype")
 @Component
 @Entity
-@Table(name = "store_transaction")
+@Table(name = "store_transactions")
+@SQLDelete(sql = "UPDATE store_transactions SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
 @IdClass(StoreTransactionDataModel.StoreTransactionCompositeId.class)
 public class StoreTransactionDataModel extends TenantScoped {
 
@@ -45,9 +45,8 @@ public class StoreTransactionDataModel extends TenantScoped {
      * Auto-incremented per tenant for better performance and serves as part of the composite key.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "transaction_id")
-    private Integer transactionId;
+    @Column(name = "store_transaction_id")
+    private Integer storeTransactionId;
 
     /**
      * Timestamp when the transaction was created.
@@ -69,7 +68,7 @@ public class StoreTransactionDataModel extends TenantScoped {
      * Sum of all sale item totals, including taxes and discounts if applicable.
      */
     @Column(name = "total_amount", nullable = false)
-    private Double totalAmount;
+    private BigDecimal totalAmount;
 
     /**
      * Method used for payment (e.g., CASH, CREDIT_CARD, DEBIT_CARD, CHECK, DIGITAL_WALLET).
@@ -84,8 +83,8 @@ public class StoreTransactionDataModel extends TenantScoped {
      * Optional field for transactions that may be processed automatically or by customers.
      */
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id")
-    @JoinColumn(name = "employee_id", referencedColumnName = "employee_id")
+    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false)
+    @JoinColumn(name = "employee_id", referencedColumnName = "employee_id", insertable=false, updatable=false)
     private EmployeeDataModel employee;
 
     /**
@@ -93,39 +92,19 @@ public class StoreTransactionDataModel extends TenantScoped {
      * Uses tenant-aware mapping to maintain data isolation.
      */
     @OneToMany(mappedBy = "transaction", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<SaleItemDataModel> saleItems;
+    private List<StoreSaleItemDataModel> saleItems;
 
     /**
      * Composite primary key class for StoreTransaction entity.
      * Combines tenant ID and transaction ID for uniqueness across tenants.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
     public static class StoreTransactionCompositeId {
-
         private Integer tenantId;
-        private Integer transactionId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof StoreTransactionCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) &&
-                    transactionId.equals(that.transactionId);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, transactionId);
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() +
-                    "{tenantId=" + tenantId +
-                    ", transactionId=" + transactionId + "}";
-        }
+        private Integer storeTransactionId;
     }
 }

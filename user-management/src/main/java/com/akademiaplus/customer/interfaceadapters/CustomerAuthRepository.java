@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.customer.interfaceadapters;
 
-import com.akademiaplus.users.customer.CustomerAuthDataModel;
+import com.akademiaplus.security.CustomerAuthDataModel;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

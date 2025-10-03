@@ -35,8 +35,8 @@ public abstract class AbstractUser extends TenantScoped {
      * All user types require personal information for identification and contact.
      */
     @OneToOne(optional = false, cascade = CascadeType.PERSIST, orphanRemoval = true)
-    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id")
-    @JoinColumn(name = "person_pii_id", referencedColumnName = "person_pii_id")
+    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false)
+    @JoinColumn(name = "person_pii_id", referencedColumnName = "person_pii_id", insertable=false, updatable=false)
     private PersonPIIDataModel personPII;
 
     /**
@@ -64,6 +64,6 @@ public abstract class AbstractUser extends TenantScoped {
      * Optional field - users may not have profile pictures.
      */
     @Lob
-    @Column(name = "encrypted_profile_picture")
+    @Column(name = "encrypted_profile_picture", columnDefinition = "MEDIUMBLOB")
     private byte[] encryptedProfilePicture;
 }

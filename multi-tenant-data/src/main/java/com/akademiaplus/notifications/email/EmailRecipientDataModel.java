@@ -9,10 +9,8 @@ package com.akademiaplus.notifications.email;
 
 import com.akademiaplus.infra.TenantScoped;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -32,6 +30,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Entity
 @Table(name = "email_recipients")
+@SQLDelete(sql = "UPDATE email_recipients SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
 @IdClass(EmailRecipientDataModel.EmailRecipientCompositeId.class)
 public class EmailRecipientDataModel extends TenantScoped {
 
@@ -56,7 +55,7 @@ public class EmailRecipientDataModel extends TenantScoped {
      * Uses composite foreign key to maintain tenant isolation.
      */
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id")
+    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable = false, updatable = false)
     @JoinColumn(name = "email_id", referencedColumnName = "email_id", insertable = false, updatable = false)
     private EmailDataModel email;
 
@@ -64,36 +63,14 @@ public class EmailRecipientDataModel extends TenantScoped {
      * Composite primary key class for EmailRecipient entity.
      * Combines tenant ID, email ID, and recipient email for uniqueness.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
     public static class EmailRecipientCompositeId {
-
         private Integer tenantId;
         private Integer emailId;
         private String recipientEmail;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof EmailRecipientCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) &&
-                    emailId.equals(that.emailId) &&
-                    recipientEmail.equals(that.recipientEmail);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, emailId, recipientEmail);
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() +
-                    "{tenantId=" + tenantId +
-                    ", emailId=" + emailId +
-                    ", recipientEmail='" + recipientEmail + "'}";
-        }
     }
 }

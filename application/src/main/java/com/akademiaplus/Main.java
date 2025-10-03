@@ -10,7 +10,7 @@ package com.akademiaplus;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication(scanBasePackages = {"com.makani"})
+@SpringBootApplication(scanBasePackages = {"com.akademia.plus"})
 public class Main {
     public static void main(String[] args) {
         SpringApplication.run(Main.class, args);

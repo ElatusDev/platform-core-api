@@ -5,14 +5,11 @@
  * This code is proprietary and confidential.
  * Unauthorized copying, distribution, or modification is strictly prohibited.
  */
-package com.akademiaplus.users.customer;
+package com.akademiaplus.security;
 
 import com.akademiaplus.infra.TenantScoped;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -44,7 +41,6 @@ public class CustomerAuthDataModel extends TenantScoped {
      * Auto-incremented per tenant for better performance.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "customer_auth_id")
     private Integer customerAuthId;
 
@@ -70,6 +66,7 @@ public class CustomerAuthDataModel extends TenantScoped {
     /**
      * Composite primary key class for CustomerAuth entity.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
@@ -77,22 +74,5 @@ public class CustomerAuthDataModel extends TenantScoped {
     public static class CustomerAuthCompositeId implements Serializable {
         protected Integer tenantId;
         protected Integer customerAuthId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof CustomerAuthCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) && customerAuthId.equals(that.customerAuthId);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, customerAuthId);
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() + "{tenantId=" + tenantId + ", customerAuthId=" + customerAuthId + "}";
-        }
     }
 }

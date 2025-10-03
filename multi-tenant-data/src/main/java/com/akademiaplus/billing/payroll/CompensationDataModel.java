@@ -10,13 +10,12 @@ package com.akademiaplus.billing.payroll;
 import com.akademiaplus.infra.TenantScoped;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -35,7 +34,8 @@ import java.util.List;
 @Scope("prototype")
 @Component
 @Entity
-@Table(name = "compensation")
+@Table(name = "compensations")
+@SQLDelete(sql = "UPDATE compensations SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
 @IdClass(CompensationDataModel.CompensationCompositeId.class)
 public class CompensationDataModel extends TenantScoped {
 
@@ -44,7 +44,6 @@ public class CompensationDataModel extends TenantScoped {
      * Auto-incremented per tenant for better performance and serves as part of the composite key.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "compensation_id")
     private Integer compensationId;
 
@@ -60,46 +59,36 @@ public class CompensationDataModel extends TenantScoped {
      * Interpretation depends on compensation type (annual for salary, per hour for hourly, etc.).
      */
     @Column(name = "amount", nullable = false)
-    private Double amount;
+    private BigDecimal amount;
 
     /**
      * List of collaborators who are assigned this compensation structure.
      * Uses tenant-aware mapping to maintain data isolation.
      */
-    @OneToMany(mappedBy = "compensation", fetch = FetchType.LAZY)
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "compensation_collaborators",
+            joinColumns = {
+                    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id"),
+                    @JoinColumn(name = "compensation_id", referencedColumnName = "compensation_id")
+            },
+            inverseJoinColumns = {
+                    @JoinColumn(name = "collaborator_id", referencedColumnName = "collaborator_id")
+            }
+    )
     private List<CollaboratorDataModel> collaborators;
 
     /**
      * Composite primary key class for Compensation entity.
      * Combines tenant ID and compensation ID for uniqueness.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
     public static class CompensationCompositeId {
-
         private Integer tenantId;
         private Integer compensationId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof CompensationCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) &&
-                    compensationId.equals(that.compensationId);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, compensationId);
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() +
-                    "{tenantId=" + tenantId +
-                    ", compensationId=" + compensationId + "}";
-        }
     }
 }

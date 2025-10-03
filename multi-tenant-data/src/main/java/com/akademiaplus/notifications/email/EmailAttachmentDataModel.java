@@ -9,10 +9,8 @@ package com.akademiaplus.notifications.email;
 
 import com.akademiaplus.infra.TenantScoped;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -33,6 +31,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Entity
 @Table(name = "email_attachments")
+@SQLDelete(sql = "UPDATE email_attachments SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
 @IdClass(EmailAttachmentDataModel.EmailAttachmentCompositeId.class)
 public class EmailAttachmentDataModel extends TenantScoped {
 
@@ -57,7 +56,7 @@ public class EmailAttachmentDataModel extends TenantScoped {
      * Uses composite foreign key to maintain tenant isolation.
      */
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id")
+    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable = false, updatable = false)
     @JoinColumn(name = "email_id", referencedColumnName = "email_id", insertable = false, updatable = false)
     private EmailDataModel email;
 
@@ -65,36 +64,14 @@ public class EmailAttachmentDataModel extends TenantScoped {
      * Composite primary key class for EmailAttachment entity.
      * Combines tenant ID, email ID, and attachment URL for uniqueness.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
     public static class EmailAttachmentCompositeId {
-
         private Integer tenantId;
         private Integer emailId;
         private String attachmentUrl;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof EmailAttachmentCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) &&
-                    emailId.equals(that.emailId) &&
-                    attachmentUrl.equals(that.attachmentUrl);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, emailId, attachmentUrl);
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() +
-                    "{tenantId=" + tenantId +
-                    ", emailId=" + emailId +
-                    ", attachmentUrl='" + attachmentUrl + "'}";
-        }
     }
 }

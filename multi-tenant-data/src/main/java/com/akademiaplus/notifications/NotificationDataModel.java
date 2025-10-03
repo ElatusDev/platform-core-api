@@ -9,10 +9,8 @@ package com.akademiaplus.notifications;
 
 import com.akademiaplus.infra.TenantScoped;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -35,6 +33,7 @@ import java.time.LocalDateTime;
 @Component
 @Entity
 @Table(name = "notifications")
+@SQLDelete(sql = "UPDATE notifications SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
 @IdClass(NotificationDataModel.NotificationCompositeId.class)
 public class NotificationDataModel extends TenantScoped {
 
@@ -43,7 +42,6 @@ public class NotificationDataModel extends TenantScoped {
      * Auto-incremented per tenant for better performance.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "notification_id")
     private Integer notificationId;
 
@@ -122,6 +120,7 @@ public class NotificationDataModel extends TenantScoped {
     /**
      * Composite primary key class for Notification entity.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
@@ -129,22 +128,5 @@ public class NotificationDataModel extends TenantScoped {
     public static class NotificationCompositeId implements Serializable {
         private Integer tenantId;
         private Integer notificationId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof NotificationCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) && notificationId.equals(that.notificationId);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, notificationId);
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() + "{tenantId=" + tenantId + ", notificationId=" + notificationId + "}";
-        }
     }
 }

@@ -35,7 +35,7 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: makani_db
+      MYSQL_DATABASE: multi_tenant_db
       MYSQL_USER: dev
       MYSQL_PASSWORD: 12345
     ports:

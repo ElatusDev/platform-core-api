@@ -12,9 +12,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.PropertySource;
 
-@Profile("mock-data-service")
+@Profile("test")
 @PropertySource("classpath:mock-data-service.properties")
-@SpringBootApplication(scanBasePackages = {"com.makani"})
+@SpringBootApplication(scanBasePackages = {"com.akademiaplus"})
 public class MockDataApp {
     public static void main(String[] args) {
         SpringApplication.run(MockDataApp.class, args);

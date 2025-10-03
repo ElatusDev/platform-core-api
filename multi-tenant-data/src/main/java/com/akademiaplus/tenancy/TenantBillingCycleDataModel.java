@@ -9,10 +9,8 @@ package com.akademiaplus.tenancy;
 
 import com.akademiaplus.infra.TenantScoped;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +18,6 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.YearMonth;
 
 /**
  * Entity representing a billing cycle for a tenant organization.
@@ -38,6 +35,7 @@ import java.time.YearMonth;
 @Component
 @Entity
 @Table(name = "tenant_billing_cycles")
+@SQLDelete(sql = "UPDATE tenant_billing_cycles SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
 @IdClass(TenantBillingCycleDataModel.TenantBillingCycleCompositeId.class)
 public class TenantBillingCycleDataModel extends TenantScoped {
 
@@ -46,8 +44,8 @@ public class TenantBillingCycleDataModel extends TenantScoped {
      * Auto-incremented per tenant for better performance.
      */
     @Id
-    @Column(name = "billing_cycle_id")
-    private Integer billingCycleId;
+    @Column(name = "tenant_billing_cycle_id")
+    private Integer tenantBillingCycleId;
 
     /**
      * Year and month for this billing cycle.
@@ -56,7 +54,7 @@ public class TenantBillingCycleDataModel extends TenantScoped {
      * Format: YYYY-MM (e.g., 2025-01 for January 2025)
      */
     @Column(name = "billing_month", nullable = false)
-    private YearMonth billingMonth;
+    private LocalDate billingMonth;
 
     /**
      * Date when billing calculations were performed.
@@ -113,6 +111,7 @@ public class TenantBillingCycleDataModel extends TenantScoped {
     /**
      * Composite primary key class for TenantBillingCycle entity.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
@@ -120,22 +119,5 @@ public class TenantBillingCycleDataModel extends TenantScoped {
     public static class TenantBillingCycleCompositeId implements Serializable {
         private Integer tenantId;
         private Integer tenantBillingCycleId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof TenantBillingCycleCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) && tenantBillingCycleId.equals(that.tenantBillingCycleId);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, tenantBillingCycleId);
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() + "{tenantId=" + tenantId + ", tenantBillingCycleId=" + tenantBillingCycleId + "}";
-        }
     }
 }

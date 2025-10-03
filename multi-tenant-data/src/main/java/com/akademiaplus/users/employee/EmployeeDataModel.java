@@ -10,10 +10,7 @@ package com.akademiaplus.users.employee;
 import com.akademiaplus.security.InternalAuthDataModel;
 import com.akademiaplus.users.base.AbstractUser;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -40,16 +37,13 @@ import java.io.Serializable;
 @Table(name = "employees")
 @SQLDelete(sql = "UPDATE employees SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
 @IdClass(EmployeeDataModel.EmployeeCompositeId.class)
-public class EmployeeDataModel extends AbstractUser implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 1L;
+public class EmployeeDataModel extends AbstractUser {
 
     /**
      * Unique identifier for the employee within the tenant.
      * Auto-incremented per tenant for better performance.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "employee_id")
     private Integer employeeId;
 
@@ -69,14 +63,15 @@ public class EmployeeDataModel extends AbstractUser implements Serializable {
      * Employees require internal auth for system access and security.
      */
     @OneToOne(optional = false, cascade = CascadeType.PERSIST, orphanRemoval = true)
-    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id")
-    @JoinColumn(name = "internal_auth_id", referencedColumnName = "internal_auth_id")
+    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false)
+    @JoinColumn(name = "internal_auth_id", referencedColumnName = "internal_auth_id", insertable=false, updatable=false)
     private InternalAuthDataModel internalAuth;
 
 
     /**
      * Composite primary key class for Employee entity.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
@@ -84,22 +79,5 @@ public class EmployeeDataModel extends AbstractUser implements Serializable {
     public static class EmployeeCompositeId implements Serializable {
         private Integer tenantId;
         private Integer employeeId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof EmployeeCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) && employeeId.equals(that.employeeId);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, employeeId);
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() + "{tenantId=" + tenantId + ", employeeId=" + employeeId + "}";
-        }
     }
 }

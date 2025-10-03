@@ -9,12 +9,12 @@ package com.akademiaplus.billing.store;
 
 import com.akademiaplus.infra.TenantScoped;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
 
 /**
  * Entity representing individual line items within a store transaction in the multi-tenant platform.
@@ -32,26 +32,26 @@ import org.springframework.stereotype.Component;
 @Scope("prototype")
 @Component
 @Entity
-@Table(name = "store_sale_item")
-@IdClass(SaleItemDataModel.SaleItemCompositeId.class)
-public class SaleItemDataModel extends TenantScoped {
+@Table(name = "store_sale_items")
+@SQLDelete(sql = "UPDATE store_sale_items SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@IdClass(StoreSaleItemDataModel.SaleItemCompositeId.class)
+public class StoreSaleItemDataModel extends TenantScoped {
 
     /**
      * Unique identifier for the sale item within the tenant.
      * Auto-incremented per tenant for better performance and serves as part of the composite key.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "sale_item_id")
-    private Integer saleItemId;
+    @Column(name = "store_sale_item_id")
+    private Integer storeSaleItemId;
 
     /**
      * Reference to the parent store transaction containing this sale item.
      * Uses tenant-aware join to maintain data isolation across tenants.
      */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id")
-    @JoinColumn(name = "transaction_id", referencedColumnName = "transaction_id")
+    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false)
+    @JoinColumn(name = "store_transaction_id", referencedColumnName = "store_transaction_id", insertable=false, updatable=false)
     private StoreTransactionDataModel transaction;
 
     /**
@@ -59,9 +59,9 @@ public class SaleItemDataModel extends TenantScoped {
      * Uses tenant-aware join to ensure products belong to the same tenant.
      */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id")
-    @JoinColumn(name = "product_id", referencedColumnName = "product_id")
-    private ProductDataModel product;
+    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false)
+    @JoinColumn(name = "store_product_id", referencedColumnName = "store_product_id", insertable=false, updatable=false)
+    private StoreProductDataModel product;
 
     /**
      * Number of units of the product being purchased.
@@ -76,46 +76,26 @@ public class SaleItemDataModel extends TenantScoped {
      * due to discounts, promotions, or price changes.
      */
     @Column(name = "unit_price_at_sale", nullable = false)
-    private Double unitPriceAtSale;
+    private BigDecimal unitPriceAtSale;
 
     /**
      * Total amount for this line item (quantity × unit_price_at_sale).
      * Calculated and stored for performance and audit purposes.
      */
     @Column(name = "item_total", nullable = false)
-    private Double itemTotal;
+    private BigDecimal itemTotal;
 
     /**
      * Composite primary key class for SaleItem entity.
      * Combines tenant ID and sale item ID for uniqueness across tenants.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
     public static class SaleItemCompositeId {
-
         private Integer tenantId;
-        private Integer saleItemId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof SaleItemCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) &&
-                    saleItemId.equals(that.saleItemId);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, saleItemId);
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() +
-                    "{tenantId=" + tenantId +
-                    ", saleItemId=" + saleItemId + "}";
-        }
+        private Integer storeSaleItemId;
     }
 }

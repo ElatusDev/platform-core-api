@@ -56,8 +56,8 @@ public abstract class AbstractEvent extends TenantScoped {
      * Links the event to specific course timing and recurrence patterns.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id")
-    @JoinColumn(name = "schedule_id", referencedColumnName = "schedule_id")
+    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false)
+    @JoinColumn(name = "schedule_id", referencedColumnName = "schedule_id", insertable=false, updatable=false)
     private ScheduleDataModel schedule;
 
     /**

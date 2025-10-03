@@ -10,10 +10,8 @@ package com.akademiaplus.billing.membership;
 import com.akademiaplus.infra.TenantScoped;
 import com.akademiaplus.courses.program.CourseDataModel;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -34,6 +32,7 @@ import java.util.List;
 @Component
 @Entity
 @Table(name = "memberships")
+@SQLDelete(sql = "UPDATE memberships SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
 @IdClass(MembershipDataModel.MembershipCompositeId.class)
 public class MembershipDataModel extends TenantScoped {
 
@@ -42,7 +41,6 @@ public class MembershipDataModel extends TenantScoped {
      * Auto-incremented per tenant for better performance.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "membership_id")
     private Integer membershipId;
 
@@ -75,12 +73,12 @@ public class MembershipDataModel extends TenantScoped {
     @JoinTable(
             name = "membership_courses",
             joinColumns = {
-                    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id"),
-                    @JoinColumn(name = "membership_id", referencedColumnName = "membership_id")
+                    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false),
+                    @JoinColumn(name = "membership_id", referencedColumnName = "membership_id", insertable=false, updatable=false)
             },
             inverseJoinColumns = {
-                    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id"),
-                    @JoinColumn(name = "course_id", referencedColumnName = "course_id")
+                    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false),
+                    @JoinColumn(name = "course_id", referencedColumnName = "course_id", insertable=false, updatable=false)
             }
     )
     private List<CourseDataModel> courses;
@@ -88,6 +86,7 @@ public class MembershipDataModel extends TenantScoped {
     /**
      * Composite primary key class for Membership entity.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
@@ -95,22 +94,5 @@ public class MembershipDataModel extends TenantScoped {
     public static class MembershipCompositeId implements Serializable {
         private Integer tenantId;
         private Integer membershipId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof MembershipCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) && membershipId.equals(that.membershipId);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, membershipId);
-        }
-
-        @Override
-        public String toString() {
-            return "MembershipCompositeId{tenantId=" + tenantId + ", membershipId=" + membershipId + "}";
-        }
     }
 }

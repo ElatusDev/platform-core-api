@@ -9,10 +9,8 @@ package com.akademiaplus.billing.customerpayment;
 
 import com.akademiaplus.billing.membership.MembershipTutorDataModel;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -31,6 +29,7 @@ import java.io.Serializable;
 @Component
 @Entity
 @Table(name = "payment_tutors")
+@SQLDelete(sql = "UPDATE payment_tutors SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
 @IdClass(PaymentTutorDataModel.PaymentTutorCompositeId.class)
 public class PaymentTutorDataModel extends BasePayment {
 
@@ -39,7 +38,6 @@ public class PaymentTutorDataModel extends BasePayment {
      * Auto-incremented per tenant for better performance.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "payment_tutor_id")
     private Integer paymentTutorId;
 
@@ -55,6 +53,7 @@ public class PaymentTutorDataModel extends BasePayment {
     /**
      * Composite primary key class for PaymentTutor entity.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
@@ -62,22 +61,5 @@ public class PaymentTutorDataModel extends BasePayment {
     public static class PaymentTutorCompositeId implements Serializable {
         private Integer tenantId;
         private Integer paymentTutorId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof PaymentTutorCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) && paymentTutorId.equals(that.paymentTutorId);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, paymentTutorId);
-        }
-
-        @Override
-        public String toString() {
-            return "PaymentTutorCompositeId{tenantId=" + tenantId + ", paymentTutorId=" + paymentTutorId + "}";
-        }
     }
 }

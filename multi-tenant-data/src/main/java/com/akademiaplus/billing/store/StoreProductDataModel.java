@@ -9,12 +9,12 @@ package com.akademiaplus.billing.store;
 
 import com.akademiaplus.infra.TenantScoped;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
 
 /**
  * Entity representing products available in the store within the multi-tenant platform.
@@ -31,18 +31,18 @@ import org.springframework.stereotype.Component;
 @Scope("prototype")
 @Component
 @Entity
-@Table(name = "store_product")
-@IdClass(ProductDataModel.ProductCompositeId.class)
-public class ProductDataModel extends TenantScoped {
+@Table(name = "store_products")
+@SQLDelete(sql = "UPDATE store_products SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@IdClass(StoreProductDataModel.ProductCompositeId.class)
+public class StoreProductDataModel extends TenantScoped {
 
     /**
      * Unique identifier for the product within the tenant.
      * Auto-incremented per tenant for better performance and serves as part of the composite key.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "product_id")
-    private Integer productId;
+    @Column(name = "store_product_id")
+    private Integer storeProductId;
 
     /**
      * Display name of the product.
@@ -60,11 +60,11 @@ public class ProductDataModel extends TenantScoped {
 
     /**
      * Current selling price of the product.
-     * Stored as Double for flexibility, but should be handled with proper
+     * Stored as BigDecimal for flexibility, but should be handled with proper
      * currency precision in business logic and display layers.
      */
     @Column(name = "price", nullable = false)
-    private Double price;
+    private BigDecimal price;
 
     /**
      * Current available quantity in stock for this product.
@@ -78,33 +78,13 @@ public class ProductDataModel extends TenantScoped {
      * Composite primary key class for Product entity.
      * Combines tenant ID and product ID for uniqueness across tenants.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
     public static class ProductCompositeId {
-
         private Integer tenantId;
-        private Integer productId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof ProductCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) &&
-                    productId.equals(that.productId);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, productId);
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() +
-                    "{tenantId=" + tenantId +
-                    ", productId=" + productId + "}";
-        }
+        private Integer storeProductId;
     }
 }

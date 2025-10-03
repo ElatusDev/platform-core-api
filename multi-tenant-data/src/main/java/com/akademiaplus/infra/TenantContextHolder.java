@@ -23,7 +23,7 @@ import java.util.Objects;
 @Getter
 @Component
 @Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
-public final class TenantContextHolder {
+public class TenantContextHolder {
 
     private final Integer tenantId;
 

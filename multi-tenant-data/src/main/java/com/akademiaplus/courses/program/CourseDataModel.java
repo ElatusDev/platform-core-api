@@ -10,10 +10,8 @@ package com.akademiaplus.courses.program;
 import com.akademiaplus.infra.TenantScoped;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -36,6 +34,7 @@ import java.util.List;
 @Component
 @Entity
 @Table(name = "courses")
+@SQLDelete(sql = "UPDATE courses SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
 @IdClass(CourseDataModel.CourseCompositeId.class)
 public class CourseDataModel extends TenantScoped {
 
@@ -44,7 +43,6 @@ public class CourseDataModel extends TenantScoped {
      * Auto-incremented per tenant for better performance.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "course_id")
     private Integer courseId;
 
@@ -84,12 +82,12 @@ public class CourseDataModel extends TenantScoped {
     @JoinTable(
             name = "course_available_collaborators",
             joinColumns = {
-                    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id"),
-                    @JoinColumn(name = "course_id", referencedColumnName = "course_id")
+                    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false),
+                    @JoinColumn(name = "course_id", referencedColumnName = "course_id", insertable=false, updatable=false)
             },
             inverseJoinColumns = {
-                    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id"),
-                    @JoinColumn(name = "collaborator_id", referencedColumnName = "collaborator_id")
+                    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false),
+                    @JoinColumn(name = "collaborator_id", referencedColumnName = "collaborator_id", insertable=false, updatable=false)
             }
     )
     private List<CollaboratorDataModel> availableCollaborators;
@@ -97,6 +95,7 @@ public class CourseDataModel extends TenantScoped {
     /**
      * Composite primary key class for Course entity.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
@@ -104,22 +103,5 @@ public class CourseDataModel extends TenantScoped {
     public static class CourseCompositeId implements Serializable {
         private Integer tenantId;
         private Integer courseId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof CourseCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) && courseId.equals(that.courseId);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, courseId);
-        }
-
-        @Override
-        public String toString() {
-            return "CourseCompositeId{tenantId=" + tenantId + ", courseId=" + courseId + "}";
-        }
     }
 }

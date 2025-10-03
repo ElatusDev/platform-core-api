@@ -9,10 +9,8 @@ package com.akademiaplus.billing.customerpayment;
 
 import com.akademiaplus.infra.TenantScoped;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -31,6 +29,7 @@ import java.io.Serializable;
 @Component
 @Entity
 @Table(name = "card_payment_infos")
+@SQLDelete(sql = "UPDATE card_payment_infos SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
 @IdClass(CardPaymentInfoDataModel.CardPaymentInfoCompositeId.class)
 public class CardPaymentInfoDataModel extends TenantScoped {
 
@@ -39,7 +38,6 @@ public class CardPaymentInfoDataModel extends TenantScoped {
      * Auto-incremented per tenant for better performance.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "card_payment_info_id")
     private Integer cardPaymentInfoId;
 
@@ -68,6 +66,7 @@ public class CardPaymentInfoDataModel extends TenantScoped {
     /**
      * Composite primary key class for CardPaymentInfo entity.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
@@ -75,22 +74,5 @@ public class CardPaymentInfoDataModel extends TenantScoped {
     public static class CardPaymentInfoCompositeId implements Serializable {
         private Integer tenantId;
         private Integer cardPaymentInfoId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof CardPaymentInfoCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) && cardPaymentInfoId.equals(that.cardPaymentInfoId);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, cardPaymentInfoId);
-        }
-
-        @Override
-        public String toString() {
-            return "CardPaymentInfoCompositeId{tenantId=" + tenantId + ", cardPaymentInfoId=" + cardPaymentInfoId + "}";
-        }
     }
 }

@@ -9,10 +9,8 @@ package com.akademiaplus.notifications;
 
 import com.akademiaplus.infra.TenantScoped;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -35,6 +33,7 @@ import java.time.LocalDateTime;
 @Component
 @Entity
 @Table(name = "notification_deliveries")
+@SQLDelete(sql = "UPDATE notification_deliveries SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
 @IdClass(NotificationDeliveryDataModel.NotificationDeliveryCompositeId.class)
 public class NotificationDeliveryDataModel extends TenantScoped {
 
@@ -43,8 +42,7 @@ public class NotificationDeliveryDataModel extends TenantScoped {
      * Auto-incremented per tenant for better performance.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "delivery_id")
+    @Column(name = "notification_delivery_id")
     private Integer notificationDeliveryId;
 
     /**
@@ -141,6 +139,7 @@ public class NotificationDeliveryDataModel extends TenantScoped {
     /**
      * Composite primary key class for NotificationDelivery entity.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
@@ -148,22 +147,5 @@ public class NotificationDeliveryDataModel extends TenantScoped {
     public static class NotificationDeliveryCompositeId implements Serializable {
         private Integer tenantId;
         private Integer notificationDeliveryId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof NotificationDeliveryCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) && notificationDeliveryId.equals(that.notificationDeliveryId);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, notificationDeliveryId);
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() + "{tenantId=" + tenantId + ", notificationDeliveryId=" + notificationDeliveryId + "}";
-        }
     }
 }

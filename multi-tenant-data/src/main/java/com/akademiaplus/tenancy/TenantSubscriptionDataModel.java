@@ -9,10 +9,8 @@ package com.akademiaplus.tenancy;
 
 import com.akademiaplus.infra.TenantScoped;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -35,6 +33,7 @@ import java.time.LocalDate;
 @Component
 @Entity
 @Table(name = "tenant_subscriptions")
+@SQLDelete(sql = "UPDATE tenant_subscriptions SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
 @IdClass(TenantSubscriptionDataModel.TenantSubscriptionCompositeId.class)
 public class TenantSubscriptionDataModel extends TenantScoped {
 
@@ -43,7 +42,6 @@ public class TenantSubscriptionDataModel extends TenantScoped {
      * Auto-incremented per tenant for better performance and serves as part of the composite key.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "tenant_subscription_id")
     private Integer tenantSubscriptionId;
 
@@ -79,33 +77,13 @@ public class TenantSubscriptionDataModel extends TenantScoped {
      * Composite primary key class for TenantSubscription entity.
      * Combines tenant ID and tenant subscription ID for uniqueness across tenants.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
     public static class TenantSubscriptionCompositeId {
-
         private Integer tenantId;
         private Integer tenantSubscriptionId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof TenantSubscriptionCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) &&
-                    tenantSubscriptionId.equals(that.tenantSubscriptionId);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, tenantSubscriptionId);
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() +
-                    "{tenantId=" + tenantId +
-                    ", tenantSubscriptionId=" + tenantSubscriptionId + "}";
-        }
     }
 }

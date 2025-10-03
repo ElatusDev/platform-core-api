@@ -44,8 +44,8 @@ public abstract class MembershipAssociationBase extends TenantScoped {
      * Uses composite foreign key to maintain tenant isolation.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id")
-    @JoinColumn(name = "membership_id", referencedColumnName = "membership_id")
+    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false)
+    @JoinColumn(name = "membership_id", referencedColumnName = "membership_id", insertable=false, updatable=false)
     protected MembershipDataModel membership;
 
     /**
@@ -54,7 +54,7 @@ public abstract class MembershipAssociationBase extends TenantScoped {
      * Null indicates the membership applies to all courses or is course-independent.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id")
-    @JoinColumn(name = "course_id", referencedColumnName = "course_id")
+    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false)
+    @JoinColumn(name = "course_id", referencedColumnName = "course_id", insertable=false, updatable=false)
     private CourseDataModel course;
 }

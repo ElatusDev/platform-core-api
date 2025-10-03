@@ -26,9 +26,9 @@ public class PeopleModuleSecurityConfiguration implements ModuleSecurityConfigur
     private final String adultStudentPath;
     private final String adultStudentPathAnyPathVar;
 
-    public PeopleModuleSecurityConfiguration(@Value("${api.people.employee.base-url}") String employeeBaseUri,
-                                             @Value("${api.people.collaborator.base-url}") String collaboratorBaseUri,
-                                             @Value("${api.people.adult-student.base-url}") String adultStudentBaseUri) {
+    public PeopleModuleSecurityConfiguration(@Value("${api.user-management.employee.base-url}") String employeeBaseUri,
+                                             @Value("${api.user-management.collaborator.base-url}") String collaboratorBaseUri,
+                                             @Value("${api.user-management.adult-student.base-url}") String adultStudentBaseUri) {
         String anyPathVar = "/**";
         employeePath = employeeBaseUri;
         employeePathAnyPathVars = employeePath + anyPathVar;

@@ -9,10 +9,8 @@ package com.akademiaplus.billing.membership;
 
 import com.akademiaplus.users.customer.AdultStudentDataModel;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -32,7 +30,8 @@ import org.springframework.stereotype.Component;
 @Scope("prototype")
 @Component
 @Entity
-@Table(name = "membership_adult_student")
+@Table(name = "membership_adult_students")
+@SQLDelete(sql = "UPDATE membership_adult_students SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
 @IdClass(MembershipAdultStudentDataModel.MembershipAdultStudentCompositeId.class)
 public class MembershipAdultStudentDataModel extends MembershipAssociationBase {
 
@@ -41,7 +40,6 @@ public class MembershipAdultStudentDataModel extends MembershipAssociationBase {
      * Auto-incremented per tenant for better performance and serves as part of the composite key.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "membership_adult_student_id")
     private Integer membershipAdultStudentId;
 
@@ -50,41 +48,21 @@ public class MembershipAdultStudentDataModel extends MembershipAssociationBase {
      * Part of the composite primary key and uses tenant-aware join.
      */
     @ManyToOne(optional = false)
-    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id")
-    @JoinColumn(name = "adult_student_id", referencedColumnName = "adult_student_id")
+    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false)
+    @JoinColumn(name = "adult_student_id", referencedColumnName = "adult_student_id", insertable=false, updatable=false)
     private AdultStudentDataModel adultStudent;
 
     /**
      * Composite primary key class for MembershipAdultStudent entity.
      * Combines tenant ID and membership-adult student ID for uniqueness.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
     public static class MembershipAdultStudentCompositeId {
-
         private Integer tenantId;
         private Integer membershipAdultStudentId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof MembershipAdultStudentCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) &&
-                    membershipAdultStudentId.equals(that.membershipAdultStudentId);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, membershipAdultStudentId);
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() +
-                    "{tenantId=" + tenantId +
-                    ", membershipAdultStudentId=" + membershipAdultStudentId + "}";
-        }
     }
 }

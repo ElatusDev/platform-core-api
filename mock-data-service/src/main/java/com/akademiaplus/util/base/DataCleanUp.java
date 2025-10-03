@@ -5,30 +5,34 @@
  * This code is proprietary and confidential.
  * Unauthorized copying, distribution, or modification is strictly prohibited.
  */
-package com.akademiaplus.util;
+package com.akademiaplus.util.base;
 
 import com.akademiaplus.exceptions.UnprocessableDataModelException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Table;
 import jakarta.transaction.Transactional;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 @Scope("prototype")
 public class DataCleanUp<M, I> {
     private static final String ANNOTATION_MISSING = "missing table annotation";
 
     @PersistenceContext
-    private EntityManager entityManager;
+    @NonNull private EntityManager entityManager;
 
     @Setter
     private Class<M> dataModel;
+
     @Setter
-    private JpaRepository<M,I> repository;
+    private JpaRepository<@NonNull M, @NonNull I> repository;
 
     @Transactional
     public void clean() {

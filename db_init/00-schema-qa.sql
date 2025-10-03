@@ -3,7 +3,7 @@ USE multi_tenant_db;
 --      TENANT MODULE       --
 
 CREATE TABLE tenants (
-    tenant_id INT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id INT PRIMARY KEY AUTO_INCREMENT,  -- Keep AUTO_INCREMENT for primary tenant table
     organization_name VARCHAR(200) NOT NULL,
     legal_name VARCHAR(200),
     website_url VARCHAR(255),
@@ -21,7 +21,7 @@ CREATE TABLE tenants (
 
 CREATE TABLE tenant_subscriptions (
     tenant_id INT NOT NULL,
-    tenant_subscription_id INT NOT NULL,
+    tenant_subscription_id INT NOT NULL,  -- Service-managed
     type VARCHAR(30) NOT NULL,
     max_users INT DEFAULT NULL,
     billing_date DATE NOT NULL,
@@ -39,8 +39,8 @@ CREATE TABLE tenant_subscriptions (
 
 CREATE TABLE tenant_billing_cycles (
     tenant_id INT NOT NULL,
-    tenant_billing_cycle_id INT NOT NULL,
-    billing_month YEAR_MONTH NOT NULL,
+    tenant_billing_cycle_id INT NOT NULL,  -- Service-managed
+    billing_month DATE NOT NULL,
     calculation_date DATE NOT NULL,
     user_count INT NOT NULL,
     total_amount DECIMAL(12,2) NOT NULL,
@@ -60,11 +60,21 @@ CREATE TABLE tenant_billing_cycles (
     INDEX idx_billing_month_status (billing_month, billing_status, deleted_at)
 );
 
+CREATE TABLE tenant_sequences (
+    tenant_id INT NOT NULL,
+    entity_name VARCHAR(50) NOT NULL,
+    next_value BIGINT NOT NULL DEFAULT 1,
+    version INT NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (tenant_id, entity_name),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id)
+);
+
 --      NOTIFICATIONS MODULE     --
 
 CREATE TABLE notifications (
     tenant_id INT NOT NULL,
-    notification_id INT AUTO_INCREMENT,
+    notification_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     title VARCHAR(200) NOT NULL,
     content TEXT NOT NULL,
     notification_type VARCHAR(50) NOT NULL,
@@ -88,7 +98,7 @@ CREATE TABLE notifications (
 
 CREATE TABLE notification_deliveries (
     tenant_id INT NOT NULL,
-    notification_delivery_id INT AUTO_INCREMENT,
+    notification_delivery_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     notification_id INT NOT NULL,
     channel VARCHAR(30) NOT NULL,
     recipient_identifier VARCHAR(500) NOT NULL,
@@ -116,7 +126,7 @@ CREATE TABLE notification_deliveries (
 
 CREATE TABLE emails (
     tenant_id INT NOT NULL,
-    email_id INT AUTO_INCREMENT,
+    email_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     subject VARCHAR(255) NOT NULL,
     body TEXT NOT NULL,
     sender VARCHAR(150) NOT NULL,
@@ -157,7 +167,7 @@ CREATE TABLE email_attachments (
 
 CREATE TABLE store_products (
     tenant_id INT NOT NULL,
-    store_product_id INT AUTO_INCREMENT,
+    store_product_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     product_name VARCHAR(100) NOT NULL,
     description VARCHAR(500),
     price DOUBLE PRECISION NOT NULL,
@@ -174,7 +184,7 @@ CREATE TABLE store_products (
 
 CREATE TABLE store_transactions (
     tenant_id INT NOT NULL,
-    store_transaction_id INT AUTO_INCREMENT,
+    store_transaction_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     transaction_datetime DATETIME NOT NULL,
     transaction_type VARCHAR(50) NOT NULL,
     total_amount DOUBLE PRECISION NOT NULL,
@@ -185,14 +195,14 @@ CREATE TABLE store_transactions (
     deleted_at TIMESTAMP NULL,
     PRIMARY KEY (tenant_id, store_transaction_id),
     FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
-    FOREIGN KEY (tenant_id, employee_id) REFERENCES employees(tenant_id, employee_id),
+    -- Note: FK to employees table defined after employees table is created
     INDEX idx_tenant_active_store_transaction (tenant_id, deleted_at),
     INDEX idx_tenant_active_transaction_date (tenant_id, deleted_at, transaction_datetime)
 );
 
 CREATE TABLE store_sale_items (
     tenant_id INT NOT NULL,
-    store_sale_item_id INT AUTO_INCREMENT,
+    store_sale_item_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     store_transaction_id INT NOT NULL,
     store_product_id INT NOT NULL,
     quantity INT NOT NULL,
@@ -213,7 +223,7 @@ CREATE TABLE store_sale_items (
 
 CREATE TABLE customer_auths (
     tenant_id INT NOT NULL,
-    customer_auth_id INT AUTO_INCREMENT,
+    customer_auth_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     provider VARCHAR(50) NOT NULL,
     token TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -226,7 +236,7 @@ CREATE TABLE customer_auths (
 
 CREATE TABLE internal_auths (
     tenant_id INT NOT NULL,
-    internal_auth_id INT AUTO_INCREMENT,
+    internal_auth_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     encrypted_username VARCHAR(500) NOT NULL,
     encrypted_password VARCHAR(500) NOT NULL,
     encrypted_role VARCHAR(500) NOT NULL,
@@ -244,7 +254,7 @@ CREATE TABLE internal_auths (
 
 CREATE TABLE person_piis (
     tenant_id INT NOT NULL,
-    person_pii_id INT AUTO_INCREMENT,
+    person_pii_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     encrypted_first_name VARCHAR(500) NOT NULL,
     encrypted_last_name VARCHAR(500) NOT NULL,
     encrypted_phone_number VARCHAR(500) NOT NULL,
@@ -265,7 +275,7 @@ CREATE TABLE person_piis (
 
 CREATE TABLE employees (
     tenant_id INT NOT NULL,
-    employee_id INT AUTO_INCREMENT,
+    employee_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     employee_type VARCHAR(50) NOT NULL,
     birthdate DATE NOT NULL,
     entry_date DATE NOT NULL,
@@ -286,9 +296,14 @@ CREATE TABLE employees (
     INDEX idx_tenant_employee_anniversary (tenant_id, entry_date, deleted_at)
 );
 
+-- Now add the foreign key for store_transactions that references employees
+ALTER TABLE store_transactions
+ADD CONSTRAINT fk_store_transaction_employee
+FOREIGN KEY (tenant_id, employee_id) REFERENCES employees(tenant_id, employee_id);
+
 CREATE TABLE collaborators (
     tenant_id INT NOT NULL,
-    collaborator_id INT AUTO_INCREMENT,
+    collaborator_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     internal_auth_id INT NOT NULL,
     encrypted_profile_picture MEDIUMBLOB,
     skills VARCHAR(100) NOT NULL,
@@ -311,7 +326,7 @@ CREATE TABLE collaborators (
 
 CREATE TABLE adult_students (
     tenant_id INT NOT NULL,
-    adult_student_id INT AUTO_INCREMENT,
+    adult_student_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     customer_auth_id INT NOT NULL,
     birthdate DATE NOT NULL,
     encrypted_profile_picture MEDIUMBLOB,
@@ -330,7 +345,7 @@ CREATE TABLE adult_students (
 
 CREATE TABLE tutors (
     tenant_id INT NOT NULL,
-    tutor_id INT AUTO_INCREMENT,
+    tutor_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     birthdate DATE NOT NULL,
     customer_auth_id INT,
     person_pii_id INT NOT NULL,
@@ -347,7 +362,7 @@ CREATE TABLE tutors (
 
 CREATE TABLE minor_students (
     tenant_id INT NOT NULL,
-    minor_student_id INT AUTO_INCREMENT,
+    minor_student_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     birthdate DATE NOT NULL,
     encrypted_profile_picture MEDIUMBLOB,
     customer_auth_id INT NOT NULL,
@@ -370,7 +385,7 @@ CREATE TABLE minor_students (
 
 CREATE TABLE courses (
     tenant_id INT NOT NULL,
-    course_id INT AUTO_INCREMENT,
+    course_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     course_name VARCHAR(100) NOT NULL,
     course_description VARCHAR(500) NOT NULL,
     max_capacity INT NOT NULL,
@@ -385,7 +400,7 @@ CREATE TABLE courses (
 
 CREATE TABLE schedules (
     tenant_id INT NOT NULL,
-    schedule_id INT AUTO_INCREMENT,
+    schedule_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     schedule_day VARCHAR(9) NOT NULL,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
@@ -444,7 +459,7 @@ CREATE TABLE minor_student_courses (
 
 CREATE TABLE course_events (
     tenant_id INT NOT NULL,
-    course_event_id INT AUTO_INCREMENT,
+    course_event_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     course_id INT NOT NULL,
     collaborator_id INT NOT NULL,
     schedule_id INT NOT NULL,
@@ -495,7 +510,7 @@ CREATE TABLE course_event_minor_student_attendees (
 
 CREATE TABLE memberships (
     tenant_id INT NOT NULL,
-    membership_id INT AUTO_INCREMENT,
+    membership_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     membership_type VARCHAR(50) NOT NULL,
     fee DOUBLE PRECISION NOT NULL,
     description VARCHAR(255) NOT NULL,
@@ -510,7 +525,7 @@ CREATE TABLE memberships (
 
 CREATE TABLE membership_adult_students (
     tenant_id INT NOT NULL,
-    membership_adult_student_id INT AUTO_INCREMENT,
+    membership_adult_student_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     membership_id INT NOT NULL,
     adult_student_id INT NOT NULL,
     start_date DATE NOT NULL,
@@ -530,7 +545,7 @@ CREATE TABLE membership_adult_students (
 
 CREATE TABLE membership_tutors (
     tenant_id INT NOT NULL,
-    membership_tutor_id INT AUTO_INCREMENT,
+    membership_tutor_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     membership_id INT NOT NULL,
     tutor_id INT NOT NULL,
     start_date DATE NOT NULL,
@@ -550,7 +565,7 @@ CREATE TABLE membership_tutors (
 
 CREATE TABLE card_payment_infos (
     tenant_id INT NOT NULL,
-    card_payment_info_id INT AUTO_INCREMENT,
+    card_payment_info_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     payment_id BIGINT NOT NULL,
     token TEXT NOT NULL,
     card_type VARCHAR(20) NOT NULL,
@@ -564,7 +579,7 @@ CREATE TABLE card_payment_infos (
 
 CREATE TABLE payment_adult_students (
     tenant_id INT NOT NULL,
-    payment_adult_student_id INT AUTO_INCREMENT,
+    payment_adult_student_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     payment_date DATE NOT NULL,
     amount DOUBLE PRECISION NOT NULL,
     payment_method VARCHAR(50) NOT NULL,
@@ -581,7 +596,7 @@ CREATE TABLE payment_adult_students (
 
 CREATE TABLE payment_tutors (
     tenant_id INT NOT NULL,
-    payment_tutor_id INT AUTO_INCREMENT,
+    payment_tutor_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     payment_date DATE NOT NULL,
     amount DOUBLE PRECISION NOT NULL,
     payment_method VARCHAR(50) NOT NULL,
@@ -612,13 +627,15 @@ CREATE TABLE membership_courses (
 
 CREATE TABLE compensations (
     tenant_id INT NOT NULL,
-    compensation_id INT AUTO_INCREMENT,
+    compensation_id INT NOT NULL,  -- Service-managed (removed AUTO_INCREMENT)
     compensation_type VARCHAR(50) NOT NULL,
     amount DOUBLE PRECISION NOT NULL,
+    collaborator_id INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
     PRIMARY KEY (tenant_id, compensation_id),
+    FOREIGN KEY (collaborator_id) REFERENCES collaborators(collaborator_id)
     FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
     INDEX idx_tenant_active_compensation (tenant_id, deleted_at)
 );

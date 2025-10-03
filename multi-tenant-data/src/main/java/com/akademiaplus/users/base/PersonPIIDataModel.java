@@ -10,10 +10,7 @@ package com.akademiaplus.users.base;
 import com.akademiaplus.infra.TenantScoped;
 import com.akademiaplus.utilities.security.StringEncryptor;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -45,7 +42,6 @@ public class PersonPIIDataModel extends TenantScoped {
      * Auto-incremented per tenant for better performance than UUIDs.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "person_pii_id")
     private Integer personPiiId;
 
@@ -130,6 +126,7 @@ public class PersonPIIDataModel extends TenantScoped {
     /**
      * Composite primary key class for PersonPII entity.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
@@ -137,22 +134,5 @@ public class PersonPIIDataModel extends TenantScoped {
     public static class PersonPIICompositeId implements Serializable {
         protected Integer tenantId;
         protected Integer personPiiId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof PersonPIICompositeId that)) return false;
-            return tenantId.equals(that.tenantId) && personPiiId.equals(that.personPiiId);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, personPiiId);
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() + "{tenantId=" + tenantId + ", personPiiId=" + personPiiId + "}";
-        }
     }
 }

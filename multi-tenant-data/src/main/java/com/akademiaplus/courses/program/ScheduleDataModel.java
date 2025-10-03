@@ -9,10 +9,8 @@ package com.akademiaplus.courses.program;
 
 import com.akademiaplus.infra.TenantScoped;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -34,6 +32,7 @@ import java.time.LocalTime;
 @Component
 @Entity
 @Table(name = "schedules")
+@SQLDelete(sql = "UPDATE schedules SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
 @IdClass(ScheduleDataModel.ScheduleCompositeId.class)
 public class ScheduleDataModel extends TenantScoped {
 
@@ -42,7 +41,6 @@ public class ScheduleDataModel extends TenantScoped {
      * Auto-incremented per tenant for better performance.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "schedule_id")
     private Integer scheduleId;
 
@@ -72,13 +70,14 @@ public class ScheduleDataModel extends TenantScoped {
      * Uses composite foreign key to maintain tenant isolation.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id")
-    @JoinColumn(name = "course_id", referencedColumnName = "course_id")
+    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false)
+    @JoinColumn(name = "course_id", referencedColumnName = "course_id", insertable=false, updatable=false)
     private CourseDataModel course;
 
     /**
      * Composite primary key class for Schedule entity.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
@@ -86,22 +85,5 @@ public class ScheduleDataModel extends TenantScoped {
     public static class ScheduleCompositeId implements Serializable {
         private Integer tenantId;
         private Integer scheduleId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof ScheduleCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) && scheduleId.equals(that.scheduleId);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, scheduleId);
-        }
-
-        @Override
-        public String toString() {
-            return "ScheduleCompositeId{tenantId=" + tenantId + ", scheduleId=" + scheduleId + "}";
-        }
     }
 }

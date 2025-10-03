@@ -45,7 +45,7 @@ run_local() {
 }
 
 _start_db() {
-    local volume_name="makani-helpdesk-api_db_data"
+    local volume_name="$APP_SERVICE_NAME'_db_data'"
     # Check and remove existing DB container and volume
     if docker-compose -f "$COMPOSE_FILE" ps -q "$DB_SERVICE_NAME" | grep -q .; then
         echo "Stopping and removing existing container: $DB_SERVICE_NAME"

@@ -31,7 +31,7 @@ public class BeanConfig {
         );
         messageSource.setDefaultEncoding("UTF-8");
         messageSource.setCacheSeconds(-1);
-        messageSource.setDefaultLocale();
+        messageSource.setDefaultLocale(Locale.forLanguageTag(LOCALE_LANGUAGE));
         return messageSource;
     }
 

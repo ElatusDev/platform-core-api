@@ -9,10 +9,8 @@ package com.akademiaplus.notifications.email;
 
 import com.akademiaplus.infra.TenantScoped;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -34,6 +32,7 @@ import java.util.List;
 @Component
 @Entity
 @Table(name = "emails")
+@SQLDelete(sql = "UPDATE emails SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
 @IdClass(EmailDataModel.EmailCompositeId.class)
 public class EmailDataModel extends TenantScoped {
 
@@ -42,7 +41,6 @@ public class EmailDataModel extends TenantScoped {
      * Auto-incremented per tenant for better performance and serves as part of the composite key.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "email_id")
     private Integer emailId;
 
@@ -85,33 +83,13 @@ public class EmailDataModel extends TenantScoped {
      * Composite primary key class for Email entity.
      * Combines tenant ID and email ID for uniqueness across tenants.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
     public static class EmailCompositeId {
-
         private Integer tenantId;
         private Integer emailId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof EmailCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) &&
-                    emailId.equals(that.emailId);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, emailId);
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() +
-                    "{tenantId=" + tenantId +
-                    ", emailId=" + emailId + "}";
-        }
     }
 }

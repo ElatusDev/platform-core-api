@@ -10,10 +10,8 @@ package com.akademiaplus.security;
 import com.akademiaplus.infra.TenantScoped;
 import com.akademiaplus.utilities.security.StringEncryptor;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -35,6 +33,7 @@ import java.io.Serializable;
 @Component
 @Entity
 @Table(name = "internal_auths")
+@SQLDelete(sql = "UPDATE internal_auths SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
 @IdClass(InternalAuthDataModel.InternalAuthCompositeId.class)
 public class InternalAuthDataModel extends TenantScoped {
 
@@ -43,7 +42,6 @@ public class InternalAuthDataModel extends TenantScoped {
      * Auto-incremented per tenant for better performance.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "internal_auth_id")
     private Integer internalAuthId;
 
@@ -89,6 +87,7 @@ public class InternalAuthDataModel extends TenantScoped {
     /**
      * Composite primary key class for InternalAuth entity.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
@@ -96,22 +95,5 @@ public class InternalAuthDataModel extends TenantScoped {
     public static class InternalAuthCompositeId implements Serializable {
         private Integer tenantId;
         private Integer internalAuthId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof InternalAuthCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) && internalAuthId.equals(that.internalAuthId);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, internalAuthId);
-        }
-
-        @Override
-        public String toString() {
-            return getClass().getSimpleName() + "{tenantId=" + tenantId + ", internalAuthId=" + internalAuthId + "}";
-        }
     }
 }

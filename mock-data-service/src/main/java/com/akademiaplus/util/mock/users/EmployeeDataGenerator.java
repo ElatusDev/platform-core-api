@@ -1,4 +1,4 @@
-package com.akademiaplus.mock.users;
+package com.akademiaplus.util.mock.users;
 
 import net.datafaker.Faker;
 import org.openapitools.jackson.nullable.JsonNullable;

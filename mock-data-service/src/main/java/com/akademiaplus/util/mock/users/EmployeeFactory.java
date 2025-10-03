@@ -1,8 +1,7 @@
-package com.akademiaplus.mock.users;
+package com.akademiaplus.util.mock.users;
 
-import com.akademiaplus.util.DataFactory;
+import com.akademiaplus.util.base.DataFactory;
 import openapi.akademiaplus.domain.user_management.dto.EmployeeCreationRequestDTO;
-import org.openapitools.jackson.nullable.JsonNullable;
 import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 

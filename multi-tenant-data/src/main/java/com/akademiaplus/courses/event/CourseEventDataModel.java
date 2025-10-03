@@ -12,10 +12,8 @@ import com.akademiaplus.users.customer.MinorStudentDataModel;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
 import com.akademiaplus.courses.program.CourseDataModel;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -38,6 +36,7 @@ import java.util.List;
 @Component
 @Entity
 @Table(name = "course_events")
+@SQLDelete(sql = "UPDATE course_events SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
 @IdClass(CourseEventDataModel.CourseEventCompositeId.class)
 public class CourseEventDataModel extends AbstractEvent {
 
@@ -46,7 +45,6 @@ public class CourseEventDataModel extends AbstractEvent {
      * Auto-incremented per tenant for better performance.
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "course_event_id")
     private Integer courseEventId;
 
@@ -55,8 +53,8 @@ public class CourseEventDataModel extends AbstractEvent {
      * Uses composite foreign key to maintain tenant isolation.
      */
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id")
-    @JoinColumn(name = "course_id", referencedColumnName = "course_id")
+    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false)
+    @JoinColumn(name = "course_id", referencedColumnName = "course_id", insertable=false, updatable=false)
     private CourseDataModel course;
 
     /**
@@ -64,8 +62,8 @@ public class CourseEventDataModel extends AbstractEvent {
      * Uses composite foreign key to maintain tenant isolation.
      */
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id")
-    @JoinColumn(name = "collaborator_id", referencedColumnName = "collaborator_id")
+    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false)
+    @JoinColumn(name = "collaborator_id", referencedColumnName = "collaborator_id", insertable=false, updatable=false)
     private CollaboratorDataModel collaborator;
 
     /**
@@ -76,12 +74,12 @@ public class CourseEventDataModel extends AbstractEvent {
     @JoinTable(
             name = "course_event_adult_student_attendees",
             joinColumns = {
-                    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id"),
-                    @JoinColumn(name = "course_event_id", referencedColumnName = "course_event_id")
+                    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false),
+                    @JoinColumn(name = "course_event_id", referencedColumnName = "course_event_id", insertable=false, updatable=false)
             },
             inverseJoinColumns = {
-                    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id"),
-                    @JoinColumn(name = "adult_student_id", referencedColumnName = "adult_student_id")
+                    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false),
+                    @JoinColumn(name = "adult_student_id", referencedColumnName = "adult_student_id", insertable=false, updatable=false)
             }
     )
     private List<AdultStudentDataModel> adultAttendees;
@@ -94,31 +92,20 @@ public class CourseEventDataModel extends AbstractEvent {
     @JoinTable(
             name = "course_event_minor_student_attendees",
             joinColumns = {
-                    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id"),
-                    @JoinColumn(name = "course_event_id", referencedColumnName = "course_event_id")
+                    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false),
+                    @JoinColumn(name = "course_event_id", referencedColumnName = "course_event_id", insertable=false, updatable=false)
             },
             inverseJoinColumns = {
-                    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id"),
-                    @JoinColumn(name = "minor_student_id", referencedColumnName = "minor_student_id")
+                    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false),
+                    @JoinColumn(name = "minor_student_id", referencedColumnName = "minor_student_id", insertable=false, updatable=false)
             }
     )
     private List<MinorStudentDataModel> minorAttendees;
 
     /**
-     * Assigns a collaborator to this event if the event has a title.
-     * Business rule validation to ensure events are properly configured.
-     *
-     * @param collaborator The collaborator to assign to this event
-     */
-    public void assignCollaborator(CollaboratorDataModel collaborator) {
-        if (this.hasTitle()) {
-            this.collaborator = collaborator;
-        }
-    }
-
-    /**
      * Composite primary key class for CourseEvent entity.
      */
+    @Data
     @Getter
     @Setter
     @AllArgsConstructor
@@ -126,22 +113,5 @@ public class CourseEventDataModel extends AbstractEvent {
     public static class CourseEventCompositeId implements Serializable {
         private Integer tenantId;
         private Integer courseEventId;
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof CourseEventCompositeId that)) return false;
-            return tenantId.equals(that.tenantId) && courseEventId.equals(that.courseEventId);
-        }
-
-        @Override
-        public int hashCode() {
-            return java.util.Objects.hash(tenantId, courseEventId);
-        }
-
-        @Override
-        public String toString() {
-            return "CourseEventCompositeId{tenantId=" + tenantId + ", courseEventId=" + courseEventId + "}";
-        }
     }
 }
