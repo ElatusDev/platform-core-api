@@ -1,5 +1,6 @@
 package com.akademiaplus.infra;
 
+import com.akademiaplus.internal.interfaceadapters.TenantContextHolder;
 import com.akademiaplus.utilities.idgeneration.IDGeneratorService;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;

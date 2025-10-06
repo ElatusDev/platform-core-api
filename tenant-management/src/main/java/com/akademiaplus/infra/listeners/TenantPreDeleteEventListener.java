@@ -1,8 +1,8 @@
 package com.akademiaplus.infra.listeners;
 
 import com.akademiaplus.infra.TenantScoped;
-import com.akademiaplus.infra.TenantContextHolder;
-import com.akademiaplus.infra.exception.InvalidTenantException;
+import com.akademiaplus.infra.exceptions.InvalidTenantException;
+import com.akademiaplus.internal.interfaceadapters.TenantContextHolder;
 import lombok.NonNull;
 import org.hibernate.event.spi.PreDeleteEvent;
 import org.hibernate.event.spi.PreDeleteEventListener;
@@ -35,7 +35,7 @@ public class TenantPreDeleteEventListener implements PreDeleteEventListener {
      *
      * @param tenantContextHolderProvider The provider that supplies TenantContextHolder instances
      */
-    public TenantPreDeleteEventListener(ObjectProvider<TenantContextHolder> tenantContextHolderProvider) {
+    public TenantPreDeleteEventListener(ObjectProvider<@NonNull TenantContextHolder> tenantContextHolderProvider) {
         this.tenantContextHolderProvider = tenantContextHolderProvider;
     }
 

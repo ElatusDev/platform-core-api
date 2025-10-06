@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.internal.interfaceadapters.jwt;
 
-import com.akademiaplus.infra.config.TenantContextHolder;
+import com.akademiaplus.internal.interfaceadapters.TenantContextHolder;
 import com.akademiaplus.internal.usecases.InternalAuthorizationUseCase;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

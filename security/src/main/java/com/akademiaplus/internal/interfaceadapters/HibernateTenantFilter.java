@@ -1,6 +1,5 @@
 package com.akademiaplus.internal.interfaceadapters;
 
-import com.akademiaplus.infra.config.TenantContextHolder;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;

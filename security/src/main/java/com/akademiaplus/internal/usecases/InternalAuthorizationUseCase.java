@@ -7,8 +7,8 @@
  */
 package com.akademiaplus.internal.usecases;
 
-import com.akademiaplus.infra.config.TenantContextHolder;
 import com.akademiaplus.internal.interfaceadapters.InternalAuthRepository;
+import com.akademiaplus.internal.interfaceadapters.TenantContextHolder;
 import com.akademiaplus.security.InternalAuthDataModel;
 import com.akademiaplus.utilities.security.HashingService;
 import lombok.Setter;
