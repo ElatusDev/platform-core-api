@@ -1,7 +1,7 @@
 package com.akademiaplus.utilities.security.it;
 
-import com.akademiaplus.utilities.exceptions.DecryptionFailureException;
-import com.akademiaplus.utilities.exceptions.EncryptionFailureException;
+import com.akademiaplus.utilities.exceptions.security.DecryptionFailureException;
+import com.akademiaplus.utilities.exceptions.security.EncryptionFailureException;
 import com.akademiaplus.utilities.security.AESGCMEncryptionService;
 import com.akademiaplus.utilities.security.it.conf.TestConfig;
 import org.junit.jupiter.api.DisplayName;

@@ -1,7 +1,7 @@
 package com.akademiaplus.customer.adultstudent.usecases;
 
 import com.akademiaplus.customer.adultstudent.interfaceadapters.AdultStudentRepository;
-import openapi.akademiaplus.domain.user_management.dto.GetAdultStudentResponseDTO;
+import openapi.akademiaplus.domain.user.management.dto.GetAdultStudentResponseDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 

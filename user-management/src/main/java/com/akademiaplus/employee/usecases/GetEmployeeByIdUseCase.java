@@ -10,7 +10,7 @@ package com.akademiaplus.employee.usecases;
 import com.akademiaplus.users.employee.EmployeeDataModel;
 import com.akademiaplus.employee.interfaceadapters.EmployeeRepository;
 import com.akademiaplus.exception.EmployeeNotFoundException;
-import openapi.akademiaplus.domain.user_management.dto.GetEmployeeResponseDTO;
+import openapi.akademiaplus.domain.user.management.dto.GetEmployeeResponseDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 

@@ -11,31 +11,28 @@ import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.employee.EmployeeDataModel;
 import com.akademiaplus.employee.interfaceadapters.EmployeeRepository;
 import com.akademiaplus.security.InternalAuthDataModel;
+import com.akademiaplus.utilities.idgeneration.IDGeneratorService;
 import com.akademiaplus.utilities.security.HashingService;
 import com.akademiaplus.utilities.security.PiiNormalizer;
-import openapi.akademiaplus.domain.user_management.dto.EmployeeCreationRequestDTO;
-import openapi.akademiaplus.domain.user_management.dto.EmployeeCreationResponseDTO;
+import lombok.RequiredArgsConstructor;
+import openapi.akademiaplus.domain.user.management.dto.EmployeeCreationRequestDTO;
+import openapi.akademiaplus.domain.user.management.dto.EmployeeCreationResponseDTO;
 import org.modelmapper.ModelMapper;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@RequiredArgsConstructor
 @Service
 public class EmployeeCreationUseCase {
-    private final EmployeeRepository employeeRepository;
+    public static final String MAP_NAME = "employeeMap";
+
+    private final ApplicationContext applicationContext;
     private final ModelMapper modelMapper;
     private final HashingService hashingService;
     private final PiiNormalizer piiNormalizer;
-    public static final String MAP_NAME = "employeeMap";
-
-    public EmployeeCreationUseCase(EmployeeRepository employeeRepository,
-                                   ModelMapper modelMapper,
-                                   HashingService hashingService,
-                                   PiiNormalizer piiNormalizer) {
-        this.employeeRepository = employeeRepository;
-        this.modelMapper = modelMapper;
-        this.hashingService = hashingService;
-        this.piiNormalizer = piiNormalizer;
-    }
+    private final EmployeeRepository employeeRepository;
+    private final IDGeneratorService idGeneratorService;
 
     @Transactional
     public EmployeeCreationResponseDTO create(EmployeeCreationRequestDTO dto)  {
@@ -43,9 +40,14 @@ public class EmployeeCreationUseCase {
     }
 
     public EmployeeDataModel transform(EmployeeCreationRequestDTO dto) {
-        final InternalAuthDataModel internalAuthDataModel= modelMapper.map(dto, InternalAuthDataModel.class);
-        final PersonPIIDataModel personPIIDataModel = modelMapper.map(dto, PersonPIIDataModel.class);
-        final EmployeeDataModel model =  modelMapper.map(dto, EmployeeDataModel.class, MAP_NAME);
+        final InternalAuthDataModel internalAuthDataModel = applicationContext.getBean(InternalAuthDataModel.class);
+        modelMapper.map(dto, internalAuthDataModel);
+
+        final PersonPIIDataModel personPIIDataModel = applicationContext.getBean(PersonPIIDataModel.class);
+        modelMapper.map(dto, personPIIDataModel);
+
+        final EmployeeDataModel model = applicationContext.getBean(EmployeeDataModel.class);
+        modelMapper.map(dto, model, MAP_NAME);
         model.setPersonPII(personPIIDataModel);
         model.setInternalAuth(internalAuthDataModel);
 
@@ -58,6 +60,7 @@ public class EmployeeCreationUseCase {
         internalAuthDataModel.setUsernameHash(hashingService.generateHash(internalAuthDataModel.getUsername()));
         return model;
     }
+
 
 
 }

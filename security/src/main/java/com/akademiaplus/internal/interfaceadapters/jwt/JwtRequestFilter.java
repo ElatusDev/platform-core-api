@@ -7,13 +7,14 @@
  */
 package com.akademiaplus.internal.interfaceadapters.jwt;
 
+import com.akademiaplus.infra.config.TenantContextHolder;
 import com.akademiaplus.internal.usecases.InternalAuthorizationUseCase;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.NonNull;
 import org.springframework.core.annotation.Order;
-import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -29,10 +30,14 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     private final InternalAuthorizationUseCase internalAuthorizationUseCase;
     private final JwtTokenProvider jwtTokenProvider;
+    private final TenantContextHolder tenantContextHolder;
 
-    public JwtRequestFilter(InternalAuthorizationUseCase internalAuthorizationUseCase, JwtTokenProvider jwtTokenProvider) {
+    public JwtRequestFilter(InternalAuthorizationUseCase internalAuthorizationUseCase,
+                            JwtTokenProvider jwtTokenProvider,
+                            TenantContextHolder tenantContextHolder) {
         this.internalAuthorizationUseCase = internalAuthorizationUseCase;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.tenantContextHolder = tenantContextHolder;
     }
 
     @Override
@@ -53,6 +58,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 if (jwtTokenProvider.validateToken(jwtToken)) {
                     username = jwtTokenProvider.getUsername(jwtToken);
                     Integer tenantId = jwtTokenProvider.getTenantId(jwtToken);
+                    tenantContextHolder.setTenantId(tenantId);
                 }
             } catch (Exception e) {
                throw new SecurityException(e);
@@ -60,13 +66,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            this.internalAuthorizationUseCase.setTenantContextHolder(tenantContextHolder);
             UserDetails userDetails = this.internalAuthorizationUseCase.loadUserByUsername(username);
-            if (userDetails != null) {
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, userDetails.getUsername(), userDetails.getAuthorities());
-                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-            }
+            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                    userDetails, userDetails.getUsername(), userDetails.getAuthorities());
+            authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         }
         chain.doFilter(request, response);
     }

@@ -9,7 +9,7 @@ package com.akademiaplus.utilities.security;
 
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
-import com.akademiaplus.utilities.exceptions.ErrorNormalizationException;
+import com.akademiaplus.utilities.exceptions.security.ErrorNormalizationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;

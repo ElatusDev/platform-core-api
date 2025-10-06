@@ -12,8 +12,8 @@ import com.akademiaplus.customer.adultstudent.interfaceadapters.AdultStudentCont
 import com.akademiaplus.employee.interfaceadapters.EmployeeController;
 import com.akademiaplus.exception.*;
 import com.akademiaplus.utilities.MessageService;
-import com.akademiaplus.utilities.exceptions.DecryptionFailureException;
-import com.akademiaplus.utilities.exceptions.EncryptionFailureException;
+import com.akademiaplus.utilities.exceptions.security.DecryptionFailureException;
+import com.akademiaplus.utilities.exceptions.security.EncryptionFailureException;
 import openapi.akademiaplus.domain.utilities.dto.ErrorResponseDTO;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;

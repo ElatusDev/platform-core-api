@@ -10,6 +10,14 @@
     </parent>
 
     <artifactId>multi-tenant-data</artifactId>
+    <packaging>jar</packaging>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <module.name>multi.tenant.data</module.name>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -19,7 +27,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <scope>provided</scope> <!-- or omit scope if needed -->
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.akademiaplus</groupId>

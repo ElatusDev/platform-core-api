@@ -1,14 +1,14 @@
 
 ### maven modules ###
 application/target/
-audit-service/target/
+audit-system/target/
 billing/target/
-ca-service/target/
+certificate-authority/target/
 course-management/target/
-etl-service/target/
-mock-data-service/target/
+etl-system/target/
+mock-data-system/target/
 multi-tenant-data/target/
-notification-service/target/
+notification-system/target/
 pos-system/target/
 security/target/
 tenant-management/target/
@@ -23,14 +23,14 @@ utilities/target/
 #intelliJ
 .idea/
 application/*.iml
-audit-service/*.iml
+audit-system/*.iml
 billing/*.iml
-ca-service/*.iml
+certificate-authority/*.iml
 course-management/*.iml
-etl-service/*.iml
-mock-data-service/*.iml
+etl-system/*.iml
+mock-data-system/*.iml
 multi-tenant-data/*.iml
-notification-service/*.iml
+notification-system/*.iml
 pos-system/*.iml
 security/*.iml
 tenant-management/*.iml

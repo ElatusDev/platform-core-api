@@ -11,10 +11,10 @@ import com.akademiaplus.customer.adultstudent.usecases.AdultStudentCreationUseCa
 import com.akademiaplus.customer.adultstudent.usecases.DeleteAdultStudentUseCase;
 import com.akademiaplus.customer.adultstudent.usecases.GetAdultStudentByIdUseCase;
 import com.akademiaplus.customer.adultstudent.usecases.GetAllAdultStudentsUseCase;
-import openapi.akademiaplus.domain.user_management.api.AdultStudentsApi;
-import openapi.akademiaplus.domain.user_management.dto.AdultStudentCreationRequestDTO;
-import openapi.akademiaplus.domain.user_management.dto.AdultStudentCreationResponseDTO;
-import openapi.akademiaplus.domain.user_management.dto.GetAdultStudentResponseDTO;
+import openapi.akademiaplus.domain.user.management.api.AdultStudentsApi;
+import openapi.akademiaplus.domain.user.management.dto.AdultStudentCreationRequestDTO;
+import openapi.akademiaplus.domain.user.management.dto.AdultStudentCreationResponseDTO;
+import openapi.akademiaplus.domain.user.management.dto.GetAdultStudentResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;

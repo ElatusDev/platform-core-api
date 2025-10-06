@@ -1,9 +1,9 @@
 package com.akademiaplus.program.interfaceadapters;
 
 import com.akademiaplus.program.usecases.CreateCourseUseCase;
-import openapi.akademiaplus.domain.course_management.api.CoursesApi;
-import openapi.akademiaplus.domain.course_management.dto.CourseCreationRequestDTO;
-import openapi.akademiaplus.domain.course_management.dto.CourseCreationResponseDTO;
+import openapi.akademiaplus.domain.course.management.api.CoursesApi;
+import openapi.akademiaplus.domain.course.management.dto.CourseCreationRequestDTO;
+import openapi.akademiaplus.domain.course.management.dto.CourseCreationResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;

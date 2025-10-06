@@ -20,6 +20,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <module.name>application</module.name>
         <!--    Main dependencies    -->
         <mockito.version>5.19.0</mockito.version>
         <junit-jupiter.version>5.13.4</junit-jupiter.version>
@@ -72,7 +73,7 @@
 
 
     <modules>
-        <module>notification-service</module>
+        <module>notification-system</module>
         <module>course-management</module>
         <module>user-management</module>
         <module>billing</module>
@@ -80,11 +81,11 @@
         <module>security</module>
         <module>multi-tenant-data</module>
         <module>utilities</module>
-        <module>ca-service</module>
-        <module>mock-data-service</module>
-        <module>etl-service</module>
+        <module>certificate-authority</module>
+        <module>mock-data-system</module>
+        <module>etl-system</module>
         <module>tenant-management</module>
-        <module>audit-service</module>
+        <module>audit-system</module>
         <module>pos-system</module>
     </modules>
 
@@ -92,14 +93,14 @@
         <profile>
             <id>ca-service</id>
             <modules>
-                <module>ca-service</module>
+                <module>certificate-authority</module>
             </modules>
         </profile>
 
         <profile>
             <id>mock-data-service</id>
             <modules>
-                <module>mock-data-service</module>
+                <module>mock-data-system</module>
                 <module>multi-tenant-data</module>
                 <module>utilities</module>
             </modules>
@@ -111,7 +112,7 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
-                <module>notification-service</module>
+                <module>notification-system</module>
                 <module>course-management</module>
                 <module>user-management</module>
                 <module>billing</module>
@@ -518,14 +519,16 @@
                             </goals>
                             <configuration>
                                 <inputSpec>${project.basedir}/src/main/resources/openapi/${project.artifactId}-module.yaml</inputSpec>
-                                <apiPackage>openapi.akademiaplus.domain.${project.artifactId}.api</apiPackage>
-                                <modelPackage>openapi.akademiaplus.domain.${project.artifactId}.dto</modelPackage>
+                                <apiPackage>openapi.akademiaplus.domain.${module.name}.api</apiPackage>
+                                <modelPackage>openapi.akademiaplus.domain.${module.name}.dto</modelPackage>
                                 <modelNameSuffix>DTO</modelNameSuffix>
                                 <generatorName>spring</generatorName>
                                 <configOptions>
                                     <generateTests>false</generateTests>
                                     <useJakartaEe>true</useJakartaEe>
                                     <serializableModel>true</serializableModel>
+                                    <!-- Disable the tag-based package generation -->
+                                    <useTags>false</useTags>
                                 </configOptions>
                             </configuration>
                         </execution>

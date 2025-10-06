@@ -6,7 +6,7 @@
  * Unauthorized copying, distribution, or modification is strictly prohibited.
  */package com.akademiaplus.utilities.security;
 
-import com.akademiaplus.utilities.exceptions.HashingFailureException;
+import com.akademiaplus.utilities.exceptions.security.HashingFailureException;
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.stereotype.Service;
 

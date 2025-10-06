@@ -11,15 +11,13 @@ import com.akademiaplus.employee.usecases.DeleteEmployeeUseCase;
 import com.akademiaplus.employee.usecases.EmployeeCreationUseCase;
 import com.akademiaplus.employee.usecases.GetAllEmployeesUseCase;
 import com.akademiaplus.employee.usecases.GetEmployeeByIdUseCase;
-import openapi.akademiaplus.domain.user_management.api.EmployeesApi;
-import openapi.akademiaplus.domain.user_management.dto.EmployeeCreationRequestDTO;
-import openapi.akademiaplus.domain.user_management.dto.EmployeeCreationResponseDTO;
-import openapi.akademiaplus.domain.user_management.dto.GetEmployeeResponseDTO;
+import openapi.akademiaplus.domain.user.management.api.EmployeesApi;
+import openapi.akademiaplus.domain.user.management.dto.EmployeeCreationRequestDTO;
+import openapi.akademiaplus.domain.user.management.dto.EmployeeCreationResponseDTO;
+import openapi.akademiaplus.domain.user.management.dto.GetEmployeeResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/v1/user-management")

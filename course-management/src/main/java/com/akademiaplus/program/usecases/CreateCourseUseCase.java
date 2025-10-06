@@ -7,8 +7,8 @@ import com.akademiaplus.program.application.CourseValidator;
 import com.akademiaplus.program.interfaceadapters.CourseRepository;
 
 import com.akademiaplus.program.interfaceadapters.SchedulePersistenceOutputPort;
-import openapi.akademiaplus.domain.course_management.dto.CourseCreationRequestDTO;
-import openapi.akademiaplus.domain.course_management.dto.CourseCreationResponseDTO;
+import openapi.akademiaplus.domain.course.management.dto.CourseCreationRequestDTO;
+import openapi.akademiaplus.domain.course.management.dto.CourseCreationResponseDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

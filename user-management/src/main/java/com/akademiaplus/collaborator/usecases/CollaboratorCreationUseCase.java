@@ -13,14 +13,12 @@ import com.akademiaplus.collaborator.interfaceadapters.CollaboratorRepository;
 import com.akademiaplus.security.InternalAuthDataModel;
 import com.akademiaplus.utilities.security.HashingService;
 import com.akademiaplus.utilities.security.PiiNormalizer;
-import openapi.akademiaplus.domain.user_management.dto.CollaboratorCreationRequestDTO;
-import openapi.akademiaplus.domain.user_management.dto.CollaboratorCreationResponseDTO;
+import openapi.akademiaplus.domain.user.management.dto.CollaboratorCreationRequestDTO;
+import openapi.akademiaplus.domain.user.management.dto.CollaboratorCreationResponseDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.Set;
 
 @Service
 public class CollaboratorCreationUseCase {
@@ -28,7 +26,6 @@ public class CollaboratorCreationUseCase {
     private final ModelMapper modelMapper;
     private final HashingService hashingService;
     private final PiiNormalizer piiNormalizer;
-    private final Set<InternalAuthDataModel> set;
     public static final String TYPE_MAP = "collaboratorMap";
 
     public CollaboratorCreationUseCase(CollaboratorRepository repository,
@@ -39,7 +36,6 @@ public class CollaboratorCreationUseCase {
         this.modelMapper = modelMapper;
         this.hashingService = hashingService;
         this.piiNormalizer = piiNormalizer;
-        this.set = new HashSet<>();
     }
 
     @Transactional

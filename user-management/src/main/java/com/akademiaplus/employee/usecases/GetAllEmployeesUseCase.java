@@ -8,7 +8,7 @@
 package com.akademiaplus.employee.usecases;
 
 import com.akademiaplus.employee.interfaceadapters.EmployeeRepository;
-import openapi.akademiaplus.domain.user_management.dto.GetEmployeeResponseDTO;
+import openapi.akademiaplus.domain.user.management.dto.GetEmployeeResponseDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 

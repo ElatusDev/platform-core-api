@@ -1,81 +1,105 @@
 package com.akademiaplus.internal.interfaceadapters;
 
-/*
- * Copyright a (c) 2025 ElatusDev
- * All rights reserved.
- *
- * This code is proprietary and confidential.
- * Unauthorized copying, distribution, or modification is strictly prohibited.
- */
-
-import com.akademiaplus.infra.TenantContextHolder;
+import com.akademiaplus.infra.config.TenantContextHolder;
+import jakarta.annotation.Nonnull;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Filter;
 import org.hibernate.Session;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.lang.NonNull;
+import org.springframework.orm.jpa.EntityManagerHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.EntityManager;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
-
 import java.io.IOException;
+import java.util.Objects;
 
 @Component
-@Order(2)
+@Order(Ordered.HIGHEST_PRECEDENCE)
+@RequiredArgsConstructor
+@Slf4j
 public class HibernateTenantFilter extends OncePerRequestFilter {
 
+    private static final String TENANT_HEADER = "X-Tenant-Id";
     private static final String TENANT_FILTER_NAME = "tenantFilter";
-    private final TenantContextHolder tenantContextHolder;
-    private final EntityManagerFactory entityManagerFactory;
 
-    public HibernateTenantFilter(TenantContextHolder tenantContextHolder, EntityManagerFactory entityManagerFactory) {
-        this.tenantContextHolder = tenantContextHolder;
-        this.entityManagerFactory = entityManagerFactory;
-    }
+    private final EntityManagerFactory entityManagerFactory;
+    private final TenantContextHolder tenantContextHolder;
 
     @Override
-    protected void doFilterInternal(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain)
+    protected void doFilterInternal(@Nonnull HttpServletRequest request,
+                                    @Nonnull HttpServletResponse response,
+                                    @Nonnull FilterChain filterChain)
             throws ServletException, IOException {
 
-        // Get the current EntityManager for the transaction
-        EntityManager entityManager = getEntityManager();
+        Integer tenantId = null;
+        Session hibernateSession = null;
 
-        if (entityManager != null) {
-            Session session = entityManager.unwrap(Session.class);
-            if (session != null) {
-                // Get the tenant ID from our request-scoped holder
-                Integer tenantId = tenantContextHolder.getTenantId();
+        try {
+            tenantId = extractTenantId(request);
 
-                try {
-                    // Activate the Hibernate filter and set the parameter
-                    Filter filter = session.enableFilter(TENANT_FILTER_NAME);
-                    filter.setParameter("tenantId", tenantId);
-                    filterChain.doFilter(request, response);
-                } finally {
-                    // Very important: always disable the filter when done
-                    session.disableFilter(TENANT_FILTER_NAME);
-                }
-            } else {
-                filterChain.doFilter(request, response);
+            if (tenantId == null) {
+                log.error("No tenant ID found for request: {} {}",
+                        request.getMethod(), request.getRequestURI());
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                        "X-Tenant-Id header is required");
+                return;
             }
-        } else {
-            // No EntityManager available for the current request
+
+            tenantContextHolder.setTenantId(tenantId);
+            log.debug("✅ Set tenant {} in context for: {} {}",
+                    tenantId, request.getMethod(), request.getRequestURI());
+
+            hibernateSession = getCurrentSession();
+            if (hibernateSession != null) {
+                Filter filter = hibernateSession.enableFilter(TENANT_FILTER_NAME);
+                filter.setParameter("tenantId", tenantId);
+                log.debug("✅ Enabled Hibernate filter for tenant {}", tenantId);
+            } else {
+                log.debug("No active Hibernate session yet (will be created when needed)");
+            }
+
             filterChain.doFilter(request, response);
+        } catch (NumberFormatException e) {
+            log.error("Invalid tenant ID format in header", e);
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST,
+                    "Invalid X-Tenant-Id format");
         }
     }
 
-    private EntityManager getEntityManager() {
-        if (TransactionSynchronizationManager.hasResource(entityManagerFactory)) {
-            return (EntityManager) TransactionSynchronizationManager.getResource(entityManagerFactory);
+    private Integer extractTenantId(HttpServletRequest request) {
+        String tenantHeader = request.getHeader(TENANT_HEADER);
+        if (tenantHeader != null && !tenantHeader.trim().isEmpty()) {
+            try {
+                return Integer.valueOf(tenantHeader.trim());
+            } catch (NumberFormatException e) {
+                log.error("Invalid tenant ID format: {}", tenantHeader);
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private Session getCurrentSession() {
+        try {
+            if (TransactionSynchronizationManager.hasResource(entityManagerFactory)) {
+                EntityManagerHolder holder = (EntityManagerHolder)
+                        TransactionSynchronizationManager.getResource(entityManagerFactory);
+                EntityManager em = Objects.requireNonNull(holder).getEntityManager();
+                if (em.isOpen()) {
+                    return em.unwrap(Session.class);
+                }
+            }
+        } catch (Exception e) {
+            log.debug("Could not get current session: {}", e.getMessage());
         }
         return null;
     }

@@ -10,10 +10,10 @@ package com.akademiaplus.infra;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.annotations.TenantId;
 import org.hibernate.type.descriptor.java.IntegerJavaType;
 
 /**
@@ -25,6 +25,7 @@ import org.hibernate.type.descriptor.java.IntegerJavaType;
  * <p>
  * This implementation uses Hibernate 6.3+ features for enhanced multi-tenancy support.
  */
+@Slf4j
 @Getter
 @Setter
 @MappedSuperclass
@@ -48,59 +49,6 @@ public abstract class TenantScoped extends SoftDeletable {
     @Id
     @Column(name = "tenant_id", nullable = false, updatable = false)
     private Integer tenantId;
-
-    /**
-     * Sets the tenant ID for this entity.
-     * Should only be called once during entity creation.
-     * <p>
-     * @param tenantId The tenant identifier to associate with this entity
-     * @throws IllegalStateException if tenant ID is already assigned
-     */
-    public void assignToTenant(Integer tenantId) {
-        if (this.tenantId != null) {
-            throw new IllegalStateException("Tenant ID cannot be changed once assigned");
-        }
-        if (tenantId == null) {
-            throw new IllegalArgumentException("Tenant ID cannot be null");
-        }
-        this.tenantId = tenantId;
-    }
-
-    /**
-     * Checks if this entity belongs to the specified tenant.
-     * <p>
-     * @param tenantId The tenant ID to check against
-     * @return true if the entity belongs to the specified tenant
-     */
-    public boolean belongsToTenant(Integer tenantId) {
-        return this.tenantId != null && this.tenantId.equals(tenantId);
-    }
-
-    /**
-     * Validates that the current entity belongs to the specified tenant.
-     * Throws exception if validation fails.
-     * <p>
-     * @param tenantId The tenant ID to validate against
-     * @throws SecurityException if the entity doesn't belong to the specified tenant
-     */
-    public void validateTenantAccess(Integer tenantId) {
-        if (!belongsToTenant(tenantId)) {
-            throw new SecurityException(
-                    String.format("Access denied: Entity belongs to tenant %d, but tenant %d was requested",
-                            this.tenantId, tenantId)
-            );
-        }
-    }
-
-    /**
-     * Hook method called before persist to ensure tenant is set.
-     */
-    @PrePersist
-    protected void onPrePersist() {
-        if (this.tenantId == null) {
-            throw new IllegalStateException("Tenant ID must be set before persisting entity");
-        }
-    }
 
     /**
      * Hook method called after load to validate tenant isolation.

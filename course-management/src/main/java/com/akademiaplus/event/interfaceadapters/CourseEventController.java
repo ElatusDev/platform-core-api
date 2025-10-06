@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.event.interfaceadapters;
 
-import openapi.akademiaplus.domain.course_management.api.CourseEventsApiController;
+import openapi.akademiaplus.domain.course.management.api.CourseEventsApiController;
 import org.springframework.web.context.request.NativeWebRequest;
 
 public class CourseEventController extends CourseEventsApiController {

@@ -7,8 +7,8 @@
  */
 package com.akademiaplus.utilities.security;
 
-import com.akademiaplus.utilities.exceptions.DecryptionFailureException;
-import com.akademiaplus.utilities.exceptions.EncryptionFailureException;
+import com.akademiaplus.utilities.exceptions.security.DecryptionFailureException;
+import com.akademiaplus.utilities.exceptions.security.EncryptionFailureException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

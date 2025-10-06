@@ -10,7 +10,7 @@ package com.akademiaplus.collaborator.usecases;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
 import com.akademiaplus.collaborator.interfaceadapters.CollaboratorRepository;
 import com.akademiaplus.exception.CollaboratorNotFoundException;
-import openapi.akademiaplus.domain.user_management.dto.GetCollaboratorResponseDTO;
+import openapi.akademiaplus.domain.user.management.dto.GetCollaboratorResponseDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 

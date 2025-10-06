@@ -1,0 +1,35 @@
+openapi: 3.0.0
+info:
+  title: Mock Data Service API
+  version: 1.0.0
+  description: API for generating mock data for development and testing environments.
+tags:
+  - name: MockData
+    description: Operations for generating mock data
+
+paths:
+  /mock-data/generate/all:
+    post:
+      summary: Generates and loads all mock data into the database
+      operationId: generateAllMockData
+      tags:
+        - Mock Data
+      description: This endpoint triggers the MockDataService to wipe and repopulate the database with a full set of mock data. This operation is designed for development and testing environments only.
+      responses:
+        '200':
+          description: Mock data generated and loaded successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Mock data generation completed successfully."
+        '500':
+          description: An unexpected error occurred during data generation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    ErrorResponse:
+      type: object

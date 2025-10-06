@@ -7,9 +7,11 @@
  */
 package com.akademiaplus.internal.usecases;
 
+import com.akademiaplus.infra.config.TenantContextHolder;
 import com.akademiaplus.internal.interfaceadapters.InternalAuthRepository;
 import com.akademiaplus.security.InternalAuthDataModel;
 import com.akademiaplus.utilities.security.HashingService;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -26,6 +28,9 @@ import java.util.Optional;
 public class InternalAuthorizationUseCase implements UserDetailsService {
     private final InternalAuthRepository repository;
     private final HashingService hashingService;
+
+    @Setter
+    private TenantContextHolder tenantContextHolder;
 
     public InternalAuthorizationUseCase(InternalAuthRepository repository,
                                         HashingService hashingService) {
