@@ -26,6 +26,7 @@ components:
       properties:
         compensationId:
           type: integer
+          format: int64
           readOnly: true
           description: Compensation ID
       required:
@@ -37,6 +38,7 @@ components:
           properties:
             compensationId:
               type: integer
+              format: int64
               readOnly: true
               description: Compensation ID
             instructorIds:
@@ -54,6 +56,7 @@ components:
       properties:
         instructorId:
           type: integer
+          format: int64
           description: ID of the instructor to associate with the compensation
       required:
         - instructorId
@@ -62,10 +65,12 @@ components:
       properties:
         compensationId:
           type: integer
+          format: int64
           readOnly: true
           description: Compensation ID
         instructorId:
           type: integer
+          format: int64
           readOnly: true
           description: ID of the associated instructor
       required:
@@ -132,6 +137,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the compensation to retrieve
       responses:
         '200':
@@ -161,6 +167,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the compensation to update
       requestBody:
         required: true
@@ -202,6 +209,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the compensation to delete
       responses:
         '204':
@@ -228,6 +236,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the compensation
       requestBody:
         required: true
@@ -269,12 +278,14 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the compensation
         - name: instructorId
           in: path
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the instructor to remove
       responses:
         '204':

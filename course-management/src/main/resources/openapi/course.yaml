@@ -61,6 +61,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
       responses:
         '200':
           description: Course details
@@ -89,6 +90,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
       responses:
         '204':
           description: Course deleted successfully
@@ -121,10 +123,12 @@ components:
           type: array
           items:
             type: integer
+            format: int64
         availableCollaboratorIds:
           type: array
           items:
             type: integer
+            format: int64
       required:
         - name
         - description
@@ -139,6 +143,7 @@ components:
       properties:
         courseId:
           type: integer
+          format: int64
           readOnly: true
       required:
         - courseId
@@ -149,6 +154,7 @@ components:
           properties:
             courseId:
               type: integer
+              format: int64
               readOnly: true
           required:
             - courseId

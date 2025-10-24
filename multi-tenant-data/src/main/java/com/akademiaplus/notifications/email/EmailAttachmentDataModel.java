@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.notifications.email;
 
-import com.akademiaplus.infra.TenantScoped;
+ import com.akademiaplus.infra.persistence.model.TenantScoped;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -41,7 +41,7 @@ public class EmailAttachmentDataModel extends TenantScoped {
      */
     @Id
     @Column(name = "email_id")
-    private Integer emailId;
+    private Long emailId;
 
     /**
      * URL or path to the attachment file.
@@ -71,7 +71,7 @@ public class EmailAttachmentDataModel extends TenantScoped {
     @NoArgsConstructor
     public static class EmailAttachmentCompositeId {
         private Integer tenantId;
-        private Integer emailId;
+        private Long emailId;
         private String attachmentUrl;
     }
 }

@@ -44,7 +44,7 @@ public class CollaboratorDataModel extends AbstractUser {
      */
     @Id
     @Column(name = "collaborator_id")
-    private Integer collaboratorId;
+    private Long collaboratorId;
 
     /**
      * Skills and competencies of the collaborator.

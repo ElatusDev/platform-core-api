@@ -48,13 +48,13 @@ public class CollaboratorController implements CollaboratorsApi {
     }
 
     @Override
-    public ResponseEntity<Void> deleteCollaborator(Integer collaboratorId) {
+    public ResponseEntity<Void> deleteCollaborator(Long collaboratorId) {
         deleteCollaboratorUseCase.delete(collaboratorId);
         return ResponseEntity.noContent().build();
     }
 
     @Override
-    public ResponseEntity<GetCollaboratorResponseDTO> getCollaborator(Integer collaboratorId) {
+    public ResponseEntity<GetCollaboratorResponseDTO> getCollaborator(Long collaboratorId) {
         return ResponseEntity.ok(getCollaboratorByIdUseCase.get(collaboratorId));
     }
 

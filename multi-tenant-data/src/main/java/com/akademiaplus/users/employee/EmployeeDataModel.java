@@ -45,7 +45,7 @@ public class EmployeeDataModel extends AbstractUser {
      */
     @Id
     @Column(name = "employee_id")
-    private Integer employeeId;
+    private Long employeeId;
 
     /**
      * Type/category of the employee (e.g., MANAGER, INSTRUCTOR, ADMIN, CLERK).
@@ -78,6 +78,6 @@ public class EmployeeDataModel extends AbstractUser {
     @NoArgsConstructor
     public static class EmployeeCompositeId implements Serializable {
         private Integer tenantId;
-        private Integer employeeId;
+        private Long employeeId;
     }
 }

@@ -23,7 +23,7 @@ public class DeleteEmployeeUseCase {
         this.employeeRepository = employeeRepository;
     }
 
-    public void delete(Integer employeeId) {
+    public void delete(Long employeeId) {
         Optional<EmployeeDataModel> found = employeeRepository.findById(employeeId);
         if(found.isPresent()) {
             try {

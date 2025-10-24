@@ -47,13 +47,13 @@ public class AdultStudentController implements AdultStudentsApi {
     }
 
     @Override
-    public ResponseEntity<Void> deleteAdultStudent(Integer adultStudentId) {
+    public ResponseEntity<Void> deleteAdultStudent(Long adultStudentId) {
         deleteAdultStudentUseCase.delete(adultStudentId);
         return ResponseEntity.noContent().build();
     }
 
     @Override
-    public ResponseEntity<GetAdultStudentResponseDTO> getAdultStudent(Integer adultStudentId){
+    public ResponseEntity<GetAdultStudentResponseDTO> getAdultStudent(Long adultStudentId){
         return ResponseEntity.ok(getAdultStudentByIdUseCase.get(adultStudentId));
     }
 

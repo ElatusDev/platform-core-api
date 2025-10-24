@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.courses.program;
 
-import com.akademiaplus.infra.TenantScoped;
+ import com.akademiaplus.infra.persistence.model.TenantScoped;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
 import jakarta.persistence.*;
 import lombok.*;
@@ -44,7 +44,7 @@ public class CourseDataModel extends TenantScoped {
      */
     @Id
     @Column(name = "course_id")
-    private Integer courseId;
+    private Long courseId;
 
     /**
      * Name of the course.
@@ -102,6 +102,6 @@ public class CourseDataModel extends TenantScoped {
     @NoArgsConstructor
     public static class CourseCompositeId implements Serializable {
         private Integer tenantId;
-        private Integer courseId;
+        private Long courseId;
     }
 }

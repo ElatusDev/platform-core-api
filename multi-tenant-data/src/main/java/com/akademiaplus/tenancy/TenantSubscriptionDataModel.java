@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.tenancy;
 
-import com.akademiaplus.infra.TenantScoped;
+ import com.akademiaplus.infra.persistence.model.TenantScoped;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -43,7 +43,7 @@ public class TenantSubscriptionDataModel extends TenantScoped {
      */
     @Id
     @Column(name = "tenant_subscription_id")
-    private Integer tenantSubscriptionId;
+    private Long tenantSubscriptionId;
 
     /**
      * Type of subscription plan (e.g., BASIC, PREMIUM, ENTERPRISE, TRIAL).
@@ -84,6 +84,6 @@ public class TenantSubscriptionDataModel extends TenantScoped {
     @NoArgsConstructor
     public static class TenantSubscriptionCompositeId {
         private Integer tenantId;
-        private Integer tenantSubscriptionId;
+        private Long tenantSubscriptionId;
     }
 }

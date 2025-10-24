@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.notifications;
 
-import com.akademiaplus.infra.TenantScoped;
+ import com.akademiaplus.infra.persistence.model.TenantScoped;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -43,14 +43,14 @@ public class NotificationDeliveryDataModel extends TenantScoped {
      */
     @Id
     @Column(name = "notification_delivery_id")
-    private Integer notificationDeliveryId;
+    private Long notificationDeliveryId;
 
     /**
      * Reference to the notification being delivered.
      * Links this delivery attempt to the original notification content.
      */
     @Column(name = "notification_id", nullable = false)
-    private Integer notificationId;
+    private Long notificationId;
 
     /**
      * Delivery channel used for this notification attempt.
@@ -146,6 +146,6 @@ public class NotificationDeliveryDataModel extends TenantScoped {
     @NoArgsConstructor
     public static class NotificationDeliveryCompositeId implements Serializable {
         private Integer tenantId;
-        private Integer notificationDeliveryId;
+        private Long notificationDeliveryId;
     }
 }

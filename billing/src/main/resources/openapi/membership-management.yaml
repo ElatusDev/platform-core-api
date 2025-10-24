@@ -18,9 +18,11 @@ components:
           description: Due date of the association
         membershipId:
           type: integer
+          format: int64
           description: ID of the associated membership
         courseId:
           type: integer
+          format: int64
           description: ID of the associated course
       required:
         - startDate
@@ -34,6 +36,7 @@ components:
           properties:
             adultStudentId:
               type: integer
+              format: int64
               description: ID of the associated adult student
           required:
             - adultStudentId
@@ -42,6 +45,7 @@ components:
       properties:
         membershipAdultStudentId:
           type: integer
+          format: int64
           readOnly: true
           description: Adult student membership ID
       required:
@@ -53,10 +57,12 @@ components:
           properties:
             membershipAdultStudentId:
               type: integer
+              format: int64
               readOnly: true
               description: Adult student membership ID
             adultStudentId:
               type: integer
+              format: int64
               description: ID of the associated adult student
           required:
             - membershipAdultStudentId
@@ -72,6 +78,7 @@ components:
           properties:
             tutorId:
               type: integer
+              format: int64
               description: ID of the associated tutor
           required:
             - tutorId
@@ -80,6 +87,7 @@ components:
       properties:
         membershipTutorId:
           type: integer
+          format: int64
           readOnly: true
           description: Tutor membership ID
       required:
@@ -91,10 +99,12 @@ components:
           properties:
             membershipTutorId:
               type: integer
+              format: int64
               readOnly: true
               description: Tutor membership ID
             tutorId:
               type: integer
+              format: int64
               description: ID of the associated tutor
           required:
             - membershipTutorId
@@ -164,6 +174,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the adult student membership association to retrieve
       responses:
         '200':
@@ -193,6 +204,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the adult student membership association to update
       requestBody:
         required: true
@@ -234,6 +246,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the adult student membership association to delete
       responses:
         '204':
@@ -307,6 +320,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the tutor membership association to retrieve
       responses:
         '200':
@@ -336,6 +350,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the tutor membership association to update
       requestBody:
         required: true
@@ -377,6 +392,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the tutor membership association to delete
       responses:
         '204':

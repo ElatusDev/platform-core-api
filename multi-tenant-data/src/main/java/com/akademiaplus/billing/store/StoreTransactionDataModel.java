@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.billing.store;
 
-import com.akademiaplus.infra.TenantScoped;
+ import com.akademiaplus.infra.persistence.model.TenantScoped;
 import com.akademiaplus.users.employee.EmployeeDataModel;
 import jakarta.persistence.*;
 import lombok.*;
@@ -46,7 +46,7 @@ public class StoreTransactionDataModel extends TenantScoped {
      */
     @Id
     @Column(name = "store_transaction_id")
-    private Integer storeTransactionId;
+    private Long storeTransactionId;
 
     /**
      * Timestamp when the transaction was created.
@@ -105,6 +105,6 @@ public class StoreTransactionDataModel extends TenantScoped {
     @NoArgsConstructor
     public static class StoreTransactionCompositeId {
         private Integer tenantId;
-        private Integer storeTransactionId;
+        private Long storeTransactionId;
     }
 }

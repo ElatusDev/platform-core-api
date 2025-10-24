@@ -7,7 +7,6 @@
  */
 package com.akademiaplus.internal.interfaceadapters.jwt;
 
-import com.akademiaplus.internal.interfaceadapters.TenantContextHolder;
 import com.akademiaplus.internal.usecases.InternalAuthorizationUseCase;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -25,19 +24,16 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
-@Order(1)
+@Order(3)
 public class JwtRequestFilter extends OncePerRequestFilter {
 
     private final InternalAuthorizationUseCase internalAuthorizationUseCase;
     private final JwtTokenProvider jwtTokenProvider;
-    private final TenantContextHolder tenantContextHolder;
 
     public JwtRequestFilter(InternalAuthorizationUseCase internalAuthorizationUseCase,
-                            JwtTokenProvider jwtTokenProvider,
-                            TenantContextHolder tenantContextHolder) {
+                            JwtTokenProvider jwtTokenProvider) {
         this.internalAuthorizationUseCase = internalAuthorizationUseCase;
         this.jwtTokenProvider = jwtTokenProvider;
-        this.tenantContextHolder = tenantContextHolder;
     }
 
     @Override
@@ -57,8 +53,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             try {
                 if (jwtTokenProvider.validateToken(jwtToken)) {
                     username = jwtTokenProvider.getUsername(jwtToken);
-                    Integer tenantId = jwtTokenProvider.getTenantId(jwtToken);
-                    tenantContextHolder.setTenantId(tenantId);
                 }
             } catch (Exception e) {
                throw new SecurityException(e);
@@ -66,7 +60,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            this.internalAuthorizationUseCase.setTenantContextHolder(tenantContextHolder);
             UserDetails userDetails = this.internalAuthorizationUseCase.loadUserByUsername(username);
             UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                     userDetails, userDetails.getUsername(), userDetails.getAuthorities());

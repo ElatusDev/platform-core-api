@@ -541,8 +541,10 @@ components:
       properties:
         deliveryId:
           type: integer
+          format: int64
         notificationId:
           type: integer
+          format: int64
         recipientEmail:
           type: string
           format: email
@@ -693,6 +695,7 @@ components:
       properties:
         notificationId:
           type: integer
+          format: int64
         title:
           type: string
         notificationType:

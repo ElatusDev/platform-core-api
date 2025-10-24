@@ -16,14 +16,14 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class LoadPeopleMockDataUseCase {
-    private final DataCleanUp<InternalAuthDataModel, Integer> internalAuthDataCleanUp;
-    private final DataCleanUp<PersonPIIDataModel, Integer> personPIIDataCleanUp;
+    private final DataCleanUp<InternalAuthDataModel, Long> internalAuthDataCleanUp;
+    private final DataCleanUp<PersonPIIDataModel, Long> personPIIDataCleanUp;
     private final LoadEmployeeMockDataUseCase loadEmployeeMockDataUseCase;
 
     public LoadPeopleMockDataUseCase(InternalAuthRepository internalAuthRepository,
-                                     DataCleanUp<InternalAuthDataModel, Integer> internalAuthDataCleanUp,
+                                     DataCleanUp<InternalAuthDataModel, Long> internalAuthDataCleanUp,
                                      PersonPIIRepository personPIIRepository,
-                                     DataCleanUp<PersonPIIDataModel, Integer> personPIIDataCleanUp,
+                                     DataCleanUp<PersonPIIDataModel, Long> personPIIDataCleanUp,
                                      LoadEmployeeMockDataUseCase loadEmployeeMockDataUseCase) {
         this.internalAuthDataCleanUp = internalAuthDataCleanUp;
         this.internalAuthDataCleanUp.setDataModel(InternalAuthDataModel.class);

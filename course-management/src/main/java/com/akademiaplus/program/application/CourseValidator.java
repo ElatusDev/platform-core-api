@@ -5,8 +5,8 @@ import com.akademiaplus.courses.program.ScheduleDataModel;
 import com.akademiaplus.exception.CollaboratorNotFoundException;
 import com.akademiaplus.exception.ScheduleNotFoundException;
 import com.akademiaplus.exception.ScheduleNotAvailableException;
+import com.akademiaplus.program.interfaceadapters.ScheduleRepository;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
-import com.akademiaplus.program.interfaceadapters.SchedulePersistenceOutputPort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,19 +17,19 @@ import java.util.stream.Collectors;
 public class CourseValidator {
 
     private final CollaboratorRepository collaboratorRepository;
-    private final SchedulePersistenceOutputPort schedulePersistenceOutputPort;
+    private final ScheduleRepository scheduleRepository;
 
     public CourseValidator(CollaboratorRepository collaboratorRepository,
-                           SchedulePersistenceOutputPort schedulePersistenceOutputPort) {
+                           ScheduleRepository scheduleRepository) {
         this.collaboratorRepository = collaboratorRepository;
-        this.schedulePersistenceOutputPort = schedulePersistenceOutputPort;
+        this.scheduleRepository = scheduleRepository;
     }
 
-    public List<CollaboratorDataModel> validateCollaboratorsExist(List<Integer> collaboratorIds) {
+    public List<CollaboratorDataModel> validateCollaboratorsExist(List<Long> collaboratorIds) {
         List<CollaboratorDataModel> foundCollaborator = collaboratorRepository.findAllById(collaboratorIds);
 
         if (foundCollaborator.size() != collaboratorIds.size()) {
-            Set<Integer> foundIds = foundCollaborator.stream().map(CollaboratorDataModel::getCollaboratorId)
+            Set<Long> foundIds = foundCollaborator.stream().map(CollaboratorDataModel::getCollaboratorId)
                                                               .collect(Collectors.toSet());
             String missingIds = collaboratorIds.stream()
                     .filter(id -> !foundIds.contains(id))
@@ -49,14 +49,14 @@ public class CourseValidator {
      * @param scheduleIds List of schedule IDs to validate.
      * @return List of found Schedule data models that are available.
      */
-    public List<ScheduleDataModel> validateSchedulesAvailable(List<Integer> scheduleIds) {
+    public List<ScheduleDataModel> validateSchedulesAvailable(List<Long> scheduleIds) {
         if (scheduleIds == null || scheduleIds.isEmpty()) {
             return List.of();
         }
 
-        List<ScheduleDataModel> foundSchedules = schedulePersistenceOutputPort.findAllById(scheduleIds);
+        List<ScheduleDataModel> foundSchedules = scheduleRepository.findAllById(scheduleIds);
         if (foundSchedules.size() != scheduleIds.size()) {
-            Set<Integer> foundIds = foundSchedules.stream().map(ScheduleDataModel::getScheduleId).collect(Collectors.toSet());
+            Set<Long> foundIds = foundSchedules.stream().map(ScheduleDataModel::getScheduleId).collect(Collectors.toSet());
             String missingIds = scheduleIds.stream()
                     .filter(id -> !foundIds.contains(id))
                     .map(String::valueOf)

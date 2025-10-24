@@ -87,6 +87,7 @@
         <module>tenant-management</module>
         <module>audit-system</module>
         <module>pos-system</module>
+        <module>infra-common</module>
     </modules>
 
     <profiles>

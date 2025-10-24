@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.users.base;
 
-import com.akademiaplus.infra.TenantScoped;
+ import com.akademiaplus.infra.persistence.model.TenantScoped;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

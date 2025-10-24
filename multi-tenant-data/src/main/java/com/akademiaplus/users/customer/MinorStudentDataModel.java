@@ -44,7 +44,7 @@ public class MinorStudentDataModel extends AbstractUser {
      */
     @Id
     @Column(name = "minor_student_id")
-    private Integer minorStudentId;
+    private Long minorStudentId;
 
     /**
      * Reference to the tutor responsible for this minor student.

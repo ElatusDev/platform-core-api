@@ -27,7 +27,7 @@ public class GetAdultStudentByIdUseCase {
         this.modelMapper = modelMapper;
     }
 
-    public GetAdultStudentResponseDTO get(Integer adultStudentId) {
+    public GetAdultStudentResponseDTO get(Long adultStudentId) {
         Optional<AdultStudentDataModel> result = adultStudentRepository.findById(adultStudentId);
         if(result.isPresent()) {
             AdultStudentDataModel found = result.get();

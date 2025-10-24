@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.security;
 
-import com.akademiaplus.infra.TenantScoped;
+ import com.akademiaplus.infra.persistence.model.TenantScoped;
 import com.akademiaplus.utilities.security.StringEncryptor;
 import jakarta.persistence.*;
 import lombok.*;
@@ -43,7 +43,7 @@ public class InternalAuthDataModel extends TenantScoped {
      */
     @Id
     @Column(name = "internal_auth_id")
-    private Integer internalAuthId;
+    private Long internalAuthId;
 
     /**
      * Encrypted username for internal authentication.
@@ -94,6 +94,6 @@ public class InternalAuthDataModel extends TenantScoped {
     @NoArgsConstructor
     public static class InternalAuthCompositeId implements Serializable {
         private Integer tenantId;
-        private Integer internalAuthId;
+        private Long internalAuthId;
     }
 }

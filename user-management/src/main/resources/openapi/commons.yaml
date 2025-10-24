@@ -183,6 +183,7 @@ components:
       properties:
         internalAuthId:
           type: integer
+          format: int64
           example: 456
         username:
           type: string
@@ -237,6 +238,7 @@ components:
       properties:
         customerAuthId:
           type: integer
+          format: int64
           example: 789
         provider:
           $ref: '#/components/schemas/AuthProvider'
@@ -275,6 +277,7 @@ components:
       properties:
         courseId:
           type: integer
+          format: int64
           example: 101
         enrollmentDate:
           type: string
@@ -291,12 +294,15 @@ components:
       properties:
         enrollmentId:
           type: integer
+          format: int64
           example: 1001
         studentId:
           type: integer
+          format: int64
           example: 501
         courseId:
           type: integer
+          format: int64
           example: 101
         courseName:
           type: string
@@ -337,6 +343,7 @@ components:
       properties:
         courseId:
           type: integer
+          format: int64
           example: 101
         courseName:
           type: string
@@ -354,6 +361,7 @@ components:
       properties:
         courseId:
           type: integer
+          format: int64
           example: 101
         courseName:
           type: string
@@ -372,6 +380,7 @@ components:
       properties:
         compensationId:
           type: integer
+          format: int64
           example: 201
         compensationType:
           $ref: '#/components/schemas/CompensationType'
@@ -398,6 +407,7 @@ components:
       properties:
         paymentId:
           type: integer
+          format: int64
           example: 301
         amount:
           type: number

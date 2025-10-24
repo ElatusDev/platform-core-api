@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.billing.customerpayment;
 
-import com.akademiaplus.infra.TenantScoped;
+ import com.akademiaplus.infra.persistence.model.TenantScoped;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -39,7 +39,7 @@ public class CardPaymentInfoDataModel extends TenantScoped {
      */
     @Id
     @Column(name = "card_payment_info_id")
-    private Integer cardPaymentInfoId;
+    private Long cardPaymentInfoId;
 
     /**
      * External payment processor reference ID.
@@ -73,6 +73,6 @@ public class CardPaymentInfoDataModel extends TenantScoped {
     @NoArgsConstructor
     public static class CardPaymentInfoCompositeId implements Serializable {
         private Integer tenantId;
-        private Integer cardPaymentInfoId;
+        private Long cardPaymentInfoId;
     }
 }

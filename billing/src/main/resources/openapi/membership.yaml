@@ -32,6 +32,7 @@ components:
       properties:
         membershipId:
           type: integer
+          format: int64
           readOnly: true
           description: Membership ID
       required:
@@ -43,6 +44,7 @@ components:
           properties:
             membershipId:
               type: integer
+              format: int64
               readOnly: true
               description: Membership ID
           required:
@@ -111,6 +113,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the membership to retrieve
       responses:
         '200':
@@ -140,6 +143,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the membership to update
       requestBody:
         required: true
@@ -181,6 +185,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the membership to delete
       responses:
         '204':

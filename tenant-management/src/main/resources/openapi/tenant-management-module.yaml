@@ -575,7 +575,8 @@ components:
       properties:
         tenant_id:
           type: integer
-          format: int32
+          format: int64
+
           readOnly: true
         organization_name:
           type: string
@@ -713,11 +714,13 @@ components:
       properties:
         tenant_subscription_id:
           type: integer
-          format: int32
+          format: int64
+
           readOnly: true
         tenant_id:
           type: integer
-          format: int32
+          format: int64
+
           readOnly: true
         type:
           type: string
@@ -725,7 +728,7 @@ components:
           maxLength: 30
         max_users:
           type: integer
-          format: int32
+
           nullable: true
         billing_date:
           type: string
@@ -759,7 +762,7 @@ components:
           enum: [basic, standard, premium, enterprise]
         max_users:
           type: integer
-          format: int32
+
           nullable: true
         billing_date:
           type: string
@@ -777,7 +780,7 @@ components:
           enum: [basic, standard, premium, enterprise]
         max_users:
           type: integer
-          format: int32
+
           nullable: true
         billing_date:
           type: string
@@ -801,11 +804,13 @@ components:
       properties:
         tenant_billing_cycle_id:
           type: integer
-          format: int32
+          format: int64
+
           readOnly: true
         tenant_id:
           type: integer
-          format: int32
+          format: int64
+
           readOnly: true
         billing_month:
           type: string
@@ -816,7 +821,7 @@ components:
           format: date
         user_count:
           type: integer
-          format: int32
+
         total_amount:
           type: number
           format: double
@@ -873,7 +878,7 @@ components:
           format: date
         user_count:
           type: integer
-          format: int32
+
           minimum: 0
         notes:
           type: string
@@ -883,16 +888,16 @@ components:
       properties:
         page:
           type: integer
-          format: int32
+
         limit:
           type: integer
-          format: int32
+
         total_pages:
           type: integer
-          format: int32
+
         total_items:
           type: integer
-          format: int32
+
 
     Error:
       type: object

@@ -46,7 +46,7 @@ public class CourseEventDataModel extends AbstractEvent {
      */
     @Id
     @Column(name = "course_event_id")
-    private Integer courseEventId;
+    private Long courseEventId;
 
     /**
      * Reference to the course this event belongs to.
@@ -112,6 +112,6 @@ public class CourseEventDataModel extends AbstractEvent {
     @NoArgsConstructor
     public static class CourseEventCompositeId implements Serializable {
         private Integer tenantId;
-        private Integer courseEventId;
+        private Long courseEventId;
     }
 }

@@ -44,7 +44,7 @@ public class CollaboratorCreationUseCase {
     }
 
     public CollaboratorDataModel transform(CollaboratorCreationRequestDTO dto) {
-        final InternalAuthDataModel internalAuthDataModel= modelMapper.map(dto, InternalAuthDataModel.class);
+        final InternalAuthDataModel internalAuthDataModel = modelMapper.map(dto, InternalAuthDataModel.class);
         final PersonPIIDataModel personPIIDataModel = modelMapper.map(dto, PersonPIIDataModel.class);
         CollaboratorDataModel model =  modelMapper.map(dto, CollaboratorDataModel.class, TYPE_MAP);
 

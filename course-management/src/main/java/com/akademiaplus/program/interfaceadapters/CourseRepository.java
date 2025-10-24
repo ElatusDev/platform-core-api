@@ -10,5 +10,5 @@ package com.akademiaplus.program.interfaceadapters;
 import com.akademiaplus.courses.program.CourseDataModel;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface CourseRepository extends JpaRepository <CourseDataModel, Integer> {
+public interface CourseRepository extends JpaRepository<CourseDataModel, Long> {
 }

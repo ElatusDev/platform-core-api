@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.billing.payroll;
 
-import com.akademiaplus.infra.TenantScoped;
+ import com.akademiaplus.infra.persistence.model.TenantScoped;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
 import jakarta.persistence.*;
 import lombok.*;
@@ -45,7 +45,7 @@ public class CompensationDataModel extends TenantScoped {
      */
     @Id
     @Column(name = "compensation_id")
-    private Integer compensationId;
+    private Long compensationId;
 
     /**
      * Type of compensation (e.g., SALARY, HOURLY, COMMISSION, BONUS).
@@ -89,6 +89,6 @@ public class CompensationDataModel extends TenantScoped {
     @NoArgsConstructor
     public static class CompensationCompositeId {
         private Integer tenantId;
-        private Integer compensationId;
+        private Long compensationId;
     }
 }

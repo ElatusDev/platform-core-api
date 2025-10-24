@@ -39,7 +39,7 @@ public class PaymentTutorDataModel extends BasePayment {
      */
     @Id
     @Column(name = "payment_tutor_id")
-    private Integer paymentTutorId;
+    private Long paymentTutorId;
 
     /**
      * Reference to the tutor membership this payment is for.
@@ -60,6 +60,6 @@ public class PaymentTutorDataModel extends BasePayment {
     @NoArgsConstructor
     public static class PaymentTutorCompositeId implements Serializable {
         private Integer tenantId;
-        private Integer paymentTutorId;
+        private Long paymentTutorId;
     }
 }

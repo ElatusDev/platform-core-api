@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.notifications.email;
 
-import com.akademiaplus.infra.TenantScoped;
+ import com.akademiaplus.infra.persistence.model.TenantScoped;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -42,7 +42,7 @@ public class EmailDataModel extends TenantScoped {
      */
     @Id
     @Column(name = "email_id")
-    private Integer emailId;
+    private Long emailId;
 
     /**
      * Subject line of the email.
@@ -90,6 +90,6 @@ public class EmailDataModel extends TenantScoped {
     @NoArgsConstructor
     public static class EmailCompositeId {
         private Integer tenantId;
-        private Integer emailId;
+        private Long emailId;
     }
 }

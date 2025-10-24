@@ -19,7 +19,7 @@ paths:
           description: Filter by tutor ID
           schema:
             type: integer
-            format: int32
+
       responses:
         '200':
           description: Successful response
@@ -76,7 +76,8 @@ paths:
           required: true
           schema:
             type: integer
-            format: int32
+            format: int64
+
       responses:
         '200':
           description: Successful response
@@ -100,7 +101,8 @@ paths:
           required: true
           schema:
             type: integer
-            format: int32
+            format: int64
+  
       requestBody:
         required: true
         content:
@@ -132,7 +134,8 @@ paths:
           required: true
           schema:
             type: integer
-            format: int32
+            format: int64
+  
       responses:
         '204':
           description: Minor student deleted successfully
@@ -153,7 +156,8 @@ paths:
           required: true
           schema:
             type: integer
-            format: int32
+            format: int64
+  
         - $ref: './commons.yaml#/components/parameters/PageParam'
         - $ref: './commons.yaml#/components/parameters/SizeParam'
       responses:

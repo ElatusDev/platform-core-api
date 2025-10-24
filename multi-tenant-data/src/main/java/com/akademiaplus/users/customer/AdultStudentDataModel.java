@@ -44,7 +44,7 @@ public class AdultStudentDataModel extends AbstractUser {
      */
     @Id
     @Column(name = "adult_student_id")
-    private Integer adultStudentId;
+    private Long adultStudentId;
 
     /**
      * Reference to the student's customer authentication credentials.

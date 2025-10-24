@@ -351,8 +351,10 @@ components:
       properties:
         deliveryId:
           type: integer
+          format: int64
         notificationId:
           type: integer
+          format: int64
         deviceToken:
           type: string
         platform:
@@ -440,6 +442,7 @@ components:
       properties:
         notificationId:
           type: integer
+          format: int64
         title:
           type: string
         notificationType:

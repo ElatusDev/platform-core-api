@@ -65,7 +65,7 @@ components:
           type: string
         internalAuthId:
           type: integer
-          format: int32
+          format: int64
 
     # ===== BASE CUSTOMER AUTH FIELDS =====
     CustomerAuthFields:
@@ -86,9 +86,17 @@ components:
           type: string
         customerAuthId:
           type: integer
-          format: int32
+          format: int64
 
-    # ===== AUDIT FIELDS =====
+    # ===== BASE ID RESPONSE =====
+    BaseIdResponse:
+      type: object
+      properties:
+        personPiiId:
+          type: integer
+          format: int64
+
+    # ===== AUDIT FIELDS (Missing from original) =====
     AuditFields:
       type: object
       properties:
@@ -98,14 +106,10 @@ components:
         updatedAt:
           type: string
           format: date-time
-
-    # ===== BASE ID RESPONSE =====
-    BaseIdResponse:
-      type: object
-      properties:
-        personPiiId:
-          type: integer
-          format: int32
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
 
     # ===== EMPLOYEE BASE SCHEMAS =====
     EmployeeBaseFields:
@@ -136,10 +140,10 @@ components:
           properties:
             employeeId:
               type: integer
-              format: int32
+              format: int64
             internalAuthId:
               type: integer
-              format: int32
+              format: int64
 
     GetEmployeeResponse:
       allOf:
@@ -187,10 +191,10 @@ components:
           properties:
             collaboratorId:
               type: integer
-              format: int32
+              format: int64
             internalAuthId:
               type: integer
-              format: int32
+              format: int64
 
     GetCollaboratorResponse:
       allOf:
@@ -230,10 +234,10 @@ components:
           properties:
             adultStudentId:
               type: integer
-              format: int32
+              format: int64
             customerAuthId:
               type: integer
-              format: int32
+              format: int64
 
     GetAdultStudentResponse:
       allOf:
@@ -262,7 +266,7 @@ components:
           example: "2010-06-15"
         tutorId:
           type: integer
-          format: int32
+          format: int64
           example: 101
         profilePicture:
           type: string
@@ -277,10 +281,10 @@ components:
           properties:
             minorStudentId:
               type: integer
-              format: int32
+              format: int64
             customerAuthId:
               type: integer
-              format: int32
+              format: int64
 
     GetMinorStudentResponse:
       allOf:
@@ -318,10 +322,10 @@ components:
           properties:
             tutorId:
               type: integer
-              format: int32
+              format: int64
             customerAuthId:
               type: integer
-              format: int32
+              format: int64
               nullable: true
 
     GetTutorResponse:
@@ -346,7 +350,7 @@ components:
       properties:
         employeeId:
           type: integer
-          format: int32
+          format: int64
         message:
           type: string
           example: "Employee updated successfully"
@@ -356,7 +360,7 @@ components:
       properties:
         collaboratorId:
           type: integer
-          format: int32
+          format: int64
         message:
           type: string
           example: "Collaborator updated successfully"
@@ -366,7 +370,7 @@ components:
       properties:
         adultStudentId:
           type: integer
-          format: int32
+          format: int64
         message:
           type: string
           example: "Adult student updated successfully"
@@ -376,7 +380,7 @@ components:
       properties:
         minorStudentId:
           type: integer
-          format: int32
+          format: int64
         message:
           type: string
           example: "Minor student updated successfully"
@@ -386,7 +390,7 @@ components:
       properties:
         tutorId:
           type: integer
-          format: int32
+          format: int64
         message:
           type: string
           example: "Tutor updated successfully"

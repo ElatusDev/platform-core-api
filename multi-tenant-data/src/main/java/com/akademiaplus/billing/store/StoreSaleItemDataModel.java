@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.billing.store;
 
-import com.akademiaplus.infra.TenantScoped;
+ import com.akademiaplus.infra.persistence.model.TenantScoped;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -43,7 +43,7 @@ public class StoreSaleItemDataModel extends TenantScoped {
      */
     @Id
     @Column(name = "store_sale_item_id")
-    private Integer storeSaleItemId;
+    private Long storeSaleItemId;
 
     /**
      * Reference to the parent store transaction containing this sale item.
@@ -96,6 +96,6 @@ public class StoreSaleItemDataModel extends TenantScoped {
     @NoArgsConstructor
     public static class SaleItemCompositeId {
         private Integer tenantId;
-        private Integer storeSaleItemId;
+        private Long storeSaleItemId;
     }
 }

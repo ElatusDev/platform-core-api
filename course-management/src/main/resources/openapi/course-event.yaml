@@ -60,6 +60,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
       responses:
         '200':
           description: Course event details
@@ -88,6 +89,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
       requestBody:
         required: true
         content:
@@ -128,6 +130,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
       responses:
         '204':
           description: Course event deleted successfully
@@ -159,10 +162,13 @@ components:
           maxLength: 200
         scheduleId:
           type: integer
+          format: int64
         courseId:
           type: integer
+          format: int64
         instructorId:
           type: integer
+          format: int64
         adultAttendeeIds:
           type: array
           items:
@@ -188,6 +194,7 @@ components:
       properties:
         courseEventId:
           type: integer
+          format: int64
           readOnly: true
       required:
         - courseEventId
@@ -198,6 +205,7 @@ components:
           properties:
             courseEventId:
               type: integer
+              format: int64
               readOnly: true
           required:
             - courseEventId

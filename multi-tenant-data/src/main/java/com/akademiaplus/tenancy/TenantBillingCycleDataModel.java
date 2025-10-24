@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.tenancy;
 
-import com.akademiaplus.infra.TenantScoped;
+ import com.akademiaplus.infra.persistence.model.TenantScoped;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -45,7 +45,7 @@ public class TenantBillingCycleDataModel extends TenantScoped {
      */
     @Id
     @Column(name = "tenant_billing_cycle_id")
-    private Integer tenantBillingCycleId;
+    private Long tenantBillingCycleId;
 
     /**
      * Year and month for this billing cycle.
@@ -118,6 +118,6 @@ public class TenantBillingCycleDataModel extends TenantScoped {
     @NoArgsConstructor
     public static class TenantBillingCycleCompositeId implements Serializable {
         private Integer tenantId;
-        private Integer tenantBillingCycleId;
+        private Long tenantBillingCycleId;
     }
 }

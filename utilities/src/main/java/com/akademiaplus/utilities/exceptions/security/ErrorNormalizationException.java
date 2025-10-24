@@ -7,6 +7,8 @@
  */
 package com.akademiaplus.utilities.exceptions.security;
 
+import com.google.i18n.phonenumbers.NumberParseException;
+
 public class ErrorNormalizationException extends RuntimeException {
     public ErrorNormalizationException(Exception e) {
         super(e);
@@ -14,5 +16,9 @@ public class ErrorNormalizationException extends RuntimeException {
 
     public ErrorNormalizationException(String msg) {
         super(msg);
+    }
+
+    public ErrorNormalizationException(String msg, NumberParseException e) {
+        super(msg, e);
     }
 }

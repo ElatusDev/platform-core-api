@@ -14,7 +14,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface InternalAuthRepository extends JpaRepository<InternalAuthDataModel, Integer> {
+public interface InternalAuthRepository extends JpaRepository<InternalAuthDataModel, Long> {
     Optional<InternalAuthDataModel> findByUsernameHash(String usernameHash);
 
 }

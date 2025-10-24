@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.users.base;
 
-import com.akademiaplus.infra.TenantScoped;
+ import com.akademiaplus.infra.persistence.model.TenantScoped;
 import com.akademiaplus.utilities.security.StringEncryptor;
 import jakarta.persistence.*;
 import lombok.*;
@@ -43,7 +43,7 @@ public class PersonPIIDataModel extends TenantScoped {
      */
     @Id
     @Column(name = "person_pii_id")
-    private Integer personPiiId;
+    private Long personPiiId;
 
     /**
      * Encrypted first name of the person.

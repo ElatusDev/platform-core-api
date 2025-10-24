@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.courses.program;
 
-import com.akademiaplus.infra.TenantScoped;
+ import com.akademiaplus.infra.persistence.model.TenantScoped;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -42,7 +42,7 @@ public class ScheduleDataModel extends TenantScoped {
      */
     @Id
     @Column(name = "schedule_id")
-    private Integer scheduleId;
+    private Long scheduleId;
 
     /**
      * Day of the week when the course is scheduled.
@@ -84,6 +84,6 @@ public class ScheduleDataModel extends TenantScoped {
     @NoArgsConstructor
     public static class ScheduleCompositeId implements Serializable {
         private Integer tenantId;
-        private Integer scheduleId;
+        private Long scheduleId;
     }
 }

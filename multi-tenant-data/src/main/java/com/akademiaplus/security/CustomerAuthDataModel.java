@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.security;
 
-import com.akademiaplus.infra.TenantScoped;
+ import com.akademiaplus.infra.persistence.model.TenantScoped;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -42,7 +42,7 @@ public class CustomerAuthDataModel extends TenantScoped {
      */
     @Id
     @Column(name = "customer_auth_id")
-    private Integer customerAuthId;
+    private Long customerAuthId;
 
     /**
      * OAuth provider name for external authentication.

@@ -24,7 +24,7 @@ public class DeleteCollaboratorUseCase {
         this.repository = repository;
     }
 
-    public void delete(Integer collaboratorId) {
+    public void delete(Long collaboratorId) {
         Optional<CollaboratorDataModel> found = repository.findById(collaboratorId);
         if(found.isPresent()) {
             try {

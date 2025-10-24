@@ -2,11 +2,11 @@ package com.akademiaplus.program.usecases;
 
 import com.akademiaplus.courses.program.CourseDataModel;
 import com.akademiaplus.courses.program.ScheduleDataModel;
+import com.akademiaplus.program.interfaceadapters.ScheduleRepository;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
 import com.akademiaplus.program.application.CourseValidator;
 import com.akademiaplus.program.interfaceadapters.CourseRepository;
 
-import com.akademiaplus.program.interfaceadapters.SchedulePersistenceOutputPort;
 import openapi.akademiaplus.domain.course.management.dto.CourseCreationRequestDTO;
 import openapi.akademiaplus.domain.course.management.dto.CourseCreationResponseDTO;
 import org.modelmapper.ModelMapper;
@@ -19,18 +19,18 @@ import java.util.List;
 public class CreateCourseUseCase {
 
     private final CourseRepository courseRepository;
-    private final SchedulePersistenceOutputPort schedulePersistenceOutputPort;
+    private final ScheduleRepository scheduleRepository;
     private final CourseValidator courseValidator;
     private final ModelMapper modelMapper;
 
     public CreateCourseUseCase(CourseRepository courseRepository,
-                               SchedulePersistenceOutputPort schedulePersistenceOutputPort,
+                               ScheduleRepository scheduleRepository,
                                CourseValidator courseValidator,
                                ModelMapper modelMapper) {
         this.courseRepository = courseRepository;
-        this.schedulePersistenceOutputPort = schedulePersistenceOutputPort; // Inject the port
         this.courseValidator = courseValidator;
         this.modelMapper = modelMapper;
+        this.scheduleRepository = scheduleRepository;
     }
 
     @Transactional
@@ -42,7 +42,7 @@ public class CreateCourseUseCase {
         courseDataModel.setAvailableCollaborators(existingCollaborators);
 
         CourseDataModel savedCourse = courseRepository.save(courseDataModel);
-        schedulePersistenceOutputPort.update(existingSchedules);
+        scheduleRepository.saveAll(existingSchedules);
         return modelMapper.map(savedCourse, CourseCreationResponseDTO.class);
     }
 }

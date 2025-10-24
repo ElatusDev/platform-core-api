@@ -44,7 +44,7 @@ public class TutorDataModel extends AbstractUser {
      */
     @Id
     @Column(name = "tutor_id")
-    private Integer tutorId;
+    private Long tutorId;
 
     /**
      * Reference to the tutor's customer authentication credentials.

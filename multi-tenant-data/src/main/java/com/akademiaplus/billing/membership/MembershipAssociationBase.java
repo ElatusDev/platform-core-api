@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.billing.membership;
 
-import com.akademiaplus.infra.TenantScoped;
+ import com.akademiaplus.infra.persistence.model.TenantScoped;
 import com.akademiaplus.courses.program.CourseDataModel;
 import jakarta.persistence.*;
 import lombok.Getter;

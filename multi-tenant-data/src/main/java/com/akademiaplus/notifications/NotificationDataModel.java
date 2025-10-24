@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.notifications;
 
-import com.akademiaplus.infra.TenantScoped;
+ import com.akademiaplus.infra.persistence.model.TenantScoped;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -43,7 +43,7 @@ public class NotificationDataModel extends TenantScoped {
      */
     @Id
     @Column(name = "notification_id")
-    private Integer notificationId;
+    private Long notificationId;
 
     /**
      * Title of the notification displayed to users.
@@ -106,7 +106,7 @@ public class NotificationDataModel extends TenantScoped {
      * Used for direct user targeting and personalized notifications.
      */
     @Column(name = "target_user_id")
-    private Integer targetUserId;
+    private Long targetUserId;
 
     /**
      * Optional metadata in JSON format for additional notification properties.
@@ -127,6 +127,6 @@ public class NotificationDataModel extends TenantScoped {
     @NoArgsConstructor
     public static class NotificationCompositeId implements Serializable {
         private Integer tenantId;
-        private Integer notificationId;
+        private Long notificationId;
     }
 }

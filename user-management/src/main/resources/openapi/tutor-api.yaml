@@ -70,7 +70,8 @@ paths:
           required: true
           schema:
             type: integer
-            format: int32
+            format: int64
+  
       responses:
         '200':
           description: Successful response
@@ -94,7 +95,8 @@ paths:
           required: true
           schema:
             type: integer
-            format: int32
+            format: int64
+  
       requestBody:
         required: true
         content:
@@ -127,7 +129,8 @@ paths:
           required: true
           schema:
             type: integer
-            format: int32
+            format: int64
+  
       responses:
         '204':
           description: Tutor deleted successfully
@@ -154,7 +157,8 @@ paths:
           required: true
           schema:
             type: integer
-            format: int32
+            format: int64
+  
       responses:
         '200':
           description: Successful response

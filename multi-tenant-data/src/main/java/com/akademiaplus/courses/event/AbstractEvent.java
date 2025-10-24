@@ -8,7 +8,7 @@
 package com.akademiaplus.courses.event;
 
 import com.akademiaplus.courses.program.ScheduleDataModel;
-import com.akademiaplus.infra.TenantScoped;
+ import com.akademiaplus.infra.persistence.model.TenantScoped;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

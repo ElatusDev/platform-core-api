@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.billing.membership;
 
-import com.akademiaplus.infra.TenantScoped;
+ import com.akademiaplus.infra.persistence.model.TenantScoped;
 import com.akademiaplus.courses.program.CourseDataModel;
 import jakarta.persistence.*;
 import lombok.*;
@@ -42,7 +42,7 @@ public class MembershipDataModel extends TenantScoped {
      */
     @Id
     @Column(name = "membership_id")
-    private Integer membershipId;
+    private Long membershipId;
 
     /**
      * Type classification of the membership.
@@ -93,6 +93,6 @@ public class MembershipDataModel extends TenantScoped {
     @NoArgsConstructor
     public static class MembershipCompositeId implements Serializable {
         private Integer tenantId;
-        private Integer membershipId;
+        private Long membershipId;
     }
 }

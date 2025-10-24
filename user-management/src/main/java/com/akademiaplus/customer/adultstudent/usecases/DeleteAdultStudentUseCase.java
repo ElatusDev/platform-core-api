@@ -24,7 +24,7 @@ public class DeleteAdultStudentUseCase {
         this.adultStudentRepository = adultStudentRepository;
     }
 
-    public void delete(Integer adultStudentId) {
+    public void delete(Long adultStudentId) {
         Optional<AdultStudentDataModel> result = adultStudentRepository.findById(adultStudentId);
         if(result.isPresent()) {
             try {

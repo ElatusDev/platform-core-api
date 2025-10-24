@@ -494,8 +494,10 @@ components:
       properties:
         deliveryId:
           type: integer
+          format: int64
         notificationId:
           type: integer
+          format: int64
         phoneNumber:
           type: string
         status:
@@ -617,6 +619,7 @@ components:
           format: date-time
         deliveryId:
           type: integer
+          format: int64
         cost:
           type: number
           format: decimal
@@ -688,6 +691,7 @@ components:
       properties:
         notificationId:
           type: integer
+          format: int64
         title:
           type: string
         notificationType:

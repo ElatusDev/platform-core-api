@@ -10,5 +10,5 @@ package com.akademiaplus.membership.interfaceadapters;
 import com.akademiaplus.billing.customerpayment.CardPaymentInfoDataModel;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface CardPaymentInfoRepository extends JpaRepository<CardPaymentInfoDataModel, Integer> {
+public interface CardPaymentInfoRepository extends JpaRepository<CardPaymentInfoDataModel, Long> {
 }

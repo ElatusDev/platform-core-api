@@ -41,7 +41,7 @@ public class MembershipTutorDataModel extends MembershipAssociationBase {
      */
     @Id
     @Column(name = "membership_tutor_id")
-    private Integer membershipTutorId;
+    private Long membershipTutorId;
 
     /**
      * Reference to the tutor associated with this membership.
@@ -63,6 +63,6 @@ public class MembershipTutorDataModel extends MembershipAssociationBase {
     @NoArgsConstructor
     public static class MembershipTutorCompositeId {
         private Integer tenantId;
-        private Integer membershipTutorId;
+        private Long membershipTutorId;
     }
 }

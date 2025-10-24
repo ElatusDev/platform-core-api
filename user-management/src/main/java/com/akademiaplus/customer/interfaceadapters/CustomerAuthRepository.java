@@ -12,5 +12,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface CustomerAuthRepository extends JpaRepository <CustomerAuthDataModel, Integer> {
+public interface CustomerAuthRepository extends JpaRepository<CustomerAuthDataModel, Long> {
 }

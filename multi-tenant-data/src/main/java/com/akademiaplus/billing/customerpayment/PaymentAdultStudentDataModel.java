@@ -39,7 +39,7 @@ public class PaymentAdultStudentDataModel extends BasePayment {
      */
     @Id
     @Column(name = "payment_adult_student_id")
-    private Integer paymentAdultStudentId;
+    private Long paymentAdultStudentId;
 
     /**
      * Reference to the adult student membership this payment is for.
@@ -60,6 +60,6 @@ public class PaymentAdultStudentDataModel extends BasePayment {
     @NoArgsConstructor
     public static class PaymentAdultStudentCompositeId implements Serializable {
         private Integer tenantId;
-        private Integer paymentAdultStudentId;
+        private Long paymentAdultStudentId;
     }
 }

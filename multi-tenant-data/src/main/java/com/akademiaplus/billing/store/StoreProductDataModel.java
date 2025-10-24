@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.billing.store;
 
-import com.akademiaplus.infra.TenantScoped;
+ import com.akademiaplus.infra.persistence.model.TenantScoped;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.SQLDelete;
@@ -42,7 +42,7 @@ public class StoreProductDataModel extends TenantScoped {
      */
     @Id
     @Column(name = "store_product_id")
-    private Integer storeProductId;
+    private Long storeProductId;
 
     /**
      * Display name of the product.
@@ -85,6 +85,6 @@ public class StoreProductDataModel extends TenantScoped {
     @NoArgsConstructor
     public static class ProductCompositeId {
         private Integer tenantId;
-        private Integer storeProductId;
+        private Long storeProductId;
     }
 }

@@ -10,5 +10,5 @@ package com.akademiaplus.interfaceadapters;
 import com.akademiaplus.users.base.PersonPIIDataModel;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface PersonPIIRepository extends JpaRepository<PersonPIIDataModel, Integer> {
+public interface PersonPIIRepository extends JpaRepository<PersonPIIDataModel, Long> {
 }

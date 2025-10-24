@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
 public class PeopleDataLoaderConfiguration {
 
     @Bean
-    public DataLoader<EmployeeCreationRequestDTO, EmployeeDataModel, Integer> employeeDataLoader(
+    public DataLoader<EmployeeCreationRequestDTO, EmployeeDataModel, Long> employeeDataLoader(
             EmployeeRepository repository,
             DataFactory<EmployeeCreationRequestDTO> employeeFactory,
             EmployeeCreationUseCase employeeCreationUseCase) {
@@ -28,11 +28,11 @@ public class PeopleDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<EmployeeDataModel, Integer> employeeDataCleanUp(
+    public DataCleanUp<EmployeeDataModel, Long> employeeDataCleanUp(
             EntityManager entityManager,
             EmployeeRepository repository) {
 
-        DataCleanUp<EmployeeDataModel, Integer> cleanup =
+        DataCleanUp<EmployeeDataModel, Long> cleanup =
                 new DataCleanUp<>(entityManager);
         cleanup.setDataModel(EmployeeDataModel.class);
         cleanup.setRepository(repository);

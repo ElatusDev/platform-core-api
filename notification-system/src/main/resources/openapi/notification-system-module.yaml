@@ -82,6 +82,7 @@ components:
       properties:
         notificationId:
           type: integer
+          format: int64
         title:
           type: string
         content:

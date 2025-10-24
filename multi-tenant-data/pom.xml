@@ -35,6 +35,11 @@
             <version>1.0</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.akademiaplus</groupId>
+            <artifactId>infra-common</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
 
 </project>

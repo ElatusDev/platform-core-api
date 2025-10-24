@@ -31,6 +31,7 @@ components:
           properties:
             membershipAdultStudentId:
               type: integer
+              format: int64
               description: ID of the associated adult student membership
       required:
         - paymentDate
@@ -42,6 +43,7 @@ components:
       properties:
         paymentAdultStudentId:
           type: integer
+          format: int64
           readOnly: true
           description: Adult student payment ID
       required:
@@ -53,10 +55,12 @@ components:
           properties:
             paymentAdultStudentId:
               type: integer
+              format: int64
               readOnly: true
               description: Adult student payment ID
             membershipAdultStudentId:
               type: integer
+              format: int64
               description: ID of the associated adult student membership
       required:
         - paymentAdultStudentId
@@ -71,6 +75,7 @@ components:
           properties:
             membershipTutorId:
               type: integer
+              format: int64
               description: ID of the associated tutor membership
       required:
         - paymentDate
@@ -82,6 +87,7 @@ components:
       properties:
         paymentTutorId:
           type: integer
+          format: int64
           readOnly: true
           description: Tutor payment ID
       required:
@@ -93,10 +99,12 @@ components:
           properties:
             paymentTutorId:
               type: integer
+              format: int64
               readOnly: true
               description: Tutor payment ID
             membershipTutorId:
               type: integer
+              format: int64
               description: ID of the associated tutor membership
       required:
         - paymentTutorId
@@ -165,6 +173,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the adult student payment to retrieve
       responses:
         '200':
@@ -194,6 +203,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the adult student payment to update
       requestBody:
         required: true
@@ -235,6 +245,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the adult student payment to delete
       responses:
         '204':
@@ -308,6 +319,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the tutor payment to retrieve
       responses:
         '200':
@@ -337,6 +349,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the tutor payment to update
       requestBody:
         required: true
@@ -378,6 +391,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
           description: ID of the tutor payment to delete
       responses:
         '204':
