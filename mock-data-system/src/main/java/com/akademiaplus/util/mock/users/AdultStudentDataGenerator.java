@@ -14,23 +14,21 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 /**
- * Employee-specific data generation. Delegates shared person fields
- * to {@link PersonDataGenerator}.
+ * AdultStudent-specific data generation. Delegates shared person fields
+ * to {@link PersonDataGenerator}. Uses CustomerAuth (provider + token)
+ * rather than InternalAuth.
  */
 @Component
 @RequiredArgsConstructor
-public class EmployeeDataGenerator {
+public class AdultStudentDataGenerator {
 
     private final PersonDataGenerator personData;
 
-    private static final List<String> EMPLOYEE_TYPES = Arrays.asList(
-            "INSTRUCTOR", "ADMINISTRATOR", "COORDINATOR", "MANAGER", "ASSISTANT"
-    );
-
-    private static final List<String> ROLES = Arrays.asList(
-            "EMPLOYEE", "ADMIN", "SUPERVISOR", "MANAGER", "USER"
+    private static final List<String> AUTH_PROVIDERS = Arrays.asList(
+            "GOOGLE", "FACEBOOK", "APPLE"
     );
 
     public String firstName() {
@@ -43,14 +41,6 @@ public class EmployeeDataGenerator {
 
     public String email(String firstName, String lastName) {
         return personData.email(firstName, lastName);
-    }
-
-    public String username(String firstName, String lastName) {
-        return personData.username(firstName, lastName);
-    }
-
-    public String password() {
-        return personData.password();
     }
 
     public String phoneNumber() {
@@ -66,19 +56,15 @@ public class EmployeeDataGenerator {
     }
 
     public LocalDate birthdate() {
-        return personData.birthdate(22, 65);
+        return personData.birthdate(18, 55);
     }
 
-    public LocalDate entryDate() {
-        return personData.entryDate();
+    public String provider() {
+        return AUTH_PROVIDERS.get(personData.random().nextInt(AUTH_PROVIDERS.size()));
     }
 
-    public String employeeType() {
-        return EMPLOYEE_TYPES.get(personData.random().nextInt(EMPLOYEE_TYPES.size()));
-    }
-
-    public String role() {
-        return ROLES.get(personData.random().nextInt(ROLES.size()));
+    public String token() {
+        return "oauth_" + UUID.randomUUID().toString().replace("-", "");
     }
 
     public JsonNullable<byte[]> profilePicture() {

@@ -16,21 +16,30 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Employee-specific data generation. Delegates shared person fields
+ * Collaborator-specific data generation. Delegates shared person fields
  * to {@link PersonDataGenerator}.
  */
 @Component
 @RequiredArgsConstructor
-public class EmployeeDataGenerator {
+public class CollaboratorDataGenerator {
 
     private final PersonDataGenerator personData;
 
-    private static final List<String> EMPLOYEE_TYPES = Arrays.asList(
-            "INSTRUCTOR", "ADMINISTRATOR", "COORDINATOR", "MANAGER", "ASSISTANT"
+    private static final List<String> SKILL_SETS = Arrays.asList(
+            "Mathematics, Physics",
+            "Chemistry, Biology",
+            "Spanish Literature, Grammar",
+            "English, French",
+            "Music, Art",
+            "Physical Education, Dance",
+            "Programming, Robotics",
+            "History, Social Studies",
+            "Accounting, Finance",
+            "Yoga, Meditation"
     );
 
     private static final List<String> ROLES = Arrays.asList(
-            "EMPLOYEE", "ADMIN", "SUPERVISOR", "MANAGER", "USER"
+            "COLLABORATOR", "INSTRUCTOR", "SPECIALIST"
     );
 
     public String firstName() {
@@ -66,15 +75,15 @@ public class EmployeeDataGenerator {
     }
 
     public LocalDate birthdate() {
-        return personData.birthdate(22, 65);
+        return personData.birthdate(25, 60);
     }
 
     public LocalDate entryDate() {
         return personData.entryDate();
     }
 
-    public String employeeType() {
-        return EMPLOYEE_TYPES.get(personData.random().nextInt(EMPLOYEE_TYPES.size()));
+    public String skills() {
+        return SKILL_SETS.get(personData.random().nextInt(SKILL_SETS.size()));
     }
 
     public String role() {
