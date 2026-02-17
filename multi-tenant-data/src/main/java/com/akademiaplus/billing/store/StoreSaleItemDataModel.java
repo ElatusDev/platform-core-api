@@ -75,14 +75,14 @@ public class StoreSaleItemDataModel extends TenantScoped {
      * Preserved for historical accuracy and may differ from current product price
      * due to discounts, promotions, or price changes.
      */
-    @Column(name = "unit_price_at_sale", nullable = false)
+    @Column(name = "unit_price_at_sale", nullable = false, precision = 10, scale = 2)
     private BigDecimal unitPriceAtSale;
 
     /**
      * Total amount for this line item (quantity × unit_price_at_sale).
      * Calculated and stored for performance and audit purposes.
      */
-    @Column(name = "item_total", nullable = false)
+    @Column(name = "item_total", nullable = false, precision = 10, scale = 2)
     private BigDecimal itemTotal;
 
     /**

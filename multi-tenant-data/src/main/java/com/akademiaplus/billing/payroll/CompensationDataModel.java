@@ -58,7 +58,7 @@ public class CompensationDataModel extends TenantScoped {
      * Monetary amount for this compensation structure.
      * Interpretation depends on compensation type (annual for salary, per hour for hourly, etc.).
      */
-    @Column(name = "amount", nullable = false)
+    @Column(name = "amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
     /**

@@ -67,7 +67,7 @@ public class StoreTransactionDataModel extends TenantScoped {
      * Total monetary amount for the entire transaction.
      * Sum of all sale item totals, including taxes and discounts if applicable.
      */
-    @Column(name = "total_amount", nullable = false)
+    @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
     /**

@@ -63,7 +63,7 @@ public class StoreProductDataModel extends TenantScoped {
      * Stored as BigDecimal for flexibility, but should be handled with proper
      * currency precision in business logic and display layers.
      */
-    @Column(name = "price", nullable = false)
+    @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
     /**
