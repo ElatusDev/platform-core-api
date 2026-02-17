@@ -12,7 +12,7 @@
 
 ## Coding Standards
 
-**CRITICAL**: All code must follow the comprehensive standards in `@AI-code-ref.md`.
+**CRITICAL**: All code must follow the comprehensive standards in `AI-CODE-REF.md`.
 
 ### Non-Negotiable Rules
 
@@ -172,13 +172,12 @@ docker compose -f docker-compose.dev.yml up --build
 3. **SonarQube workflow** references `makani-helpdesk-api` project key — needs update
 4. **Several modules are placeholders**: `etl-system`, `audit-system`, `pos-system` only contain `Main.java`
 5. **notification-system** has OpenAPI specs but no Java implementation yet
-6. **No README.md** exists at project root
 
 ---
 
 ## When Working on This Project
 
-- Always read `AI-code-ref.md` before writing any code
+- Always read `AI-CODE-REF.md` before writing any code
 - Check entity inheritance chain before modifying data models
 - Verify tenant isolation is maintained in any new query or repository method
 - Run `mvn test -pl {module}` after changes to verify test suite passes

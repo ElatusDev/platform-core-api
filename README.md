@@ -124,6 +124,19 @@ For the full architecture deep-dive, see [DESIGN.md](DESIGN.md).
 
 ---
 
+## Documentation
+
+| Document | Purpose |
+|----------|---------|
+| [DESIGN.md](DESIGN.md) | Architecture, module catalog, multi-tenancy model, security layers |
+| [AI-CODE-REF.md](AI-CODE-REF.md) | Coding standards, review rules, detection patterns, test conventions |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Onboarding, git workflow, commit conventions, PR checklist |
+| [SECURITY.md](SECURITY.md) | Vulnerability disclosure policy |
+| [CHANGELOG.md](CHANGELOG.md) | Release history (Keep a Changelog + Conventional Commits) |
+| [docs/adr/](docs/adr/) | Architecture Decision Records for key technical choices |
+
+---
+
 ## Maven Profiles
 
 | Profile | Command | What it builds |
@@ -149,12 +162,8 @@ For architecture and system design, see [DESIGN.md](DESIGN.md).
 
 ## Contributing
 
-1. Read [AI-CODE-REF.md](AI-CODE-REF.md) before writing any code
-2. Follow the existing module structure and naming conventions
-3. Add comprehensive tests using the Given-When-Then pattern
-4. Ensure all public APIs have Javadoc with `@param`, `@return`, `@throws`
-5. Include the ElatusDev copyright header on all new files
-6. Run `mvn test` before pushing
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full onboarding guide, git workflow,
+commit conventions, and PR checklist.
 
 ---
 
