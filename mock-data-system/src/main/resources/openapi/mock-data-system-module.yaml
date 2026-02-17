@@ -15,8 +15,18 @@ paths:
       tags:
         - Mock Data
       description: This endpoint triggers the MockDataService to wipe and repopulate the database with a full set of mock data. This operation is designed for development and testing environments only.
+      parameters:
+        - name: count
+          in: query
+          required: false
+          description: Number of records to generate per entity type (employees, collaborators, adult students).
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 500
       responses:
-        '200':
+        '201':
           description: Mock data generated and loaded successfully
           content:
             application/json:

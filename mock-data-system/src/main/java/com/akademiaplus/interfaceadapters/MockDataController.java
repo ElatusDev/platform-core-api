@@ -24,12 +24,9 @@ public class MockDataController implements MockDataApi {
     }
 
     @Override
-    public ResponseEntity<String> generateAllMockData() {
-        loadPeopleMockDataUseCase.load();
-        return ResponseEntity.status(HttpStatus.CREATED).body("mock data ready!");
+    public ResponseEntity<String> generateAllMockData(Integer count) {
+        loadPeopleMockDataUseCase.load(count);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("Mock data generated: " + count + " records per entity type.");
     }
-
-
-
-
 }
