@@ -92,7 +92,7 @@ public class MembershipDataModel extends TenantScoped {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class MembershipCompositeId implements Serializable {
-        private Integer tenantId;
+        private Long tenantId;
         private Long membershipId;
     }
 }

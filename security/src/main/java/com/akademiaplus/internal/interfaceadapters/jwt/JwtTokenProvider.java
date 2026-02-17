@@ -65,7 +65,7 @@ public class JwtTokenProvider  {
      * @param additionalClaims Additional claims to include in the payload. Can be null.
      * @return The signed JWT string.
      */
-    public String createToken(String username, Integer tenantId, Map<String, Object> additionalClaims) {
+    public String createToken(String username, Long tenantId, Map<String, Object> additionalClaims) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + validityInMs);
 

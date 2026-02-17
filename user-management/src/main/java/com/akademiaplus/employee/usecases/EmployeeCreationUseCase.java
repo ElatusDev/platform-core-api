@@ -11,7 +11,6 @@ import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.employee.EmployeeDataModel;
 import com.akademiaplus.employee.interfaceadapters.EmployeeRepository;
 import com.akademiaplus.security.InternalAuthDataModel;
-import com.akademiaplus.utilities.idgeneration.IDGeneratorService;
 import com.akademiaplus.utilities.security.HashingService;
 import com.akademiaplus.utilities.security.PiiNormalizer;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +31,6 @@ public class EmployeeCreationUseCase {
     private final HashingService hashingService;
     private final PiiNormalizer piiNormalizer;
     private final EmployeeRepository employeeRepository;
-    private final IDGeneratorService idGeneratorService;
 
     @Transactional
     public EmployeeCreationResponseDTO create(EmployeeCreationRequestDTO dto)  {

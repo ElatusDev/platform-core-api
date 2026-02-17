@@ -53,7 +53,7 @@ public class TenantSequence {
         private static final long serialVersionUID = 1L;
 
         @Column(name = "tenant_id", nullable = false)
-        private Integer tenantId;
+        private Long tenantId;
 
         @Column(name = "entity_name", nullable = false, length = 50)
         private String entityName;

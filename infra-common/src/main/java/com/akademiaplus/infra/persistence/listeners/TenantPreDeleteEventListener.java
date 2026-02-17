@@ -72,7 +72,7 @@ public class TenantPreDeleteEventListener implements PreDeleteEventListener {
     public boolean onPreDelete(PreDeleteEvent event) {
         if (event.getEntity() instanceof TenantScoped tenantAwareEntity) {
             TenantContextHolder tenantContextHolder = tenantContextHolderProvider.getObject();
-            Integer contextTenantId = tenantContextHolder.getTenantId()
+            Long contextTenantId = tenantContextHolder.getTenantId()
                     .orElseThrow(() -> new InvalidTenantException(ERROR_TENANT_MISSING));
 
             if (!Objects.equals(contextTenantId, tenantAwareEntity.getTenantId())) {

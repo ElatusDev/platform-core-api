@@ -88,7 +88,7 @@ public class CompensationDataModel extends TenantScoped {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class CompensationCompositeId {
-        private Integer tenantId;
+        private Long tenantId;
         private Long compensationId;
     }
 }

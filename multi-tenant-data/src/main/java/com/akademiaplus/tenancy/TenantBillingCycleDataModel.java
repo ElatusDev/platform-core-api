@@ -117,7 +117,7 @@ public class TenantBillingCycleDataModel extends TenantScoped {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class TenantBillingCycleCompositeId implements Serializable {
-        private Integer tenantId;
+        private Long tenantId;
         private Long tenantBillingCycleId;
     }
 }

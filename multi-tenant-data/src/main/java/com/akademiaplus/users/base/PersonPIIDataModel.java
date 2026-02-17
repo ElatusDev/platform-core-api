@@ -132,7 +132,7 @@ public class PersonPIIDataModel extends TenantScoped {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class PersonPIICompositeId implements Serializable {
-        protected Integer tenantId;
-        protected Integer personPiiId;
+        protected Long tenantId;
+        protected Long personPiiId;
     }
 }

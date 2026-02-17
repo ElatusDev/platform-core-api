@@ -8,8 +8,8 @@
 package com.akademiaplus.utilities.exceptions.security;
 
 public class EncryptionFailureException extends RuntimeException {
-    public EncryptionFailureException(Exception e) {
-        super(e);
+    public EncryptionFailureException(String msg, Exception e) {
+        super(msg, e);
     }
     public EncryptionFailureException(String msg) { super(msg); }
 }

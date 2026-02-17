@@ -115,7 +115,7 @@ public class SequentialIDGenerator implements IDGenerator {
             maxAttempts = MAX_RETRY_ATTEMPTS,
             backoff = @Backoff(delay = RETRY_BACKOFF_DELAY, multiplier = RETRY_BACKOFF_MULTIPLIER)
     )
-    public Long generateId(String entityName, Integer tenantId) {
+    public Long generateId(String entityName, Long tenantId) {
         validateParameters(entityName, tenantId);
 
         log.debug(DEBUG_GENERATING_ID, entityName, tenantId);
@@ -163,7 +163,7 @@ public class SequentialIDGenerator implements IDGenerator {
             maxAttempts = MAX_RETRY_ATTEMPTS,
             backoff = @Backoff(delay = RETRY_BACKOFF_DELAY, multiplier = RETRY_BACKOFF_MULTIPLIER)
     )
-    public List<Long> generateIds(String entityName, Integer tenantId, int count) {
+    public List<Long> generateIds(String entityName, Long tenantId, int count) {
         validateParameters(entityName, tenantId);
         validateCount(count);
 
@@ -226,7 +226,7 @@ public class SequentialIDGenerator implements IDGenerator {
             maxAttempts = MAX_RETRY_ATTEMPTS,
             backoff = @Backoff(delay = RETRY_BACKOFF_DELAY, multiplier = RETRY_BACKOFF_MULTIPLIER)
     )
-    public Long reserveRange(String entityName, Integer tenantId, int rangeSize) {
+    public Long reserveRange(String entityName, Long tenantId, int rangeSize) {
         validateParameters(entityName, tenantId);
         validateCount(rangeSize);
 
@@ -271,7 +271,7 @@ public class SequentialIDGenerator implements IDGenerator {
      * @return The initialized sequence
      * @throws IDGenerationException if initialization fails after concurrent creation
      */
-    private TenantSequence initializeSequence(Integer tenantId, String entityName) {
+    private TenantSequence initializeSequence(Long tenantId, String entityName) {
         log.info(INFO_INITIALIZING_SEQUENCE, entityName, tenantId);
 
         TenantSequence newSequence = TenantSequence.builder()
@@ -300,7 +300,7 @@ public class SequentialIDGenerator implements IDGenerator {
      * @param tenantId The tenant ID to validate
      * @throws IllegalArgumentException if validation fails
      */
-    private void validateParameters(String entityName, Integer tenantId) {
+    private void validateParameters(String entityName, Long tenantId) {
         Assert.hasText(entityName, ERROR_ENTITY_NAME_EMPTY);
         Assert.notNull(tenantId, ERROR_TENANT_ID_NULL);
         Assert.isTrue(tenantId > MIN_TENANT_ID, ERROR_TENANT_ID_NOT_POSITIVE);

@@ -79,7 +79,7 @@ public class EntityIdAssigner {
                         tenantContextHolder.getTenantId().orElse(null));
             }
 
-            Integer tenantId = tenantContextHolder.getTenantId().orElse(null);
+            Long tenantId = tenantContextHolder.getTenantId().orElse(null);
             Object generatedId = idGenerator.generateId(metadata.getTableName(), tenantId);
             metadata.getSetter().invoke(entity, generatedId);
             hibernateStateUpdater.updatePropertyInState(event, metadata.getIdFieldName(), generatedId);

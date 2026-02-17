@@ -72,7 +72,7 @@ public class TenantContextLoader extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
-        Integer tenantId = extractTenantId(request);
+        Long tenantId = extractTenantId(request);
 
         if (tenantId == null) {
             log.error(ERROR_NO_TENANT_FOR_REQUEST,
@@ -99,11 +99,11 @@ public class TenantContextLoader extends OncePerRequestFilter {
      * @param request The HTTP request
      * @return The tenant ID, or null if not found or invalid
      */
-    private Integer extractTenantId(HttpServletRequest request) {
+    private Long extractTenantId(HttpServletRequest request) {
         String tenantHeader = request.getHeader(TENANT_HEADER);
         if (tenantHeader != null && !tenantHeader.trim().isEmpty()) {
             try {
-                return Integer.valueOf(tenantHeader.trim());
+                return Long.valueOf(tenantHeader.trim());
             } catch (NumberFormatException e) {
                 log.error(ERROR_INVALID_TENANT_FORMAT, tenantHeader, e);
                 return null;

@@ -126,7 +126,7 @@ public class NotificationDataModel extends TenantScoped {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class NotificationCompositeId implements Serializable {
-        private Integer tenantId;
+        private Long tenantId;
         private Long notificationId;
     }
 }

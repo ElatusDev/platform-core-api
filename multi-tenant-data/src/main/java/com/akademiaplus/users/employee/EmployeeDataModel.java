@@ -77,7 +77,7 @@ public class EmployeeDataModel extends AbstractUser {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class EmployeeCompositeId implements Serializable {
-        private Integer tenantId;
+        private Long tenantId;
         private Long employeeId;
     }
 }

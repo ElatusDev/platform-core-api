@@ -39,12 +39,15 @@ import java.util.regex.Pattern;
 @Component
 public class PiiNormalizer {
 
-    // Error messages as constants
-    private static final String ERROR_EMAIL_NULL_OR_EMPTY = "Email address cannot be null or empty";
-    private static final String ERROR_EMAIL_INVALID_FORMAT = "Email address format is invalid: %s";
-    private static final String ERROR_PHONE_NULL_OR_EMPTY = "Phone number cannot be null or empty";
-    private static final String ERROR_PHONE_INVALID = "Phone number is invalid: %s";
-    private static final String ERROR_PHONE_PARSE_FAILED = "Failed to parse phone number: %s";
+    // Error messages as public constants (referenced by tests)
+    public static final String ERROR_EMAIL_NULL_OR_EMPTY = "Email address cannot be null or empty";
+    public static final String ERROR_EMAIL_INVALID_FORMAT = "Email address format is invalid: %s";
+    public static final String ERROR_EMAIL_EXCEEDS_MAX_LENGTH = "Email address format is invalid: Email exceeds maximum length of %d";
+    public static final String ERROR_LOCAL_PART_EXCEEDS_MAX_LENGTH = "Email address format is invalid: Local part exceeds maximum length of %d";
+    public static final String ERROR_DOMAIN_EXCEEDS_MAX_LENGTH = "Email address format is invalid: Domain exceeds maximum length of %d";
+    public static final String ERROR_PHONE_NULL_OR_EMPTY = "Phone number cannot be null or empty";
+    public static final String ERROR_PHONE_INVALID = "Phone number is invalid: %s";
+    public static final String ERROR_PHONE_PARSE_FAILED = "Failed to parse phone number: %s";
 
     // RFC 5321 email length limits
     private static final int MAX_EMAIL_LENGTH = 320;
@@ -111,7 +114,7 @@ public class PiiNormalizer {
         // Length validation (prevents ReDoS and ensures RFC compliance)
         if (trimmedEmail.length() > MAX_EMAIL_LENGTH) {
             throw new ErrorNormalizationException(
-                    String.format(ERROR_EMAIL_INVALID_FORMAT, "Email exceeds maximum length of " + MAX_EMAIL_LENGTH));
+                    String.format(ERROR_EMAIL_EXCEEDS_MAX_LENGTH, MAX_EMAIL_LENGTH));
         }
 
         // Format validation with safe regex
@@ -136,9 +139,10 @@ public class PiiNormalizer {
      */
     public String normalizePhoneNumber(String phoneNumber) {
         validateNotNullOrEmpty(phoneNumber, ERROR_PHONE_NULL_OR_EMPTY);
+        String trimmedPhoneNumber = phoneNumber.trim();
 
         try {
-            Phonenumber.PhoneNumber parsedNumber = parsePhoneNumber(phoneNumber);
+            Phonenumber.PhoneNumber parsedNumber = parsePhoneNumber(trimmedPhoneNumber);
             validatePhoneNumber(parsedNumber, phoneNumber);
             return formatPhoneNumber(parsedNumber);
         } catch (NumberParseException e) {
@@ -192,14 +196,12 @@ public class PiiNormalizer {
         // Validate length constraints (RFC 5321)
         if (localPart.length() > MAX_LOCAL_PART_LENGTH) {
             throw new ErrorNormalizationException(
-                    String.format(ERROR_EMAIL_INVALID_FORMAT,
-                            "Local part exceeds maximum length of " + MAX_LOCAL_PART_LENGTH));
+                    String.format(ERROR_LOCAL_PART_EXCEEDS_MAX_LENGTH, MAX_LOCAL_PART_LENGTH));
         }
 
         if (domain.length() > MAX_DOMAIN_LENGTH) {
             throw new ErrorNormalizationException(
-                    String.format(ERROR_EMAIL_INVALID_FORMAT,
-                            "Domain exceeds maximum length of " + MAX_DOMAIN_LENGTH));
+                    String.format(ERROR_DOMAIN_EXCEEDS_MAX_LENGTH, MAX_DOMAIN_LENGTH));
         }
 
         // Validate domain doesn't have consecutive dots or start/end with dot

@@ -53,6 +53,16 @@
             <version>${module.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.akademiaplus</groupId>
+            <artifactId>tenant-management</artifactId>
+            <version>${module.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.akademiaplus</groupId>
+            <artifactId>infra-common</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
             <groupId>org.mariadb.jdbc</groupId>
             <artifactId>mariadb-java-client</artifactId>
         </dependency>

@@ -13,9 +13,9 @@ import java.util.Optional;
 public class TenantContextHolder {
 
     @Setter
-    private Integer tenantId;
+    private Long tenantId;
 
-    public Optional<Integer> getTenantId() {
+    public Optional<Long> getTenantId() {
         return Optional.of(tenantId);
     }
 }

@@ -11,4 +11,10 @@ public class DecryptionFailureException extends RuntimeException {
     public DecryptionFailureException(Exception e) {
         super(e);
     }
+    public DecryptionFailureException(String msg, Exception e) {
+        super(msg, e);
+    }
+    public DecryptionFailureException(String msg) {
+        super(msg);
+    }
 }

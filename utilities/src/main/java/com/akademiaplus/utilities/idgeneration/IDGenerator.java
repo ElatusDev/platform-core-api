@@ -19,7 +19,7 @@ public interface IDGenerator {
      * @throws IllegalArgumentException if parameters are invalid
      * @throws IDGenerationException if ID generation fails
      */
-    Long generateId(String entityName, Integer tenantId);
+    Long generateId(String entityName, Long tenantId);
 
     /**
      * Generate multiple unique IDs in a single operation.
@@ -32,7 +32,7 @@ public interface IDGenerator {
      * @throws IllegalArgumentException if count <= 0 or parameters invalid
      * @throws IDGenerationException if generation fails
      */
-    List<Long> generateIds(String entityName, Integer tenantId, int count);
+    List<Long> generateIds(String entityName, Long tenantId, int count);
 
     /**
      * Reserve a range of IDs for external system integration.
@@ -45,5 +45,5 @@ public interface IDGenerator {
      * @throws IllegalArgumentException if rangeSize <= 0
      * @throws IDGenerationException if reservation fails
      */
-    Long reserveRange(String entityName, Integer tenantId, int rangeSize);
+    Long reserveRange(String entityName, Long tenantId, int rangeSize);
 }

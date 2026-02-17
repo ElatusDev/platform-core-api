@@ -79,7 +79,7 @@ public class MinorStudentDataModel extends AbstractUser {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class MinorStudentCompositeId implements Serializable {
-        protected Integer tenantId;
-        protected Integer minorStudentId;
+        protected Long tenantId;
+        protected Long minorStudentId;
     }
 }

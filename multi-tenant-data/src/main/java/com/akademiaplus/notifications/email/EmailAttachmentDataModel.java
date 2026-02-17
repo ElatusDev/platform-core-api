@@ -70,7 +70,7 @@ public class EmailAttachmentDataModel extends TenantScoped {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class EmailAttachmentCompositeId {
-        private Integer tenantId;
+        private Long tenantId;
         private Long emailId;
         private String attachmentUrl;
     }

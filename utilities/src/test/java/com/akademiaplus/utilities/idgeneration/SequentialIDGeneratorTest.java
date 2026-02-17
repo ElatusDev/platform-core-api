@@ -31,7 +31,7 @@ import static org.mockito.Mockito.*;
 class SequentialIDGeneratorTest {
 
     // Test data constants - shared across multiple tests
-    private static final Integer TENANT_ID = 1;
+    private static final Long TENANT_ID = 1L;
     private static final String ENTITY_NAME = "course";
     private static final String EMPTY_STRING = "";
     private static final String WHITESPACE_STRING = "   ";
@@ -335,14 +335,6 @@ class SequentialIDGeneratorTest {
         @DisplayName("Should throw exception for invalid count")
         void shouldThrowExceptionForInvalidCount(int invalidCount) {
             // Given
-            TenantSequence.TenantSequenceId sequenceId =
-                    new TenantSequence.TenantSequenceId(TENANT_ID, ENTITY_NAME);
-
-            TenantSequence sequence = TenantSequence.builder()
-                    .id(sequenceId)
-                    .nextValue(SEQUENCE_VALUE_10)
-                    .version(VERSION_1)
-                    .build();
 
             // When/Then
             assertThatThrownBy(() -> idGenerator.generateIds(ENTITY_NAME, TENANT_ID, invalidCount))
@@ -354,15 +346,6 @@ class SequentialIDGeneratorTest {
         @DisplayName("Should throw exception for count exceeding limit")
         void shouldThrowExceptionForCountExceedingLimit() {
             // Given
-            TenantSequence.TenantSequenceId sequenceId =
-                    new TenantSequence.TenantSequenceId(TENANT_ID, ENTITY_NAME);
-
-            TenantSequence sequence = TenantSequence.builder()
-                    .id(sequenceId)
-                    .nextValue(SEQUENCE_VALUE_10)
-                    .version(VERSION_1)
-                    .build();
-
             String expectedMessageFragment = "safety";
 
             // When/Then
@@ -491,9 +474,9 @@ class SequentialIDGeneratorTest {
         }
 
         @ParameterizedTest
-        @ValueSource(ints = {0, -1, -100})
+        @ValueSource(longs = {0L, -1L, -100L})
         @DisplayName("Should throw exception for non-positive tenant ID")
-        void shouldThrowExceptionForNonPositiveTenantId(int invalidTenantId) {
+        void shouldThrowExceptionForNonPositiveTenantId(Long invalidTenantId) {
             // When/Then
             assertThatThrownBy(() -> idGenerator.generateId(ENTITY_NAME, invalidTenantId))
                     .isInstanceOf(IllegalArgumentException.class)

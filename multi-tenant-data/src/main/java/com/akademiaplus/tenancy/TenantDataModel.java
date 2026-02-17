@@ -7,8 +7,7 @@
  */
 package com.akademiaplus.tenancy;
 
-import com.akademiaplus.infra.Auditable;
-import com.akademiaplus.infra.SoftDeletable;
+import com.akademiaplus.infra.persistence.model.SoftDeletable;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -42,7 +41,7 @@ public class TenantDataModel extends SoftDeletable {
      */
     @Id
     @Column(name = "tenant_id")
-    private Integer tenantId;
+    private Long tenantId;
 
     /**
      * Display name of the organization.

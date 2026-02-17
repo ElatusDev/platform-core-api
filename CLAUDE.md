@@ -1,8 +1,9 @@
-# AI-Optimized Coding Standards Reference
+# CLAUDE.md — AI Coding Standards & Review Reference
 
-**Version**: 3.0 (AI-Optimized with Comprehensive Test Conventions)  
-**Last Updated**: October 24, 2025  
-**Purpose**: Quick reference for AI code analysis, review, refactoring, and test creation
+**Version**: 4.0  
+**Last Updated**: February 17, 2026  
+**Purpose**: Quick reference for AI code analysis, review, refactoring, and test creation  
+**See also**: [DESIGN.md](DESIGN.md) for architecture and system design
 
 ---
 
@@ -932,6 +933,6 @@ Throwable
 
 ---
 
-**End of AI-Optimized Reference Document v3.0**
+**End of CLAUDE.md v4.0**
 
-*This document is structured for programmatic analysis and quick pattern matching during code reviews, refactoring sessions, and test creation. Version 3.0 adds comprehensive test conventions including Given-When-Then pattern, no any() matchers rule, mock stubbing best practices, and test-specific detection keywords.*
+*This document is structured for programmatic analysis and quick pattern matching during code reviews, refactoring sessions, and test creation. Formerly AI-code-ref.md v3.0. Renamed to CLAUDE.md to follow Claude Code conventions.*

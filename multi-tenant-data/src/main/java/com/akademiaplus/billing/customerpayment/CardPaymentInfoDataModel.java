@@ -72,7 +72,7 @@ public class CardPaymentInfoDataModel extends TenantScoped {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class CardPaymentInfoCompositeId implements Serializable {
-        private Integer tenantId;
+        private Long tenantId;
         private Long cardPaymentInfoId;
     }
 }

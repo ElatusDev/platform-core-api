@@ -3,7 +3,7 @@ USE multi_tenant_db;
 --      TENANT MODULE       --
 
 CREATE TABLE tenants (
-    tenant_id INT PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT PRIMARY KEY AUTO_INCREMENT,
     organization_name VARCHAR(200) NOT NULL,
     legal_name VARCHAR(200),
     website_url VARCHAR(255),

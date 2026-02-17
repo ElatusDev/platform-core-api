@@ -8,6 +8,9 @@
 package com.akademiaplus.utilities.exceptions.security;
 
 public class HashingFailureException extends RuntimeException {
+    public HashingFailureException(String msg, Exception cause) {
+        super(msg, cause);
+    }
     public HashingFailureException(String msg) {
         super(msg);
     }

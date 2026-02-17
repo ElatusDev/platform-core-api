@@ -83,7 +83,7 @@ public class ScheduleDataModel extends TenantScoped {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class ScheduleCompositeId implements Serializable {
-        private Integer tenantId;
+        private Long tenantId;
         private Long scheduleId;
     }
 }

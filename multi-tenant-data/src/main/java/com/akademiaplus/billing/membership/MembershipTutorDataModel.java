@@ -62,7 +62,7 @@ public class MembershipTutorDataModel extends MembershipAssociationBase {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class MembershipTutorCompositeId {
-        private Integer tenantId;
+        private Long tenantId;
         private Long membershipTutorId;
     }
 }

@@ -104,7 +104,7 @@ public class StoreTransactionDataModel extends TenantScoped {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class StoreTransactionCompositeId {
-        private Integer tenantId;
+        private Long tenantId;
         private Long storeTransactionId;
     }
 }

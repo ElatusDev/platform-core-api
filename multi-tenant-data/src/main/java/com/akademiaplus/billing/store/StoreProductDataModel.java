@@ -84,7 +84,7 @@ public class StoreProductDataModel extends TenantScoped {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class ProductCompositeId {
-        private Integer tenantId;
+        private Long tenantId;
         private Long storeProductId;
     }
 }

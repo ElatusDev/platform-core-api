@@ -26,7 +26,7 @@ import static org.mockito.Mockito.*;
 class EntityIdAssignerTest {
 
     private static final Long GENERATED_ID = 12345L;
-    private static final Integer TENANT_ID = 100;
+    private static final Long TENANT_ID = 100L;
     private static final String TABLE_NAME = "users";
     private static final String ID_FIELD_NAME = "userId";
     private static final String TEST_ENTITY_NAME = "TestEntity";

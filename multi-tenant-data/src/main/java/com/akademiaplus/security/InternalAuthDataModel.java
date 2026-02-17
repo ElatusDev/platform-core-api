@@ -93,7 +93,7 @@ public class InternalAuthDataModel extends TenantScoped {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class InternalAuthCompositeId implements Serializable {
-        private Integer tenantId;
+        private Long tenantId;
         private Long internalAuthId;
     }
 }

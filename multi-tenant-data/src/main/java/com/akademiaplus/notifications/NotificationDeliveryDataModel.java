@@ -145,7 +145,7 @@ public class NotificationDeliveryDataModel extends TenantScoped {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class NotificationDeliveryCompositeId implements Serializable {
-        private Integer tenantId;
+        private Long tenantId;
         private Long notificationDeliveryId;
     }
 }

@@ -89,7 +89,7 @@ public class EmailDataModel extends TenantScoped {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class EmailCompositeId {
-        private Integer tenantId;
+        private Long tenantId;
         private Long emailId;
     }
 }

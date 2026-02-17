@@ -9,7 +9,7 @@ import java.util.Optional;
 @Repository
 public interface TenantSequenceRepository extends JpaRepository<@NonNull TenantSequence, TenantSequence.@NonNull TenantSequenceId> {
 
-    default Optional<TenantSequence> findByTenantIdAndEntityName(Integer tenantId, String entityName) {
+    default Optional<TenantSequence> findByTenantIdAndEntityName(Long tenantId, String entityName) {
         return findById(new TenantSequence.TenantSequenceId(tenantId, entityName));
     }
 }

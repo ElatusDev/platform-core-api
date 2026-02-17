@@ -67,7 +67,7 @@ public class TutorDataModel extends AbstractUser {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class TutorCompositeId implements Serializable {
-        protected Integer tenantId;
-        protected Integer tutorId;
+        protected Long tenantId;
+        protected Long tutorId;
     }
 }

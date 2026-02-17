@@ -111,7 +111,7 @@ public class CourseEventDataModel extends AbstractEvent {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class CourseEventCompositeId implements Serializable {
-        private Integer tenantId;
+        private Long tenantId;
         private Long courseEventId;
     }
 }

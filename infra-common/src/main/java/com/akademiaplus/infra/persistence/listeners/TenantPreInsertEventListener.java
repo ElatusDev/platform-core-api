@@ -74,7 +74,7 @@ public class TenantPreInsertEventListener implements PreInsertEventListener {
 
         if (event.getEntity() instanceof TenantScoped tenantEntity) {
             TenantContextHolder holder = tenantContextHolderProvider.getObject();
-            Integer tenantId = holder.getTenantId()
+            Long tenantId = holder.getTenantId()
                     .orElseThrow(() -> new InvalidTenantException(ERROR_TENANT_MISSING));
 
             tenantEntity.setTenantId(tenantId);
@@ -93,7 +93,7 @@ public class TenantPreInsertEventListener implements PreInsertEventListener {
      * @param state The state array containing entity property values
      * @param tenantId The tenant ID to assign
      */
-    private void updateTenantIdInState(EntityPersister persister, Object[] state, Integer tenantId) {
+    private void updateTenantIdInState(EntityPersister persister, Object[] state, Long tenantId) {
         String[] propertyNames = persister.getPropertyNames();
         for (int i = 0; i < propertyNames.length; i++) {
             if (TENANT_ID_PROPERTY.equals(propertyNames[i])) {

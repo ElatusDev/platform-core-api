@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.type.descriptor.java.IntegerJavaType;
+import org.hibernate.type.descriptor.java.LongJavaType;
 
 /**
  * Abstract base class providing multi-tenant isolation for platform entities.
@@ -31,7 +31,7 @@ import org.hibernate.type.descriptor.java.IntegerJavaType;
 @MappedSuperclass
 @FilterDef(
         name = "tenantFilter",
-        parameters = @ParamDef(name = "tenantId", type = IntegerJavaType.class),
+        parameters = @ParamDef(name = "tenantId", type = LongJavaType.class),
         defaultCondition = "tenant_id = :tenantId"
 )
 @Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
@@ -48,7 +48,7 @@ public abstract class TenantScoped extends SoftDeletable {
      */
     @Id
     @Column(name = "tenant_id", nullable = false, updatable = false)
-    private Integer tenantId;
+    private Long tenantId;
 
     /**
      * Hook method called after load to validate tenant isolation.

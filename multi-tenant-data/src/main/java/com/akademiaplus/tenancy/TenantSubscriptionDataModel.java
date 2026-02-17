@@ -83,7 +83,7 @@ public class TenantSubscriptionDataModel extends TenantScoped {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class TenantSubscriptionCompositeId {
-        private Integer tenantId;
+        private Long tenantId;
         private Long tenantSubscriptionId;
     }
 }

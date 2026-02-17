@@ -101,7 +101,7 @@ public class CourseDataModel extends TenantScoped {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class CourseCompositeId implements Serializable {
-        private Integer tenantId;
+        private Long tenantId;
         private Long courseId;
     }
 }

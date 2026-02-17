@@ -59,7 +59,7 @@ public class PaymentTutorDataModel extends BasePayment {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class PaymentTutorCompositeId implements Serializable {
-        private Integer tenantId;
+        private Long tenantId;
         private Long paymentTutorId;
     }
 }

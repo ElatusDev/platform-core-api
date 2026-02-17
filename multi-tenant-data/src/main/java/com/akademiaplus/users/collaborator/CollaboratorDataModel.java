@@ -76,7 +76,7 @@ public class CollaboratorDataModel extends AbstractUser {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class CollaboratorCompositeId implements Serializable {
-        protected Integer tenantId;
-        protected Integer collaboratorId;
+        protected Long tenantId;
+        protected Long collaboratorId;
     }
 }

@@ -72,7 +72,7 @@ public class CustomerAuthDataModel extends TenantScoped {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class CustomerAuthCompositeId implements Serializable {
-        protected Integer tenantId;
-        protected Integer customerAuthId;
+        protected Long tenantId;
+        protected Long customerAuthId;
     }
 }
