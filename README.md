@@ -136,7 +136,7 @@ For the full architecture deep-dive, see [DESIGN.md](DESIGN.md).
 
 ## Development Standards
 
-This project enforces strict coding standards documented in [CLAUDE.md](CLAUDE.md). Key highlights:
+This project enforces strict coding standards documented in [AI-CODE-REF.md](AI-CODE-REF.md). Key highlights:
 
 - **Testing**: Given-When-Then pattern, `shouldDoX_whenGivenY()` naming, zero `any()` matchers
 - **Security**: Specific exception catching, no swallowed exceptions, constant extraction for all strings
@@ -149,7 +149,7 @@ For architecture and system design, see [DESIGN.md](DESIGN.md).
 
 ## Contributing
 
-1. Read [CLAUDE.md](CLAUDE.md) before writing any code
+1. Read [AI-CODE-REF.md](AI-CODE-REF.md) before writing any code
 2. Follow the existing module structure and naming conventions
 3. Add comprehensive tests using the Given-When-Then pattern
 4. Ensure all public APIs have Javadoc with `@param`, `@return`, `@throws`

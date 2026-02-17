@@ -1,4 +1,4 @@
-# CLAUDE.md — AI Coding Standards & Review Reference
+# AI-CODE-REF.md — AI Coding Standards & Review Reference
 
 **Version**: 4.0  
 **Last Updated**: February 17, 2026  
@@ -933,6 +933,6 @@ Throwable
 
 ---
 
-**End of CLAUDE.md v4.0**
+**End of AI-CODE-REF.md v4.0**
 
-*This document is structured for programmatic analysis and quick pattern matching during code reviews, refactoring sessions, and test creation. Formerly AI-code-ref.md v3.0. Renamed to CLAUDE.md to follow Claude Code conventions.*
+*This document is structured for programmatic analysis and quick pattern matching during code reviews, refactoring sessions, and test creation. Formerly AI-code-ref.md v3.0. Renamed to AI-CODE-REF.md to avoid collision with the Claude Code CLAUDE.md convention.*

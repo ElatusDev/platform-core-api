@@ -1,6 +1,6 @@
 # Architecture — AkademiaPlus Platform Core API
 
-> **See also**: [CLAUDE.md](CLAUDE.md) for coding standards, review rules, and AI-assisted development guidelines.
+> **See also**: [AI-CODE-REF.md](AI-CODE-REF.md) for coding standards, review rules, and AI-assisted development guidelines.
 
 ## 1. System Overview
 
