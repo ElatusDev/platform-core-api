@@ -21,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.openapitools.jackson.nullable.JsonNullable;
+import org.springframework.context.ApplicationContext;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -33,6 +34,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class TutorCreationUseCaseTest {
 
+    @Mock private ApplicationContext applicationContext;
     @Mock private TutorRepository tutorRepository;
     @Mock private MinorStudentRepository minorStudentRepository;
     @Mock private ModelMapper modelMapper;
@@ -51,6 +53,7 @@ class TutorCreationUseCaseTest {
     @BeforeEach
     void setUp() {
         useCase = new TutorCreationUseCase(
+                applicationContext,
                 tutorRepository,
                 minorStudentRepository,
                 modelMapper,
@@ -86,8 +89,10 @@ class TutorCreationUseCaseTest {
         @DisplayName("Should map DTO to TutorDataModel when given valid DTO")
         void shouldMapDtoToTutorDataModel_whenGivenValidDto() {
             // Given
-            when(modelMapper.map(tutorDto, TutorDataModel.class)).thenReturn(tutorModel);
-            when(modelMapper.map(tutorDto, PersonPIIDataModel.class)).thenReturn(personPII);
+            when(applicationContext.getBean(PersonPIIDataModel.class)).thenReturn(personPII);
+            doNothing().when(modelMapper).map(tutorDto, personPII);
+            when(applicationContext.getBean(TutorDataModel.class)).thenReturn(tutorModel);
+            doNothing().when(modelMapper).map(tutorDto, tutorModel, TutorCreationUseCase.TUTOR_MAP_NAME);
             when(piiNormalizer.normalizeEmail(TEST_EMAIL)).thenReturn(NORMALIZED_EMAIL);
             when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
             when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
@@ -99,8 +104,8 @@ class TutorCreationUseCaseTest {
             // Then
             assertThat(result.getPersonPII()).isEqualTo(personPII);
             assertThat(result.getEntryDate()).isEqualTo(LocalDate.now());
-            verify(modelMapper).map(tutorDto, TutorDataModel.class);
-            verify(modelMapper).map(tutorDto, PersonPIIDataModel.class);
+            verify(applicationContext).getBean(TutorDataModel.class);
+            verify(applicationContext).getBean(PersonPIIDataModel.class);
         }
 
         @Test
@@ -111,9 +116,13 @@ class TutorCreationUseCaseTest {
             String token = "oauth_abc123";
             tutorDto.setProvider(JsonNullable.of(provider));
             tutorDto.setToken(JsonNullable.of(token));
+            CustomerAuthDataModel customerAuth = new CustomerAuthDataModel();
 
-            when(modelMapper.map(tutorDto, TutorDataModel.class)).thenReturn(tutorModel);
-            when(modelMapper.map(tutorDto, PersonPIIDataModel.class)).thenReturn(personPII);
+            when(applicationContext.getBean(PersonPIIDataModel.class)).thenReturn(personPII);
+            doNothing().when(modelMapper).map(tutorDto, personPII);
+            when(applicationContext.getBean(TutorDataModel.class)).thenReturn(tutorModel);
+            doNothing().when(modelMapper).map(tutorDto, tutorModel, TutorCreationUseCase.TUTOR_MAP_NAME);
+            when(applicationContext.getBean(CustomerAuthDataModel.class)).thenReturn(customerAuth);
             when(piiNormalizer.normalizeEmail(TEST_EMAIL)).thenReturn(NORMALIZED_EMAIL);
             when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
             when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
@@ -132,8 +141,10 @@ class TutorCreationUseCaseTest {
         @DisplayName("Should not create CustomerAuth when provider is absent")
         void shouldNotCreateCustomerAuth_whenProviderIsAbsent() {
             // Given — provider not set (remains null by default)
-            when(modelMapper.map(tutorDto, TutorDataModel.class)).thenReturn(tutorModel);
-            when(modelMapper.map(tutorDto, PersonPIIDataModel.class)).thenReturn(personPII);
+            when(applicationContext.getBean(PersonPIIDataModel.class)).thenReturn(personPII);
+            doNothing().when(modelMapper).map(tutorDto, personPII);
+            when(applicationContext.getBean(TutorDataModel.class)).thenReturn(tutorModel);
+            doNothing().when(modelMapper).map(tutorDto, tutorModel, TutorCreationUseCase.TUTOR_MAP_NAME);
             when(piiNormalizer.normalizeEmail(TEST_EMAIL)).thenReturn(NORMALIZED_EMAIL);
             when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
             when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
@@ -150,8 +161,10 @@ class TutorCreationUseCaseTest {
         @DisplayName("Should hash email and phone when transforming tutor")
         void shouldHashEmailAndPhone_whenTransformingTutor() {
             // Given
-            when(modelMapper.map(tutorDto, TutorDataModel.class)).thenReturn(tutorModel);
-            when(modelMapper.map(tutorDto, PersonPIIDataModel.class)).thenReturn(personPII);
+            when(applicationContext.getBean(PersonPIIDataModel.class)).thenReturn(personPII);
+            doNothing().when(modelMapper).map(tutorDto, personPII);
+            when(applicationContext.getBean(TutorDataModel.class)).thenReturn(tutorModel);
+            doNothing().when(modelMapper).map(tutorDto, tutorModel, TutorCreationUseCase.TUTOR_MAP_NAME);
             when(piiNormalizer.normalizeEmail(TEST_EMAIL)).thenReturn(NORMALIZED_EMAIL);
             when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
             when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
@@ -202,8 +215,12 @@ class TutorCreationUseCaseTest {
         @DisplayName("Should map DTO to MinorStudentDataModel when given valid DTO")
         void shouldMapDtoToMinorStudentDataModel_whenGivenValidDto() {
             // Given
-            when(modelMapper.map(minorDto, MinorStudentDataModel.class)).thenReturn(minorModel);
-            when(modelMapper.map(minorDto, PersonPIIDataModel.class)).thenReturn(personPII);
+            CustomerAuthDataModel customerAuth = new CustomerAuthDataModel();
+            when(applicationContext.getBean(PersonPIIDataModel.class)).thenReturn(personPII);
+            doNothing().when(modelMapper).map(minorDto, personPII);
+            when(applicationContext.getBean(MinorStudentDataModel.class)).thenReturn(minorModel);
+            doNothing().when(modelMapper).map(minorDto, minorModel, TutorCreationUseCase.MINOR_STUDENT_MAP_NAME);
+            when(applicationContext.getBean(CustomerAuthDataModel.class)).thenReturn(customerAuth);
             when(piiNormalizer.normalizeEmail(TEST_EMAIL)).thenReturn(NORMALIZED_EMAIL);
             when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
             when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
@@ -216,19 +233,22 @@ class TutorCreationUseCaseTest {
             // Then
             assertThat(result.getPersonPII()).isEqualTo(personPII);
             assertThat(result.getEntryDate()).isEqualTo(LocalDate.now());
-            assertThat(result.getCustomerAuth()).isNotNull();
+            assertThat(result.getCustomerAuth()).isEqualTo(customerAuth);
             assertThat(result.getCustomerAuth().getProvider()).isEqualTo("GOOGLE");
             assertThat(result.getCustomerAuth().getToken()).isEqualTo("oauth_token123");
-            verify(modelMapper).map(minorDto, MinorStudentDataModel.class);
-            verify(modelMapper).map(minorDto, PersonPIIDataModel.class);
+            verify(applicationContext).getBean(MinorStudentDataModel.class);
+            verify(applicationContext).getBean(PersonPIIDataModel.class);
         }
 
         @Test
         @DisplayName("Should look up tutor when transforming minor student")
         void shouldLookUpTutor_whenTransformingMinorStudent() {
             // Given
-            when(modelMapper.map(minorDto, MinorStudentDataModel.class)).thenReturn(minorModel);
-            when(modelMapper.map(minorDto, PersonPIIDataModel.class)).thenReturn(personPII);
+            when(applicationContext.getBean(PersonPIIDataModel.class)).thenReturn(personPII);
+            doNothing().when(modelMapper).map(minorDto, personPII);
+            when(applicationContext.getBean(MinorStudentDataModel.class)).thenReturn(minorModel);
+            doNothing().when(modelMapper).map(minorDto, minorModel, TutorCreationUseCase.MINOR_STUDENT_MAP_NAME);
+            when(applicationContext.getBean(CustomerAuthDataModel.class)).thenReturn(new CustomerAuthDataModel());
             when(piiNormalizer.normalizeEmail(TEST_EMAIL)).thenReturn(NORMALIZED_EMAIL);
             when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
             when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
@@ -247,8 +267,11 @@ class TutorCreationUseCaseTest {
         @DisplayName("Should throw exception when tutor not found")
         void shouldThrowException_whenTutorNotFound() {
             // Given
-            when(modelMapper.map(minorDto, MinorStudentDataModel.class)).thenReturn(minorModel);
-            when(modelMapper.map(minorDto, PersonPIIDataModel.class)).thenReturn(personPII);
+            when(applicationContext.getBean(PersonPIIDataModel.class)).thenReturn(personPII);
+            doNothing().when(modelMapper).map(minorDto, personPII);
+            when(applicationContext.getBean(MinorStudentDataModel.class)).thenReturn(minorModel);
+            doNothing().when(modelMapper).map(minorDto, minorModel, TutorCreationUseCase.MINOR_STUDENT_MAP_NAME);
+            when(applicationContext.getBean(CustomerAuthDataModel.class)).thenReturn(new CustomerAuthDataModel());
             when(piiNormalizer.normalizeEmail(TEST_EMAIL)).thenReturn(NORMALIZED_EMAIL);
             when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
             when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
@@ -265,8 +288,11 @@ class TutorCreationUseCaseTest {
         @DisplayName("Should hash email and phone when transforming minor student")
         void shouldHashEmailAndPhone_whenTransformingMinorStudent() {
             // Given
-            when(modelMapper.map(minorDto, MinorStudentDataModel.class)).thenReturn(minorModel);
-            when(modelMapper.map(minorDto, PersonPIIDataModel.class)).thenReturn(personPII);
+            when(applicationContext.getBean(PersonPIIDataModel.class)).thenReturn(personPII);
+            doNothing().when(modelMapper).map(minorDto, personPII);
+            when(applicationContext.getBean(MinorStudentDataModel.class)).thenReturn(minorModel);
+            doNothing().when(modelMapper).map(minorDto, minorModel, TutorCreationUseCase.MINOR_STUDENT_MAP_NAME);
+            when(applicationContext.getBean(CustomerAuthDataModel.class)).thenReturn(new CustomerAuthDataModel());
             when(piiNormalizer.normalizeEmail(TEST_EMAIL)).thenReturn(NORMALIZED_EMAIL);
             when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
             when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
@@ -307,8 +333,10 @@ class TutorCreationUseCaseTest {
             TutorDataModel savedTutor = new TutorDataModel();
             TutorCreationResponseDTO expectedResponse = new TutorCreationResponseDTO();
 
-            when(modelMapper.map(tutorDto, TutorDataModel.class)).thenReturn(tutorModel);
-            when(modelMapper.map(tutorDto, PersonPIIDataModel.class)).thenReturn(personPII);
+            when(applicationContext.getBean(PersonPIIDataModel.class)).thenReturn(personPII);
+            doNothing().when(modelMapper).map(tutorDto, personPII);
+            when(applicationContext.getBean(TutorDataModel.class)).thenReturn(tutorModel);
+            doNothing().when(modelMapper).map(tutorDto, tutorModel, TutorCreationUseCase.TUTOR_MAP_NAME);
             when(piiNormalizer.normalizeEmail(TEST_EMAIL)).thenReturn(NORMALIZED_EMAIL);
             when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
             when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
@@ -342,11 +370,15 @@ class TutorCreationUseCaseTest {
             personPII.setEmail(TEST_EMAIL);
             personPII.setPhone(TEST_PHONE);
             TutorDataModel existingTutor = new TutorDataModel();
+            CustomerAuthDataModel customerAuth = new CustomerAuthDataModel();
             MinorStudentDataModel savedMinor = new MinorStudentDataModel();
             MinorStudentCreationResponseDTO expectedResponse = new MinorStudentCreationResponseDTO();
 
-            when(modelMapper.map(minorDto, MinorStudentDataModel.class)).thenReturn(minorModel);
-            when(modelMapper.map(minorDto, PersonPIIDataModel.class)).thenReturn(personPII);
+            when(applicationContext.getBean(PersonPIIDataModel.class)).thenReturn(personPII);
+            doNothing().when(modelMapper).map(minorDto, personPII);
+            when(applicationContext.getBean(MinorStudentDataModel.class)).thenReturn(minorModel);
+            doNothing().when(modelMapper).map(minorDto, minorModel, TutorCreationUseCase.MINOR_STUDENT_MAP_NAME);
+            when(applicationContext.getBean(CustomerAuthDataModel.class)).thenReturn(customerAuth);
             when(piiNormalizer.normalizeEmail(TEST_EMAIL)).thenReturn(NORMALIZED_EMAIL);
             when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
             when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);

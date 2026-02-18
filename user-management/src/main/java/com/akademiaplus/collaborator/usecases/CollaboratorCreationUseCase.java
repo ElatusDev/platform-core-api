@@ -16,22 +16,33 @@ import com.akademiaplus.utilities.security.PiiNormalizer;
 import openapi.akademiaplus.domain.user.management.dto.CollaboratorCreationRequestDTO;
 import openapi.akademiaplus.domain.user.management.dto.CollaboratorCreationResponseDTO;
 import org.modelmapper.ModelMapper;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+/**
+ * Use case responsible for creating collaborators.
+ * <p>
+ * Uses a named TypeMap ({@value TYPE_MAP}) and prototype-scoped beans via
+ * {@link ApplicationContext} to align with the Employee creation pattern.
+ */
 @Service
 public class CollaboratorCreationUseCase {
+    public static final String TYPE_MAP = "collaboratorMap";
+
+    private final ApplicationContext applicationContext;
     private final CollaboratorRepository repository;
     private final ModelMapper modelMapper;
     private final HashingService hashingService;
     private final PiiNormalizer piiNormalizer;
-    public static final String TYPE_MAP = "collaboratorMap";
 
-    public CollaboratorCreationUseCase(CollaboratorRepository repository,
+    public CollaboratorCreationUseCase(ApplicationContext applicationContext,
+                                       CollaboratorRepository repository,
                                        ModelMapper modelMapper,
                                        HashingService hashingService,
                                        PiiNormalizer piiNormalizer) {
+        this.applicationContext = applicationContext;
         this.repository = repository;
         this.modelMapper = modelMapper;
         this.hashingService = hashingService;
@@ -44,9 +55,14 @@ public class CollaboratorCreationUseCase {
     }
 
     public CollaboratorDataModel transform(CollaboratorCreationRequestDTO dto) {
-        final InternalAuthDataModel internalAuthDataModel = modelMapper.map(dto, InternalAuthDataModel.class);
-        final PersonPIIDataModel personPIIDataModel = modelMapper.map(dto, PersonPIIDataModel.class);
-        CollaboratorDataModel model =  modelMapper.map(dto, CollaboratorDataModel.class, TYPE_MAP);
+        final InternalAuthDataModel internalAuthDataModel = applicationContext.getBean(InternalAuthDataModel.class);
+        modelMapper.map(dto, internalAuthDataModel);
+
+        final PersonPIIDataModel personPIIDataModel = applicationContext.getBean(PersonPIIDataModel.class);
+        modelMapper.map(dto, personPIIDataModel);
+
+        final CollaboratorDataModel model = applicationContext.getBean(CollaboratorDataModel.class);
+        modelMapper.map(dto, model, TYPE_MAP);
 
         model.setPersonPII(personPIIDataModel);
         model.setInternalAuth(internalAuthDataModel);
