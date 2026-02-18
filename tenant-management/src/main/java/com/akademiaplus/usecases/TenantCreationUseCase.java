@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class TenantCreationUseCase {
+    public static final String MAP_NAME = "tenantMap";
 
     private final TenantRepository tenantRepository;
     private final ApplicationContext applicationContext;
@@ -51,8 +52,12 @@ public class TenantCreationUseCase {
     /**
      * Maps a {@link TenantCreateRequestDTO} to a {@link TenantDataModel}.
      * <p>
-     * Uses prototype-scoped bean retrieval to ensure a fresh entity instance,
-     * following the same pattern as {@code EmployeeCreationUseCase.transform()}.
+     * Uses a named TypeMap ({@value MAP_NAME}) to prevent ModelMapper from
+     * deep-matching {@code dto.taxId} (String) into {@code tenantId} (Long)
+     * via the shared "Id" token.
+     * <p>
+     * Retrieves a prototype-scoped bean to ensure a fresh entity instance,
+     * following the same pattern as people-entity use cases.
      * The {@link ModelMapper} handles type conversions (e.g. {@code URI → String}
      * for {@code websiteUrl}) via converters registered in
      * {@link com.akademiaplus.utilities.config.ModelMapperConfig}.
@@ -62,7 +67,7 @@ public class TenantCreationUseCase {
      */
     public TenantDataModel transform(TenantCreateRequestDTO dto) {
         TenantDataModel model = applicationContext.getBean(TenantDataModel.class);
-        modelMapper.map(dto, model);
+        modelMapper.map(dto, model, MAP_NAME);
         return model;
     }
 }

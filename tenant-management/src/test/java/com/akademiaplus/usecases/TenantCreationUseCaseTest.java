@@ -86,7 +86,7 @@ class TenantCreationUseCaseTest {
         }
 
         @Test
-        @DisplayName("Should delegate mapping to ModelMapper with DTO and prototype model")
+        @DisplayName("Should delegate mapping to ModelMapper with named TypeMap")
         void shouldDelegateToModelMapper_whenTransforming() {
             // Given
             TenantCreateRequestDTO dto = buildDto();
@@ -97,7 +97,7 @@ class TenantCreationUseCaseTest {
             TenantDataModel result = useCase.transform(dto);
 
             // Then
-            verify(modelMapper).map(dto, prototypeModel);
+            verify(modelMapper).map(dto, prototypeModel, TenantCreationUseCase.MAP_NAME);
             assertThat(result).isSameAs(prototypeModel);
         }
     }
@@ -118,7 +118,7 @@ class TenantCreationUseCaseTest {
             expectedDto.setTenantId(1L);
 
             when(applicationContext.getBean(TenantDataModel.class)).thenReturn(prototypeModel);
-            doNothing().when(modelMapper).map(dto, prototypeModel);
+            doNothing().when(modelMapper).map(dto, prototypeModel, TenantCreationUseCase.MAP_NAME);
             when(tenantRepository.save(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, TenantDTO.class)).thenReturn(expectedDto);
 
@@ -141,7 +141,7 @@ class TenantCreationUseCaseTest {
             TenantDTO responseDto = new TenantDTO();
 
             when(applicationContext.getBean(TenantDataModel.class)).thenReturn(prototypeModel);
-            doNothing().when(modelMapper).map(dto, prototypeModel);
+            doNothing().when(modelMapper).map(dto, prototypeModel, TenantCreationUseCase.MAP_NAME);
             when(tenantRepository.save(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, TenantDTO.class)).thenReturn(responseDto);
 
@@ -151,7 +151,7 @@ class TenantCreationUseCaseTest {
             // Then — verify the exact object from transform() is what gets saved
             InOrder inOrder = inOrder(applicationContext, modelMapper, tenantRepository);
             inOrder.verify(applicationContext).getBean(TenantDataModel.class);
-            inOrder.verify(modelMapper).map(dto, prototypeModel);
+            inOrder.verify(modelMapper).map(dto, prototypeModel, TenantCreationUseCase.MAP_NAME);
             inOrder.verify(tenantRepository).save(prototypeModel);
             inOrder.verify(modelMapper).map(savedModel, TenantDTO.class);
         }
