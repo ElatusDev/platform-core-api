@@ -86,9 +86,11 @@ public class HibernateTenantFilter extends OncePerRequestFilter {
         try {
             Session hibernateSession = getCurrentSession();
             if (hibernateSession != null) {
-                Filter filter = hibernateSession.enableFilter(TENANT_FILTER_NAME);
-                filter.setParameter(TENANT_ID_PARAMETER, tenantContextHolder.getTenantId());
-                log.debug(DEBUG_FILTER_ENABLED, tenantContextHolder.getTenantId());
+                tenantContextHolder.getTenantId().ifPresent(tenantId -> {
+                    Filter filter = hibernateSession.enableFilter(TENANT_FILTER_NAME);
+                    filter.setParameter(TENANT_ID_PARAMETER, tenantId);
+                    log.debug(DEBUG_FILTER_ENABLED, tenantId);
+                });
             } else {
                 log.debug(DEBUG_NO_ACTIVE_SESSION);
             }

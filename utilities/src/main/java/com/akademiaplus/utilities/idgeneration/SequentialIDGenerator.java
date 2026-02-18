@@ -5,6 +5,7 @@ import com.akademiaplus.utilities.idgeneration.interfaceadapters.TenantSequence;
 import com.akademiaplus.utilities.idgeneration.interfaceadapters.TenantSequenceRepository;
 import jakarta.persistence.OptimisticLockException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -87,9 +88,15 @@ public class SequentialIDGenerator implements IDGenerator {
     /**
      * Constructor for dependency injection.
      *
+     * <p>The repository is injected lazily to break a circular dependency:
+     * {@code entityManagerFactory → TenantEventIntegrator → IdAssignationPreInsertEventListener
+     * → EntityIdAssigner → SequentialIDGenerator → TenantSequenceRepository → entityManagerFactory}.
+     * Lazy injection allows Hibernate's SessionFactory to complete initialization before
+     * the repository proxy is resolved.
+     *
      * @param repository The repository for managing tenant sequences
      */
-    public SequentialIDGenerator(TenantSequenceRepository repository) {
+    public SequentialIDGenerator(@Lazy TenantSequenceRepository repository) {
         this.repository = repository;
     }
 

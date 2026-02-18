@@ -549,7 +549,7 @@ components:
       required: true
       schema:
         type: integer
-        format: int32
+        format: int64
 
     SubscriptionId:
       name: subscriptionId

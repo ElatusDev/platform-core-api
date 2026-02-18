@@ -9,7 +9,7 @@ package com.akademiaplus.utilities.security;
 
 import com.akademiaplus.utilities.exceptions.security.DecryptionFailureException;
 import com.akademiaplus.utilities.exceptions.security.EncryptionFailureException;
-import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -79,8 +79,13 @@ public class AESGCMEncryptionService {
     /**
      * Constructs a new AESGCMEncryptionService with the provided encryption key.
      *
+     * <p>Explicit {@code @Autowired} is required because a secondary (package-private)
+     * constructor exists for testing. Without it, Spring cannot determine which
+     * constructor to use for dependency injection.
+     *
      * @param base64Key the Base64-encoded encryption key from configuration
      */
+    @Autowired
     public AESGCMEncryptionService(@Value("${security.encryption-key}") String base64Key) {
         this(base64Key, new SecureRandom());
     }
