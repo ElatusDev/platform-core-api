@@ -66,7 +66,7 @@ public class EntityIdAssigner {
             EntityMetadata metadata = metadataResolver.resolve(entityClass);
 
             if (metadata.isSkip()) {
-                throw new IdAssignmentException(ERROR_MISSING_ANNOTATION);
+                return;
             }
 
             Object currentId = metadata.getGetter().invoke(entity);

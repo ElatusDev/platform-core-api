@@ -143,16 +143,15 @@ class EntityIdAssignerTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenMetadataIndicatesSkip() {
+    void shouldSkipIdAssignment_whenMetadataIndicatesSkip() {
         // Given
         when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
         when(metadata.isSkip()).thenReturn(true);
 
-        // When/Then
-        assertThatThrownBy(() -> assigner.assignIdIfNeeded(entity, event))
-                .isInstanceOf(IdAssignmentException.class)
-                .cause().hasMessageContaining(EntityIdAssigner.ERROR_MISSING_ANNOTATION);
+        // When
+        assigner.assignIdIfNeeded(entity, event);
 
+        // Then
         verify(metadata, never()).getGetter();
         verifyNoInteractions(idGenerator);
         verifyNoInteractions(setter);

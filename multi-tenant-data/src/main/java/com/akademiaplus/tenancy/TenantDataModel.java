@@ -40,6 +40,7 @@ public class TenantDataModel extends SoftDeletable {
      * This ID is used as tenant_id in all other tenant-scoped entities.
      */
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "tenant_id")
     private Long tenantId;
 

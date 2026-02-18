@@ -20,6 +20,8 @@ public class EntityMetadataResolver {
     public static final String WARN_NO_TABLE_ANNOTATION = "No @Table annotation found for entity: {}";
     public static final String WARN_NO_ID_FIELD = "No @Id field found for entity: {}";
     public static final String ERROR_FAILED_TO_BUILD_METADATA = "Failed to build metadata for entity: {}";
+    public static final String DEBUG_EMBEDDED_ID_SKIP = "Entity uses @EmbeddedId, skipping ID assignment: {}";
+    public static final String DEBUG_GENERATED_VALUE_SKIP = "Entity uses @GeneratedValue, skipping ID assignment: {}";
 
     // Log messages (private - internal only)
     private static final String INFO_CACHE_CLEARED = "Entity metadata cache cleared";
@@ -56,6 +58,12 @@ public class EntityMetadataResolver {
                 return EntityMetadata.skip();
             }
 
+            // Check for @EmbeddedId — entity manages its own composite key
+            if (introspector.hasEmbeddedId(entityClass)) {
+                log.debug(DEBUG_EMBEDDED_ID_SKIP, entityClass.getName());
+                return EntityMetadata.skip();
+            }
+
             // Find @Id field
             Field idField = introspector.findIdField(entityClass)
                     .orElseGet(() -> {
@@ -64,6 +72,12 @@ public class EntityMetadataResolver {
                     });
 
             if (idField == null) {
+                return EntityMetadata.skip();
+            }
+
+            // Check for @GeneratedValue — DB manages the ID
+            if (introspector.hasGeneratedValue(idField)) {
+                log.debug(DEBUG_GENERATED_VALUE_SKIP, entityClass.getName());
                 return EntityMetadata.skip();
             }
 

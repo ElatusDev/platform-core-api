@@ -1,5 +1,7 @@
 package com.akademiaplus.infra.persistence.idassigner;
 
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.extern.slf4j.Slf4j;
@@ -106,5 +108,28 @@ public class EntityIntrospector {
                             setterName,
                             field.getType().getSimpleName()));
         }
+    }
+
+    /**
+     * Check if the entity uses @EmbeddedId (self-managed composite key)
+     *
+     * @return true if any field is annotated with @EmbeddedId
+     */
+    public boolean hasEmbeddedId(Class<?> entityClass) {
+        for (Field field : entityClass.getDeclaredFields()) {
+            if (field.isAnnotationPresent(EmbeddedId.class)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if the @Id field uses @GeneratedValue (DB-managed ID)
+     *
+     * @return true if the field is annotated with @GeneratedValue
+     */
+    public boolean hasGeneratedValue(Field idField) {
+        return idField.isAnnotationPresent(GeneratedValue.class);
     }
 }
