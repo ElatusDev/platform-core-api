@@ -39,8 +39,9 @@ public class PersonDataGenerator {
     }
 
     public String email(String firstName, String lastName) {
-        String clean = (firstName.charAt(0) + lastName).toLowerCase().replaceAll("[^a-z0-9]", "");
-        return clean + "@" + faker.internet().domainName();
+        String localPart = (firstName.charAt(0) + lastName).toLowerCase().replaceAll("[^a-z0-9]", "");
+        String domain = faker.internet().domainName().toLowerCase().replaceAll("[^a-z0-9.]", "");
+        return localPart + "@" + domain;
     }
 
     public String username(String firstName, String lastName) {

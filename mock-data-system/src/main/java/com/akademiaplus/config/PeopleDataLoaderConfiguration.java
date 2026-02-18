@@ -11,10 +11,15 @@ import com.akademiaplus.collaborator.interfaceadapters.CollaboratorRepository;
 import com.akademiaplus.collaborator.usecases.CollaboratorCreationUseCase;
 import com.akademiaplus.customer.adultstudent.interfaceadapters.AdultStudentRepository;
 import com.akademiaplus.customer.adultstudent.usecases.AdultStudentCreationUseCase;
+import com.akademiaplus.customer.interfaceadapters.TutorRepository;
+import com.akademiaplus.customer.minorstudent.interfaceadapters.MinorStudentRepository;
+import com.akademiaplus.customer.tutor.usecases.TutorCreationUseCase;
 import com.akademiaplus.employee.interfaceadapters.EmployeeRepository;
 import com.akademiaplus.employee.usecases.EmployeeCreationUseCase;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
 import com.akademiaplus.users.customer.AdultStudentDataModel;
+import com.akademiaplus.users.customer.MinorStudentDataModel;
+import com.akademiaplus.users.customer.TutorDataModel;
 import com.akademiaplus.users.employee.EmployeeDataModel;
 import com.akademiaplus.util.base.DataCleanUp;
 import com.akademiaplus.util.base.DataFactory;
@@ -23,6 +28,8 @@ import jakarta.persistence.EntityManager;
 import openapi.akademiaplus.domain.user.management.dto.AdultStudentCreationRequestDTO;
 import openapi.akademiaplus.domain.user.management.dto.CollaboratorCreationRequestDTO;
 import openapi.akademiaplus.domain.user.management.dto.EmployeeCreationRequestDTO;
+import openapi.akademiaplus.domain.user.management.dto.MinorStudentCreationRequestDTO;
+import openapi.akademiaplus.domain.user.management.dto.TutorCreationRequestDTO;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -91,6 +98,50 @@ public class PeopleDataLoaderConfiguration {
 
         DataCleanUp<AdultStudentDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(AdultStudentDataModel.class);
+        cleanup.setRepository(repository);
+        return cleanup;
+    }
+
+    // ── Tutor ──
+
+    @Bean
+    public DataLoader<TutorCreationRequestDTO, TutorDataModel, Long> tutorDataLoader(
+            TutorRepository repository,
+            DataFactory<TutorCreationRequestDTO> tutorFactory,
+            TutorCreationUseCase tutorCreationUseCase) {
+
+        return new DataLoader<>(repository, tutorCreationUseCase::transformTutor, tutorFactory);
+    }
+
+    @Bean
+    public DataCleanUp<TutorDataModel, Long> tutorDataCleanUp(
+            EntityManager entityManager,
+            TutorRepository repository) {
+
+        DataCleanUp<TutorDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        cleanup.setDataModel(TutorDataModel.class);
+        cleanup.setRepository(repository);
+        return cleanup;
+    }
+
+    // ── MinorStudent ──
+
+    @Bean
+    public DataLoader<MinorStudentCreationRequestDTO, MinorStudentDataModel, Long> minorStudentDataLoader(
+            MinorStudentRepository repository,
+            DataFactory<MinorStudentCreationRequestDTO> minorStudentFactory,
+            TutorCreationUseCase tutorCreationUseCase) {
+
+        return new DataLoader<>(repository, tutorCreationUseCase::transformMinorStudent, minorStudentFactory);
+    }
+
+    @Bean
+    public DataCleanUp<MinorStudentDataModel, Long> minorStudentDataCleanUp(
+            EntityManager entityManager,
+            MinorStudentRepository repository) {
+
+        DataCleanUp<MinorStudentDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        cleanup.setDataModel(MinorStudentDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
     }
