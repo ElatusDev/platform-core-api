@@ -16,7 +16,7 @@ supersedes the old one rather than editing it.
 | [0003](0003-field-encryption-with-hash-columns.md) | AES-256-GCM field encryption with hash columns | Accepted | 2025-01-01 |
 | [0004](0004-given-when-then-testing-standard.md) | Given-When-Then testing standard | Accepted | 2025-01-01 |
 | [0005](0005-conventional-commits.md) | Conventional Commits | Accepted | 2025-02-17 |
-| [0006](0006-integration-test-strategy.md) | Integration Test Strategy | Proposed | 2026-02-18 |
+| [0006](0006-integration-test-strategy.md) | Integration Test Strategy | Accepted | 2026-02-18 |
 
 ## Creating a New ADR
 

@@ -1,6 +1,6 @@
 # ADR-0006: Integration Test Strategy
 
-**Status**: Proposed
+**Status**: Accepted
 **Date**: 2026-02-18
 **Deciders**: ElatusDev
 
