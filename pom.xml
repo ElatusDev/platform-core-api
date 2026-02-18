@@ -62,7 +62,7 @@
         <openapi-generator-maven-plugin.version>7.14.0</openapi-generator-maven-plugin.version>
         <maven-antrun-plugin.version>3.1.0</maven-antrun-plugin.version>
         <maven.surefire.version>3.5.2</maven.surefire.version>
-        <byte.buddy.agent.version>1.15.11</byte.buddy.agent.version>
+        <byte.buddy.agent.version>1.17.7</byte.buddy.agent.version>
         <spring-boot-maven-plugin.version>3.5.4</spring-boot-maven-plugin.version>
         <!--  third party configurations  -->
         <sonar.organization>elatusdev</sonar.organization>
@@ -579,6 +579,7 @@
                     <version>${maven.surefire.version}</version>
                     <configuration>
                         <argLine>
+                            -XX:+EnableDynamicAgentLoading
                             -javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/${byte.buddy.agent.version}/byte-buddy-agent-${byte.buddy.agent.version}.jar
                         </argLine>
                         <systemPropertyVariables>
