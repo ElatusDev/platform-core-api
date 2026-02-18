@@ -67,6 +67,11 @@
         </dependency>
         <dependency>
             <groupId>com.akademiaplus</groupId>
+            <artifactId>tenant-management</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.akademiaplus</groupId>
             <artifactId>multi-tenant-data</artifactId>
             <version>1.0</version>
         </dependency>
