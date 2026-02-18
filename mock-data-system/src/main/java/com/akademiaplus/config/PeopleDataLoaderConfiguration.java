@@ -11,11 +11,17 @@ import com.akademiaplus.collaborator.interfaceadapters.CollaboratorRepository;
 import com.akademiaplus.collaborator.usecases.CollaboratorCreationUseCase;
 import com.akademiaplus.customer.adultstudent.interfaceadapters.AdultStudentRepository;
 import com.akademiaplus.customer.adultstudent.usecases.AdultStudentCreationUseCase;
+import com.akademiaplus.customer.interfaceadapters.CustomerAuthRepository;
 import com.akademiaplus.customer.interfaceadapters.TutorRepository;
 import com.akademiaplus.customer.minorstudent.interfaceadapters.MinorStudentRepository;
 import com.akademiaplus.customer.tutor.usecases.TutorCreationUseCase;
 import com.akademiaplus.employee.interfaceadapters.EmployeeRepository;
 import com.akademiaplus.employee.usecases.EmployeeCreationUseCase;
+import com.akademiaplus.interfaceadapters.PersonPIIRepository;
+import com.akademiaplus.internal.interfaceadapters.InternalAuthRepository;
+import com.akademiaplus.security.CustomerAuthDataModel;
+import com.akademiaplus.security.InternalAuthDataModel;
+import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
 import com.akademiaplus.users.customer.AdultStudentDataModel;
 import com.akademiaplus.users.customer.MinorStudentDataModel;
@@ -142,6 +148,41 @@ public class PeopleDataLoaderConfiguration {
 
         DataCleanUp<MinorStudentDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(MinorStudentDataModel.class);
+        cleanup.setRepository(repository);
+        return cleanup;
+    }
+
+    // ── Shared tables (cleanup-only) ──
+
+    @Bean
+    public DataCleanUp<InternalAuthDataModel, Long> internalAuthDataCleanUp(
+            EntityManager entityManager,
+            InternalAuthRepository repository) {
+
+        DataCleanUp<InternalAuthDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        cleanup.setDataModel(InternalAuthDataModel.class);
+        cleanup.setRepository(repository);
+        return cleanup;
+    }
+
+    @Bean
+    public DataCleanUp<CustomerAuthDataModel, Long> customerAuthDataCleanUp(
+            EntityManager entityManager,
+            CustomerAuthRepository repository) {
+
+        DataCleanUp<CustomerAuthDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        cleanup.setDataModel(CustomerAuthDataModel.class);
+        cleanup.setRepository(repository);
+        return cleanup;
+    }
+
+    @Bean
+    public DataCleanUp<PersonPIIDataModel, Long> personPIIDataCleanUp(
+            EntityManager entityManager,
+            PersonPIIRepository repository) {
+
+        DataCleanUp<PersonPIIDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        cleanup.setDataModel(PersonPIIDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
     }

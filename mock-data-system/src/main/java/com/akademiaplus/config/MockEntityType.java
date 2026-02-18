@@ -7,6 +7,8 @@
  */
 package com.akademiaplus.config;
 
+import lombok.Getter;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
@@ -28,6 +30,7 @@ import java.util.Set;
  * so cleanup deletes people → auth/PII → TENANT in the correct FK order.
  * TENANT is reached transitively through auth/PII.</p>
  */
+@Getter
 public enum MockEntityType {
 
     // ── Level 0: root entity ──
@@ -52,6 +55,10 @@ public enum MockEntityType {
 
     private final boolean loadable;
     private final boolean cleanable;
+    /**
+     * -- GETTER --
+     *  Returns the direct FK parents of this entity in the dependency graph.
+     */
     private final Set<MockEntityType> dependencies;
 
     MockEntityType(boolean loadable, boolean cleanable, MockEntityType... dependencies) {
@@ -62,20 +69,4 @@ public enum MockEntityType {
                 : Collections.unmodifiableSet(new java.util.LinkedHashSet<>(Arrays.asList(dependencies)));
     }
 
-    public boolean isLoadable() {
-        return loadable;
-    }
-
-    public boolean isCleanable() {
-        return cleanable;
-    }
-
-    /**
-     * Returns the direct FK parents of this entity in the dependency graph.
-     *
-     * @return unmodifiable set of direct dependencies; empty for root entities
-     */
-    public Set<MockEntityType> getDependencies() {
-        return dependencies;
-    }
 }
