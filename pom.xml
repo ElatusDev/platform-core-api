@@ -588,7 +588,39 @@
                                 <value>true</value>
                             </property>
                         </systemPropertyVariables>
+                        <excludes>
+                            <exclude>**/*ComponentTest.java</exclude>
+                        </excludes>
                     </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>${maven.surefire.version}</version>
+                    <configuration>
+                        <argLine>
+                            -XX:+EnableDynamicAgentLoading
+                            -javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/${byte.buddy.agent.version}/byte-buddy-agent-${byte.buddy.agent.version}.jar
+                        </argLine>
+                        <systemPropertyVariables>
+                            <property>
+                                <name>net.bytebuddy.agent.allow.dynamic.attach</name>
+                                <value>true</value>
+                            </property>
+                        </systemPropertyVariables>
+                        <includes>
+                            <include>**/*ComponentTest.java</include>
+                        </includes>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>integration-test</goal>
+                                <goal>verify</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
 
                 <plugin>
