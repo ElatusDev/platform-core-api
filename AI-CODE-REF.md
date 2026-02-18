@@ -1,6 +1,6 @@
 # AI-CODE-REF.md — AI Coding Standards & Review Reference
 
-**Version**: 4.0  
+**Version**: 4.1  
 **Last Updated**: February 17, 2026  
 **Purpose**: Quick reference for AI code analysis, review, refactoring, and test creation  
 **See also**: [DESIGN.md](DESIGN.md) for architecture and system design
@@ -618,6 +618,24 @@ void shouldValidateUser_whenGivenValidAge() {
     assertThat(validator.isValid(user)).isTrue();
 }
 ```
+
+### 4.10 Void Method Stubbing (Strict Stubbing)
+
+**CRITICAL**: When a mock has both void and return overloads of the same method (e.g., `ModelMapper.map()`),
+Mockito strict stubbing requires ALL invocations to be declared — otherwise `PotentialStubbingProblem` is thrown.
+
+```java
+// ❌ WRONG: Only stubs the return overload — strict stubbing flags the void overload
+when(modelMapper.map(savedModel, TenantDTO.class)).thenReturn(expectedDto);
+// transform() calls modelMapper.map(dto, prototypeModel) → PotentialStubbingProblem!
+
+// ✅ CORRECT: Stub BOTH overloads explicitly
+doNothing().when(modelMapper).map(dto, prototypeModel);                    // void overload in transform()
+when(modelMapper.map(savedModel, TenantDTO.class)).thenReturn(expectedDto); // return overload in create()
+```
+
+**Rule**: When a method under test calls the same mock through multiple overloads,
+stub every overload that will be invoked. Use `doNothing().when(mock).method(args)` for void methods.
 
 ### 4.10 Testing Checklist
 

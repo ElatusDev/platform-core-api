@@ -168,6 +168,266 @@ Each module registers its own security rules via a `{Module}ModuleSecurityConfig
 - **Error messages**: Verified against implementation's `public static final` constants
 - **Edge cases**: Null, empty, whitespace, boundary values systematically covered
 
+### 3.8 Prototype-Scoped Entity Pattern
+
+All JPA data models are Spring-managed prototype beans:
+
+```java
+@Entity
+@Component
+@Scope("prototype")
+@Table(name = "employees")
+public class EmployeeDataModel extends AbstractUser { ... }
+```
+
+**Consequence**: Use cases must obtain fresh instances via `ApplicationContext`:
+
+```java
+EmployeeDataModel model = applicationContext.getBean(EmployeeDataModel.class);
+```
+
+Never use `new EmployeeDataModel()` — the prototype scope ensures Hibernate proxying,
+lifecycle callbacks, and tenant filter integration work correctly.
+
+### 3.9 Creation Use Case Pattern
+
+All entity creation follows a two-method pattern separating transformation from persistence:
+
+```java
+@Service
+@RequiredArgsConstructor
+public class EmployeeCreationUseCase {
+    private final ApplicationContext applicationContext;
+    private final ModelMapper modelMapper;
+    private final EmployeeRepository repository;
+
+    @Transactional
+    public EmployeeCreationResponseDTO create(RequestDTO dto) {
+        return modelMapper.map(repository.save(transform(dto)), ResponseDTO.class);
+    }
+
+    public EmployeeDataModel transform(RequestDTO dto) {
+        // 1. Get prototype beans from ApplicationContext
+        // 2. ModelMapper maps DTO fields onto the beans
+        // 3. Wire child entities (PII, auth) onto parent
+        // 4. Normalize and hash PII fields
+        return model;
+    }
+}
+```
+
+**Key design decisions:**
+- `transform()` is `public` (not private) — the mock-data-system calls it directly via method reference as the `DataLoader` transformer function
+- `create()` owns the `@Transactional` boundary — `transform()` is deliberately non-transactional
+- Return type of `create()` is the OpenAPI response DTO, not the data model
+- Tenant entity is simpler (no PII, no auth, no sequential ID):
+
+```java
+// Tenant: simple transform — just ModelMapper, no nested entities
+public TenantDataModel transform(TenantCreateRequestDTO dto) {
+    TenantDataModel model = applicationContext.getBean(TenantDataModel.class);
+    modelMapper.map(dto, model);
+    return model;
+}
+
+// People: complex transform — nested entities + PII hashing
+public EmployeeDataModel transform(EmployeeCreationRequestDTO dto) {
+    InternalAuthDataModel auth = applicationContext.getBean(InternalAuthDataModel.class);
+    modelMapper.map(dto, auth);
+    PersonPIIDataModel pii = applicationContext.getBean(PersonPIIDataModel.class);
+    modelMapper.map(dto, pii);
+    EmployeeDataModel model = applicationContext.getBean(EmployeeDataModel.class);
+    modelMapper.map(dto, model, MAP_NAME);
+    model.setPersonPII(pii);
+    model.setInternalAuth(auth);
+    // ... normalize + hash PII
+    return model;
+}
+```
+
+### 3.10 Composite Key Strategy
+
+Two distinct ID strategies exist:
+
+**Tenant-scoped entities** use `@IdClass` with composite key `(tenantId, entityId)`:
+```java
+@IdClass(EmployeeDataModel.EmployeeCompositeId.class)
+public class EmployeeDataModel extends AbstractUser {
+    @Id @Column(name = "employee_id")
+    private Long employeeId;  // assigned by SequentialIDGenerator
+
+    // tenantId @Id inherited from TenantScoped
+
+    public static class EmployeeCompositeId implements Serializable {
+        private Long tenantId;
+        private Long employeeId;
+    }
+}
+```
+
+**Non-tenant-scoped entities** use DB auto-increment:
+```java
+public class TenantDataModel extends Auditable {
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "tenant_id")
+    private Long tenantId;  // DB generates via AUTO_INCREMENT
+}
+```
+
+**`EntityIdAssigner` behavior:**
+- `@GeneratedValue` → silently skipped (DB handles ID)
+- `@EmbeddedId` → silently skipped (e.g., `TenantSequence`)
+- All others → `SequentialIDGenerator` assigns per-tenant sequential ID
+
+### 3.11 ModelMapper Configuration
+
+Centralized in `utilities` module (`ModelMapperConfig.java`). All modules get the bean transitively.
+
+**Registered converters:**
+
+| Source | Target | Use Case |
+|--------|--------|----------|
+| `LocalDate` | `java.sql.Date` | JPA date columns |
+| `java.sql.Date` | `LocalDate` | Reading dates back |
+| `URI` | `String` | OpenAPI `format: uri` → JPA VARCHAR (e.g., `websiteUrl`) |
+| `String` | `URI` | JPA VARCHAR → OpenAPI URI |
+| `LocalDateTime` | `OffsetDateTime` | JPA audit fields → OpenAPI `format: date-time` |
+
+**Two mapping modes:**
+- `modelMapper.map(source, TargetClass.class)` — returns new instance (used in `create()` for response DTOs)
+- `modelMapper.map(source, existingTarget)` — maps onto existing instance, returns `void` (used in `transform()` for prototype beans)
+
+**Mockito implication:** When stubbing `ModelMapper` in tests, the void overload requires `doNothing().when(modelMapper).map(dto, model)` instead of `when().thenReturn()`. Strict stubbing will throw `PotentialStubbingProblem` if both overloads aren't stubbed explicitly.
+
+### 3.12 Mock Data Pipeline
+
+Four-layer architecture for generating test data:
+
+```
+DataGenerator → DataFactory → DataLoader → AbstractMockDataUseCase
+```
+
+**Layer responsibilities:**
+
+| Layer | Scope | Pattern |
+|-------|-------|---------|
+| `DataGenerator` | Generates individual field values using DataFaker | `@Component`, stateless, one per entity domain |
+| `DataFactory` | Assembles complete OpenAPI request DTOs | `@Component`, implements `DataFactory<D>`, may hold state (e.g., `availableTutorIds`) |
+| `DataLoader` | Transforms DTOs → DataModels → persists | `@Component @Scope("prototype")`, configured via `@Bean` in `*DataLoaderConfiguration` |
+| `AbstractMockDataUseCase` | Exposes `load(count)` and `clean()` | `@Service`, one per entity type, thin wrapper over DataLoader + DataCleanUp |
+
+**Configuration pattern** — `DataLoader` beans are wired in `@Configuration` classes:
+```java
+@Bean
+public DataLoader<EmployeeCreationRequestDTO, EmployeeDataModel, Long> employeeDataLoader(
+        EmployeeRepository repository,
+        DataFactory<EmployeeCreationRequestDTO> employeeFactory,
+        EmployeeCreationUseCase employeeCreationUseCase) {
+    return new DataLoader<>(repository, employeeCreationUseCase::transform, employeeFactory);
+}
+```
+
+The transformer function is always `creationUseCase::transform` — this reuses the production transform logic for mock data generation.
+
+**Inter-entity wiring** — when one entity depends on another's persisted IDs:
+```java
+// After tutors are loaded, collect their IDs and inject into minor student factory
+List<Long> tutorIds = tutorRepository.findAll().stream()
+        .map(TutorDataModel::getTutorId).toList();
+minorStudentFactory.setAvailableTutorIds(tutorIds);
+// Now minor students can be loaded with valid FK references
+```
+
+**Transaction boundaries:**
+- `DataLoader.load()` — `@Transactional` (jakarta, defaults to `REQUIRED`)
+- `LoadTenantMockDataUseCase.load()` — overrides with `@Transactional(propagation = REQUIRES_NEW)` because `SequentialIDGenerator` runs in independent transactions that need committed tenant rows
+- `DataCleanUp.clean()` — `@Transactional` (jakarta) — `deleteAllInBatch()` + `ALTER TABLE AUTO_INCREMENT = 1`
+
+### 3.13 Transaction Propagation Patterns
+
+**Pattern 1: `REQUIRES_NEW` for committed visibility**
+```java
+// SequentialIDGenerator: independent transaction for ID allocation
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+public Long generateId(Long tenantId, String entityName) { ... }
+
+// LoadTenantMockDataUseCase: tenant rows must be committed
+// before SequentialIDGenerator's independent tx can see them
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+public void load(int count) { super.load(count); }
+```
+
+**Pattern 2: `@Lazy` for circular dependency resolution**
+```java
+// SequentialIDGenerator depends on TenantSequenceRepository
+// TenantSequenceRepository triggers EntityIdAssigner (Hibernate listener)
+// EntityIdAssigner depends on SequentialIDGenerator → circular
+public SequentialIDGenerator(@Lazy TenantSequenceRepository repository) { ... }
+```
+
+**Pattern 3: `ObjectProvider` for scope mismatch**
+```java
+// Hibernate event listeners are singletons but need request-scoped TenantContextHolder
+private final ObjectProvider<TenantContextHolder> tenantContextHolderProvider;
+
+// Safe access inside event handler
+TenantContextHolder holder = tenantContextHolderProvider.getObject();
+```
+
+### 3.14 Module Dependency Graph
+
+```
+                    ┌─────────────────┐
+                    │   application   │ (assembles all modules)
+                    └────────┬────────┘
+                             │
+        ┌────────────────────┼────────────────────┐
+        │                    │                    │
+   ┌────┴─────┐    ┌────────┴───────┐   ┌───────┴────────┐
+   │  user-   │    │    tenant-     │   │  mock-data-    │
+   │management│    │   management   │   │    system      │
+   └────┬─────┘    └────────┬───────┘   └───────┬────────┘
+        │                   │                   │
+        │      depends on user-mgmt + tenant-mgmt
+        │                   │                   │
+   ┌────┴───────────────────┴───────────────────┘
+   │
+   ├── security          (JWT, filters)
+   ├── utilities          (crypto, hashing, PII, ModelMapper, ID generation)
+   ├── infra-common       (persistence infra, entity base classes, tenant context)
+   └── multi-tenant-data  (all JPA @Entity data models)
+```
+
+**Dependency rules:**
+- Domain modules depend on foundation modules only (never on each other)
+- `mock-data-system` is the exception — depends on domain modules for `CreationUseCase::transform` references
+- `multi-tenant-data` has ZERO dependencies on other project modules
+- `utilities` depends on `infra-common` (for `TenantSequenceRepository`)
+
+### 3.15 File Header Convention
+
+All Java source files include the proprietary copyright header:
+```java
+/*
+ * Copyright (c) 2025 ElatusDev
+ * All rights reserved.
+ *
+ * This code is proprietary and confidential.
+ * Unauthorized copying, distribution, or modification is strictly prohibited.
+ */
+```
+
+### 3.16 OpenAPI DTO Naming Convention
+
+Generated DTOs follow the pattern:
+- `{Entity}CreationRequestDTO` — POST request body
+- `{Entity}CreationResponseDTO` — POST 201 response (people entities)
+- `{Entity}DTO` — general response (non-people entities like Tenant)
+- `{Entity}CreateRequestDTO` — alternative naming (tenant module uses "Create" not "Creation")
+
+Generated package: `openapi.akademiaplus.domain.{module}.dto`
+Generated API interfaces: `openapi.akademiaplus.domain.{module}.api`
+
 ---
 
 ## 4. Suggested New Patterns
@@ -365,3 +625,6 @@ The project's coding standards overlap with and extend SonarQube's default Java 
 | 2025 | OpenAPI-first | Contract-driven development, auto-generated DTOs |
 | 2025 | Separate data model module | Entities shared across domain modules without circular deps |
 | 2025-10-29 | Integer→Long migration | All entity IDs migrated to Long across all data models |
+| 2026-02 | ModelMapper centralized | Moved from user-management to utilities module for cross-module access |
+| 2026-02 | Mock data DAG orchestration | Enum-based dependency graph with topological sort for FK-safe load/cleanup ordering |
+| 2026-02 | EntityIdAssigner skip logic | `@EmbeddedId` and `@GeneratedValue` entities silently skipped by ID assigner |
