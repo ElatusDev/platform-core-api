@@ -36,6 +36,16 @@
             <artifactId>security</artifactId>
             <version>1.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.akademiaplus</groupId>
+            <artifactId>user-management</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.akademiaplus</groupId>
+            <artifactId>course-management</artifactId>
+            <version>1.0</version>
+        </dependency>
 
         <dependency>
         <groupId>com.mercadopago</groupId>

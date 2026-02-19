@@ -1,0 +1,198 @@
+/*
+ * Copyright (c) 2025 ElatusDev
+ * All rights reserved.
+ *
+ * This code is proprietary and confidential.
+ * Unauthorized copying, distribution, or modification is strictly prohibited.
+ */
+package com.akademiaplus.payment.usecases;
+
+import com.akademiaplus.billing.customerpayment.PaymentAdultStudentDataModel;
+import com.akademiaplus.billing.membership.MembershipAdultStudentDataModel;
+import com.akademiaplus.membership.interfaceadapters.MembershipAdultStudentRepository;
+import com.akademiaplus.membership.interfaceadapters.PaymentAdultStudentRepository;
+import openapi.akademiaplus.domain.billing.dto.PaymentAdultStudentCreationRequestDTO;
+import openapi.akademiaplus.domain.billing.dto.PaymentAdultStudentCreationResponseDTO;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.modelmapper.ModelMapper;
+import org.springframework.context.ApplicationContext;
+
+import java.time.LocalDate;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
+
+@DisplayName("PaymentAdultStudentCreationUseCase")
+@ExtendWith(MockitoExtension.class)
+class PaymentAdultStudentCreationUseCaseTest {
+
+    @Mock private ApplicationContext applicationContext;
+    @Mock private PaymentAdultStudentRepository paymentRepository;
+    @Mock private MembershipAdultStudentRepository membershipAdultStudentRepository;
+    @Mock private ModelMapper modelMapper;
+
+    private PaymentAdultStudentCreationUseCase useCase;
+
+    private static final LocalDate PAYMENT_DATE = LocalDate.of(2026, 3, 15);
+    private static final Double AMOUNT = 500.0;
+    private static final String PAYMENT_METHOD = "CASH";
+    private static final Long MEMBERSHIP_ADULT_STUDENT_ID = 2L;
+    private static final Long SAVED_ID = 1L;
+
+    @BeforeEach
+    void setUp() {
+        useCase = new PaymentAdultStudentCreationUseCase(
+                applicationContext, paymentRepository, membershipAdultStudentRepository, modelMapper);
+    }
+
+    private PaymentAdultStudentCreationRequestDTO buildDto() {
+        PaymentAdultStudentCreationRequestDTO dto = new PaymentAdultStudentCreationRequestDTO();
+        dto.setPaymentDate(PAYMENT_DATE);
+        dto.setAmount(AMOUNT);
+        dto.setPaymentMethod(PAYMENT_METHOD);
+        dto.setMembershipAdultStudentId(MEMBERSHIP_ADULT_STUDENT_ID);
+        return dto;
+    }
+
+    @Nested
+    @DisplayName("Transformation")
+    class Transformation {
+
+        @Test
+        @DisplayName("Should retrieve prototype bean from ApplicationContext")
+        void shouldRetrievePrototypeBean_whenTransforming() {
+            // Given
+            PaymentAdultStudentCreationRequestDTO dto = buildDto();
+            PaymentAdultStudentDataModel prototypeModel = new PaymentAdultStudentDataModel();
+            when(applicationContext.getBean(PaymentAdultStudentDataModel.class)).thenReturn(prototypeModel);
+            when(membershipAdultStudentRepository.findById(MEMBERSHIP_ADULT_STUDENT_ID))
+                    .thenReturn(Optional.of(new MembershipAdultStudentDataModel()));
+
+            // When
+            useCase.transform(dto);
+
+            // Then
+            verify(applicationContext).getBean(PaymentAdultStudentDataModel.class);
+        }
+
+        @Test
+        @DisplayName("Should delegate mapping to ModelMapper with named TypeMap")
+        void shouldDelegateToModelMapper_whenTransforming() {
+            // Given
+            PaymentAdultStudentCreationRequestDTO dto = buildDto();
+            PaymentAdultStudentDataModel prototypeModel = new PaymentAdultStudentDataModel();
+            when(applicationContext.getBean(PaymentAdultStudentDataModel.class)).thenReturn(prototypeModel);
+            when(membershipAdultStudentRepository.findById(MEMBERSHIP_ADULT_STUDENT_ID))
+                    .thenReturn(Optional.of(new MembershipAdultStudentDataModel()));
+
+            // When
+            PaymentAdultStudentDataModel result = useCase.transform(dto);
+
+            // Then
+            verify(modelMapper).map(dto, prototypeModel, PaymentAdultStudentCreationUseCase.MAP_NAME);
+            assertThat(result).isSameAs(prototypeModel);
+        }
+
+        @Test
+        @DisplayName("Should resolve membershipAdultStudent FK via repository lookup")
+        void shouldResolveFK_whenTransforming() {
+            // Given
+            PaymentAdultStudentCreationRequestDTO dto = buildDto();
+            PaymentAdultStudentDataModel prototypeModel = new PaymentAdultStudentDataModel();
+            MembershipAdultStudentDataModel membershipAdultStudent = new MembershipAdultStudentDataModel();
+            when(applicationContext.getBean(PaymentAdultStudentDataModel.class)).thenReturn(prototypeModel);
+            when(membershipAdultStudentRepository.findById(MEMBERSHIP_ADULT_STUDENT_ID))
+                    .thenReturn(Optional.of(membershipAdultStudent));
+
+            // When
+            PaymentAdultStudentDataModel result = useCase.transform(dto);
+
+            // Then
+            assertThat(result.getMembershipAdultStudent()).isSameAs(membershipAdultStudent);
+        }
+
+        @Test
+        @DisplayName("Should throw when membershipAdultStudent is not found")
+        void shouldThrow_whenMembershipAdultStudentNotFound() {
+            // Given
+            PaymentAdultStudentCreationRequestDTO dto = buildDto();
+            PaymentAdultStudentDataModel prototypeModel = new PaymentAdultStudentDataModel();
+            when(applicationContext.getBean(PaymentAdultStudentDataModel.class)).thenReturn(prototypeModel);
+            when(membershipAdultStudentRepository.findById(MEMBERSHIP_ADULT_STUDENT_ID))
+                    .thenReturn(Optional.empty());
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.transform(dto))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining(String.valueOf(MEMBERSHIP_ADULT_STUDENT_ID));
+        }
+    }
+
+    @Nested
+    @DisplayName("Persistence")
+    class Persistence {
+
+        @Test
+        @DisplayName("Should save transformed model and return mapped DTO")
+        void shouldSaveAndReturnDto_whenCreating() {
+            // Given
+            PaymentAdultStudentCreationRequestDTO dto = buildDto();
+            PaymentAdultStudentDataModel prototypeModel = new PaymentAdultStudentDataModel();
+            PaymentAdultStudentDataModel savedModel = new PaymentAdultStudentDataModel();
+            savedModel.setPaymentAdultStudentId(SAVED_ID);
+            PaymentAdultStudentCreationResponseDTO expectedDto = new PaymentAdultStudentCreationResponseDTO();
+            expectedDto.setPaymentAdultStudentId(SAVED_ID);
+
+            when(applicationContext.getBean(PaymentAdultStudentDataModel.class)).thenReturn(prototypeModel);
+            doNothing().when(modelMapper).map(dto, prototypeModel, PaymentAdultStudentCreationUseCase.MAP_NAME);
+            when(membershipAdultStudentRepository.findById(MEMBERSHIP_ADULT_STUDENT_ID))
+                    .thenReturn(Optional.of(new MembershipAdultStudentDataModel()));
+            when(paymentRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(modelMapper.map(savedModel, PaymentAdultStudentCreationResponseDTO.class)).thenReturn(expectedDto);
+
+            // When
+            PaymentAdultStudentCreationResponseDTO result = useCase.create(dto);
+
+            // Then
+            verify(paymentRepository).save(prototypeModel);
+            assertThat(result.getPaymentAdultStudentId()).isEqualTo(SAVED_ID);
+        }
+
+        @Test
+        @DisplayName("Should execute operations in correct order")
+        void shouldExecuteInOrder_whenCreating() {
+            // Given
+            PaymentAdultStudentCreationRequestDTO dto = buildDto();
+            PaymentAdultStudentDataModel prototypeModel = new PaymentAdultStudentDataModel();
+            PaymentAdultStudentDataModel savedModel = new PaymentAdultStudentDataModel();
+            PaymentAdultStudentCreationResponseDTO responseDto = new PaymentAdultStudentCreationResponseDTO();
+
+            when(applicationContext.getBean(PaymentAdultStudentDataModel.class)).thenReturn(prototypeModel);
+            doNothing().when(modelMapper).map(dto, prototypeModel, PaymentAdultStudentCreationUseCase.MAP_NAME);
+            when(membershipAdultStudentRepository.findById(MEMBERSHIP_ADULT_STUDENT_ID))
+                    .thenReturn(Optional.of(new MembershipAdultStudentDataModel()));
+            when(paymentRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(modelMapper.map(savedModel, PaymentAdultStudentCreationResponseDTO.class)).thenReturn(responseDto);
+
+            // When
+            useCase.create(dto);
+
+            // Then
+            InOrder inOrder = inOrder(applicationContext, modelMapper, membershipAdultStudentRepository, paymentRepository);
+            inOrder.verify(applicationContext).getBean(PaymentAdultStudentDataModel.class);
+            inOrder.verify(modelMapper).map(dto, prototypeModel, PaymentAdultStudentCreationUseCase.MAP_NAME);
+            inOrder.verify(membershipAdultStudentRepository).findById(MEMBERSHIP_ADULT_STUDENT_ID);
+            inOrder.verify(paymentRepository).save(prototypeModel);
+            inOrder.verify(modelMapper).map(savedModel, PaymentAdultStudentCreationResponseDTO.class);
+        }
+    }
+}
