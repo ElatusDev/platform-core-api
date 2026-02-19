@@ -9,6 +9,8 @@ components:
       $ref: './course.yaml#/components/schemas'
     CourseEvent:
       $ref: './course-event.yaml#/components/schemas'
+    Schedule:
+      $ref: './schedule.yaml#/components/schemas'
 paths:
   /courses:
     $ref: './course.yaml#/paths/~1courses'
@@ -18,3 +20,7 @@ paths:
     $ref: './course-event.yaml#/paths/~1course-events'
   /course-events/{courseEventId}:
     $ref: './course-event.yaml#/paths/~1course-events~1{courseEventId}'
+  /schedules:
+    $ref: './schedule.yaml#/paths/~1schedules'
+  /schedules/{scheduleId}:
+    $ref: './schedule.yaml#/paths/~1schedules~1{scheduleId}'

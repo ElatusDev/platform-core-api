@@ -1,0 +1,154 @@
+openapi: 3.0.0
+info:
+  title:   Schedule Entity
+  version: '1.0.0'
+paths:
+  '/schedules':
+    post:
+      operationId: createSchedule
+      summary: Create a new schedule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleCreationRequest'
+      responses:
+        '201':
+          description: Schedule created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleCreationResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: Get all schedules
+      operationId: getSchedules
+      responses:
+        '200':
+          description: List of schedules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetScheduleResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/schedules/{scheduleId}':
+    get:
+      operationId: getScheduleById
+      summary: Get a schedule by ID
+      parameters:
+        - name: scheduleId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Schedule details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetScheduleResponse'
+        '404':
+          description: Schedule not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      operationId: deleteScheduleById
+      summary: Delete a schedule
+      parameters:
+        - name: scheduleId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Schedule deleted successfully
+        '404':
+          description: Schedule not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    BaseSchedule:
+      type: object
+      properties:
+        scheduleDay:
+          type: string
+          maxLength: 9
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+        courseId:
+          type: integer
+          format: int64
+      required:
+        - scheduleDay
+        - startTime
+        - endTime
+        - courseId
+    ScheduleCreationRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseSchedule'
+    ScheduleCreationResponse:
+      type: object
+      properties:
+        scheduleId:
+          type: integer
+          format: int64
+          readOnly: true
+      required:
+        - scheduleId
+    GetScheduleResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseSchedule'
+        - type: object
+          properties:
+            scheduleId:
+              type: integer
+              format: int64
+              readOnly: true
+          required:
+            - scheduleId
+    ErrorResponse:
+      type: object

@@ -1,0 +1,87 @@
+/*
+ * Copyright (c) 2025 ElatusDev
+ * All rights reserved.
+ *
+ * This code is proprietary and confidential.
+ * Unauthorized copying, distribution, or modification is strictly prohibited.
+ */
+package com.akademiaplus.event.usecases;
+
+import com.akademiaplus.collaborator.interfaceadapters.CollaboratorRepository;
+import com.akademiaplus.courses.event.CourseEventDataModel;
+import com.akademiaplus.courses.program.CourseDataModel;
+import com.akademiaplus.courses.program.ScheduleDataModel;
+import com.akademiaplus.event.interfaceadapters.CourseEventRepository;
+import com.akademiaplus.program.interfaceadapters.CourseRepository;
+import com.akademiaplus.program.interfaceadapters.ScheduleRepository;
+import com.akademiaplus.users.collaborator.CollaboratorDataModel;
+import lombok.RequiredArgsConstructor;
+import openapi.akademiaplus.domain.course.management.dto.CourseEventCreateRequestDTO;
+import openapi.akademiaplus.domain.course.management.dto.CourseEventCreateResponseDTO;
+import org.modelmapper.ModelMapper;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Handles course event creation by transforming the OpenAPI request DTO
+ * into the persistence data model.
+ * <p>
+ * Uses a named TypeMap ({@value MAP_NAME}) and prototype-scoped beans
+ * via {@link ApplicationContext} to prevent ModelMapper deep-matching
+ * pollution into nested JPA relationships (course, collaborator, schedule,
+ * adultAttendees, minorAttendees) and the entity ID field.
+ */
+@Service
+@RequiredArgsConstructor
+public class CourseEventCreationUseCase {
+    public static final String MAP_NAME = "courseEventMap";
+
+    private final ApplicationContext applicationContext;
+    private final CourseEventRepository courseEventRepository;
+    private final CourseRepository courseRepository;
+    private final ScheduleRepository scheduleRepository;
+    private final CollaboratorRepository collaboratorRepository;
+    private final ModelMapper modelMapper;
+
+    /**
+     * Creates and persists a new course event from the given request.
+     *
+     * @param dto the course event creation request
+     * @return the persisted course event mapped to a response DTO
+     */
+    @Transactional
+    public CourseEventCreateResponseDTO create(CourseEventCreateRequestDTO dto) {
+        CourseEventDataModel saved = courseEventRepository.save(transform(dto));
+        return modelMapper.map(saved, CourseEventCreateResponseDTO.class);
+    }
+
+    /**
+     * Maps a {@link CourseEventCreateRequestDTO} to a persistence-ready data model.
+     * <p>
+     * Uses a named TypeMap to prevent deep-matching of DTO fields
+     * into nested JPA relationships. FK associations are resolved via
+     * repository lookups, not through ModelMapper.
+     *
+     * @param dto the creation request
+     * @return populated data model ready for persistence
+     */
+    public CourseEventDataModel transform(CourseEventCreateRequestDTO dto) {
+        final CourseEventDataModel model = applicationContext.getBean(CourseEventDataModel.class);
+        modelMapper.map(dto, model, MAP_NAME);
+
+        CourseDataModel course = courseRepository.findById(dto.getCourseId())
+                .orElseThrow(() -> new IllegalArgumentException("Course not found: " + dto.getCourseId()));
+        model.setCourse(course);
+
+        CollaboratorDataModel collaborator = collaboratorRepository.findById(dto.getInstructorId())
+                .orElseThrow(() -> new IllegalArgumentException("Collaborator not found: " + dto.getInstructorId()));
+        model.setCollaborator(collaborator);
+
+        ScheduleDataModel schedule = scheduleRepository.findById(dto.getScheduleId())
+                .orElseThrow(() -> new IllegalArgumentException("Schedule not found: " + dto.getScheduleId()));
+        model.setSchedule(schedule);
+
+        return model;
+    }
+}

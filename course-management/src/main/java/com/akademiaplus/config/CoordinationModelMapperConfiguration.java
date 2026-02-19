@@ -7,9 +7,15 @@
  */
 package com.akademiaplus.config;
 
+import com.akademiaplus.courses.event.CourseEventDataModel;
 import com.akademiaplus.courses.program.CourseDataModel;
+import com.akademiaplus.courses.program.ScheduleDataModel;
+import com.akademiaplus.event.usecases.CourseEventCreationUseCase;
 import com.akademiaplus.program.usecases.CreateCourseUseCase;
+import com.akademiaplus.program.usecases.ScheduleCreationUseCase;
 import openapi.akademiaplus.domain.course.management.dto.CourseCreationRequestDTO;
+import openapi.akademiaplus.domain.course.management.dto.CourseEventCreateRequestDTO;
+import openapi.akademiaplus.domain.course.management.dto.ScheduleCreationRequestDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,10 +26,11 @@ import jakarta.annotation.PostConstruct;
  * for course-management DTO → DataModel conversions.
  * <p>
  * Prevents ModelMapper from deep-matching DTO fields into nested JPA
- * relationships ({@code schedules}, {@code availableCollaborators}) and
- * the entity ID field ({@code courseId}).
+ * relationships and entity ID fields.
  *
  * @see CreateCourseUseCase
+ * @see ScheduleCreationUseCase
+ * @see CourseEventCreationUseCase
  */
 @Configuration
 public class CoordinationModelMapperConfiguration {
@@ -39,6 +46,8 @@ public class CoordinationModelMapperConfiguration {
         modelMapper.getConfiguration().setImplicitMappingEnabled(false);
 
         registerCourseMap();
+        registerScheduleMap();
+        registerCourseEventMap();
 
         modelMapper.getConfiguration().setImplicitMappingEnabled(true);
     }
@@ -52,6 +61,35 @@ public class CoordinationModelMapperConfiguration {
             mapper.skip(CourseDataModel::setCourseId);
             mapper.skip(CourseDataModel::setSchedules);
             mapper.skip(CourseDataModel::setAvailableCollaborators);
+        }).implicitMappings();
+    }
+
+    private void registerScheduleMap() {
+        modelMapper.createTypeMap(
+                ScheduleCreationRequestDTO.class,
+                ScheduleDataModel.class,
+                ScheduleCreationUseCase.MAP_NAME
+        ).addMappings(mapper -> {
+            mapper.skip(ScheduleDataModel::setScheduleId);
+            mapper.skip(ScheduleDataModel::setCourse);
+        }).implicitMappings();
+    }
+
+    private void registerCourseEventMap() {
+        modelMapper.createTypeMap(
+                CourseEventCreateRequestDTO.class,
+                CourseEventDataModel.class,
+                CourseEventCreationUseCase.MAP_NAME
+        ).addMappings(mapper -> {
+            mapper.skip(CourseEventDataModel::setCourseEventId);
+            mapper.skip(CourseEventDataModel::setCourse);
+            mapper.skip(CourseEventDataModel::setCollaborator);
+            mapper.skip(CourseEventDataModel::setSchedule);
+            mapper.skip(CourseEventDataModel::setAdultAttendees);
+            mapper.skip(CourseEventDataModel::setMinorAttendees);
+            mapper.map(CourseEventCreateRequestDTO::getDate, CourseEventDataModel::setEventDate);
+            mapper.map(CourseEventCreateRequestDTO::getTitle, CourseEventDataModel::setEventTitle);
+            mapper.map(CourseEventCreateRequestDTO::getDescription, CourseEventDataModel::setEventDescription);
         }).implicitMappings();
     }
 }
