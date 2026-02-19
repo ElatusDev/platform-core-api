@@ -26,9 +26,9 @@ public class MockDataController implements MockDataApi {
 
     @Override
     public ResponseEntity<String> generateAllMockData(Integer count) {
-        orchestrator.generateAll(count);
+        orchestrator.generateAll(1, count);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body("Mock data generated: " + count + " records per entity type.");
+                .body("Mock data generated: " + count + " records per entity type for 1 tenant.");
     }
 }

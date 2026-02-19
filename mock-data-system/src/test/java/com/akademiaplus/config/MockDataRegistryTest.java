@@ -1,8 +1,11 @@
 package com.akademiaplus.config;
 
 import com.akademiaplus.customer.interfaceadapters.TutorRepository;
+import com.akademiaplus.infra.persistence.config.TenantContextHolder;
+import com.akademiaplus.interfaceadapters.TenantRepository;
 import com.akademiaplus.security.CustomerAuthDataModel;
 import com.akademiaplus.security.InternalAuthDataModel;
+import com.akademiaplus.tenancy.TenantDataModel;
 import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.customer.TutorDataModel;
 import com.akademiaplus.util.base.DataCleanUp;
@@ -37,6 +40,7 @@ import static org.mockito.Mockito.when;
 class MockDataRegistryTest {
 
     private static final int RECORD_COUNT = 5;
+    private static final long TENANT_ID = 1L;
     private static final long TUTOR_ID_ONE = 10L;
     private static final long TUTOR_ID_TWO = 20L;
 
@@ -53,6 +57,8 @@ class MockDataRegistryTest {
     @Mock private DataCleanUp<PersonPIIDataModel, Long> personPIICleanUp;
 
     @Mock private TutorRepository tutorRepository;
+    @Mock private TenantRepository tenantRepository;
+    @Mock private TenantContextHolder tenantContextHolder;
     @Mock private MinorStudentFactory minorStudentFactory;
 
     private MockDataRegistry registry;
@@ -285,16 +291,32 @@ class MockDataRegistryTest {
 
         @BeforeEach
         void setUp() {
-            hooks = registry.mockDataPostLoadHooks(tutorRepository, minorStudentFactory);
+            hooks = registry.mockDataPostLoadHooks(tenantRepository, tenantContextHolder, tutorRepository, minorStudentFactory);
         }
 
         @Test
-        @DisplayName("Should contain only TUTOR hook")
-        void shouldContainOnlyTutorHook() {
+        @DisplayName("Should contain TENANT and TUTOR hooks")
+        void shouldContainTenantAndTutorHooks() {
             // Given — hooks built in setUp
 
             // When & Then
-            assertThat(hooks).containsOnlyKeys(TUTOR);
+            assertThat(hooks).containsOnlyKeys(TENANT, TUTOR);
+        }
+
+        @Test
+        @DisplayName("Should set tenant context when tenant hook executes")
+        void shouldSetTenantContext_whenTenantHookExecutes() {
+            // Given
+            TenantDataModel tenant = new TenantDataModel();
+            tenant.setTenantId(TENANT_ID);
+            when(tenantRepository.findAll()).thenReturn(List.of(tenant));
+
+            // When
+            hooks.get(TENANT).execute();
+
+            // Then
+            verify(tenantRepository).findAll();
+            verify(tenantContextHolder).setTenantId(TENANT_ID);
         }
 
         @Test

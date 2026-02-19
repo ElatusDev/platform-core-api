@@ -8,8 +8,11 @@
 package com.akademiaplus.config;
 
 import com.akademiaplus.customer.interfaceadapters.TutorRepository;
+import com.akademiaplus.infra.persistence.config.TenantContextHolder;
+import com.akademiaplus.interfaceadapters.TenantRepository;
 import com.akademiaplus.security.CustomerAuthDataModel;
 import com.akademiaplus.security.InternalAuthDataModel;
+import com.akademiaplus.tenancy.TenantDataModel;
 import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.customer.TutorDataModel;
 import com.akademiaplus.util.base.DataCleanUp;
@@ -102,10 +105,19 @@ public class MockDataRegistry {
 
     @Bean
     public Map<MockEntityType, MockDataPostLoadHook> mockDataPostLoadHooks(
+            TenantRepository tenantRepository,
+            TenantContextHolder tenantContextHolder,
             TutorRepository tutorRepository,
             MinorStudentFactory minorStudentFactory) {
 
         Map<MockEntityType, MockDataPostLoadHook> hooks = new EnumMap<>(MockEntityType.class);
+        hooks.put(MockEntityType.TENANT, () -> {
+            Long firstTenantId = tenantRepository.findAll().stream()
+                    .map(TenantDataModel::getTenantId)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("No tenants found after TENANT load"));
+            tenantContextHolder.setTenantId(firstTenantId);
+        });
         hooks.put(MockEntityType.TUTOR, () -> {
             List<Long> tutorIds = tutorRepository.findAll().stream()
                     .map(TutorDataModel::getTutorId)

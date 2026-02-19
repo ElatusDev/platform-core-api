@@ -39,7 +39,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("MockDataOrchestrator — Component Test")
 class MockDataOrchestratorComponentTest extends AbstractIntegrationTest {
 
-    private static final int RECORD_COUNT = 5;
+    private static final int TENANT_COUNT = 1;
+    private static final int ENTITIES_PER_TENANT = 5;
 
     @Autowired
     private MockDataOrchestrator orchestrator;
@@ -48,7 +49,7 @@ class MockDataOrchestratorComponentTest extends AbstractIntegrationTest {
     private EntityManager entityManager;
 
     @Nested
-    @DisplayName("generateAll(count)")
+    @DisplayName("generateAll(tenantCount, entitiesPerTenant)")
     @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
     class GenerateAll {
 
@@ -59,21 +60,21 @@ class MockDataOrchestratorComponentTest extends AbstractIntegrationTest {
             // Given — empty database from Testcontainers init script
 
             // When
-            assertDoesNotThrow(() -> orchestrator.generateAll(RECORD_COUNT));
+            assertDoesNotThrow(() -> orchestrator.generateAll(TENANT_COUNT, ENTITIES_PER_TENANT));
 
             // Then — verify records exist in each entity table
-            assertEquals(RECORD_COUNT, nativeCount("tenants"),
-                    "tenants table should contain exactly " + RECORD_COUNT + " rows");
-            assertEquals(RECORD_COUNT, nativeCount("employees"),
-                    "employees table should contain exactly " + RECORD_COUNT + " rows");
-            assertEquals(RECORD_COUNT, nativeCount("collaborators"),
-                    "collaborators table should contain exactly " + RECORD_COUNT + " rows");
-            assertEquals(RECORD_COUNT, nativeCount("adult_students"),
-                    "adult_students table should contain exactly " + RECORD_COUNT + " rows");
-            assertEquals(RECORD_COUNT, nativeCount("tutors"),
-                    "tutors table should contain exactly " + RECORD_COUNT + " rows");
-            assertEquals(RECORD_COUNT, nativeCount("minor_students"),
-                    "minor_students table should contain exactly " + RECORD_COUNT + " rows");
+            assertEquals(TENANT_COUNT, nativeCount("tenants"),
+                    "tenants table should contain exactly " + TENANT_COUNT + " rows");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("employees"),
+                    "employees table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("collaborators"),
+                    "collaborators table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("adult_students"),
+                    "adult_students table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("tutors"),
+                    "tutors table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("minor_students"),
+                    "minor_students table should contain exactly " + ENTITIES_PER_TENANT + " rows");
         }
 
         @Test
@@ -102,15 +103,15 @@ class MockDataOrchestratorComponentTest extends AbstractIntegrationTest {
             // Given — database already populated from previous tests
 
             // When — calling generateAll again triggers cleanup + fresh load
-            assertDoesNotThrow(() -> orchestrator.generateAll(RECORD_COUNT));
+            assertDoesNotThrow(() -> orchestrator.generateAll(TENANT_COUNT, ENTITIES_PER_TENANT));
 
-            // Then — counts should remain exactly RECORD_COUNT (not doubled)
-            assertEquals(RECORD_COUNT, nativeCount("tenants"),
-                    "tenants count should be exactly " + RECORD_COUNT + " after clean-and-reload");
-            assertEquals(RECORD_COUNT, nativeCount("employees"),
-                    "employees count should be exactly " + RECORD_COUNT + " after clean-and-reload");
-            assertEquals(RECORD_COUNT, nativeCount("minor_students"),
-                    "minor_students count should be exactly " + RECORD_COUNT + " after clean-and-reload");
+            // Then — counts should remain exactly ENTITIES_PER_TENANT (not doubled)
+            assertEquals(TENANT_COUNT, nativeCount("tenants"),
+                    "tenants count should be exactly " + TENANT_COUNT + " after clean-and-reload");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("employees"),
+                    "employees count should be exactly " + ENTITIES_PER_TENANT + " after clean-and-reload");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("minor_students"),
+                    "minor_students count should be exactly " + ENTITIES_PER_TENANT + " after clean-and-reload");
         }
     }
 

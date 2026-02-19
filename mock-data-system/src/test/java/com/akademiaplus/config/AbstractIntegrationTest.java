@@ -39,7 +39,10 @@ import java.util.Objects;
  * @author ElatusDev
  * @since 1.0
  */
-@SpringBootTest(classes = {MockDataApp.class})
+@SpringBootTest(
+        classes = {MockDataApp.class},
+        properties = "spring.main.allow-bean-definition-overriding=true"
+)
 @ActiveProfiles("mock-data-service")
 @Import(TestSecurityConfiguration.class)
 @Testcontainers
