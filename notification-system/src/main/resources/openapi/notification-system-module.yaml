@@ -29,6 +29,12 @@ security:
   - TenantAuth: []
 
 paths:
+  # ===== BASE NOTIFICATION ENDPOINTS =====
+  '/notifications':
+    $ref: './notification.yaml#/paths/~1notifications'
+  '/notifications/{notificationId}':
+    $ref: './notification.yaml#/paths/~1notifications~1{notificationId}'
+
   # ===== PUSH NOTIFICATION ENDPOINTS =====
   /push:
     $ref: './push-notification.yaml#/paths'
@@ -65,6 +71,16 @@ components:
 
   # ===== SHARED SCHEMAS =====
   schemas:
+    # Base notification entity schemas
+    BaseNotification:
+      $ref: './notification.yaml#/components/schemas/BaseNotification'
+    NotificationCreationRequest:
+      $ref: './notification.yaml#/components/schemas/NotificationCreationRequest'
+    NotificationCreationResponse:
+      $ref: './notification.yaml#/components/schemas/NotificationCreationResponse'
+    GetNotificationResponse:
+      $ref: './notification.yaml#/components/schemas/GetNotificationResponse'
+
     # Reference shared schemas from individual APIs
     DeliveryChannel:
       $ref: './push-notification.yaml#/components/schemas/DeliveryChannel'

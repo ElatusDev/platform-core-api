@@ -46,6 +46,7 @@ public class ModelMapperConfig {
         addUriToStringConverter(modelMapper);
         addStringToUriConverter(modelMapper);
         addLocalDateTimeToOffsetDateTimeConverter(modelMapper);
+        addOffsetDateTimeToLocalDateTimeConverter(modelMapper);
 
         return modelMapper;
     }
@@ -78,5 +79,11 @@ public class ModelMapperConfig {
         Converter<LocalDateTime, OffsetDateTime> converter = ctx ->
                 ctx.getSource() == null ? null : ctx.getSource().atOffset(ZoneOffset.UTC);
         modelMapper.addConverter(converter, LocalDateTime.class, OffsetDateTime.class);
+    }
+
+    private void addOffsetDateTimeToLocalDateTimeConverter(ModelMapper modelMapper) {
+        Converter<OffsetDateTime, LocalDateTime> converter = ctx ->
+                ctx.getSource() == null ? null : ctx.getSource().toLocalDateTime();
+        modelMapper.addConverter(converter, OffsetDateTime.class, LocalDateTime.class);
     }
 }

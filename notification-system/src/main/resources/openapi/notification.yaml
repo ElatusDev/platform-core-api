@@ -1,0 +1,177 @@
+openapi: 3.0.0
+info:
+  title: Notification Entity
+  version: '1.0.0'
+  description: API for base notification management
+paths:
+  '/notifications':
+    post:
+      operationId: createNotification
+      summary: Create a new notification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationCreationRequest'
+      responses:
+        '201':
+          description: Notification created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationCreationResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      operationId: getNotifications
+      summary: Get all notifications
+      responses:
+        '200':
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetNotificationResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/notifications/{notificationId}':
+    get:
+      operationId: getNotificationById
+      summary: Get a notification by ID
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID of the notification to retrieve
+      responses:
+        '200':
+          description: Notification details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetNotificationResponse'
+        '404':
+          description: Notification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      operationId: deleteNotification
+      summary: Delete a notification
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID of the notification to delete
+      responses:
+        '204':
+          description: Notification deleted successfully
+        '404':
+          description: Notification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    BaseNotification:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+          description: Title of the notification
+        content:
+          type: string
+          description: Main content body of the notification
+        type:
+          type: string
+          maxLength: 50
+          description: Notification type classification
+        priority:
+          type: string
+          maxLength: 20
+          description: Priority level of the notification
+        scheduledAt:
+          type: string
+          format: date-time
+          description: Scheduled delivery time
+        expiresAt:
+          type: string
+          format: date-time
+          description: Expiration time
+        targetUserId:
+          type: integer
+          format: int64
+          description: ID of the target user
+        metadata:
+          type: string
+          description: Optional metadata in JSON format
+      required:
+        - title
+        - content
+        - type
+        - priority
+    NotificationCreationRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseNotification'
+    NotificationCreationResponse:
+      type: object
+      properties:
+        notificationId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Notification ID
+      required:
+        - notificationId
+    GetNotificationResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseNotification'
+        - type: object
+          properties:
+            notificationId:
+              type: integer
+              format: int64
+              readOnly: true
+              description: Notification ID
+          required:
+            - notificationId
+    ErrorResponse:
+      type: object
