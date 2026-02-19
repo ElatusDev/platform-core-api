@@ -60,9 +60,9 @@ AkademiaPlus is a multi-tenant SaaS platform for educational institutions. The `
 | `user-management` | People management | Employee, AdultStudent, MinorStudent, Tutor, Collaborator |
 | `billing` | Financial operations | Payment, Membership, Payroll, Store/POS transactions |
 | `course-management` | Academic programs | Course, Schedule, CourseEvent |
-| `tenant-management` | Platform tenancy | Tenant creation and lifecycle |
-| `notification-system` | Communications | Email, SMS, Push (OpenAPI specs defined, implementation pending) |
-| `pos-system` | Point-of-sale | Store transactions (placeholder) |
+| `tenant-management` | Platform tenancy | Tenant, TenantSubscription, TenantBillingCycle |
+| `notification-system` | Communications | Notification, Email, SMS, Push |
+| `pos-system` | Point-of-sale | StoreProduct, StoreTransaction |
 
 ### 2.3 Standalone Services
 
