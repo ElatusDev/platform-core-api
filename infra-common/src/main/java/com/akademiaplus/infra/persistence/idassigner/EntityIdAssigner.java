@@ -2,6 +2,7 @@ package com.akademiaplus.infra.persistence.idassigner;
 
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.infra.persistence.exceptions.IdAssignmentException;
+import com.akademiaplus.utilities.exceptions.InvalidTenantException;
 import com.akademiaplus.utilities.idgeneration.IDGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.event.spi.PreInsertEvent;
@@ -22,6 +23,9 @@ public class EntityIdAssigner {
     public static final String ERROR_MISSING_ANNOTATION = "missing id or table annotation in model class!";
     public static final String ERROR_CANNOT_GENERATE_ID = "Cannot generate ID for entity {}";
     public static final String ERROR_FAILED_TO_ASSIGN_ID = "Failed to assign ID for entity: {}";
+    public static final String ERROR_TENANT_CONTEXT_REQUIRED =
+            "Tenant context is required for ID generation but was not set. " +
+            "Entity: %s, Table: %s";
 
     // Warning messages
     public static final String WARNING_PRESET_ID =
@@ -79,7 +83,10 @@ public class EntityIdAssigner {
                         tenantContextHolder.getTenantId().orElse(null));
             }
 
-            Long tenantId = tenantContextHolder.getTenantId().orElse(null);
+            Long tenantId = tenantContextHolder.getTenantId()
+                    .orElseThrow(() -> new InvalidTenantException(
+                            String.format(ERROR_TENANT_CONTEXT_REQUIRED,
+                                    entityClass.getSimpleName(), metadata.getTableName())));
             Object generatedId = idGenerator.generateId(metadata.getTableName(), tenantId);
             metadata.getSetter().invoke(entity, generatedId);
             hibernateStateUpdater.updatePropertyInState(event, metadata.getIdFieldName(), generatedId);

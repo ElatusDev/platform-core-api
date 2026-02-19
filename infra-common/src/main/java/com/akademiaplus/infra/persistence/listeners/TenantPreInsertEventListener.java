@@ -11,6 +11,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Field;
+
 /**
  * Hibernate event listener that automatically assigns tenant ID to tenant-scoped entities before insert.
  * <p>
@@ -78,7 +80,7 @@ public class TenantPreInsertEventListener implements PreInsertEventListener {
                     .orElseThrow(() -> new InvalidTenantException(ERROR_TENANT_MISSING));
 
             tenantEntity.setTenantId(tenantId);
-            updateTenantIdInState(event.getPersister(), event.getState(), tenantId);
+            updateTenantIdInState(event, event.getPersister(), event.getState(), tenantId);
 
             log.debug(DEBUG_TENANT_SET, tenantId, event.getEntity().getClass().getSimpleName());
         }
@@ -89,16 +91,34 @@ public class TenantPreInsertEventListener implements PreInsertEventListener {
      * Updates the Hibernate state array to reflect the tenant ID assignment.
      * Finds the tenantId property in the entity's property array and sets its value.
      *
+     * <p>For {@code @IdClass} composite keys, {@code tenantId} is an {@code @Id} field
+     * and may not appear in the property state array. Falls back to reflective
+     * update of the identifier object so cascaded entity INSERTs carry the correct value.</p>
+     *
+     * @param event    the PreInsertEvent for the entity being inserted
      * @param persister The entity persister containing property metadata
      * @param state The state array containing entity property values
      * @param tenantId The tenant ID to assign
      */
-    private void updateTenantIdInState(EntityPersister persister, Object[] state, Long tenantId) {
+    private void updateTenantIdInState(PreInsertEvent event, EntityPersister persister, Object[] state, Long tenantId) {
         String[] propertyNames = persister.getPropertyNames();
         for (int i = 0; i < propertyNames.length; i++) {
             if (TENANT_ID_PROPERTY.equals(propertyNames[i])) {
                 state[i] = tenantId;
-                break;
+                return;
+            }
+        }
+
+        // Fallback: update identifier for @IdClass composites
+        Object id = event.getId();
+        if (id != null) {
+            try {
+                Field field = id.getClass().getDeclaredField(TENANT_ID_PROPERTY);
+                field.setAccessible(true);
+                field.set(id, tenantId);
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                log.warn("Could not update tenantId in identifier for entity {}",
+                        event.getEntity().getClass().getSimpleName());
             }
         }
     }

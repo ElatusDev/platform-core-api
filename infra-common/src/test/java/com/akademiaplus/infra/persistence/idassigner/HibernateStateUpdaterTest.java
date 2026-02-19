@@ -94,6 +94,7 @@ class HibernateStateUpdaterTest {
         when(event.getPersister()).thenReturn(persister);
         when(persister.getPropertyNames()).thenReturn(propertyNames);
         when(event.getState()).thenReturn(state);
+        when(event.getId()).thenReturn(null);
         when(event.getEntity()).thenReturn(entity);
 
         // When

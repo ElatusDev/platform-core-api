@@ -97,25 +97,25 @@ class EntityIdAssignerTest {
     }
 
     @Test
-    void shouldAssignIdWhenNoTenantContext() throws Exception {
+    void shouldThrowIdAssignmentException_whenNoTenantContext() throws Exception {
         // Given
         when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
         when(metadata.isSkip()).thenReturn(false);
         when(metadata.getGetter()).thenReturn(getter);
-        when(metadata.getSetter()).thenReturn(setter);
         when(metadata.getTableName()).thenReturn(TABLE_NAME);
-        when(metadata.getIdFieldName()).thenReturn(ID_FIELD_NAME);
         when(getter.invoke(entity)).thenReturn(null);
         when(idGenerationStrategy.shouldGenerateId(null)).thenReturn(true);
         when(tenantContextHolder.getTenantId()).thenReturn(Optional.empty());
-        when(idGenerator.generateId(TABLE_NAME, null)).thenReturn(GENERATED_ID);
 
-        // When
-        assigner.assignIdIfNeeded(entity, event);
+        // When / Then
+        String expectedMessage = formatErrorMessage(EntityIdAssigner.ERROR_CANNOT_GENERATE_ID, TEST_ENTITY_NAME);
+        assertThatThrownBy(() -> assigner.assignIdIfNeeded(entity, event))
+                .isInstanceOf(IdAssignmentException.class)
+                .hasMessageContaining(expectedMessage);
 
-        // Then
-        verify(setter).invoke(entity, GENERATED_ID);
-        verify(idGenerator).generateId(TABLE_NAME, null);
+        verifyNoInteractions(idGenerator);
+        verifyNoInteractions(setter);
+        verifyNoInteractions(hibernateStateUpdater);
     }
 
     @Test
