@@ -7,8 +7,14 @@
  */
 package com.akademiaplus.config;
 
+import com.akademiaplus.tenancy.TenantBillingCycleDataModel;
 import com.akademiaplus.tenancy.TenantDataModel;
+import com.akademiaplus.tenancy.TenantSubscriptionDataModel;
+import com.akademiaplus.usecases.TenantBillingCycleCreationUseCase;
 import com.akademiaplus.usecases.TenantCreationUseCase;
+import com.akademiaplus.usecases.TenantSubscriptionCreationUseCase;
+import openapi.akademiaplus.domain.tenant.management.dto.BillingCycleCreateRequestDTO;
+import openapi.akademiaplus.domain.tenant.management.dto.SubscriptionCreateRequestDTO;
 import openapi.akademiaplus.domain.tenant.management.dto.TenantCreateRequestDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Configuration;
@@ -17,14 +23,14 @@ import jakarta.annotation.PostConstruct;
 
 /**
  * Registers module-specific named {@link org.modelmapper.TypeMap TypeMaps}
- * for tenant DTO → DataModel conversions.
+ * for tenant-management DTO → DataModel conversions.
  * <p>
- * Prevents ModelMapper from deep-matching {@code TenantCreateRequestDTO.taxId}
- * (String) into {@code TenantDataModel.tenantId} (Long) via the shared "Id"
- * token. Without this skip rule, the {@code NumberConverter} attempts to parse
- * the tax identifier as a numeric tenant ID, causing a {@code MappingException}.
+ * Prevents ModelMapper from deep-matching DTO fields into entity ID fields
+ * and other unintended targets.
  *
  * @see TenantCreationUseCase
+ * @see TenantSubscriptionCreationUseCase
+ * @see TenantBillingCycleCreationUseCase
  */
 @Configuration
 public class TenantModelMapperConfiguration {
@@ -39,6 +45,14 @@ public class TenantModelMapperConfiguration {
     void registerTypeMaps() {
         modelMapper.getConfiguration().setImplicitMappingEnabled(false);
 
+        registerTenantMap();
+        registerTenantSubscriptionMap();
+        registerTenantBillingCycleMap();
+
+        modelMapper.getConfiguration().setImplicitMappingEnabled(true);
+    }
+
+    private void registerTenantMap() {
         modelMapper.createTypeMap(
                 TenantCreateRequestDTO.class,
                 TenantDataModel.class,
@@ -46,7 +60,25 @@ public class TenantModelMapperConfiguration {
         ).addMappings(mapper ->
                 mapper.skip(TenantDataModel::setTenantId)
         ).implicitMappings();
+    }
 
-        modelMapper.getConfiguration().setImplicitMappingEnabled(true);
+    private void registerTenantSubscriptionMap() {
+        modelMapper.createTypeMap(
+                SubscriptionCreateRequestDTO.class,
+                TenantSubscriptionDataModel.class,
+                TenantSubscriptionCreationUseCase.MAP_NAME
+        ).addMappings(mapper ->
+                mapper.skip(TenantSubscriptionDataModel::setTenantSubscriptionId)
+        ).implicitMappings();
+    }
+
+    private void registerTenantBillingCycleMap() {
+        modelMapper.createTypeMap(
+                BillingCycleCreateRequestDTO.class,
+                TenantBillingCycleDataModel.class,
+                TenantBillingCycleCreationUseCase.MAP_NAME
+        ).addMappings(mapper ->
+                mapper.skip(TenantBillingCycleDataModel::setTenantBillingCycleId)
+        ).implicitMappings();
     }
 }
