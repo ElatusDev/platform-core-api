@@ -1,0 +1,36 @@
+openapi: 3.0.0
+info:
+  title: POS System Module API
+  version: 1.0.0
+  description: API for managing point-of-sale products and transactions
+
+components:
+  schemas:
+    BaseStoreProduct:
+      $ref: './store-product.yaml#/components/schemas/BaseStoreProduct'
+    StoreProductCreationRequest:
+      $ref: './store-product.yaml#/components/schemas/StoreProductCreationRequest'
+    StoreProductCreationResponse:
+      $ref: './store-product.yaml#/components/schemas/StoreProductCreationResponse'
+    GetStoreProductResponse:
+      $ref: './store-product.yaml#/components/schemas/GetStoreProductResponse'
+    BaseStoreTransaction:
+      $ref: './store-transaction.yaml#/components/schemas/BaseStoreTransaction'
+    StoreTransactionCreationRequest:
+      $ref: './store-transaction.yaml#/components/schemas/StoreTransactionCreationRequest'
+    StoreTransactionCreationResponse:
+      $ref: './store-transaction.yaml#/components/schemas/StoreTransactionCreationResponse'
+    GetStoreTransactionResponse:
+      $ref: './store-transaction.yaml#/components/schemas/GetStoreTransactionResponse'
+    ErrorResponse:
+      $ref: './store-product.yaml#/components/schemas/ErrorResponse'
+
+paths:
+  '/store-products':
+    $ref: './store-product.yaml#/paths/~1store-products'
+  '/store-products/{storeProductId}':
+    $ref: './store-product.yaml#/paths/~1store-products~1{storeProductId}'
+  '/store-transactions':
+    $ref: './store-transaction.yaml#/paths/~1store-transactions'
+  '/store-transactions/{storeTransactionId}':
+    $ref: './store-transaction.yaml#/paths/~1store-transactions~1{storeTransactionId}'

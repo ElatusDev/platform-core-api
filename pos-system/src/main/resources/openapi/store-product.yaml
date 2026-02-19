@@ -1,0 +1,203 @@
+openapi: 3.0.0
+info:
+  title: Store Product Entity
+  version: '1.0.0'
+  description: API for store products
+paths:
+  '/store-products':
+    post:
+      operationId: createStoreProduct
+      summary: Create a new store product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreProductCreationRequest'
+      responses:
+        '201':
+          description: Store product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreProductCreationResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      operationId: getStoreProducts
+      summary: Get all store products
+      responses:
+        '200':
+          description: List of store products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetStoreProductResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/store-products/{storeProductId}':
+    get:
+      operationId: getStoreProductById
+      summary: Get a store product by ID
+      parameters:
+        - name: storeProductId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID of the store product to retrieve
+      responses:
+        '200':
+          description: Store product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetStoreProductResponse'
+        '404':
+          description: Store product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      operationId: updateStoreProduct
+      summary: Update a store product
+      parameters:
+        - name: storeProductId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID of the store product to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreProductCreationRequest'
+      responses:
+        '200':
+          description: Store product updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreProductCreationResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Store product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      operationId: deleteStoreProduct
+      summary: Delete a store product
+      parameters:
+        - name: storeProductId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID of the store product to delete
+      responses:
+        '204':
+          description: Store product deleted successfully
+        '404':
+          description: Store product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    BaseStoreProduct:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          description: Display name of the product
+        description:
+          type: string
+          maxLength: 500
+          description: Detailed description of the product
+        price:
+          type: number
+          format: double
+          description: Current selling price
+        stockQuantity:
+          type: integer
+          description: Current available quantity in stock
+      required:
+        - name
+        - price
+        - stockQuantity
+    StoreProductCreationRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseStoreProduct'
+    StoreProductCreationResponse:
+      type: object
+      properties:
+        storeProductId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Store product ID
+      required:
+        - storeProductId
+    GetStoreProductResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseStoreProduct'
+        - type: object
+          properties:
+            storeProductId:
+              type: integer
+              format: int64
+              readOnly: true
+              description: Store product ID
+          required:
+            - storeProductId
+    ErrorResponse:
+      type: object
