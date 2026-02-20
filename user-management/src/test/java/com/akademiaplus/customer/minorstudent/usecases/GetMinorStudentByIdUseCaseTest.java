@@ -8,7 +8,8 @@
 package com.akademiaplus.customer.minorstudent.usecases;
 
 import com.akademiaplus.customer.minorstudent.interfaceadapters.MinorStudentRepository;
-import com.akademiaplus.exception.MinorStudentNotFoundException;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.customer.MinorStudentDataModel;
@@ -82,8 +83,8 @@ class GetMinorStudentByIdUseCaseTest {
     class NotFound {
 
         @Test
-        @DisplayName("Should throw MinorStudentNotFoundException when minor student not found")
-        void shouldThrowMinorStudentNotFoundException_whenMinorStudentNotFound() {
+        @DisplayName("Should throw EntityNotFoundException when minor student not found")
+        void shouldThrowEntityNotFoundException_whenMinorStudentNotFound() {
             // Given
             when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
             when(minorStudentRepository.findById(new MinorStudentDataModel.MinorStudentCompositeId(TENANT_ID, MINOR_STUDENT_ID)))
@@ -91,8 +92,12 @@ class GetMinorStudentByIdUseCaseTest {
 
             // When & Then
             assertThatThrownBy(() -> useCase.get(MINOR_STUDENT_ID))
-                    .isInstanceOf(MinorStudentNotFoundException.class)
-                    .hasMessage(String.valueOf(MINOR_STUDENT_ID));
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .satisfies(ex -> {
+                        EntityNotFoundException enfe = (EntityNotFoundException) ex;
+                        assertThat(enfe.getEntityType()).isEqualTo(EntityType.MINOR_STUDENT);
+                        assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(MINOR_STUDENT_ID));
+                    });
             verify(tenantContextHolder).getTenantId();
             verify(minorStudentRepository).findById(new MinorStudentDataModel.MinorStudentCompositeId(TENANT_ID, MINOR_STUDENT_ID));
             verifyNoMoreInteractions(tenantContextHolder, minorStudentRepository, modelMapper);

@@ -11,7 +11,8 @@ import com.akademiaplus.config.PeopleControllerAdvice;
 import com.akademiaplus.customer.tutor.usecases.GetAllTutorsUseCase;
 import com.akademiaplus.customer.tutor.usecases.GetTutorByIdUseCase;
 import com.akademiaplus.customer.tutor.usecases.TutorCreationUseCase;
-import com.akademiaplus.exception.TutorNotFoundException;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.MessageService;
 import openapi.akademiaplus.domain.user.management.dto.GetTutorResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -139,8 +140,10 @@ class TutorControllerTest {
         @DisplayName("Should return 404 when tutor not found")
         void shouldReturn404_whenTutorNotFound() throws Exception {
             // Given
+            when(messageService.getEntityNotFound(EntityType.TUTOR, String.valueOf(TUTOR_ID)))
+                    .thenReturn("Tutor not found");
             when(getTutorByIdUseCase.get(TUTOR_ID))
-                    .thenThrow(new TutorNotFoundException(String.valueOf(TUTOR_ID)));
+                    .thenThrow(new EntityNotFoundException(EntityType.TUTOR, String.valueOf(TUTOR_ID)));
 
             // When & Then
             mockMvc.perform(get(BASE_PATH + "/{tutorId}", TUTOR_ID)

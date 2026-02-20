@@ -8,7 +8,8 @@
 package com.akademiaplus.customer.tutor.usecases;
 
 import com.akademiaplus.customer.interfaceadapters.TutorRepository;
-import com.akademiaplus.exception.TutorNotFoundException;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.customer.TutorDataModel;
@@ -82,8 +83,8 @@ class GetTutorByIdUseCaseTest {
     class NotFound {
 
         @Test
-        @DisplayName("Should throw TutorNotFoundException when tutor not found")
-        void shouldThrowTutorNotFoundException_whenTutorNotFound() {
+        @DisplayName("Should throw EntityNotFoundException when tutor not found")
+        void shouldThrowEntityNotFoundException_whenTutorNotFound() {
             // Given
             when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
             when(tutorRepository.findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID)))
@@ -91,8 +92,12 @@ class GetTutorByIdUseCaseTest {
 
             // When & Then
             assertThatThrownBy(() -> useCase.get(TUTOR_ID))
-                    .isInstanceOf(TutorNotFoundException.class)
-                    .hasMessage(String.valueOf(TUTOR_ID));
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .satisfies(ex -> {
+                        EntityNotFoundException enfe = (EntityNotFoundException) ex;
+                        assertThat(enfe.getEntityType()).isEqualTo(EntityType.TUTOR);
+                        assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(TUTOR_ID));
+                    });
             verify(tenantContextHolder).getTenantId();
             verify(tutorRepository).findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID));
             verifyNoMoreInteractions(tenantContextHolder, tutorRepository, modelMapper);

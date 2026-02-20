@@ -8,7 +8,8 @@
 package com.akademiaplus.customer.adultstudent.usecases;
 
 import com.akademiaplus.customer.adultstudent.interfaceadapters.AdultStudentRepository;
-import com.akademiaplus.exception.AdultStudentNotFoundException;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.customer.AdultStudentDataModel;
@@ -82,8 +83,8 @@ class GetAdultStudentByIdUseCaseTest {
     class NotFound {
 
         @Test
-        @DisplayName("Should throw AdultStudentNotFoundException when adult student not found")
-        void shouldThrowAdultStudentNotFoundException_whenAdultStudentNotFound() {
+        @DisplayName("Should throw EntityNotFoundException when adult student not found")
+        void shouldThrowEntityNotFoundException_whenAdultStudentNotFound() {
             // Given
             when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
             when(adultStudentRepository.findById(new AdultStudentDataModel.AdultStudentCompositeId(TENANT_ID, ADULT_STUDENT_ID)))
@@ -91,8 +92,12 @@ class GetAdultStudentByIdUseCaseTest {
 
             // When & Then
             assertThatThrownBy(() -> useCase.get(ADULT_STUDENT_ID))
-                    .isInstanceOf(AdultStudentNotFoundException.class)
-                    .hasMessage(String.valueOf(ADULT_STUDENT_ID));
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .satisfies(ex -> {
+                        EntityNotFoundException enfe = (EntityNotFoundException) ex;
+                        assertThat(enfe.getEntityType()).isEqualTo(EntityType.ADULT_STUDENT);
+                        assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(ADULT_STUDENT_ID));
+                    });
             verify(tenantContextHolder).getTenantId();
             verify(adultStudentRepository).findById(new AdultStudentDataModel.AdultStudentCompositeId(TENANT_ID, ADULT_STUDENT_ID));
             verifyNoMoreInteractions(tenantContextHolder, adultStudentRepository, modelMapper);

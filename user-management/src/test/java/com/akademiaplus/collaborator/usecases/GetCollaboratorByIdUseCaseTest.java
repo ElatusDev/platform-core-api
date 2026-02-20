@@ -8,7 +8,8 @@
 package com.akademiaplus.collaborator.usecases;
 
 import com.akademiaplus.collaborator.interfaceadapters.CollaboratorRepository;
-import com.akademiaplus.exception.CollaboratorNotFoundException;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
@@ -82,8 +83,8 @@ class GetCollaboratorByIdUseCaseTest {
     class NotFound {
 
         @Test
-        @DisplayName("Should throw CollaboratorNotFoundException when collaborator not found")
-        void shouldThrowCollaboratorNotFoundException_whenCollaboratorNotFound() {
+        @DisplayName("Should throw EntityNotFoundException when collaborator not found")
+        void shouldThrowEntityNotFoundException_whenCollaboratorNotFound() {
             // Given
             when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
             when(collaboratorRepository.findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, COLLABORATOR_ID)))
@@ -91,8 +92,12 @@ class GetCollaboratorByIdUseCaseTest {
 
             // When & Then
             assertThatThrownBy(() -> useCase.get(COLLABORATOR_ID))
-                    .isInstanceOf(CollaboratorNotFoundException.class)
-                    .hasMessage(String.valueOf(COLLABORATOR_ID));
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .satisfies(ex -> {
+                        EntityNotFoundException enfe = (EntityNotFoundException) ex;
+                        assertThat(enfe.getEntityType()).isEqualTo(EntityType.COLLABORATOR);
+                        assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(COLLABORATOR_ID));
+                    });
             verify(tenantContextHolder).getTenantId();
             verify(collaboratorRepository).findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, COLLABORATOR_ID));
             verifyNoMoreInteractions(tenantContextHolder, collaboratorRepository, modelMapper);

@@ -8,7 +8,8 @@
 package com.akademiaplus.customer.minorstudent.usecases;
 
 import com.akademiaplus.customer.minorstudent.interfaceadapters.MinorStudentRepository;
-import com.akademiaplus.exception.MinorStudentNotFoundException;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.users.customer.MinorStudentDataModel;
 import openapi.akademiaplus.domain.user.management.dto.GetMinorStudentResponseDTO;
@@ -51,7 +52,7 @@ public class GetMinorStudentByIdUseCase {
      * @param minorStudentId the unique identifier of the minor student
      * @return the minor student response DTO
      * @throws IllegalArgumentException      if tenant context is not available
-     * @throws MinorStudentNotFoundException if no minor student is found with the given identifier
+     * @throws EntityNotFoundException if no minor student is found with the given identifier
      */
     public GetMinorStudentResponseDTO get(Long minorStudentId) {
         Long tenantId = tenantContextHolder.getTenantId()
@@ -64,7 +65,7 @@ public class GetMinorStudentByIdUseCase {
             modelMapper.map(found.getPersonPII(), dto);
             return dto;
         } else {
-            throw new MinorStudentNotFoundException(String.valueOf(minorStudentId));
+            throw new EntityNotFoundException(EntityType.MINOR_STUDENT, String.valueOf(minorStudentId));
         }
     }
 }

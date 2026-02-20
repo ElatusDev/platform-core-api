@@ -8,7 +8,8 @@
 package com.akademiaplus.customer.tutor.usecases;
 
 import com.akademiaplus.customer.interfaceadapters.TutorRepository;
-import com.akademiaplus.exception.TutorNotFoundException;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.users.customer.TutorDataModel;
 import openapi.akademiaplus.domain.user.management.dto.GetTutorResponseDTO;
@@ -51,7 +52,7 @@ public class GetTutorByIdUseCase {
      * @param tutorId the unique identifier of the tutor
      * @return the tutor response DTO
      * @throws IllegalArgumentException if tenant context is not available
-     * @throws TutorNotFoundException   if no tutor is found with the given identifier
+     * @throws EntityNotFoundException   if no tutor is found with the given identifier
      */
     public GetTutorResponseDTO get(Long tutorId) {
         Long tenantId = tenantContextHolder.getTenantId()
@@ -64,7 +65,7 @@ public class GetTutorByIdUseCase {
             modelMapper.map(found.getPersonPII(), dto);
             return dto;
         } else {
-            throw new TutorNotFoundException(String.valueOf(tutorId));
+            throw new EntityNotFoundException(EntityType.TUTOR, String.valueOf(tutorId));
         }
     }
 }

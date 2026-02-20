@@ -9,7 +9,8 @@ package com.akademiaplus.collaborator.usecases;
 
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
 import com.akademiaplus.collaborator.interfaceadapters.CollaboratorRepository;
-import com.akademiaplus.exception.CollaboratorNotFoundException;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import openapi.akademiaplus.domain.user.management.dto.GetCollaboratorResponseDTO;
 import org.modelmapper.ModelMapper;
@@ -46,7 +47,7 @@ public class GetCollaboratorByIdUseCase {
               modelMapper.map(found.getPersonPII(), dto);
               return dto;
           } else {
-              throw new CollaboratorNotFoundException(String.valueOf(collaboratorId));
+              throw new EntityNotFoundException(EntityType.COLLABORATOR, String.valueOf(collaboratorId));
           }
     }
 }

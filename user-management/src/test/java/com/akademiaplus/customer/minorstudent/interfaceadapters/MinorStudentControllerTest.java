@@ -10,7 +10,8 @@ package com.akademiaplus.customer.minorstudent.interfaceadapters;
 import com.akademiaplus.config.PeopleControllerAdvice;
 import com.akademiaplus.customer.minorstudent.usecases.GetAllMinorStudentsUseCase;
 import com.akademiaplus.customer.minorstudent.usecases.GetMinorStudentByIdUseCase;
-import com.akademiaplus.exception.MinorStudentNotFoundException;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.MessageService;
 import openapi.akademiaplus.domain.user.management.dto.GetMinorStudentResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -135,8 +136,10 @@ class MinorStudentControllerTest {
         @DisplayName("Should return 404 when minor student not found")
         void shouldReturn404_whenMinorStudentNotFound() throws Exception {
             // Given
+            when(messageService.getEntityNotFound(EntityType.MINOR_STUDENT, String.valueOf(MINOR_STUDENT_ID)))
+                    .thenReturn("Minor student not found");
             when(getMinorStudentByIdUseCase.get(MINOR_STUDENT_ID))
-                    .thenThrow(new MinorStudentNotFoundException(String.valueOf(MINOR_STUDENT_ID)));
+                    .thenThrow(new EntityNotFoundException(EntityType.MINOR_STUDENT, String.valueOf(MINOR_STUDENT_ID)));
 
             // When & Then
             mockMvc.perform(get(BASE_PATH + "/{minorStudentId}", MINOR_STUDENT_ID)

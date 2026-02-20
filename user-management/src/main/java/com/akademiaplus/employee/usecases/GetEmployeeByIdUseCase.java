@@ -9,7 +9,8 @@ package com.akademiaplus.employee.usecases;
 
 import com.akademiaplus.users.employee.EmployeeDataModel;
 import com.akademiaplus.employee.interfaceadapters.EmployeeRepository;
-import com.akademiaplus.exception.EmployeeNotFoundException;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import openapi.akademiaplus.domain.user.management.dto.GetEmployeeResponseDTO;
 import org.modelmapper.ModelMapper;
@@ -46,7 +47,7 @@ public class GetEmployeeByIdUseCase {
               modelMapper.map(found.getPersonPII() , dto);
               return dto;
           } else {
-              throw new EmployeeNotFoundException(String.valueOf(employeeId));
+              throw new EntityNotFoundException(EntityType.EMPLOYEE, String.valueOf(employeeId));
           }
     }
 }

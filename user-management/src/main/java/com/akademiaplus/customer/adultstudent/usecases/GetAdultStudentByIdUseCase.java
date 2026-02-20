@@ -8,7 +8,8 @@
 package com.akademiaplus.customer.adultstudent.usecases;
 
 import com.akademiaplus.customer.adultstudent.interfaceadapters.AdultStudentRepository;
-import com.akademiaplus.exception.AdultStudentNotFoundException;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.users.customer.AdultStudentDataModel;
 import openapi.akademiaplus.domain.user.management.dto.GetAdultStudentResponseDTO;
@@ -46,7 +47,7 @@ public class GetAdultStudentByIdUseCase {
             modelMapper.map(found.getPersonPII(), dto);
             return dto;
         } else {
-            throw new AdultStudentNotFoundException(String.valueOf(adultStudentId));
+            throw new EntityNotFoundException(EntityType.ADULT_STUDENT, String.valueOf(adultStudentId));
         }
     }
 }

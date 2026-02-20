@@ -10,8 +10,9 @@ package com.akademiaplus.employee.usecases;
 import com.akademiaplus.employee.interfaceadapters.EmployeeRepository;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.users.employee.EmployeeDataModel;
-import com.akademiaplus.exception.EmployeeDeletionNotAllowedException;
-import com.akademiaplus.exception.EmployeeNotFoundException;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
+import com.akademiaplus.utilities.exceptions.EntityDeletionNotAllowedException;
+import com.akademiaplus.utilities.EntityType;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
@@ -37,10 +38,10 @@ public class DeleteEmployeeUseCase {
             try {
                 employeeRepository.delete(found.get());
             } catch(DataIntegrityViolationException ex) {
-                throw new EmployeeDeletionNotAllowedException(ex);
+                throw new EntityDeletionNotAllowedException(EntityType.EMPLOYEE, String.valueOf(employeeId), ex);
             }
         } else {
-            throw new EmployeeNotFoundException(String.valueOf(employeeId));
+            throw new EntityNotFoundException(EntityType.EMPLOYEE, String.valueOf(employeeId));
         }
     }
 }

@@ -8,7 +8,8 @@
 package com.akademiaplus.employee.usecases;
 
 import com.akademiaplus.employee.interfaceadapters.EmployeeRepository;
-import com.akademiaplus.exception.EmployeeNotFoundException;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.employee.EmployeeDataModel;
@@ -82,8 +83,8 @@ class GetEmployeeByIdUseCaseTest {
     class NotFound {
 
         @Test
-        @DisplayName("Should throw EmployeeNotFoundException when employee not found")
-        void shouldThrowEmployeeNotFoundException_whenEmployeeNotFound() {
+        @DisplayName("Should throw EntityNotFoundException when employee not found")
+        void shouldThrowEntityNotFoundException_whenEmployeeNotFound() {
             // Given
             when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
             when(employeeRepository.findById(new EmployeeDataModel.EmployeeCompositeId(TENANT_ID, EMPLOYEE_ID)))
@@ -91,8 +92,12 @@ class GetEmployeeByIdUseCaseTest {
 
             // When & Then
             assertThatThrownBy(() -> useCase.get(EMPLOYEE_ID))
-                    .isInstanceOf(EmployeeNotFoundException.class)
-                    .hasMessage(String.valueOf(EMPLOYEE_ID));
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .satisfies(ex -> {
+                        EntityNotFoundException enfe = (EntityNotFoundException) ex;
+                        assertThat(enfe.getEntityType()).isEqualTo(EntityType.EMPLOYEE);
+                        assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(EMPLOYEE_ID));
+                    });
             verify(tenantContextHolder).getTenantId();
             verify(employeeRepository).findById(new EmployeeDataModel.EmployeeCompositeId(TENANT_ID, EMPLOYEE_ID));
             verifyNoMoreInteractions(tenantContextHolder, employeeRepository, modelMapper);
