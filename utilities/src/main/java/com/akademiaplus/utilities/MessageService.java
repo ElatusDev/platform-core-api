@@ -8,7 +8,6 @@
 package com.akademiaplus.utilities;
 
 import com.akademiaplus.utilities.config.BeanConfig;
-import jakarta.annotation.PostConstruct;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
@@ -46,59 +45,16 @@ public class MessageService {
     /** Message key for invalid tenant context. */
     public static final String KEY_INVALID_TENANT = "invalid.tenant";
 
-    // ── Legacy per-entity message keys ───────────────────────────────────
-    private static final String ADULT_STUDENT_ENTITY = "entity.adult.student";
-    private static final String EMPLOYEE_ENTITY = "entity.employee";
-    private static final String COLLABORATOR_ENTITY = "entity.collaborator";
-    private static final String TUTOR_ENTITY = "entity.tutor";
-    private static final String MINOR_STUDENT_ENTITY = "entity.minor.student";
-    private static final String COURSE_ENTITY = "entity.course";
-    private static final String COURSE_EVENT_ENTITY = "entity.course.event";
-    private static final String MEMBERSHIP_ENTITY = "entity.membership";
-    private static final String MEMBERSHIP_ADULT_STUDENT_ENTITY = "entity.membership.adult.student";
-    private static final String MEMBERSHIP_TUTOR_ENTITY = "entity.membership.tutor";
-    private static final String PAYMENT_ADULT_STUDENT_ENTITY = "entity.payment.adult.student";
-    private static final String PAYMENT_TUTOR_ENTITY = "entity.payment.tutor";
-    private static final String COMPENSATION_ENTITY = "entity.compensation";
-    private static final String NOTIFICATION_ENTITY = "entity.notification";
-    private static final String STORE_PRODUCT_ENTITY = "entity.store.product";
-    private static final String STORE_TRANSACTION_ENTITY = "entity.store.transaction";
-
+    // ── Domain-specific message keys ────────────────────────────────────
     private static final String INVALID_DATA_EMAIL_CREATION_REQUEST = "invalid.data.email.creation.request";
     private static final String INVALID_DATA_PHONE_CREATION_REQUEST = "invalid.data.phone.creation.request";
     private static final String INVALID_UNKNOWN_DATA_REQUEST = "invalid.unknown.data.request";
-
-    //      security
     private static final String INVALID_LOGIN = "invalid.login";
-
-    //      coordination
     private static final String SCHEDULE_NOT_AVAILABLE = "schedule.not.available";
-    private static final String SCHEDULE_NOT_FOUND = "schedule.not.found";
-    private static final String COURSE_COLLABORATOR_NOT_FOUND = "course.collaborator.not.assignable";
-
-    // Internal server error
     private static final String INTERNAL_ERROR_HIGH_SEVERITY = "internal.error.high.severity";
 
     private final MessageSource messageSource;
     private final Locale locale;
-
-    // Cached entity display names (initialized in @PostConstruct)
-    private String adultStudent;
-    private String collaborator;
-    private String employee;
-    private String tutor;
-    private String minorStudent;
-    private String course;
-    private String courseEvent;
-    private String membership;
-    private String membershipAdultStudent;
-    private String membershipTutor;
-    private String paymentAdultStudent;
-    private String paymentTutor;
-    private String compensation;
-    private String notification;
-    private String storeProduct;
-    private String storeTransaction;
 
     /**
      * Creates a new MessageService.
@@ -108,27 +64,6 @@ public class MessageService {
     public MessageService(MessageSource messageSource) {
         this.messageSource = messageSource;
         this.locale = Locale.forLanguageTag(BeanConfig.LOCALE_LANGUAGE);
-    }
-
-    /** Initializes cached entity display name strings. */
-    @PostConstruct
-    public void init() {
-        adultStudent = messageSource.getMessage(ADULT_STUDENT_ENTITY, null, locale);
-        collaborator = messageSource.getMessage(COLLABORATOR_ENTITY, null, locale);
-        employee = messageSource.getMessage(EMPLOYEE_ENTITY, null, locale);
-        tutor = messageSource.getMessage(TUTOR_ENTITY, null, locale);
-        minorStudent = messageSource.getMessage(MINOR_STUDENT_ENTITY, null, locale);
-        course = messageSource.getMessage(COURSE_ENTITY, null, locale);
-        courseEvent = messageSource.getMessage(COURSE_EVENT_ENTITY, null, locale);
-        membership = messageSource.getMessage(MEMBERSHIP_ENTITY, null, locale);
-        membershipAdultStudent = messageSource.getMessage(MEMBERSHIP_ADULT_STUDENT_ENTITY, null, locale);
-        membershipTutor = messageSource.getMessage(MEMBERSHIP_TUTOR_ENTITY, null, locale);
-        paymentAdultStudent = messageSource.getMessage(PAYMENT_ADULT_STUDENT_ENTITY, null, locale);
-        paymentTutor = messageSource.getMessage(PAYMENT_TUTOR_ENTITY, null, locale);
-        compensation = messageSource.getMessage(COMPENSATION_ENTITY, null, locale);
-        notification = messageSource.getMessage(NOTIFICATION_ENTITY, null, locale);
-        storeProduct = messageSource.getMessage(STORE_PRODUCT_ENTITY, null, locale);
-        storeTransaction = messageSource.getMessage(STORE_TRANSACTION_ENTITY, null, locale);
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -210,129 +145,7 @@ public class MessageService {
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // Deprecated per-entity NotFound methods
-    // ══════════════════════════════════════════════════════════════════════
-
-    /** @deprecated Use {@link #getEntityNotFound(String, String)} with {@link EntityType#ADULT_STUDENT} */
-    @Deprecated(since = "1.1", forRemoval = true)
-    public String getAdultStudentNotFound(String id) {
-        return resolveNotFoundByName(adultStudent, id);
-    }
-
-    /** @deprecated Use {@link #getEntityNotFound(String, String)} with {@link EntityType#COLLABORATOR} */
-    @Deprecated(since = "1.1", forRemoval = true)
-    public String getCollaboratorNotFound(String id) {
-        return resolveNotFoundByName(collaborator, id);
-    }
-
-    /** @deprecated Use {@link #getEntityNotFound(String, String)} with {@link EntityType#EMPLOYEE} */
-    @Deprecated(since = "1.1", forRemoval = true)
-    public String getEmployeeNotFound(String id) {
-        return resolveNotFoundByName(employee, id);
-    }
-
-    /** @deprecated Use {@link #getEntityNotFound(String, String)} with {@link EntityType#TUTOR} */
-    @Deprecated(since = "1.1", forRemoval = true)
-    public String getTutorNotFound(String id) {
-        return resolveNotFoundByName(tutor, id);
-    }
-
-    /** @deprecated Use {@link #getEntityNotFound(String, String)} with {@link EntityType#MINOR_STUDENT} */
-    @Deprecated(since = "1.1", forRemoval = true)
-    public String getMinorStudentNotFound(String id) {
-        return resolveNotFoundByName(minorStudent, id);
-    }
-
-    /** @deprecated Use {@link #getEntityNotFound(String, String)} with {@link EntityType#COURSE} */
-    @Deprecated(since = "1.1", forRemoval = true)
-    public String getCourseNotFound(String id) {
-        return resolveNotFoundByName(course, id);
-    }
-
-    /** @deprecated Use {@link #getEntityNotFound(String, String)} with {@link EntityType#COURSE_EVENT} */
-    @Deprecated(since = "1.1", forRemoval = true)
-    public String getCourseEventNotFound(String id) {
-        return resolveNotFoundByName(courseEvent, id);
-    }
-
-    /** @deprecated Use {@link #getEntityNotFound(String, String)} with {@link EntityType#MEMBERSHIP} */
-    @Deprecated(since = "1.1", forRemoval = true)
-    public String getMembershipNotFound(String id) {
-        return resolveNotFoundByName(membership, id);
-    }
-
-    /** @deprecated Use {@link #getEntityNotFound(String, String)} with {@link EntityType#MEMBERSHIP_ADULT_STUDENT} */
-    @Deprecated(since = "1.1", forRemoval = true)
-    public String getMembershipAdultStudentNotFound(String id) {
-        return resolveNotFoundByName(membershipAdultStudent, id);
-    }
-
-    /** @deprecated Use {@link #getEntityNotFound(String, String)} with {@link EntityType#MEMBERSHIP_TUTOR} */
-    @Deprecated(since = "1.1", forRemoval = true)
-    public String getMembershipTutorNotFound(String id) {
-        return resolveNotFoundByName(membershipTutor, id);
-    }
-
-    /** @deprecated Use {@link #getEntityNotFound(String, String)} with {@link EntityType#PAYMENT_ADULT_STUDENT} */
-    @Deprecated(since = "1.1", forRemoval = true)
-    public String getPaymentAdultStudentNotFound(String id) {
-        return resolveNotFoundByName(paymentAdultStudent, id);
-    }
-
-    /** @deprecated Use {@link #getEntityNotFound(String, String)} with {@link EntityType#PAYMENT_TUTOR} */
-    @Deprecated(since = "1.1", forRemoval = true)
-    public String getPaymentTutorNotFound(String id) {
-        return resolveNotFoundByName(paymentTutor, id);
-    }
-
-    /** @deprecated Use {@link #getEntityNotFound(String, String)} with {@link EntityType#COMPENSATION} */
-    @Deprecated(since = "1.1", forRemoval = true)
-    public String getCompensationNotFound(String id) {
-        return resolveNotFoundByName(compensation, id);
-    }
-
-    /** @deprecated Use {@link #getEntityNotFound(String, String)} with {@link EntityType#NOTIFICATION} */
-    @Deprecated(since = "1.1", forRemoval = true)
-    public String getNotificationNotFound(String id) {
-        return resolveNotFoundByName(notification, id);
-    }
-
-    /** @deprecated Use {@link #getEntityNotFound(String, String)} with {@link EntityType#STORE_PRODUCT} */
-    @Deprecated(since = "1.1", forRemoval = true)
-    public String getStoreProductNotFound(String id) {
-        return resolveNotFoundByName(storeProduct, id);
-    }
-
-    /** @deprecated Use {@link #getEntityNotFound(String, String)} with {@link EntityType#STORE_TRANSACTION} */
-    @Deprecated(since = "1.1", forRemoval = true)
-    public String getStoreTransactionNotFound(String id) {
-        return resolveNotFoundByName(storeTransaction, id);
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // Deprecated per-entity DeleteNotAllowed methods
-    // ══════════════════════════════════════════════════════════════════════
-
-    /** @deprecated Use {@link #getEntityDeleteNotAllowed(String)} with {@link EntityType#ADULT_STUDENT} */
-    @Deprecated(since = "1.1", forRemoval = true)
-    public String getAdultStudentDeleteNotAllowed() {
-        return resolveDeleteNotAllowedByName(adultStudent);
-    }
-
-    /** @deprecated Use {@link #getEntityDeleteNotAllowed(String)} with {@link EntityType#COLLABORATOR} */
-    @Deprecated(since = "1.1", forRemoval = true)
-    public String getCollaboratorDeleteNotAllowed() {
-        return resolveDeleteNotAllowedByName(collaborator);
-    }
-
-    /** @deprecated Use {@link #getEntityDeleteNotAllowed(String)} with {@link EntityType#EMPLOYEE} */
-    @Deprecated(since = "1.1", forRemoval = true)
-    public String getEmployeeDeleteNotAllowed() {
-        return resolveDeleteNotAllowedByName(employee);
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // Non-deprecated domain-specific methods
+    // Domain-specific methods
     // ══════════════════════════════════════════════════════════════════════
 
     /**
@@ -382,45 +195,11 @@ public class MessageService {
     }
 
     /**
-     * Resolves the course collaborator not found message.
-     *
-     * @param notFounded identifier of the collaborator not found
-     * @return localized error message
-     */
-    public String getCourseCollaboratorNotFound(String notFounded) {
-        return messageSource.getMessage(COURSE_COLLABORATOR_NOT_FOUND, new Object[]{notFounded}, locale);
-    }
-
-    /**
-     * Resolves the schedule not found message.
-     *
-     * @param notFounded identifier of the schedule not found
-     * @return localized error message
-     */
-    public String getScheduleNotFound(String notFounded) {
-        return messageSource.getMessage(SCHEDULE_NOT_FOUND, new Object[]{notFounded}, locale);
-    }
-
-    /**
      * Resolves the high severity internal error message.
      *
      * @return localized error message for internal server errors
      */
     public String getInternalErrorHighSeverity() {
         return messageSource.getMessage(INTERNAL_ERROR_HIGH_SEVERITY, null, locale);
-    }
-
-    // ══════════════════════════════════════════════════════════════════════
-    // Private helpers
-    // ══════════════════════════════════════════════════════════════════════
-
-    private String resolveNotFoundByName(String entityName, String id) {
-        return messageSource.getMessage(KEY_ENTITY_NOT_FOUND,
-                new Object[]{entityName, id}, locale);
-    }
-
-    private String resolveDeleteNotAllowedByName(String entityName) {
-        return messageSource.getMessage(KEY_ENTITY_DELETE_NOT_ALLOWED,
-                new Object[]{entityName}, locale);
     }
 }

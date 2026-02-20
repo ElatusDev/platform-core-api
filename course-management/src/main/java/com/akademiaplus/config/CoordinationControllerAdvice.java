@@ -8,7 +8,6 @@
 package com.akademiaplus.config;
 
 import com.akademiaplus.event.interfaceadapters.CourseEventController;
-import com.akademiaplus.exception.CollaboratorNotFoundException;
 import com.akademiaplus.exception.ScheduleNotAvailableException;
 import com.akademiaplus.program.interfaceadapters.CourseController;
 import com.akademiaplus.program.interfaceadapters.ScheduleController;
@@ -55,18 +54,4 @@ public class CoordinationControllerAdvice extends BaseControllerAdvice {
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 
-    /**
-     * Handles CollaboratorNotFoundException when a collaborator is not found.
-     *
-     * @param ex the exception containing missing collaborator details
-     * @return ResponseEntity with error details and HTTP 400 BAD REQUEST status
-     */
-    @ExceptionHandler(CollaboratorNotFoundException.class)
-    public ResponseEntity<ErrorResponseDTO> handleCollaboratorNotFound(
-            CollaboratorNotFoundException ex) {
-        ErrorResponseDTO error = new ErrorResponseDTO(
-                messageService().getCourseCollaboratorNotFound(ex.getMessage()));
-        error.setCode("COLLABORATOR_NOT_FOUND");
-        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
-    }
 }

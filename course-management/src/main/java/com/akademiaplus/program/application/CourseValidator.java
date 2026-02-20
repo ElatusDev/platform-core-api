@@ -2,7 +2,6 @@ package com.akademiaplus.program.application;
 
 import com.akademiaplus.collaborator.interfaceadapters.CollaboratorRepository;
 import com.akademiaplus.courses.program.ScheduleDataModel;
-import com.akademiaplus.exception.CollaboratorNotFoundException;
 import com.akademiaplus.exception.ScheduleNotAvailableException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.program.interfaceadapters.ScheduleRepository;
@@ -45,7 +44,7 @@ public class CourseValidator {
                     .filter(id -> !foundIds.contains(id))
                     .map(String::valueOf)
                     .collect(Collectors.joining(", "));
-            throw new CollaboratorNotFoundException(missingIds);
+            throw new EntityNotFoundException(EntityType.COLLABORATOR, missingIds);
         } else {
             return foundCollaborator;
         }
