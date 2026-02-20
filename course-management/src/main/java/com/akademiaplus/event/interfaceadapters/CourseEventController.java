@@ -8,6 +8,7 @@
 package com.akademiaplus.event.interfaceadapters;
 
 import com.akademiaplus.event.usecases.CourseEventCreationUseCase;
+import com.akademiaplus.event.usecases.DeleteCourseEventUseCase;
 import com.akademiaplus.event.usecases.GetAllCourseEventsUseCase;
 import com.akademiaplus.event.usecases.GetCourseEventByIdUseCase;
 import openapi.akademiaplus.domain.course.management.api.CourseEventsApi;
@@ -32,13 +33,16 @@ import java.util.List;
 public class CourseEventController implements CourseEventsApi {
 
     private final CourseEventCreationUseCase courseEventCreationUseCase;
+    private final DeleteCourseEventUseCase deleteCourseEventUseCase;
     private final GetAllCourseEventsUseCase getAllCourseEventsUseCase;
     private final GetCourseEventByIdUseCase getCourseEventByIdUseCase;
 
     public CourseEventController(CourseEventCreationUseCase courseEventCreationUseCase,
+                                 DeleteCourseEventUseCase deleteCourseEventUseCase,
                                  GetAllCourseEventsUseCase getAllCourseEventsUseCase,
                                  GetCourseEventByIdUseCase getCourseEventByIdUseCase) {
         this.courseEventCreationUseCase = courseEventCreationUseCase;
+        this.deleteCourseEventUseCase = deleteCourseEventUseCase;
         this.getAllCourseEventsUseCase = getAllCourseEventsUseCase;
         this.getCourseEventByIdUseCase = getCourseEventByIdUseCase;
     }
@@ -58,5 +62,11 @@ public class CourseEventController implements CourseEventsApi {
     @Override
     public ResponseEntity<GetCourseEventResponseDTO> getCourseEventById(Long courseEventId) {
         return ResponseEntity.ok(getCourseEventByIdUseCase.get(courseEventId));
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteCourseEventById(Long courseEventId) {
+        deleteCourseEventUseCase.delete(courseEventId);
+        return ResponseEntity.noContent().build();
     }
 }

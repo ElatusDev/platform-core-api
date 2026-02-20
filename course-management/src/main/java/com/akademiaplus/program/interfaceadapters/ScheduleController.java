@@ -7,6 +7,7 @@
  */
 package com.akademiaplus.program.interfaceadapters;
 
+import com.akademiaplus.program.usecases.DeleteScheduleUseCase;
 import com.akademiaplus.program.usecases.GetAllSchedulesUseCase;
 import com.akademiaplus.program.usecases.GetScheduleByIdUseCase;
 import com.akademiaplus.program.usecases.ScheduleCreationUseCase;
@@ -34,13 +35,16 @@ public class ScheduleController implements SchedulesApi {
     private final ScheduleCreationUseCase scheduleCreationUseCase;
     private final GetAllSchedulesUseCase getAllSchedulesUseCase;
     private final GetScheduleByIdUseCase getScheduleByIdUseCase;
+    private final DeleteScheduleUseCase deleteScheduleUseCase;
 
     public ScheduleController(ScheduleCreationUseCase scheduleCreationUseCase,
                               GetAllSchedulesUseCase getAllSchedulesUseCase,
-                              GetScheduleByIdUseCase getScheduleByIdUseCase) {
+                              GetScheduleByIdUseCase getScheduleByIdUseCase,
+                              DeleteScheduleUseCase deleteScheduleUseCase) {
         this.scheduleCreationUseCase = scheduleCreationUseCase;
         this.getAllSchedulesUseCase = getAllSchedulesUseCase;
         this.getScheduleByIdUseCase = getScheduleByIdUseCase;
+        this.deleteScheduleUseCase = deleteScheduleUseCase;
     }
 
     @Override
@@ -58,5 +62,11 @@ public class ScheduleController implements SchedulesApi {
     @Override
     public ResponseEntity<GetScheduleResponseDTO> getScheduleById(Long scheduleId) {
         return ResponseEntity.ok(getScheduleByIdUseCase.get(scheduleId));
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteScheduleById(Long scheduleId) {
+        deleteScheduleUseCase.delete(scheduleId);
+        return ResponseEntity.noContent().build();
     }
 }

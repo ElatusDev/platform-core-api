@@ -8,6 +8,7 @@
 package com.akademiaplus.program.interfaceadapters;
 
 import com.akademiaplus.program.usecases.CreateCourseUseCase;
+import com.akademiaplus.program.usecases.DeleteCourseUseCase;
 import com.akademiaplus.program.usecases.GetAllCoursesUseCase;
 import com.akademiaplus.program.usecases.GetCourseByIdUseCase;
 import openapi.akademiaplus.domain.course.management.api.CoursesApi;
@@ -34,13 +35,16 @@ public class CourseController implements CoursesApi {
     private final CreateCourseUseCase createCourseUseCase;
     private final GetAllCoursesUseCase getAllCoursesUseCase;
     private final GetCourseByIdUseCase getCourseByIdUseCase;
+    private final DeleteCourseUseCase deleteCourseUseCase;
 
     public CourseController(CreateCourseUseCase createCourseUseCase,
                             GetAllCoursesUseCase getAllCoursesUseCase,
-                            GetCourseByIdUseCase getCourseByIdUseCase) {
+                            GetCourseByIdUseCase getCourseByIdUseCase,
+                            DeleteCourseUseCase deleteCourseUseCase) {
         this.createCourseUseCase = createCourseUseCase;
         this.getAllCoursesUseCase = getAllCoursesUseCase;
         this.getCourseByIdUseCase = getCourseByIdUseCase;
+        this.deleteCourseUseCase = deleteCourseUseCase;
     }
 
     @Override
@@ -58,5 +62,11 @@ public class CourseController implements CoursesApi {
     @Override
     public ResponseEntity<GetCourseResponseDTO> getCourseById(Long courseId) {
         return ResponseEntity.ok(getCourseByIdUseCase.get(courseId));
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteCourseById(Long courseId) {
+        deleteCourseUseCase.delete(courseId);
+        return ResponseEntity.noContent().build();
     }
 }

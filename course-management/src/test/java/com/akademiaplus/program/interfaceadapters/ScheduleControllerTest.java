@@ -8,6 +8,7 @@
 package com.akademiaplus.program.interfaceadapters;
 
 import com.akademiaplus.config.CoordinationControllerAdvice;
+import com.akademiaplus.program.usecases.DeleteScheduleUseCase;
 import com.akademiaplus.program.usecases.GetAllSchedulesUseCase;
 import com.akademiaplus.program.usecases.GetScheduleByIdUseCase;
 import com.akademiaplus.program.usecases.ScheduleCreationUseCase;
@@ -48,6 +49,7 @@ class ScheduleControllerTest {
     private static final String BASE_PATH = "/v1/course-management/schedules";
 
     @Mock private ScheduleCreationUseCase scheduleCreationUseCase;
+    @Mock private DeleteScheduleUseCase deleteScheduleUseCase;
     @Mock private GetAllSchedulesUseCase getAllSchedulesUseCase;
     @Mock private GetScheduleByIdUseCase getScheduleByIdUseCase;
     @Mock private MessageService messageService;
@@ -57,7 +59,8 @@ class ScheduleControllerTest {
     @BeforeEach
     void setUp() {
         ScheduleController controller = new ScheduleController(
-                scheduleCreationUseCase, getAllSchedulesUseCase, getScheduleByIdUseCase);
+                scheduleCreationUseCase, getAllSchedulesUseCase, getScheduleByIdUseCase,
+                deleteScheduleUseCase);
         CoordinationControllerAdvice controllerAdvice = new CoordinationControllerAdvice(messageService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(controllerAdvice)
