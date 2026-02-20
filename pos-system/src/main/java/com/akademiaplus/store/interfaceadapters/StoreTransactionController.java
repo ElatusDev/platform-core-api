@@ -7,6 +7,7 @@
  */
 package com.akademiaplus.store.interfaceadapters;
 
+import com.akademiaplus.store.usecases.DeleteStoreTransactionUseCase;
 import com.akademiaplus.store.usecases.GetAllStoreTransactionsUseCase;
 import com.akademiaplus.store.usecases.GetStoreTransactionByIdUseCase;
 import com.akademiaplus.store.usecases.StoreTransactionCreationUseCase;
@@ -34,14 +35,17 @@ public class StoreTransactionController implements StoreTransactionsApi {
     private final StoreTransactionCreationUseCase storeTransactionCreationUseCase;
     private final GetAllStoreTransactionsUseCase getAllStoreTransactionsUseCase;
     private final GetStoreTransactionByIdUseCase getStoreTransactionByIdUseCase;
+    private final DeleteStoreTransactionUseCase deleteStoreTransactionUseCase;
 
     public StoreTransactionController(
             StoreTransactionCreationUseCase storeTransactionCreationUseCase,
             GetAllStoreTransactionsUseCase getAllStoreTransactionsUseCase,
-            GetStoreTransactionByIdUseCase getStoreTransactionByIdUseCase) {
+            GetStoreTransactionByIdUseCase getStoreTransactionByIdUseCase,
+            DeleteStoreTransactionUseCase deleteStoreTransactionUseCase) {
         this.storeTransactionCreationUseCase = storeTransactionCreationUseCase;
         this.getAllStoreTransactionsUseCase = getAllStoreTransactionsUseCase;
         this.getStoreTransactionByIdUseCase = getStoreTransactionByIdUseCase;
+        this.deleteStoreTransactionUseCase = deleteStoreTransactionUseCase;
     }
 
     @Override
@@ -60,5 +64,11 @@ public class StoreTransactionController implements StoreTransactionsApi {
     public ResponseEntity<GetStoreTransactionResponseDTO> getStoreTransactionById(
             Long storeTransactionId) {
         return ResponseEntity.ok(getStoreTransactionByIdUseCase.get(storeTransactionId));
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteStoreTransaction(Long storeTransactionId) {
+        deleteStoreTransactionUseCase.delete(storeTransactionId);
+        return ResponseEntity.noContent().build();
     }
 }

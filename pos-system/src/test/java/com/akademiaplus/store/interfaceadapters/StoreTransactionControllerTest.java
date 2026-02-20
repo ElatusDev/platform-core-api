@@ -8,6 +8,7 @@
 package com.akademiaplus.store.interfaceadapters;
 
 import com.akademiaplus.config.PosControllerAdvice;
+import com.akademiaplus.store.usecases.DeleteStoreTransactionUseCase;
 import com.akademiaplus.store.usecases.GetAllStoreTransactionsUseCase;
 import com.akademiaplus.store.usecases.GetStoreTransactionByIdUseCase;
 import com.akademiaplus.store.usecases.StoreTransactionCreationUseCase;
@@ -42,6 +43,7 @@ class StoreTransactionControllerTest {
     private static final String BASE_PATH = "/v1/pos-system/store-transactions";
 
     @Mock private StoreTransactionCreationUseCase storeTransactionCreationUseCase;
+    @Mock private DeleteStoreTransactionUseCase deleteStoreTransactionUseCase;
     @Mock private GetAllStoreTransactionsUseCase getAllStoreTransactionsUseCase;
     @Mock private GetStoreTransactionByIdUseCase getStoreTransactionByIdUseCase;
     @Mock private MessageService messageService;
@@ -51,7 +53,8 @@ class StoreTransactionControllerTest {
     @BeforeEach
     void setUp() {
         StoreTransactionController controller = new StoreTransactionController(
-                storeTransactionCreationUseCase, getAllStoreTransactionsUseCase, getStoreTransactionByIdUseCase);
+                storeTransactionCreationUseCase, getAllStoreTransactionsUseCase, getStoreTransactionByIdUseCase,
+                deleteStoreTransactionUseCase);
         PosControllerAdvice controllerAdvice = new PosControllerAdvice(messageService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(controllerAdvice)

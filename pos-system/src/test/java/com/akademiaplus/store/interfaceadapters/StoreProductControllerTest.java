@@ -8,6 +8,7 @@
 package com.akademiaplus.store.interfaceadapters;
 
 import com.akademiaplus.config.PosControllerAdvice;
+import com.akademiaplus.store.usecases.DeleteStoreProductUseCase;
 import com.akademiaplus.store.usecases.GetAllStoreProductsUseCase;
 import com.akademiaplus.store.usecases.GetStoreProductByIdUseCase;
 import com.akademiaplus.store.usecases.StoreProductCreationUseCase;
@@ -42,6 +43,7 @@ class StoreProductControllerTest {
     private static final String BASE_PATH = "/v1/pos-system/store-products";
 
     @Mock private StoreProductCreationUseCase storeProductCreationUseCase;
+    @Mock private DeleteStoreProductUseCase deleteStoreProductUseCase;
     @Mock private GetAllStoreProductsUseCase getAllStoreProductsUseCase;
     @Mock private GetStoreProductByIdUseCase getStoreProductByIdUseCase;
     @Mock private MessageService messageService;
@@ -51,7 +53,8 @@ class StoreProductControllerTest {
     @BeforeEach
     void setUp() {
         StoreProductController controller = new StoreProductController(
-                storeProductCreationUseCase, getAllStoreProductsUseCase, getStoreProductByIdUseCase);
+                storeProductCreationUseCase, getAllStoreProductsUseCase, getStoreProductByIdUseCase,
+                deleteStoreProductUseCase);
         PosControllerAdvice controllerAdvice = new PosControllerAdvice(messageService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(controllerAdvice)

@@ -7,6 +7,7 @@
  */
 package com.akademiaplus.store.interfaceadapters;
 
+import com.akademiaplus.store.usecases.DeleteStoreProductUseCase;
 import com.akademiaplus.store.usecases.GetAllStoreProductsUseCase;
 import com.akademiaplus.store.usecases.GetStoreProductByIdUseCase;
 import com.akademiaplus.store.usecases.StoreProductCreationUseCase;
@@ -34,13 +35,16 @@ public class StoreProductController implements StoreProductsApi {
     private final StoreProductCreationUseCase storeProductCreationUseCase;
     private final GetAllStoreProductsUseCase getAllStoreProductsUseCase;
     private final GetStoreProductByIdUseCase getStoreProductByIdUseCase;
+    private final DeleteStoreProductUseCase deleteStoreProductUseCase;
 
     public StoreProductController(StoreProductCreationUseCase storeProductCreationUseCase,
                                   GetAllStoreProductsUseCase getAllStoreProductsUseCase,
-                                  GetStoreProductByIdUseCase getStoreProductByIdUseCase) {
+                                  GetStoreProductByIdUseCase getStoreProductByIdUseCase,
+                                  DeleteStoreProductUseCase deleteStoreProductUseCase) {
         this.storeProductCreationUseCase = storeProductCreationUseCase;
         this.getAllStoreProductsUseCase = getAllStoreProductsUseCase;
         this.getStoreProductByIdUseCase = getStoreProductByIdUseCase;
+        this.deleteStoreProductUseCase = deleteStoreProductUseCase;
     }
 
     @Override
@@ -58,5 +62,11 @@ public class StoreProductController implements StoreProductsApi {
     @Override
     public ResponseEntity<GetStoreProductResponseDTO> getStoreProductById(Long storeProductId) {
         return ResponseEntity.ok(getStoreProductByIdUseCase.get(storeProductId));
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteStoreProduct(Long storeProductId) {
+        deleteStoreProductUseCase.delete(storeProductId);
+        return ResponseEntity.noContent().build();
     }
 }
