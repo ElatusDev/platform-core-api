@@ -17,11 +17,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.akademiaplus.config.BillingControllerAdvice;
-import com.akademiaplus.exception.MembershipAdultStudentNotFoundException;
 import com.akademiaplus.membership.usecases.GetAllMembershipAdultStudentsUseCase;
 import com.akademiaplus.membership.usecases.GetMembershipAdultStudentByIdUseCase;
 import com.akademiaplus.membership.usecases.MembershipAdultStudentCreationUseCase;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.MessageService;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.util.Collections;
@@ -166,8 +167,8 @@ class MembershipAdultStudentControllerTest {
         void shouldReturn404_whenNotFound() throws Exception {
             // Given
             when(getByIdUseCase.get(MEMBERSHIP_ADULT_STUDENT_ID))
-                    .thenThrow(new MembershipAdultStudentNotFoundException(String.valueOf(MEMBERSHIP_ADULT_STUDENT_ID)));
-            when(messageService.getMembershipAdultStudentNotFound(String.valueOf(MEMBERSHIP_ADULT_STUDENT_ID)))
+                    .thenThrow(new EntityNotFoundException(EntityType.MEMBERSHIP_ADULT_STUDENT, String.valueOf(MEMBERSHIP_ADULT_STUDENT_ID)));
+            when(messageService.getEntityNotFound(EntityType.MEMBERSHIP_ADULT_STUDENT, String.valueOf(MEMBERSHIP_ADULT_STUDENT_ID)))
                     .thenReturn("MembershipAdultStudent not found: " + MEMBERSHIP_ADULT_STUDENT_ID);
 
             // When & Then
@@ -175,7 +176,7 @@ class MembershipAdultStudentControllerTest {
                     .andExpect(status().isNotFound());
 
             verify(getByIdUseCase).get(MEMBERSHIP_ADULT_STUDENT_ID);
-            verify(messageService).getMembershipAdultStudentNotFound(String.valueOf(MEMBERSHIP_ADULT_STUDENT_ID));
+            verify(messageService).getEntityNotFound(EntityType.MEMBERSHIP_ADULT_STUDENT, String.valueOf(MEMBERSHIP_ADULT_STUDENT_ID));
             verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, messageService);
         }
     }

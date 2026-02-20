@@ -14,9 +14,10 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.akademiaplus.billing.payroll.CompensationDataModel;
-import com.akademiaplus.exception.CompensationNotFoundException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.payroll.interfaceadapters.CompensationRepository;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import java.util.Optional;
 import openapi.akademiaplus.domain.billing.dto.GetCompensationResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,15 +76,16 @@ class GetCompensationByIdUseCaseTest {
     class NotFound {
         @Test
         @DisplayName("Should throw NotFoundException when entity not found")
-        void shouldThrowCompensationNotFoundException_whenCompensationNotFound() {
+        void shouldThrowEntityNotFoundException_whenCompensationNotFound() {
             // Given
             when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
             when(compensationRepository.findById(new CompensationDataModel.CompensationCompositeId(TENANT_ID, COMPENSATION_ID)))
                     .thenReturn(Optional.empty());
             // When & Then
             assertThatThrownBy(() -> useCase.get(COMPENSATION_ID))
-                    .isInstanceOf(CompensationNotFoundException.class)
-                    .hasMessage(String.valueOf(COMPENSATION_ID));
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasFieldOrPropertyWithValue("entityType", EntityType.COMPENSATION)
+                    .hasFieldOrPropertyWithValue("entityId", String.valueOf(COMPENSATION_ID));
             verify(tenantContextHolder).getTenantId();
             verify(compensationRepository).findById(new CompensationDataModel.CompensationCompositeId(TENANT_ID, COMPENSATION_ID));
             verifyNoMoreInteractions(tenantContextHolder, compensationRepository, modelMapper);

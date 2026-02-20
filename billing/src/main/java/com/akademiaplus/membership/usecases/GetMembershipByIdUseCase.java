@@ -8,9 +8,10 @@
 package com.akademiaplus.membership.usecases;
 
 import com.akademiaplus.billing.membership.MembershipDataModel;
-import com.akademiaplus.exception.MembershipNotFoundException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.membership.interfaceadapters.MembershipRepository;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.billing.dto.GetMembershipResponseDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -50,8 +51,8 @@ public class GetMembershipByIdUseCase {
      *
      * @param membershipId the unique identifier of the membership
      * @return the membership response DTO
-     * @throws IllegalArgumentException      if tenant context is not available
-     * @throws MembershipNotFoundException   if no membership is found with the given identifier
+     * @throws IllegalArgumentException   if tenant context is not available
+     * @throws EntityNotFoundException    if no membership is found with the given identifier
      */
     public GetMembershipResponseDTO get(Long membershipId) {
         Long tenantId = tenantContextHolder.getTenantId()
@@ -62,7 +63,7 @@ public class GetMembershipByIdUseCase {
             MembershipDataModel found = queryResult.get();
             return modelMapper.map(found, GetMembershipResponseDTO.class);
         } else {
-            throw new MembershipNotFoundException(String.valueOf(membershipId));
+            throw new EntityNotFoundException(EntityType.MEMBERSHIP, String.valueOf(membershipId));
         }
     }
 }

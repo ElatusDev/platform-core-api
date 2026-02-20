@@ -17,11 +17,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.akademiaplus.config.BillingControllerAdvice;
-import com.akademiaplus.exception.MembershipNotFoundException;
 import com.akademiaplus.membership.usecases.GetAllMembershipsUseCase;
 import com.akademiaplus.membership.usecases.GetMembershipByIdUseCase;
 import com.akademiaplus.membership.usecases.MembershipCreationUseCase;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.MessageService;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.List;
@@ -161,8 +162,9 @@ class MembershipControllerTest {
         @DisplayName("Should return 404 when not found")
         void shouldReturn404_whenNotFound() throws Exception {
             // Given
-            when(getByIdUseCase.get(MEMBERSHIP_ID)).thenThrow(new MembershipNotFoundException(String.valueOf(MEMBERSHIP_ID)));
-            when(messageService.getMembershipNotFound(String.valueOf(MEMBERSHIP_ID)))
+            when(getByIdUseCase.get(MEMBERSHIP_ID))
+                    .thenThrow(new EntityNotFoundException(EntityType.MEMBERSHIP, String.valueOf(MEMBERSHIP_ID)));
+            when(messageService.getEntityNotFound(EntityType.MEMBERSHIP, String.valueOf(MEMBERSHIP_ID)))
                     .thenReturn("Membership not found: " + MEMBERSHIP_ID);
 
             // When & Then
@@ -170,7 +172,7 @@ class MembershipControllerTest {
                     .andExpect(status().isNotFound());
 
             verify(getByIdUseCase).get(MEMBERSHIP_ID);
-            verify(messageService).getMembershipNotFound(String.valueOf(MEMBERSHIP_ID));
+            verify(messageService).getEntityNotFound(EntityType.MEMBERSHIP, String.valueOf(MEMBERSHIP_ID));
             verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, messageService);
         }
     }

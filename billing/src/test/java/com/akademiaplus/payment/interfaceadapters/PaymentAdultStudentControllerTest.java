@@ -17,11 +17,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.akademiaplus.config.BillingControllerAdvice;
-import com.akademiaplus.exception.PaymentAdultStudentNotFoundException;
 import com.akademiaplus.payment.usecases.GetAllPaymentAdultStudentsUseCase;
 import com.akademiaplus.payment.usecases.GetPaymentAdultStudentByIdUseCase;
 import com.akademiaplus.payment.usecases.PaymentAdultStudentCreationUseCase;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.MessageService;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.util.Collections;
@@ -165,8 +166,8 @@ class PaymentAdultStudentControllerTest {
         void shouldReturn404_whenNotFound() throws Exception {
             // Given
             when(getByIdUseCase.get(PAYMENT_ADULT_STUDENT_ID))
-                    .thenThrow(new PaymentAdultStudentNotFoundException(String.valueOf(PAYMENT_ADULT_STUDENT_ID)));
-            when(messageService.getPaymentAdultStudentNotFound(String.valueOf(PAYMENT_ADULT_STUDENT_ID)))
+                    .thenThrow(new EntityNotFoundException(EntityType.PAYMENT_ADULT_STUDENT, String.valueOf(PAYMENT_ADULT_STUDENT_ID)));
+            when(messageService.getEntityNotFound(EntityType.PAYMENT_ADULT_STUDENT, String.valueOf(PAYMENT_ADULT_STUDENT_ID)))
                     .thenReturn("PaymentAdultStudent not found: " + PAYMENT_ADULT_STUDENT_ID);
 
             // When & Then
@@ -174,7 +175,7 @@ class PaymentAdultStudentControllerTest {
                     .andExpect(status().isNotFound());
 
             verify(getByIdUseCase).get(PAYMENT_ADULT_STUDENT_ID);
-            verify(messageService).getPaymentAdultStudentNotFound(String.valueOf(PAYMENT_ADULT_STUDENT_ID));
+            verify(messageService).getEntityNotFound(EntityType.PAYMENT_ADULT_STUDENT, String.valueOf(PAYMENT_ADULT_STUDENT_ID));
             verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, messageService);
         }
     }

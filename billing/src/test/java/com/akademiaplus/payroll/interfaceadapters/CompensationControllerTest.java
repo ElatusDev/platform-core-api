@@ -17,11 +17,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.akademiaplus.config.BillingControllerAdvice;
-import com.akademiaplus.exception.CompensationNotFoundException;
 import com.akademiaplus.payroll.usecases.CompensationCreationUseCase;
 import com.akademiaplus.payroll.usecases.GetAllCompensationsUseCase;
 import com.akademiaplus.payroll.usecases.GetCompensationByIdUseCase;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.MessageService;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.List;
@@ -162,8 +163,8 @@ class CompensationControllerTest {
         void shouldReturn404_whenNotFound() throws Exception {
             // Given
             when(getByIdUseCase.get(COMPENSATION_ID))
-                    .thenThrow(new CompensationNotFoundException(String.valueOf(COMPENSATION_ID)));
-            when(messageService.getCompensationNotFound(String.valueOf(COMPENSATION_ID)))
+                    .thenThrow(new EntityNotFoundException(EntityType.COMPENSATION, String.valueOf(COMPENSATION_ID)));
+            when(messageService.getEntityNotFound(EntityType.COMPENSATION, String.valueOf(COMPENSATION_ID)))
                     .thenReturn("Compensation not found: " + COMPENSATION_ID);
 
             // When & Then
@@ -171,7 +172,7 @@ class CompensationControllerTest {
                     .andExpect(status().isNotFound());
 
             verify(getByIdUseCase).get(COMPENSATION_ID);
-            verify(messageService).getCompensationNotFound(String.valueOf(COMPENSATION_ID));
+            verify(messageService).getEntityNotFound(EntityType.COMPENSATION, String.valueOf(COMPENSATION_ID));
             verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, messageService);
         }
     }

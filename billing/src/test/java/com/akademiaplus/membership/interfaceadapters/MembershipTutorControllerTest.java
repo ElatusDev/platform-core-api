@@ -17,11 +17,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.akademiaplus.config.BillingControllerAdvice;
-import com.akademiaplus.exception.MembershipTutorNotFoundException;
 import com.akademiaplus.membership.usecases.GetAllMembershipTutorsUseCase;
 import com.akademiaplus.membership.usecases.GetMembershipTutorByIdUseCase;
 import com.akademiaplus.membership.usecases.MembershipTutorCreationUseCase;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.MessageService;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.util.Collections;
@@ -166,8 +167,8 @@ class MembershipTutorControllerTest {
         void shouldReturn404_whenNotFound() throws Exception {
             // Given
             when(getByIdUseCase.get(MEMBERSHIP_TUTOR_ID))
-                    .thenThrow(new MembershipTutorNotFoundException(String.valueOf(MEMBERSHIP_TUTOR_ID)));
-            when(messageService.getMembershipTutorNotFound(String.valueOf(MEMBERSHIP_TUTOR_ID)))
+                    .thenThrow(new EntityNotFoundException(EntityType.MEMBERSHIP_TUTOR, String.valueOf(MEMBERSHIP_TUTOR_ID)));
+            when(messageService.getEntityNotFound(EntityType.MEMBERSHIP_TUTOR, String.valueOf(MEMBERSHIP_TUTOR_ID)))
                     .thenReturn("MembershipTutor not found: " + MEMBERSHIP_TUTOR_ID);
 
             // When & Then
@@ -175,7 +176,7 @@ class MembershipTutorControllerTest {
                     .andExpect(status().isNotFound());
 
             verify(getByIdUseCase).get(MEMBERSHIP_TUTOR_ID);
-            verify(messageService).getMembershipTutorNotFound(String.valueOf(MEMBERSHIP_TUTOR_ID));
+            verify(messageService).getEntityNotFound(EntityType.MEMBERSHIP_TUTOR, String.valueOf(MEMBERSHIP_TUTOR_ID));
             verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, messageService);
         }
     }

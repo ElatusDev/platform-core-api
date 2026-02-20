@@ -8,9 +8,10 @@
 package com.akademiaplus.membership.usecases;
 
 import com.akademiaplus.billing.membership.MembershipTutorDataModel;
-import com.akademiaplus.exception.MembershipTutorNotFoundException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.membership.interfaceadapters.MembershipTutorRepository;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.billing.dto.GetMembershipTutorResponseDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -50,8 +51,8 @@ public class GetMembershipTutorByIdUseCase {
      *
      * @param membershipTutorId the unique identifier of the membership tutor
      * @return the membership tutor response DTO
-     * @throws IllegalArgumentException              if tenant context is not available
-     * @throws MembershipTutorNotFoundException      if no membership tutor is found with the given identifier
+     * @throws IllegalArgumentException   if tenant context is not available
+     * @throws EntityNotFoundException    if no membership tutor is found with the given identifier
      */
     public GetMembershipTutorResponseDTO get(Long membershipTutorId) {
         Long tenantId = tenantContextHolder.getTenantId()
@@ -62,7 +63,7 @@ public class GetMembershipTutorByIdUseCase {
             MembershipTutorDataModel found = queryResult.get();
             return modelMapper.map(found, GetMembershipTutorResponseDTO.class);
         } else {
-            throw new MembershipTutorNotFoundException(String.valueOf(membershipTutorId));
+            throw new EntityNotFoundException(EntityType.MEMBERSHIP_TUTOR, String.valueOf(membershipTutorId));
         }
     }
 }

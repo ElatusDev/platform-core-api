@@ -14,9 +14,10 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.akademiaplus.billing.customerpayment.PaymentAdultStudentDataModel;
-import com.akademiaplus.exception.PaymentAdultStudentNotFoundException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.membership.interfaceadapters.PaymentAdultStudentRepository;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import java.util.Optional;
 import openapi.akademiaplus.domain.billing.dto.GetPaymentAdultStudentResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,15 +76,16 @@ class GetPaymentAdultStudentByIdUseCaseTest {
     class NotFound {
         @Test
         @DisplayName("Should throw NotFoundException when entity not found")
-        void shouldThrowPaymentAdultStudentNotFoundException_whenPaymentAdultStudentNotFound() {
+        void shouldThrowEntityNotFoundException_whenPaymentAdultStudentNotFound() {
             // Given
             when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
             when(paymentAdultStudentRepository.findById(new PaymentAdultStudentDataModel.PaymentAdultStudentCompositeId(TENANT_ID, PAYMENT_ADULT_STUDENT_ID)))
                     .thenReturn(Optional.empty());
             // When & Then
             assertThatThrownBy(() -> useCase.get(PAYMENT_ADULT_STUDENT_ID))
-                    .isInstanceOf(PaymentAdultStudentNotFoundException.class)
-                    .hasMessage(String.valueOf(PAYMENT_ADULT_STUDENT_ID));
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasFieldOrPropertyWithValue("entityType", EntityType.PAYMENT_ADULT_STUDENT)
+                    .hasFieldOrPropertyWithValue("entityId", String.valueOf(PAYMENT_ADULT_STUDENT_ID));
             verify(tenantContextHolder).getTenantId();
             verify(paymentAdultStudentRepository).findById(new PaymentAdultStudentDataModel.PaymentAdultStudentCompositeId(TENANT_ID, PAYMENT_ADULT_STUDENT_ID));
             verifyNoMoreInteractions(tenantContextHolder, paymentAdultStudentRepository, modelMapper);

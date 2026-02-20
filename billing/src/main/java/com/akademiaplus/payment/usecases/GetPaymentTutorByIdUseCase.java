@@ -8,9 +8,10 @@
 package com.akademiaplus.payment.usecases;
 
 import com.akademiaplus.billing.customerpayment.PaymentTutorDataModel;
-import com.akademiaplus.exception.PaymentTutorNotFoundException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.membership.interfaceadapters.PaymentTutorRepository;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.billing.dto.GetPaymentTutorResponseDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -50,8 +51,8 @@ public class GetPaymentTutorByIdUseCase {
      *
      * @param paymentTutorId the unique identifier of the payment tutor
      * @return the payment tutor response DTO
-     * @throws IllegalArgumentException          if tenant context is not available
-     * @throws PaymentTutorNotFoundException     if no payment tutor is found with the given identifier
+     * @throws IllegalArgumentException   if tenant context is not available
+     * @throws EntityNotFoundException    if no payment tutor is found with the given identifier
      */
     public GetPaymentTutorResponseDTO get(Long paymentTutorId) {
         Long tenantId = tenantContextHolder.getTenantId()
@@ -62,7 +63,7 @@ public class GetPaymentTutorByIdUseCase {
             PaymentTutorDataModel found = queryResult.get();
             return modelMapper.map(found, GetPaymentTutorResponseDTO.class);
         } else {
-            throw new PaymentTutorNotFoundException(String.valueOf(paymentTutorId));
+            throw new EntityNotFoundException(EntityType.PAYMENT_TUTOR, String.valueOf(paymentTutorId));
         }
     }
 }

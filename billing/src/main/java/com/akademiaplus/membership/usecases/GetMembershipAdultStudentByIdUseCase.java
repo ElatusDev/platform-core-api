@@ -8,9 +8,10 @@
 package com.akademiaplus.membership.usecases;
 
 import com.akademiaplus.billing.membership.MembershipAdultStudentDataModel;
-import com.akademiaplus.exception.MembershipAdultStudentNotFoundException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.membership.interfaceadapters.MembershipAdultStudentRepository;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.billing.dto.GetMembershipAdultStudentResponseDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -50,8 +51,8 @@ public class GetMembershipAdultStudentByIdUseCase {
      *
      * @param membershipAdultStudentId the unique identifier of the membership adult student
      * @return the membership adult student response DTO
-     * @throws IllegalArgumentException                    if tenant context is not available
-     * @throws MembershipAdultStudentNotFoundException     if no membership adult student is found with the given identifier
+     * @throws IllegalArgumentException   if tenant context is not available
+     * @throws EntityNotFoundException    if no membership adult student is found with the given identifier
      */
     public GetMembershipAdultStudentResponseDTO get(Long membershipAdultStudentId) {
         Long tenantId = tenantContextHolder.getTenantId()
@@ -62,7 +63,7 @@ public class GetMembershipAdultStudentByIdUseCase {
             MembershipAdultStudentDataModel found = queryResult.get();
             return modelMapper.map(found, GetMembershipAdultStudentResponseDTO.class);
         } else {
-            throw new MembershipAdultStudentNotFoundException(String.valueOf(membershipAdultStudentId));
+            throw new EntityNotFoundException(EntityType.MEMBERSHIP_ADULT_STUDENT, String.valueOf(membershipAdultStudentId));
         }
     }
 }

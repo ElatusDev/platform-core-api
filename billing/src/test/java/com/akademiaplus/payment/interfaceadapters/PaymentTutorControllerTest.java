@@ -17,11 +17,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.akademiaplus.config.BillingControllerAdvice;
-import com.akademiaplus.exception.PaymentTutorNotFoundException;
 import com.akademiaplus.payment.usecases.GetAllPaymentTutorsUseCase;
 import com.akademiaplus.payment.usecases.GetPaymentTutorByIdUseCase;
 import com.akademiaplus.payment.usecases.PaymentTutorCreationUseCase;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.MessageService;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.util.Collections;
@@ -165,8 +166,8 @@ class PaymentTutorControllerTest {
         void shouldReturn404_whenNotFound() throws Exception {
             // Given
             when(getByIdUseCase.get(PAYMENT_TUTOR_ID))
-                    .thenThrow(new PaymentTutorNotFoundException(String.valueOf(PAYMENT_TUTOR_ID)));
-            when(messageService.getPaymentTutorNotFound(String.valueOf(PAYMENT_TUTOR_ID)))
+                    .thenThrow(new EntityNotFoundException(EntityType.PAYMENT_TUTOR, String.valueOf(PAYMENT_TUTOR_ID)));
+            when(messageService.getEntityNotFound(EntityType.PAYMENT_TUTOR, String.valueOf(PAYMENT_TUTOR_ID)))
                     .thenReturn("PaymentTutor not found: " + PAYMENT_TUTOR_ID);
 
             // When & Then
@@ -174,7 +175,7 @@ class PaymentTutorControllerTest {
                     .andExpect(status().isNotFound());
 
             verify(getByIdUseCase).get(PAYMENT_TUTOR_ID);
-            verify(messageService).getPaymentTutorNotFound(String.valueOf(PAYMENT_TUTOR_ID));
+            verify(messageService).getEntityNotFound(EntityType.PAYMENT_TUTOR, String.valueOf(PAYMENT_TUTOR_ID));
             verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, messageService);
         }
     }

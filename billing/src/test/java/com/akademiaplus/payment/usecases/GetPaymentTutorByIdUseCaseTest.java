@@ -14,9 +14,10 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.akademiaplus.billing.customerpayment.PaymentTutorDataModel;
-import com.akademiaplus.exception.PaymentTutorNotFoundException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.membership.interfaceadapters.PaymentTutorRepository;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import java.util.Optional;
 import openapi.akademiaplus.domain.billing.dto.GetPaymentTutorResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,15 +76,16 @@ class GetPaymentTutorByIdUseCaseTest {
     class NotFound {
         @Test
         @DisplayName("Should throw NotFoundException when entity not found")
-        void shouldThrowPaymentTutorNotFoundException_whenPaymentTutorNotFound() {
+        void shouldThrowEntityNotFoundException_whenPaymentTutorNotFound() {
             // Given
             when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
             when(paymentTutorRepository.findById(new PaymentTutorDataModel.PaymentTutorCompositeId(TENANT_ID, PAYMENT_TUTOR_ID)))
                     .thenReturn(Optional.empty());
             // When & Then
             assertThatThrownBy(() -> useCase.get(PAYMENT_TUTOR_ID))
-                    .isInstanceOf(PaymentTutorNotFoundException.class)
-                    .hasMessage(String.valueOf(PAYMENT_TUTOR_ID));
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasFieldOrPropertyWithValue("entityType", EntityType.PAYMENT_TUTOR)
+                    .hasFieldOrPropertyWithValue("entityId", String.valueOf(PAYMENT_TUTOR_ID));
             verify(tenantContextHolder).getTenantId();
             verify(paymentTutorRepository).findById(new PaymentTutorDataModel.PaymentTutorCompositeId(TENANT_ID, PAYMENT_TUTOR_ID));
             verifyNoMoreInteractions(tenantContextHolder, paymentTutorRepository, modelMapper);

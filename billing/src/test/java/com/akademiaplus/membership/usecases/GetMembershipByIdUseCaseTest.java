@@ -14,9 +14,10 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import com.akademiaplus.billing.membership.MembershipDataModel;
-import com.akademiaplus.exception.MembershipNotFoundException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.membership.interfaceadapters.MembershipRepository;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import java.util.Optional;
 import openapi.akademiaplus.domain.billing.dto.GetMembershipResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -74,16 +75,17 @@ class GetMembershipByIdUseCaseTest {
     @DisplayName("Not found")
     class NotFound {
         @Test
-        @DisplayName("Should throw NotFoundException when entity not found")
-        void shouldThrowMembershipNotFoundException_whenMembershipNotFound() {
+        @DisplayName("Should throw EntityNotFoundException when entity not found")
+        void shouldThrowEntityNotFoundException_whenMembershipNotFound() {
             // Given
             when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
             when(membershipRepository.findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID)))
                     .thenReturn(Optional.empty());
             // When & Then
             assertThatThrownBy(() -> useCase.get(MEMBERSHIP_ID))
-                    .isInstanceOf(MembershipNotFoundException.class)
-                    .hasMessage(String.valueOf(MEMBERSHIP_ID));
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasFieldOrPropertyWithValue("entityType", EntityType.MEMBERSHIP)
+                    .hasFieldOrPropertyWithValue("entityId", String.valueOf(MEMBERSHIP_ID));
             verify(tenantContextHolder).getTenantId();
             verify(membershipRepository).findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID));
             verifyNoMoreInteractions(tenantContextHolder, membershipRepository, modelMapper);

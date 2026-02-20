@@ -8,9 +8,10 @@
 package com.akademiaplus.payroll.usecases;
 
 import com.akademiaplus.billing.payroll.CompensationDataModel;
-import com.akademiaplus.exception.CompensationNotFoundException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.payroll.interfaceadapters.CompensationRepository;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.billing.dto.GetCompensationResponseDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -50,8 +51,8 @@ public class GetCompensationByIdUseCase {
      *
      * @param compensationId the unique identifier of the compensation
      * @return the compensation response DTO
-     * @throws IllegalArgumentException          if tenant context is not available
-     * @throws CompensationNotFoundException     if no compensation is found with the given identifier
+     * @throws IllegalArgumentException   if tenant context is not available
+     * @throws EntityNotFoundException    if no compensation is found with the given identifier
      */
     public GetCompensationResponseDTO get(Long compensationId) {
         Long tenantId = tenantContextHolder.getTenantId()
@@ -62,7 +63,7 @@ public class GetCompensationByIdUseCase {
             CompensationDataModel found = queryResult.get();
             return modelMapper.map(found, GetCompensationResponseDTO.class);
         } else {
-            throw new CompensationNotFoundException(String.valueOf(compensationId));
+            throw new EntityNotFoundException(EntityType.COMPENSATION, String.valueOf(compensationId));
         }
     }
 }

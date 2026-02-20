@@ -7,7 +7,6 @@
  */
 package com.akademiaplus.config;
 
-import com.akademiaplus.exception.*;
 import com.akademiaplus.membership.interfaceadapters.MembershipAdultStudentController;
 import com.akademiaplus.membership.interfaceadapters.MembershipController;
 import com.akademiaplus.membership.interfaceadapters.MembershipTutorController;
@@ -15,14 +14,13 @@ import com.akademiaplus.payment.interfaceadapters.PaymentAdultStudentController;
 import com.akademiaplus.payment.interfaceadapters.PaymentTutorController;
 import com.akademiaplus.payroll.interfaceadapters.CompensationController;
 import com.akademiaplus.utilities.MessageService;
-import openapi.akademiaplus.domain.utilities.dto.ErrorResponseDTO;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.akademiaplus.utilities.web.BaseControllerAdvice;
 import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 
 /**
  * Controller advice for billing module exception handling.
+ * Extends {@link BaseControllerAdvice} to inherit generic exception handling capabilities
+ * including {@link com.akademiaplus.utilities.exceptions.EntityNotFoundException}.
  *
  * @author ElatusDev
  * @since 1.0
@@ -31,51 +29,14 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
         MembershipAdultStudentController.class, MembershipTutorController.class,
         PaymentAdultStudentController.class, PaymentTutorController.class,
         CompensationController.class})
-public class BillingControllerAdvice {
+public class BillingControllerAdvice extends BaseControllerAdvice {
 
-    private final MessageService messageService;
-
+    /**
+     * Constructs a new BillingControllerAdvice with the required message service.
+     *
+     * @param messageService the service for retrieving localized messages
+     */
     public BillingControllerAdvice(MessageService messageService) {
-        this.messageService = messageService;
-    }
-
-    @ExceptionHandler
-    public ResponseEntity<ErrorResponseDTO> handleMembershipNotFoundException(MembershipNotFoundException ex) {
-        return new ResponseEntity<>(new ErrorResponseDTO(messageService.getMembershipNotFound(ex.getMessage())), HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler
-    public ResponseEntity<ErrorResponseDTO> handleMembershipAdultStudentNotFoundException(
-            MembershipAdultStudentNotFoundException ex) {
-        return new ResponseEntity<>(new ErrorResponseDTO(
-                messageService.getMembershipAdultStudentNotFound(ex.getMessage())), HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler
-    public ResponseEntity<ErrorResponseDTO> handleMembershipTutorNotFoundException(
-            MembershipTutorNotFoundException ex) {
-        return new ResponseEntity<>(new ErrorResponseDTO(
-                messageService.getMembershipTutorNotFound(ex.getMessage())), HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler
-    public ResponseEntity<ErrorResponseDTO> handlePaymentAdultStudentNotFoundException(
-            PaymentAdultStudentNotFoundException ex) {
-        return new ResponseEntity<>(new ErrorResponseDTO(
-                messageService.getPaymentAdultStudentNotFound(ex.getMessage())), HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler
-    public ResponseEntity<ErrorResponseDTO> handlePaymentTutorNotFoundException(
-            PaymentTutorNotFoundException ex) {
-        return new ResponseEntity<>(new ErrorResponseDTO(
-                messageService.getPaymentTutorNotFound(ex.getMessage())), HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler
-    public ResponseEntity<ErrorResponseDTO> handleCompensationNotFoundException(
-            CompensationNotFoundException ex) {
-        return new ResponseEntity<>(new ErrorResponseDTO(
-                messageService.getCompensationNotFound(ex.getMessage())), HttpStatus.NOT_FOUND);
+        super(messageService);
     }
 }
