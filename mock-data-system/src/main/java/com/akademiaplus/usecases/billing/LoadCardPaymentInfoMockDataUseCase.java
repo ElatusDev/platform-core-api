@@ -20,12 +20,12 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class LoadCardPaymentInfoMockDataUseCase
-        extends AbstractMockDataUseCase<CardPaymentInfoRequest, CardPaymentInfoDataModel, Long> {
+        extends AbstractMockDataUseCase<CardPaymentInfoRequest, CardPaymentInfoDataModel, CardPaymentInfoDataModel.CardPaymentInfoCompositeId> {
 
     public LoadCardPaymentInfoMockDataUseCase(
-            DataLoader<CardPaymentInfoRequest, CardPaymentInfoDataModel, Long> dataLoader,
+            DataLoader<CardPaymentInfoRequest, CardPaymentInfoDataModel, CardPaymentInfoDataModel.CardPaymentInfoCompositeId> dataLoader,
             @Qualifier("cardPaymentInfoDataCleanUp")
-            DataCleanUp<CardPaymentInfoDataModel, Long> dataCleanup) {
+            DataCleanUp<CardPaymentInfoDataModel, CardPaymentInfoDataModel.CardPaymentInfoCompositeId> dataCleanup) {
         super(dataLoader, dataCleanup);
     }
 }

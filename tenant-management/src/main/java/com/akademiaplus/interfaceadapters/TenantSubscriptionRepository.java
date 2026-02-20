@@ -7,11 +7,11 @@
  */
 package com.akademiaplus.interfaceadapters;
 
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import com.akademiaplus.tenancy.TenantSubscriptionDataModel;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TenantSubscriptionRepository
-        extends JpaRepository<TenantSubscriptionDataModel, TenantSubscriptionDataModel.TenantSubscriptionCompositeId> {
+        extends TenantScopedRepository<TenantSubscriptionDataModel, TenantSubscriptionDataModel.TenantSubscriptionCompositeId> {
 }

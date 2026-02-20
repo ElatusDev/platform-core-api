@@ -7,10 +7,10 @@
  */
 package com.akademiaplus.employee.interfaceadapters;
 
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import com.akademiaplus.users.employee.EmployeeDataModel;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface EmployeeRepository extends JpaRepository<EmployeeDataModel, Long> {
+public interface EmployeeRepository extends TenantScopedRepository<EmployeeDataModel, EmployeeDataModel.EmployeeCompositeId> {
 }

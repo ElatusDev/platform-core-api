@@ -868,6 +868,7 @@ components:
         - billing_month
         - calculation_date
         - user_count
+        - total_amount
       properties:
         billing_month:
           type: string
@@ -878,7 +879,10 @@ components:
           format: date
         user_count:
           type: integer
-
+          minimum: 0
+        total_amount:
+          type: number
+          format: double
           minimum: 0
         notes:
           type: string

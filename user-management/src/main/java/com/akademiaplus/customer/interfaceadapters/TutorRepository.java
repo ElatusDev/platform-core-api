@@ -7,10 +7,10 @@
  */
 package com.akademiaplus.customer.interfaceadapters;
 
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import com.akademiaplus.users.customer.TutorDataModel;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface TutorRepository extends JpaRepository<TutorDataModel, Long> {
+public interface TutorRepository extends TenantScopedRepository<TutorDataModel, TutorDataModel.TutorCompositeId> {
 }

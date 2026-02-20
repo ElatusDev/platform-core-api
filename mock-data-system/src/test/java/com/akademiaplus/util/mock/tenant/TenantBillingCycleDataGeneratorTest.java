@@ -102,6 +102,24 @@ class TenantBillingCycleDataGeneratorTest {
     }
 
     @Nested
+    @DisplayName("Total amount generation")
+    class TotalAmountGeneration {
+
+        @Test
+        @DisplayName("Should return an amount between 500.00 and 50,000.00")
+        void shouldReturnAmountInRange() {
+            // Given
+            // generator initialized in setUp
+
+            // When
+            double totalAmount = generator.totalAmount();
+
+            // Then
+            assertThat(totalAmount).isBetween(500.0, 50000.0);
+        }
+    }
+
+    @Nested
     @DisplayName("Notes generation")
     class NotesGeneration {
 

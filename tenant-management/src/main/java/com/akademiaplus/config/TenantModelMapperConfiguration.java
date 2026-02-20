@@ -67,9 +67,10 @@ public class TenantModelMapperConfiguration {
                 SubscriptionCreateRequestDTO.class,
                 TenantSubscriptionDataModel.class,
                 TenantSubscriptionCreationUseCase.MAP_NAME
-        ).addMappings(mapper ->
-                mapper.skip(TenantSubscriptionDataModel::setTenantSubscriptionId)
-        ).implicitMappings();
+        ).addMappings(mapper -> {
+                mapper.skip(TenantSubscriptionDataModel::setTenantSubscriptionId);
+                mapper.skip(TenantSubscriptionDataModel::setMaxUsers);
+        }).implicitMappings();
     }
 
     private void registerTenantBillingCycleMap() {
@@ -77,8 +78,9 @@ public class TenantModelMapperConfiguration {
                 BillingCycleCreateRequestDTO.class,
                 TenantBillingCycleDataModel.class,
                 TenantBillingCycleCreationUseCase.MAP_NAME
-        ).addMappings(mapper ->
-                mapper.skip(TenantBillingCycleDataModel::setTenantBillingCycleId)
-        ).implicitMappings();
+        ).addMappings(mapper -> {
+                mapper.skip(TenantBillingCycleDataModel::setTenantBillingCycleId);
+                mapper.skip(TenantBillingCycleDataModel::setBillingMonth);
+        }).implicitMappings();
     }
 }

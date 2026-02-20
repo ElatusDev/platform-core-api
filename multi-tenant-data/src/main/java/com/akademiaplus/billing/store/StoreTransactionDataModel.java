@@ -78,6 +78,13 @@ public class StoreTransactionDataModel extends TenantScoped {
     private String paymentMethod;
 
     /**
+     * Foreign key to the employee who processed this transaction.
+     * Writable column used to persist the FK value during INSERT.
+     */
+    @Column(name = "employee_id")
+    private Long employeeId;
+
+    /**
      * Reference to the employee who processed this transaction.
      * Uses tenant-aware join to ensure employee belongs to the same tenant.
      * Optional field for transactions that may be processed automatically or by customers.

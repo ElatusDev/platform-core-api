@@ -24,11 +24,13 @@ import java.util.Random;
 public class NotificationDataGenerator {
 
     private static final List<String> NOTIFICATION_TYPES = Arrays.asList(
-            "SYSTEM", "ACADEMIC", "BILLING", "EVENT", "ANNOUNCEMENT"
+            "COURSE_REMINDER", "PAYMENT_DUE", "ENROLLMENT_CONFIRMATION",
+            "SCHEDULE_CHANGE", "SYSTEM_MAINTENANCE", "PROMOTIONAL",
+            "ANNOUNCEMENT", "ASSIGNMENT_REMINDER", "GRADE_NOTIFICATION"
     );
 
     private static final List<String> PRIORITIES = Arrays.asList(
-            "LOW", "MEDIUM", "HIGH", "URGENT"
+            "LOW", "NORMAL", "HIGH", "URGENT"
     );
 
     private final Faker faker;

@@ -40,6 +40,7 @@ class TenantBillingCycleCreationUseCaseTest {
     private static final String BILLING_MONTH = "2026-03";
     private static final LocalDate CALCULATION_DATE = LocalDate.of(2026, 3, 15);
     private static final Integer USER_COUNT = 42;
+    private static final Double TOTAL_AMOUNT = 6300.0;
     private static final Long SAVED_ID = 1L;
 
     @BeforeEach
@@ -88,6 +89,37 @@ class TenantBillingCycleCreationUseCaseTest {
             // Then
             verify(modelMapper).map(dto, prototypeModel, TenantBillingCycleCreationUseCase.MAP_NAME);
             assertThat(result).isSameAs(prototypeModel);
+        }
+
+        @Test
+        @DisplayName("Should parse billingMonth string to LocalDate using first day of month")
+        void shouldParseBillingMonth_whenStringIsProvided() {
+            // Given
+            BillingCycleCreateRequestDTO dto = buildDto();
+            TenantBillingCycleDataModel prototypeModel = new TenantBillingCycleDataModel();
+            when(applicationContext.getBean(TenantBillingCycleDataModel.class)).thenReturn(prototypeModel);
+
+            // When
+            TenantBillingCycleDataModel result = useCase.transform(dto);
+
+            // Then — "2026-03" → LocalDate(2026, 3, 1)
+            assertThat(result.getBillingMonth()).isEqualTo(LocalDate.of(2026, 3, 1));
+        }
+
+        @Test
+        @DisplayName("Should leave billingMonth null when DTO billingMonth is null")
+        void shouldLeaveBillingMonthNull_whenDtoBillingMonthIsNull() {
+            // Given
+            BillingCycleCreateRequestDTO dto = buildDto();
+            dto.setBillingMonth(null);
+            TenantBillingCycleDataModel prototypeModel = new TenantBillingCycleDataModel();
+            when(applicationContext.getBean(TenantBillingCycleDataModel.class)).thenReturn(prototypeModel);
+
+            // When
+            TenantBillingCycleDataModel result = useCase.transform(dto);
+
+            // Then
+            assertThat(result.getBillingMonth()).isNull();
         }
     }
 

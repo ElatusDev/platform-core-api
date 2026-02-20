@@ -7,10 +7,10 @@
  */
 package com.akademiaplus.customer.minorstudent.interfaceadapters;
 
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import com.akademiaplus.users.customer.MinorStudentDataModel;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface MinorStudentRepository extends JpaRepository<MinorStudentDataModel, Long> {
+public interface MinorStudentRepository extends TenantScopedRepository<MinorStudentDataModel, MinorStudentDataModel.MinorStudentCompositeId> {
 }

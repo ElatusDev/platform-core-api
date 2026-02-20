@@ -20,12 +20,12 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class LoadPaymentAdultStudentMockDataUseCase
-        extends AbstractMockDataUseCase<PaymentAdultStudentCreationRequestDTO, PaymentAdultStudentDataModel, Long> {
+        extends AbstractMockDataUseCase<PaymentAdultStudentCreationRequestDTO, PaymentAdultStudentDataModel, PaymentAdultStudentDataModel.PaymentAdultStudentCompositeId> {
 
     public LoadPaymentAdultStudentMockDataUseCase(
-            DataLoader<PaymentAdultStudentCreationRequestDTO, PaymentAdultStudentDataModel, Long> dataLoader,
+            DataLoader<PaymentAdultStudentCreationRequestDTO, PaymentAdultStudentDataModel, PaymentAdultStudentDataModel.PaymentAdultStudentCompositeId> dataLoader,
             @Qualifier("paymentAdultStudentDataCleanUp")
-            DataCleanUp<PaymentAdultStudentDataModel, Long> dataCleanup) {
+            DataCleanUp<PaymentAdultStudentDataModel, PaymentAdultStudentDataModel.PaymentAdultStudentCompositeId> dataCleanup) {
         super(dataLoader, dataCleanup);
     }
 }

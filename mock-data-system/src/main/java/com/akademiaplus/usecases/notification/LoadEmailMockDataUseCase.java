@@ -20,12 +20,12 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class LoadEmailMockDataUseCase
-        extends AbstractMockDataUseCase<EmailRequest, EmailDataModel, Long> {
+        extends AbstractMockDataUseCase<EmailRequest, EmailDataModel, EmailDataModel.EmailCompositeId> {
 
     public LoadEmailMockDataUseCase(
-            DataLoader<EmailRequest, EmailDataModel, Long> dataLoader,
+            DataLoader<EmailRequest, EmailDataModel, EmailDataModel.EmailCompositeId> dataLoader,
             @Qualifier("emailDataCleanUp")
-            DataCleanUp<EmailDataModel, Long> dataCleanup) {
+            DataCleanUp<EmailDataModel, EmailDataModel.EmailCompositeId> dataCleanup) {
         super(dataLoader, dataCleanup);
     }
 }

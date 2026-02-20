@@ -9,6 +9,7 @@ package com.akademiaplus.payment.usecases;
 
 import com.akademiaplus.billing.customerpayment.PaymentTutorDataModel;
 import com.akademiaplus.billing.membership.MembershipTutorDataModel;
+import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.membership.interfaceadapters.MembershipTutorRepository;
 import com.akademiaplus.membership.interfaceadapters.PaymentTutorRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class PaymentTutorCreationUseCase {
     private final ApplicationContext applicationContext;
     private final PaymentTutorRepository paymentRepository;
     private final MembershipTutorRepository membershipTutorRepository;
+    private final TenantContextHolder tenantContextHolder;
     private final ModelMapper modelMapper;
 
     @Transactional
@@ -49,8 +51,11 @@ public class PaymentTutorCreationUseCase {
                 applicationContext.getBean(PaymentTutorDataModel.class);
         modelMapper.map(dto, model, MAP_NAME);
 
+        Long tenantId = tenantContextHolder.getTenantId()
+                .orElseThrow(() -> new IllegalArgumentException("Tenant context is required"));
         MembershipTutorDataModel membershipTutor =
-                membershipTutorRepository.findById(dto.getMembershipTutorId())
+                membershipTutorRepository.findById(
+                                new MembershipTutorDataModel.MembershipTutorCompositeId(tenantId, dto.getMembershipTutorId()))
                         .orElseThrow(() -> new IllegalArgumentException(
                                 "MembershipTutor not found: " + dto.getMembershipTutorId()));
         model.setMembershipTutor(membershipTutor);

@@ -16,10 +16,10 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 @Service
-public class LoadTutorMockDataUseCase extends AbstractMockDataUseCase<TutorCreationRequestDTO, TutorDataModel, Long> {
+public class LoadTutorMockDataUseCase extends AbstractMockDataUseCase<TutorCreationRequestDTO, TutorDataModel, TutorDataModel.TutorCompositeId> {
 
-    public LoadTutorMockDataUseCase(DataLoader<TutorCreationRequestDTO, TutorDataModel, Long> dataLoader,
-                                    @Qualifier("tutorDataCleanUp") DataCleanUp<TutorDataModel, Long> dataCleanup) {
+    public LoadTutorMockDataUseCase(DataLoader<TutorCreationRequestDTO, TutorDataModel, TutorDataModel.TutorCompositeId> dataLoader,
+                                    @Qualifier("tutorDataCleanUp") DataCleanUp<TutorDataModel, TutorDataModel.TutorCompositeId> dataCleanup) {
         super(dataLoader, dataCleanup);
     }
 }

@@ -7,10 +7,10 @@
  */
 package com.akademiaplus.notification.interfaceadapters;
 
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import com.akademiaplus.notifications.NotificationDataModel;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface NotificationRepository extends JpaRepository<NotificationDataModel, Long> {
+public interface NotificationRepository extends TenantScopedRepository<NotificationDataModel, NotificationDataModel.NotificationCompositeId> {
 }

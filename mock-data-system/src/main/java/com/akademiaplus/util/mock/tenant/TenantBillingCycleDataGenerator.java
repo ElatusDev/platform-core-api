@@ -42,6 +42,15 @@ public class TenantBillingCycleDataGenerator {
         return faker.number().numberBetween(5, 200);
     }
 
+    /**
+     * Generates a random total billing amount between 500.00 and 50,000.00.
+     *
+     * @return total amount as a double
+     */
+    public double totalAmount() {
+        return faker.number().randomDouble(2, 500, 50000);
+    }
+
     public String notes() {
         return faker.lorem().sentence();
     }

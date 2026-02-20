@@ -8,9 +8,9 @@
 package com.akademiaplus.payroll.interfaceadapters;
 
 import com.akademiaplus.billing.payroll.CompensationDataModel;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface CompensationRepository extends JpaRepository<CompensationDataModel, Long> {
+public interface CompensationRepository extends TenantScopedRepository<CompensationDataModel, CompensationDataModel.CompensationCompositeId> {
 }

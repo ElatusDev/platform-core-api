@@ -7,13 +7,13 @@
  */
 package com.akademiaplus.notification.interfaceadapters;
 
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import com.akademiaplus.notifications.email.EmailDataModel;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 /**
  * JPA repository for {@link EmailDataModel} entities.
  */
 @Repository
-public interface EmailRepository extends JpaRepository<EmailDataModel, Long> {
+public interface EmailRepository extends TenantScopedRepository<EmailDataModel, EmailDataModel.EmailCompositeId> {
 }

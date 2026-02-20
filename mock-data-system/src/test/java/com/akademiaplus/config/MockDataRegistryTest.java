@@ -161,9 +161,9 @@ class MockDataRegistryTest {
 
     // ── Cleanup-only beans ──
     @Mock private DataCleanUp<TenantSequence, TenantSequence.TenantSequenceId> tenantSequenceCleanUp;
-    @Mock private DataCleanUp<InternalAuthDataModel, Long> internalAuthCleanUp;
-    @Mock private DataCleanUp<CustomerAuthDataModel, Long> customerAuthCleanUp;
-    @Mock private DataCleanUp<PersonPIIDataModel, Long> personPIICleanUp;
+    @Mock private DataCleanUp<InternalAuthDataModel, InternalAuthDataModel.InternalAuthCompositeId> internalAuthCleanUp;
+    @Mock private DataCleanUp<CustomerAuthDataModel, CustomerAuthDataModel.CustomerAuthCompositeId> customerAuthCleanUp;
+    @Mock private DataCleanUp<PersonPIIDataModel, PersonPIIDataModel.PersonPIICompositeId> personPIICleanUp;
 
     // ── Repositories for hooks ──
     @Mock private TenantRepository tenantRepository;

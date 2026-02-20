@@ -20,12 +20,12 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class LoadScheduleMockDataUseCase
-        extends AbstractMockDataUseCase<ScheduleCreationRequestDTO, ScheduleDataModel, Long> {
+        extends AbstractMockDataUseCase<ScheduleCreationRequestDTO, ScheduleDataModel, ScheduleDataModel.ScheduleCompositeId> {
 
     public LoadScheduleMockDataUseCase(
-            DataLoader<ScheduleCreationRequestDTO, ScheduleDataModel, Long> dataLoader,
+            DataLoader<ScheduleCreationRequestDTO, ScheduleDataModel, ScheduleDataModel.ScheduleCompositeId> dataLoader,
             @Qualifier("scheduleDataCleanUp")
-            DataCleanUp<ScheduleDataModel, Long> dataCleanup) {
+            DataCleanUp<ScheduleDataModel, ScheduleDataModel.ScheduleCompositeId> dataCleanup) {
         super(dataLoader, dataCleanup);
     }
 }

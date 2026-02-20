@@ -9,6 +9,7 @@ package com.akademiaplus.program.usecases;
 
 import com.akademiaplus.courses.program.CourseDataModel;
 import com.akademiaplus.courses.program.ScheduleDataModel;
+import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.program.interfaceadapters.CourseRepository;
 import com.akademiaplus.program.interfaceadapters.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ public class ScheduleCreationUseCase {
     private final ApplicationContext applicationContext;
     private final ScheduleRepository scheduleRepository;
     private final CourseRepository courseRepository;
+    private final TenantContextHolder tenantContextHolder;
     private final ModelMapper modelMapper;
 
     /**
@@ -63,7 +65,10 @@ public class ScheduleCreationUseCase {
         final ScheduleDataModel model = applicationContext.getBean(ScheduleDataModel.class);
         modelMapper.map(dto, model, MAP_NAME);
 
-        CourseDataModel course = courseRepository.findById(dto.getCourseId())
+        Long tenantId = tenantContextHolder.getTenantId()
+                .orElseThrow(() -> new IllegalArgumentException("Tenant context is required"));
+        CourseDataModel course = courseRepository.findById(
+                        new CourseDataModel.CourseCompositeId(tenantId, dto.getCourseId()))
                 .orElseThrow(() -> new IllegalArgumentException("Course not found: " + dto.getCourseId()));
         model.setCourse(course);
 

@@ -7,11 +7,56 @@
  */
 package com.akademiaplus.event.interfaceadapters;
 
-import openapi.akademiaplus.domain.course.management.api.CourseEventsApiController;
-import org.springframework.web.context.request.NativeWebRequest;
+import com.akademiaplus.event.usecases.CourseEventCreationUseCase;
+import com.akademiaplus.event.usecases.GetAllCourseEventsUseCase;
+import com.akademiaplus.event.usecases.GetCourseEventByIdUseCase;
+import openapi.akademiaplus.domain.course.management.api.CourseEventsApi;
+import openapi.akademiaplus.domain.course.management.dto.CourseEventCreateRequestDTO;
+import openapi.akademiaplus.domain.course.management.dto.CourseEventCreateResponseDTO;
+import openapi.akademiaplus.domain.course.management.dto.GetCourseEventResponseDTO;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-public class CourseEventController extends CourseEventsApiController {
-    public CourseEventController(NativeWebRequest request) {
-        super(request);
+import java.util.List;
+
+/**
+ * REST controller for course event management operations.
+ *
+ * @author ElatusDev
+ * @since 1.0
+ */
+@RestController
+@RequestMapping("/v1/course-management")
+public class CourseEventController implements CourseEventsApi {
+
+    private final CourseEventCreationUseCase courseEventCreationUseCase;
+    private final GetAllCourseEventsUseCase getAllCourseEventsUseCase;
+    private final GetCourseEventByIdUseCase getCourseEventByIdUseCase;
+
+    public CourseEventController(CourseEventCreationUseCase courseEventCreationUseCase,
+                                 GetAllCourseEventsUseCase getAllCourseEventsUseCase,
+                                 GetCourseEventByIdUseCase getCourseEventByIdUseCase) {
+        this.courseEventCreationUseCase = courseEventCreationUseCase;
+        this.getAllCourseEventsUseCase = getAllCourseEventsUseCase;
+        this.getCourseEventByIdUseCase = getCourseEventByIdUseCase;
+    }
+
+    @Override
+    public ResponseEntity<CourseEventCreateResponseDTO> createCourseEvent(
+            CourseEventCreateRequestDTO courseEventCreateRequestDTO) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(courseEventCreationUseCase.create(courseEventCreateRequestDTO));
+    }
+
+    @Override
+    public ResponseEntity<List<GetCourseEventResponseDTO>> getAllCourseEvent() {
+        return ResponseEntity.ok(getAllCourseEventsUseCase.getAll());
+    }
+
+    @Override
+    public ResponseEntity<GetCourseEventResponseDTO> getCourseEventById(Long courseEventId) {
+        return ResponseEntity.ok(getCourseEventByIdUseCase.get(courseEventId));
     }
 }

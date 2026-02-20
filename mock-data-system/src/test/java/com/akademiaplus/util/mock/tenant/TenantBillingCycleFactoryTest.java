@@ -80,6 +80,7 @@ class TenantBillingCycleFactoryTest {
             assertThat(dto.getBillingMonth()).matches("\\d{4}-\\d{2}");
             assertThat(dto.getCalculationDate()).isNotNull();
             assertThat(dto.getUserCount()).isPositive();
+            assertThat(dto.getTotalAmount()).isPositive();
             assertThat(dto.getNotes()).isNotBlank();
         }
     }

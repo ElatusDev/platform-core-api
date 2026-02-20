@@ -35,7 +35,7 @@ public class StoreDataLoaderConfiguration {
     // ── StoreProduct ──
 
     @Bean
-    public DataLoader<StoreProductCreationRequestDTO, StoreProductDataModel, Long> storeProductDataLoader(
+    public DataLoader<StoreProductCreationRequestDTO, StoreProductDataModel, StoreProductDataModel.ProductCompositeId> storeProductDataLoader(
             StoreProductRepository repository,
             DataFactory<StoreProductCreationRequestDTO> storeProductFactory,
             StoreProductCreationUseCase storeProductCreationUseCase) {
@@ -44,11 +44,11 @@ public class StoreDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<StoreProductDataModel, Long> storeProductDataCleanUp(
+    public DataCleanUp<StoreProductDataModel, StoreProductDataModel.ProductCompositeId> storeProductDataCleanUp(
             EntityManager entityManager,
             StoreProductRepository repository) {
 
-        DataCleanUp<StoreProductDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<StoreProductDataModel, StoreProductDataModel.ProductCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(StoreProductDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
@@ -57,7 +57,7 @@ public class StoreDataLoaderConfiguration {
     // ── StoreTransaction ──
 
     @Bean
-    public DataLoader<StoreTransactionCreationRequestDTO, StoreTransactionDataModel, Long> storeTransactionDataLoader(
+    public DataLoader<StoreTransactionCreationRequestDTO, StoreTransactionDataModel, StoreTransactionDataModel.StoreTransactionCompositeId> storeTransactionDataLoader(
             StoreTransactionRepository repository,
             DataFactory<StoreTransactionCreationRequestDTO> storeTransactionFactory,
             StoreTransactionCreationUseCase storeTransactionCreationUseCase) {
@@ -66,11 +66,11 @@ public class StoreDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<StoreTransactionDataModel, Long> storeTransactionDataCleanUp(
+    public DataCleanUp<StoreTransactionDataModel, StoreTransactionDataModel.StoreTransactionCompositeId> storeTransactionDataCleanUp(
             EntityManager entityManager,
             StoreTransactionRepository repository) {
 
-        DataCleanUp<StoreTransactionDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<StoreTransactionDataModel, StoreTransactionDataModel.StoreTransactionCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(StoreTransactionDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
@@ -79,7 +79,7 @@ public class StoreDataLoaderConfiguration {
     // ── StoreSaleItem (no domain creation use case — direct mapping) ──
 
     @Bean
-    public DataLoader<StoreSaleItemRequest, StoreSaleItemDataModel, Long>
+    public DataLoader<StoreSaleItemRequest, StoreSaleItemDataModel, StoreSaleItemDataModel.SaleItemCompositeId>
             storeSaleItemDataLoader(
                     StoreSaleItemRepository repository,
                     DataFactory<StoreSaleItemRequest> factory,
@@ -97,11 +97,11 @@ public class StoreDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<StoreSaleItemDataModel, Long> storeSaleItemDataCleanUp(
+    public DataCleanUp<StoreSaleItemDataModel, StoreSaleItemDataModel.SaleItemCompositeId> storeSaleItemDataCleanUp(
             EntityManager entityManager,
             StoreSaleItemRepository repository) {
 
-        DataCleanUp<StoreSaleItemDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<StoreSaleItemDataModel, StoreSaleItemDataModel.SaleItemCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(StoreSaleItemDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;

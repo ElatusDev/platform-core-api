@@ -26,6 +26,7 @@ import java.util.Objects;
  *   <li>Tenant pre-update listener - validates tenant context during updates</li>
  *   <li>Tenant pre-delete listener - validates tenant context during deletes</li>
  *   <li>ID generation listener - assigns generated IDs to entities</li>
+ *   <li>FK wiring listener - populates writable Long FK fields from relationship objects</li>
  * </ul>
  */
 @Slf4j
@@ -36,6 +37,7 @@ public class TenantEventIntegrator implements Integrator {
     private static final String BEAN_TENANT_PRE_UPDATE_LISTENER = "tenantPreUpdateEventListener";
     private static final String BEAN_TENANT_PRE_DELETE_LISTENER = "tenantPreDeleteEventListener";
     private static final String BEAN_ID_GENERATION_LISTENER = "idAssignationPreInsertEventListener";
+    private static final String BEAN_FK_WIRING_LISTENER = "foreignKeyWiringPreInsertEventListener";
 
     // Error messages (public for testing)
     public static final String ERROR_APPLICATION_CONTEXT_NOT_AVAILABLE = "ApplicationContext not available!";
@@ -99,13 +101,18 @@ public class TenantEventIntegrator implements Integrator {
                 BEAN_ID_GENERATION_LISTENER,
                 PreInsertEventListener.class
         );
+        PreInsertEventListener fkWiringListener = applicationContext.getBean(
+                BEAN_FK_WIRING_LISTENER,
+                PreInsertEventListener.class
+        );
 
-        // Register listeners with Hibernate
+        // Register listeners with Hibernate (order matters: tenant → ID → FK wiring)
         Objects.requireNonNull(eventListenerRegistry, "EventListenerRegistry must not be null")
                 .appendListeners(EventType.PRE_INSERT, tenantInsertListener);
         eventListenerRegistry.appendListeners(EventType.PRE_UPDATE, tenantUpdateListener);
         eventListenerRegistry.appendListeners(EventType.PRE_DELETE, tenantDeleteListener);
         eventListenerRegistry.appendListeners(EventType.PRE_INSERT, idGenerationListener);
+        eventListenerRegistry.appendListeners(EventType.PRE_INSERT, fkWiringListener);
 
         log.info(INFO_LISTENERS_REGISTERED);
     }

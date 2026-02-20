@@ -38,6 +38,7 @@ public class TenantBillingCycleFactory implements DataFactory<BillingCycleCreate
         dto.setBillingMonth(generator.billingMonth());
         dto.setCalculationDate(generator.calculationDate());
         dto.setUserCount(generator.userCount());
+        dto.setTotalAmount(generator.totalAmount());
         dto.setNotes(generator.notes());
         return dto;
     }

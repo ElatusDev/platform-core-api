@@ -8,9 +8,9 @@
 package com.akademiaplus.store.interfaceadapters;
 
 import com.akademiaplus.billing.store.StoreProductDataModel;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface StoreProductRepository extends JpaRepository<StoreProductDataModel, Long> {
+public interface StoreProductRepository extends TenantScopedRepository<StoreProductDataModel, StoreProductDataModel.ProductCompositeId> {
 }

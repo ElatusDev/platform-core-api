@@ -8,8 +8,11 @@
 package com.akademiaplus.mapping;
 
 import com.akademiaplus.tenancy.TenantDataModel;
+import com.akademiaplus.tenancy.TenantSubscriptionDataModel;
 import com.akademiaplus.usecases.TenantCreationUseCase;
+import com.akademiaplus.usecases.TenantSubscriptionCreationUseCase;
 import com.akademiaplus.utilities.config.ModelMapperConfig;
+import openapi.akademiaplus.domain.tenant.management.dto.SubscriptionCreateRequestDTO;
 import openapi.akademiaplus.domain.tenant.management.dto.TenantCreateRequestDTO;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -17,13 +20,15 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
 
+import java.math.BigDecimal;
 import java.net.URI;
+import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Validates that {@link ModelMapper} (configured via {@link ModelMapperConfig})
- * correctly converts {@link TenantCreateRequestDTO} into {@link TenantDataModel}.
+ * correctly converts tenant-management DTOs into their corresponding data models.
  * <p>
  * Uses a <strong>real</strong> {@code ModelMapper} to surface field-name mismatches,
  * type mismatches (e.g. {@code URI → String}), and unwanted deep-matching side effects
@@ -34,7 +39,7 @@ class TenantModelMapperConversionTest {
 
     private static ModelMapper modelMapper;
 
-    // ── Test constants ───────────────────────────────────────────────────
+    // ── Tenant test constants ────────────────────────────────────────────
     public static final String ORG_NAME = "AkademiaPlus Inc.";
     public static final String LEGAL_NAME = "AkademiaPlus S.A. de C.V.";
     public static final URI WEBSITE_URL = URI.create("https://akademiaplus.com");
@@ -44,6 +49,10 @@ class TenantModelMapperConversionTest {
     public static final String LANDLINE = "+525598765432";
     public static final String DESCRIPTION = "Educational platform";
     public static final String TAX_ID = "RFC123456ABC";
+
+    // ── Subscription test constants ───────────────────────────────────────
+    public static final LocalDate BILLING_DATE = LocalDate.of(2026, 6, 15);
+    public static final Double RATE_PER_STUDENT = 250.0;
 
     @BeforeAll
     static void setUpMapper() {
@@ -58,6 +67,15 @@ class TenantModelMapperConversionTest {
         ).addMappings(mapper ->
                 mapper.skip(TenantDataModel::setTenantId)
         ).implicitMappings();
+
+        modelMapper.createTypeMap(
+                SubscriptionCreateRequestDTO.class,
+                TenantSubscriptionDataModel.class,
+                TenantSubscriptionCreationUseCase.MAP_NAME
+        ).addMappings(mapper -> {
+                mapper.skip(TenantSubscriptionDataModel::setTenantSubscriptionId);
+                mapper.skip(TenantSubscriptionDataModel::setMaxUsers);
+        }).implicitMappings();
 
         modelMapper.getConfiguration().setImplicitMappingEnabled(true);
     }
@@ -125,7 +143,56 @@ class TenantModelMapperConversionTest {
         }
     }
 
-    // ── Builder helper ───────────────────────────────────────────────────
+    @Nested
+    @DisplayName("SubscriptionCreateRequestDTO → TenantSubscriptionDataModel")
+    class SubscriptionDtoToModel {
+
+        @Test
+        @DisplayName("Should map all scalar fields when names match exactly")
+        void shouldMapAllScalarFields_whenNamesMatchExactly() {
+            // Given
+            SubscriptionCreateRequestDTO dto = buildSubscriptionDto();
+
+            // When
+            TenantSubscriptionDataModel result = new TenantSubscriptionDataModel();
+            modelMapper.map(dto, result, TenantSubscriptionCreationUseCase.MAP_NAME);
+
+            // Then
+            assertThat(result.getType()).isEqualTo("standard");
+            assertThat(result.getBillingDate()).isEqualTo(BILLING_DATE);
+            assertThat(result.getRatePerStudent()).isEqualByComparingTo(BigDecimal.valueOf(RATE_PER_STUDENT));
+        }
+
+        @Test
+        @DisplayName("Should leave tenantSubscriptionId null when creation DTO has no ID")
+        void shouldLeaveTenantSubscriptionIdNull_whenCreationDtoHasNoId() {
+            // Given
+            SubscriptionCreateRequestDTO dto = buildSubscriptionDto();
+
+            // When
+            TenantSubscriptionDataModel result = new TenantSubscriptionDataModel();
+            modelMapper.map(dto, result, TenantSubscriptionCreationUseCase.MAP_NAME);
+
+            // Then — ID assigned by EntityIdAssigner via Hibernate listener
+            assertThat(result.getTenantSubscriptionId()).isNull();
+        }
+
+        @Test
+        @DisplayName("Should skip maxUsers because it is JsonNullable and requires manual unwrapping")
+        void shouldSkipMaxUsers_becauseItIsJsonNullable() {
+            // Given — maxUsers is JsonNullable<Integer> in DTO, plain Integer in entity
+            SubscriptionCreateRequestDTO dto = buildSubscriptionDto();
+
+            // When
+            TenantSubscriptionDataModel result = new TenantSubscriptionDataModel();
+            modelMapper.map(dto, result, TenantSubscriptionCreationUseCase.MAP_NAME);
+
+            // Then — maxUsers is skipped by TypeMap; use case handles unwrapping
+            assertThat(result.getMaxUsers()).isNull();
+        }
+    }
+
+    // ── Builder helpers ──────────────────────────────────────────────────
 
     private static TenantCreateRequestDTO buildTenantDto() {
         TenantCreateRequestDTO dto = new TenantCreateRequestDTO(
@@ -137,6 +204,14 @@ class TenantModelMapperConversionTest {
         dto.setLandline(LANDLINE);
         dto.setDescription(DESCRIPTION);
         dto.setTaxId(TAX_ID);
+        return dto;
+    }
+
+    private static SubscriptionCreateRequestDTO buildSubscriptionDto() {
+        SubscriptionCreateRequestDTO dto = new SubscriptionCreateRequestDTO();
+        dto.setType(SubscriptionCreateRequestDTO.TypeEnum.STANDARD);
+        dto.setBillingDate(BILLING_DATE);
+        dto.setRatePerStudent(RATE_PER_STUDENT);
         return dto;
     }
 }

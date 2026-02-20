@@ -12,6 +12,7 @@ import com.akademiaplus.courses.event.CourseEventDataModel;
 import com.akademiaplus.courses.program.CourseDataModel;
 import com.akademiaplus.courses.program.ScheduleDataModel;
 import com.akademiaplus.event.interfaceadapters.CourseEventRepository;
+import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.program.interfaceadapters.CourseRepository;
 import com.akademiaplus.program.interfaceadapters.ScheduleRepository;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
@@ -45,10 +46,12 @@ class CourseEventCreationUseCaseTest {
     @Mock private CourseRepository courseRepository;
     @Mock private ScheduleRepository scheduleRepository;
     @Mock private CollaboratorRepository collaboratorRepository;
+    @Mock private TenantContextHolder tenantContextHolder;
     @Mock private ModelMapper modelMapper;
 
     private CourseEventCreationUseCase useCase;
 
+    private static final Long TENANT_ID = 1L;
     private static final LocalDate EVENT_DATE = LocalDate.of(2026, 4, 15);
     private static final String EVENT_TITLE = "Lesson 1";
     private static final String EVENT_DESCRIPTION = "Introduction to the course";
@@ -65,8 +68,10 @@ class CourseEventCreationUseCaseTest {
                 courseRepository,
                 scheduleRepository,
                 collaboratorRepository,
+                tenantContextHolder,
                 modelMapper
         );
+        lenient().when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
     }
 
     private CourseEventCreateRequestDTO buildDto() {
@@ -93,9 +98,9 @@ class CourseEventCreationUseCaseTest {
             CourseEventCreateRequestDTO dto = buildDto();
             CourseEventDataModel prototypeModel = new CourseEventDataModel();
             when(applicationContext.getBean(CourseEventDataModel.class)).thenReturn(prototypeModel);
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(new CourseDataModel()));
-            when(collaboratorRepository.findById(INSTRUCTOR_ID)).thenReturn(Optional.of(new CollaboratorDataModel()));
-            when(scheduleRepository.findById(SCHEDULE_ID)).thenReturn(Optional.of(new ScheduleDataModel()));
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(new CourseDataModel()));
+            when(collaboratorRepository.findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID))).thenReturn(Optional.of(new CollaboratorDataModel()));
+            when(scheduleRepository.findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID))).thenReturn(Optional.of(new ScheduleDataModel()));
 
             // When
             useCase.transform(dto);
@@ -111,9 +116,9 @@ class CourseEventCreationUseCaseTest {
             CourseEventCreateRequestDTO dto = buildDto();
             CourseEventDataModel prototypeModel = new CourseEventDataModel();
             when(applicationContext.getBean(CourseEventDataModel.class)).thenReturn(prototypeModel);
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(new CourseDataModel()));
-            when(collaboratorRepository.findById(INSTRUCTOR_ID)).thenReturn(Optional.of(new CollaboratorDataModel()));
-            when(scheduleRepository.findById(SCHEDULE_ID)).thenReturn(Optional.of(new ScheduleDataModel()));
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(new CourseDataModel()));
+            when(collaboratorRepository.findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID))).thenReturn(Optional.of(new CollaboratorDataModel()));
+            when(scheduleRepository.findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID))).thenReturn(Optional.of(new ScheduleDataModel()));
 
             // When
             CourseEventDataModel result = useCase.transform(dto);
@@ -131,15 +136,15 @@ class CourseEventCreationUseCaseTest {
             CourseEventDataModel prototypeModel = new CourseEventDataModel();
             CourseDataModel course = new CourseDataModel();
             when(applicationContext.getBean(CourseEventDataModel.class)).thenReturn(prototypeModel);
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(course));
-            when(collaboratorRepository.findById(INSTRUCTOR_ID)).thenReturn(Optional.of(new CollaboratorDataModel()));
-            when(scheduleRepository.findById(SCHEDULE_ID)).thenReturn(Optional.of(new ScheduleDataModel()));
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(course));
+            when(collaboratorRepository.findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID))).thenReturn(Optional.of(new CollaboratorDataModel()));
+            when(scheduleRepository.findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID))).thenReturn(Optional.of(new ScheduleDataModel()));
 
             // When
             CourseEventDataModel result = useCase.transform(dto);
 
             // Then
-            verify(courseRepository).findById(COURSE_ID);
+            verify(courseRepository).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
             assertThat(result.getCourse()).isSameAs(course);
         }
 
@@ -151,15 +156,15 @@ class CourseEventCreationUseCaseTest {
             CourseEventDataModel prototypeModel = new CourseEventDataModel();
             CollaboratorDataModel collaborator = new CollaboratorDataModel();
             when(applicationContext.getBean(CourseEventDataModel.class)).thenReturn(prototypeModel);
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(new CourseDataModel()));
-            when(collaboratorRepository.findById(INSTRUCTOR_ID)).thenReturn(Optional.of(collaborator));
-            when(scheduleRepository.findById(SCHEDULE_ID)).thenReturn(Optional.of(new ScheduleDataModel()));
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(new CourseDataModel()));
+            when(collaboratorRepository.findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID))).thenReturn(Optional.of(collaborator));
+            when(scheduleRepository.findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID))).thenReturn(Optional.of(new ScheduleDataModel()));
 
             // When
             CourseEventDataModel result = useCase.transform(dto);
 
             // Then
-            verify(collaboratorRepository).findById(INSTRUCTOR_ID);
+            verify(collaboratorRepository).findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID));
             assertThat(result.getCollaborator()).isSameAs(collaborator);
         }
 
@@ -171,15 +176,15 @@ class CourseEventCreationUseCaseTest {
             CourseEventDataModel prototypeModel = new CourseEventDataModel();
             ScheduleDataModel schedule = new ScheduleDataModel();
             when(applicationContext.getBean(CourseEventDataModel.class)).thenReturn(prototypeModel);
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(new CourseDataModel()));
-            when(collaboratorRepository.findById(INSTRUCTOR_ID)).thenReturn(Optional.of(new CollaboratorDataModel()));
-            when(scheduleRepository.findById(SCHEDULE_ID)).thenReturn(Optional.of(schedule));
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(new CourseDataModel()));
+            when(collaboratorRepository.findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID))).thenReturn(Optional.of(new CollaboratorDataModel()));
+            when(scheduleRepository.findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID))).thenReturn(Optional.of(schedule));
 
             // When
             CourseEventDataModel result = useCase.transform(dto);
 
             // Then
-            verify(scheduleRepository).findById(SCHEDULE_ID);
+            verify(scheduleRepository).findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID));
             assertThat(result.getSchedule()).isSameAs(schedule);
         }
 
@@ -190,7 +195,7 @@ class CourseEventCreationUseCaseTest {
             CourseEventCreateRequestDTO dto = buildDto();
             CourseEventDataModel prototypeModel = new CourseEventDataModel();
             when(applicationContext.getBean(CourseEventDataModel.class)).thenReturn(prototypeModel);
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.empty());
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.empty());
 
             // When / Then
             assertThatThrownBy(() -> useCase.transform(dto))
@@ -205,8 +210,8 @@ class CourseEventCreationUseCaseTest {
             CourseEventCreateRequestDTO dto = buildDto();
             CourseEventDataModel prototypeModel = new CourseEventDataModel();
             when(applicationContext.getBean(CourseEventDataModel.class)).thenReturn(prototypeModel);
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(new CourseDataModel()));
-            when(collaboratorRepository.findById(INSTRUCTOR_ID)).thenReturn(Optional.empty());
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(new CourseDataModel()));
+            when(collaboratorRepository.findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID))).thenReturn(Optional.empty());
 
             // When / Then
             assertThatThrownBy(() -> useCase.transform(dto))
@@ -221,9 +226,9 @@ class CourseEventCreationUseCaseTest {
             CourseEventCreateRequestDTO dto = buildDto();
             CourseEventDataModel prototypeModel = new CourseEventDataModel();
             when(applicationContext.getBean(CourseEventDataModel.class)).thenReturn(prototypeModel);
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(new CourseDataModel()));
-            when(collaboratorRepository.findById(INSTRUCTOR_ID)).thenReturn(Optional.of(new CollaboratorDataModel()));
-            when(scheduleRepository.findById(SCHEDULE_ID)).thenReturn(Optional.empty());
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(new CourseDataModel()));
+            when(collaboratorRepository.findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID))).thenReturn(Optional.of(new CollaboratorDataModel()));
+            when(scheduleRepository.findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID))).thenReturn(Optional.empty());
 
             // When / Then
             assertThatThrownBy(() -> useCase.transform(dto))
@@ -249,9 +254,9 @@ class CourseEventCreationUseCaseTest {
 
             when(applicationContext.getBean(CourseEventDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, CourseEventCreationUseCase.MAP_NAME);
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(new CourseDataModel()));
-            when(collaboratorRepository.findById(INSTRUCTOR_ID)).thenReturn(Optional.of(new CollaboratorDataModel()));
-            when(scheduleRepository.findById(SCHEDULE_ID)).thenReturn(Optional.of(new ScheduleDataModel()));
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(new CourseDataModel()));
+            when(collaboratorRepository.findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID))).thenReturn(Optional.of(new CollaboratorDataModel()));
+            when(scheduleRepository.findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID))).thenReturn(Optional.of(new ScheduleDataModel()));
             when(courseEventRepository.save(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, CourseEventCreateResponseDTO.class)).thenReturn(expectedDto);
 
@@ -275,9 +280,9 @@ class CourseEventCreationUseCaseTest {
 
             when(applicationContext.getBean(CourseEventDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, CourseEventCreationUseCase.MAP_NAME);
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(new CourseDataModel()));
-            when(collaboratorRepository.findById(INSTRUCTOR_ID)).thenReturn(Optional.of(new CollaboratorDataModel()));
-            when(scheduleRepository.findById(SCHEDULE_ID)).thenReturn(Optional.of(new ScheduleDataModel()));
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(new CourseDataModel()));
+            when(collaboratorRepository.findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID))).thenReturn(Optional.of(new CollaboratorDataModel()));
+            when(scheduleRepository.findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID))).thenReturn(Optional.of(new ScheduleDataModel()));
             when(courseEventRepository.save(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, CourseEventCreateResponseDTO.class)).thenReturn(responseDto);
 
@@ -288,9 +293,9 @@ class CourseEventCreationUseCaseTest {
             InOrder inOrder = inOrder(applicationContext, modelMapper, courseRepository, collaboratorRepository, scheduleRepository, courseEventRepository);
             inOrder.verify(applicationContext).getBean(CourseEventDataModel.class);
             inOrder.verify(modelMapper).map(dto, prototypeModel, CourseEventCreationUseCase.MAP_NAME);
-            inOrder.verify(courseRepository).findById(COURSE_ID);
-            inOrder.verify(collaboratorRepository).findById(INSTRUCTOR_ID);
-            inOrder.verify(scheduleRepository).findById(SCHEDULE_ID);
+            inOrder.verify(courseRepository).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            inOrder.verify(collaboratorRepository).findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID));
+            inOrder.verify(scheduleRepository).findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID));
             inOrder.verify(courseEventRepository).save(prototypeModel);
             inOrder.verify(modelMapper).map(savedModel, CourseEventCreateResponseDTO.class);
         }

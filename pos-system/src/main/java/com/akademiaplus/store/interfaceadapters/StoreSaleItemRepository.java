@@ -8,12 +8,12 @@
 package com.akademiaplus.store.interfaceadapters;
 
 import com.akademiaplus.billing.store.StoreSaleItemDataModel;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import org.springframework.stereotype.Repository;
 
 /**
  * JPA repository for {@link StoreSaleItemDataModel} entities.
  */
 @Repository
-public interface StoreSaleItemRepository extends JpaRepository<StoreSaleItemDataModel, Long> {
+public interface StoreSaleItemRepository extends TenantScopedRepository<StoreSaleItemDataModel, StoreSaleItemDataModel.SaleItemCompositeId> {
 }

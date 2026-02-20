@@ -45,7 +45,7 @@ public class PeopleDataLoaderConfiguration {
     // ── Employee ──
 
     @Bean
-    public DataLoader<EmployeeCreationRequestDTO, EmployeeDataModel, Long> employeeDataLoader(
+    public DataLoader<EmployeeCreationRequestDTO, EmployeeDataModel, EmployeeDataModel.EmployeeCompositeId> employeeDataLoader(
             EmployeeRepository repository,
             DataFactory<EmployeeCreationRequestDTO> employeeFactory,
             EmployeeCreationUseCase employeeCreationUseCase) {
@@ -54,11 +54,11 @@ public class PeopleDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<EmployeeDataModel, Long> employeeDataCleanUp(
+    public DataCleanUp<EmployeeDataModel, EmployeeDataModel.EmployeeCompositeId> employeeDataCleanUp(
             EntityManager entityManager,
             EmployeeRepository repository) {
 
-        DataCleanUp<EmployeeDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<EmployeeDataModel, EmployeeDataModel.EmployeeCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(EmployeeDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
@@ -67,7 +67,7 @@ public class PeopleDataLoaderConfiguration {
     // ── Collaborator ──
 
     @Bean
-    public DataLoader<CollaboratorCreationRequestDTO, CollaboratorDataModel, Long> collaboratorDataLoader(
+    public DataLoader<CollaboratorCreationRequestDTO, CollaboratorDataModel, CollaboratorDataModel.CollaboratorCompositeId> collaboratorDataLoader(
             CollaboratorRepository repository,
             DataFactory<CollaboratorCreationRequestDTO> collaboratorFactory,
             CollaboratorCreationUseCase collaboratorCreationUseCase) {
@@ -76,11 +76,11 @@ public class PeopleDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<CollaboratorDataModel, Long> collaboratorDataCleanUp(
+    public DataCleanUp<CollaboratorDataModel, CollaboratorDataModel.CollaboratorCompositeId> collaboratorDataCleanUp(
             EntityManager entityManager,
             CollaboratorRepository repository) {
 
-        DataCleanUp<CollaboratorDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<CollaboratorDataModel, CollaboratorDataModel.CollaboratorCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(CollaboratorDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
@@ -89,7 +89,7 @@ public class PeopleDataLoaderConfiguration {
     // ── AdultStudent ──
 
     @Bean
-    public DataLoader<AdultStudentCreationRequestDTO, AdultStudentDataModel, Long> adultStudentDataLoader(
+    public DataLoader<AdultStudentCreationRequestDTO, AdultStudentDataModel, AdultStudentDataModel.AdultStudentCompositeId> adultStudentDataLoader(
             AdultStudentRepository repository,
             DataFactory<AdultStudentCreationRequestDTO> adultStudentFactory,
             AdultStudentCreationUseCase adultStudentCreationUseCase) {
@@ -98,11 +98,11 @@ public class PeopleDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<AdultStudentDataModel, Long> adultStudentDataCleanUp(
+    public DataCleanUp<AdultStudentDataModel, AdultStudentDataModel.AdultStudentCompositeId> adultStudentDataCleanUp(
             EntityManager entityManager,
             AdultStudentRepository repository) {
 
-        DataCleanUp<AdultStudentDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<AdultStudentDataModel, AdultStudentDataModel.AdultStudentCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(AdultStudentDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
@@ -111,7 +111,7 @@ public class PeopleDataLoaderConfiguration {
     // ── Tutor ──
 
     @Bean
-    public DataLoader<TutorCreationRequestDTO, TutorDataModel, Long> tutorDataLoader(
+    public DataLoader<TutorCreationRequestDTO, TutorDataModel, TutorDataModel.TutorCompositeId> tutorDataLoader(
             TutorRepository repository,
             DataFactory<TutorCreationRequestDTO> tutorFactory,
             TutorCreationUseCase tutorCreationUseCase) {
@@ -120,11 +120,11 @@ public class PeopleDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<TutorDataModel, Long> tutorDataCleanUp(
+    public DataCleanUp<TutorDataModel, TutorDataModel.TutorCompositeId> tutorDataCleanUp(
             EntityManager entityManager,
             TutorRepository repository) {
 
-        DataCleanUp<TutorDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<TutorDataModel, TutorDataModel.TutorCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(TutorDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
@@ -133,7 +133,7 @@ public class PeopleDataLoaderConfiguration {
     // ── MinorStudent ──
 
     @Bean
-    public DataLoader<MinorStudentCreationRequestDTO, MinorStudentDataModel, Long> minorStudentDataLoader(
+    public DataLoader<MinorStudentCreationRequestDTO, MinorStudentDataModel, MinorStudentDataModel.MinorStudentCompositeId> minorStudentDataLoader(
             MinorStudentRepository repository,
             DataFactory<MinorStudentCreationRequestDTO> minorStudentFactory,
             TutorCreationUseCase tutorCreationUseCase) {
@@ -142,11 +142,11 @@ public class PeopleDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<MinorStudentDataModel, Long> minorStudentDataCleanUp(
+    public DataCleanUp<MinorStudentDataModel, MinorStudentDataModel.MinorStudentCompositeId> minorStudentDataCleanUp(
             EntityManager entityManager,
             MinorStudentRepository repository) {
 
-        DataCleanUp<MinorStudentDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<MinorStudentDataModel, MinorStudentDataModel.MinorStudentCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(MinorStudentDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
@@ -155,33 +155,33 @@ public class PeopleDataLoaderConfiguration {
     // ── Shared tables (cleanup-only) ──
 
     @Bean
-    public DataCleanUp<InternalAuthDataModel, Long> internalAuthDataCleanUp(
+    public DataCleanUp<InternalAuthDataModel, InternalAuthDataModel.InternalAuthCompositeId> internalAuthDataCleanUp(
             EntityManager entityManager,
             InternalAuthRepository repository) {
 
-        DataCleanUp<InternalAuthDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<InternalAuthDataModel, InternalAuthDataModel.InternalAuthCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(InternalAuthDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
     }
 
     @Bean
-    public DataCleanUp<CustomerAuthDataModel, Long> customerAuthDataCleanUp(
+    public DataCleanUp<CustomerAuthDataModel, CustomerAuthDataModel.CustomerAuthCompositeId> customerAuthDataCleanUp(
             EntityManager entityManager,
             CustomerAuthRepository repository) {
 
-        DataCleanUp<CustomerAuthDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<CustomerAuthDataModel, CustomerAuthDataModel.CustomerAuthCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(CustomerAuthDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
     }
 
     @Bean
-    public DataCleanUp<PersonPIIDataModel, Long> personPIIDataCleanUp(
+    public DataCleanUp<PersonPIIDataModel, PersonPIIDataModel.PersonPIICompositeId> personPIIDataCleanUp(
             EntityManager entityManager,
             PersonPIIRepository repository) {
 
-        DataCleanUp<PersonPIIDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<PersonPIIDataModel, PersonPIIDataModel.PersonPIICompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(PersonPIIDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;

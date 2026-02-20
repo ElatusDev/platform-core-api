@@ -7,10 +7,10 @@
  */
 package com.akademiaplus.customer.interfaceadapters;
 
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import com.akademiaplus.security.CustomerAuthDataModel;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface CustomerAuthRepository extends JpaRepository<CustomerAuthDataModel, Long> {
+public interface CustomerAuthRepository extends TenantScopedRepository<CustomerAuthDataModel, CustomerAuthDataModel.CustomerAuthCompositeId> {
 }

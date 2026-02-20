@@ -47,6 +47,13 @@ public class MinorStudentDataModel extends AbstractUser {
     private Long minorStudentId;
 
     /**
+     * Foreign key to the responsible tutor.
+     * Writable column used to persist the FK value during INSERT.
+     */
+    @Column(name = "tutor_id")
+    private Long tutorId;
+
+    /**
      * Reference to the tutor responsible for this minor student.
      * Uses composite foreign key to maintain tenant isolation.
      * <p>
@@ -57,6 +64,13 @@ public class MinorStudentDataModel extends AbstractUser {
     @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false)
     @JoinColumn(name = "tutor_id", referencedColumnName = "tutor_id", insertable=false, updatable=false)
     private TutorDataModel tutor;
+
+    /**
+     * Foreign key to the student's customer authentication record.
+     * Writable column used to persist the FK value during INSERT.
+     */
+    @Column(name = "customer_auth_id")
+    private Long customerAuthId;
 
     /**
      * Reference to the student's customer authentication credentials.

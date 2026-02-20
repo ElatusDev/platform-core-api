@@ -22,6 +22,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.ApplicationContext;
 
+import org.openapitools.jackson.nullable.JsonNullable;
+
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,6 +42,7 @@ class TenantSubscriptionCreationUseCaseTest {
     private static final String SUBSCRIPTION_TYPE = "standard";
     private static final LocalDate BILLING_DATE = LocalDate.of(2026, 3, 1);
     private static final Double RATE_PER_STUDENT = 150.0;
+    private static final Integer MAX_USERS = 100;
     private static final Long SAVED_ID = 1L;
 
     @BeforeEach
@@ -88,6 +91,37 @@ class TenantSubscriptionCreationUseCaseTest {
             // Then
             verify(modelMapper).map(dto, prototypeModel, TenantSubscriptionCreationUseCase.MAP_NAME);
             assertThat(result).isSameAs(prototypeModel);
+        }
+
+        @Test
+        @DisplayName("Should unwrap maxUsers from JsonNullable when present")
+        void shouldUnwrapMaxUsers_whenJsonNullableIsPresent() {
+            // Given
+            SubscriptionCreateRequestDTO dto = buildDto();
+            dto.setMaxUsers(JsonNullable.of(MAX_USERS));
+            TenantSubscriptionDataModel prototypeModel = new TenantSubscriptionDataModel();
+            when(applicationContext.getBean(TenantSubscriptionDataModel.class)).thenReturn(prototypeModel);
+
+            // When
+            TenantSubscriptionDataModel result = useCase.transform(dto);
+
+            // Then
+            assertThat(result.getMaxUsers()).isEqualTo(MAX_USERS);
+        }
+
+        @Test
+        @DisplayName("Should leave maxUsers null when JsonNullable is undefined")
+        void shouldLeaveMaxUsersNull_whenJsonNullableIsUndefined() {
+            // Given — maxUsers defaults to JsonNullable.undefined() in the DTO
+            SubscriptionCreateRequestDTO dto = buildDto();
+            TenantSubscriptionDataModel prototypeModel = new TenantSubscriptionDataModel();
+            when(applicationContext.getBean(TenantSubscriptionDataModel.class)).thenReturn(prototypeModel);
+
+            // When
+            TenantSubscriptionDataModel result = useCase.transform(dto);
+
+            // Then
+            assertThat(result.getMaxUsers()).isNull();
         }
     }
 

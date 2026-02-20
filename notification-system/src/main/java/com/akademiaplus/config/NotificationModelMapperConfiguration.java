@@ -46,6 +46,8 @@ public class NotificationModelMapperConfiguration {
                 NotificationCreationUseCase.MAP_NAME
         ).addMappings(mapper -> {
             mapper.skip(NotificationDataModel::setNotificationId);
+            mapper.skip(NotificationDataModel::setType);
+            mapper.skip(NotificationDataModel::setPriority);
         }).implicitMappings();
     }
 }

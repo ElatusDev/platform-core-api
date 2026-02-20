@@ -9,6 +9,7 @@ package com.akademiaplus.customer.adultstudent.usecases;
 
 import com.akademiaplus.customer.adultstudent.interfaceadapters.AdultStudentRepository;
 import com.akademiaplus.exception.AdultStudentNotFoundException;
+import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.users.customer.AdultStudentDataModel;
 import openapi.akademiaplus.domain.user.management.dto.GetAdultStudentResponseDTO;
 import org.modelmapper.ModelMapper;
@@ -18,17 +19,27 @@ import java.util.Optional;
 
 @Service
 public class GetAdultStudentByIdUseCase {
+
+    /** Error message when tenant context is not available. */
+    public static final String ERROR_TENANT_CONTEXT_REQUIRED = "Tenant context is required";
+
     private final AdultStudentRepository adultStudentRepository;
+    private final TenantContextHolder tenantContextHolder;
     private final ModelMapper modelMapper;
 
     public GetAdultStudentByIdUseCase(AdultStudentRepository adultStudentRepository,
+                                      TenantContextHolder tenantContextHolder,
                                       ModelMapper modelMapper) {
         this.adultStudentRepository = adultStudentRepository;
+        this.tenantContextHolder = tenantContextHolder;
         this.modelMapper = modelMapper;
     }
 
     public GetAdultStudentResponseDTO get(Long adultStudentId) {
-        Optional<AdultStudentDataModel> result = adultStudentRepository.findById(adultStudentId);
+        Long tenantId = tenantContextHolder.getTenantId()
+                .orElseThrow(() -> new IllegalArgumentException(ERROR_TENANT_CONTEXT_REQUIRED));
+        Optional<AdultStudentDataModel> result = adultStudentRepository.findById(
+                new AdultStudentDataModel.AdultStudentCompositeId(tenantId, adultStudentId));
         if(result.isPresent()) {
             AdultStudentDataModel found = result.get();
             GetAdultStudentResponseDTO dto = modelMapper.map(found, GetAdultStudentResponseDTO.class);

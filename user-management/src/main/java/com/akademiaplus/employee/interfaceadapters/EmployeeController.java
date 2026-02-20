@@ -14,10 +14,14 @@ import com.akademiaplus.employee.usecases.GetEmployeeByIdUseCase;
 import openapi.akademiaplus.domain.user.management.api.EmployeesApi;
 import openapi.akademiaplus.domain.user.management.dto.EmployeeCreationRequestDTO;
 import openapi.akademiaplus.domain.user.management.dto.EmployeeCreationResponseDTO;
+import openapi.akademiaplus.domain.user.management.dto.GetAllEmployees200ResponseDTO;
 import openapi.akademiaplus.domain.user.management.dto.GetEmployeeResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/v1/user-management")
@@ -54,5 +58,15 @@ public class EmployeeController implements EmployeesApi {
     public ResponseEntity<Void> deleteEmployee(Long employeeId) {
          deleteEmployeeUseCase.delete(employeeId);
          return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    public ResponseEntity<GetAllEmployees200ResponseDTO> getAllEmployees(
+            Integer page, Integer size, String employeeType,
+            LocalDate entryDateFrom, LocalDate entryDateTo) {
+        List<GetEmployeeResponseDTO> employees = getAllEmployeesUseCase.getAll();
+        GetAllEmployees200ResponseDTO response = new GetAllEmployees200ResponseDTO();
+        response.setData(employees);
+        return ResponseEntity.ok(response);
     }
 }

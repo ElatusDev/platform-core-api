@@ -47,6 +47,13 @@ public class AdultStudentDataModel extends AbstractUser {
     private Long adultStudentId;
 
     /**
+     * Foreign key to the student's customer authentication record.
+     * Writable column used to persist the FK value during INSERT.
+     */
+    @Column(name = "customer_auth_id")
+    private Long customerAuthId;
+
+    /**
      * Reference to the student's customer authentication credentials.
      * Uses composite foreign key to maintain tenant isolation.
      * <p>

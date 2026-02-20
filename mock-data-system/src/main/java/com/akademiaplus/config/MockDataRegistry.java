@@ -218,11 +218,11 @@ public class MockDataRegistry {
             @Qualifier("tenantSequenceDataCleanUp")
             DataCleanUp<TenantSequence, TenantSequence.TenantSequenceId> tenantSequenceCleanUp,
             @Qualifier("internalAuthDataCleanUp")
-            DataCleanUp<InternalAuthDataModel, Long> internalAuthCleanUp,
+            DataCleanUp<InternalAuthDataModel, InternalAuthDataModel.InternalAuthCompositeId> internalAuthCleanUp,
             @Qualifier("customerAuthDataCleanUp")
-            DataCleanUp<CustomerAuthDataModel, Long> customerAuthCleanUp,
+            DataCleanUp<CustomerAuthDataModel, CustomerAuthDataModel.CustomerAuthCompositeId> customerAuthCleanUp,
             @Qualifier("personPIIDataCleanUp")
-            DataCleanUp<PersonPIIDataModel, Long> personPIICleanUp) {
+            DataCleanUp<PersonPIIDataModel, PersonPIIDataModel.PersonPIICompositeId> personPIICleanUp) {
 
         Map<MockEntityType, Runnable> cleaners = new EnumMap<>(MockEntityType.class);
 

@@ -5,6 +5,7 @@ import com.akademiaplus.courses.program.ScheduleDataModel;
 import com.akademiaplus.exception.CollaboratorNotFoundException;
 import com.akademiaplus.exception.ScheduleNotFoundException;
 import com.akademiaplus.exception.ScheduleNotAvailableException;
+import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.program.interfaceadapters.ScheduleRepository;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
 import org.springframework.stereotype.Service;
@@ -18,15 +19,23 @@ public class CourseValidator {
 
     private final CollaboratorRepository collaboratorRepository;
     private final ScheduleRepository scheduleRepository;
+    private final TenantContextHolder tenantContextHolder;
 
     public CourseValidator(CollaboratorRepository collaboratorRepository,
-                           ScheduleRepository scheduleRepository) {
+                           ScheduleRepository scheduleRepository,
+                           TenantContextHolder tenantContextHolder) {
         this.collaboratorRepository = collaboratorRepository;
         this.scheduleRepository = scheduleRepository;
+        this.tenantContextHolder = tenantContextHolder;
     }
 
     public List<CollaboratorDataModel> validateCollaboratorsExist(List<Long> collaboratorIds) {
-        List<CollaboratorDataModel> foundCollaborator = collaboratorRepository.findAllById(collaboratorIds);
+        Long tenantId = tenantContextHolder.getTenantId()
+                .orElseThrow(() -> new IllegalArgumentException("Tenant context is required"));
+        List<CollaboratorDataModel.CollaboratorCompositeId> compositeIds = collaboratorIds.stream()
+                .map(id -> new CollaboratorDataModel.CollaboratorCompositeId(tenantId, id))
+                .toList();
+        List<CollaboratorDataModel> foundCollaborator = collaboratorRepository.findAllById(compositeIds);
 
         if (foundCollaborator.size() != collaboratorIds.size()) {
             Set<Long> foundIds = foundCollaborator.stream().map(CollaboratorDataModel::getCollaboratorId)
@@ -54,7 +63,12 @@ public class CourseValidator {
             return List.of();
         }
 
-        List<ScheduleDataModel> foundSchedules = scheduleRepository.findAllById(scheduleIds);
+        Long tenantId = tenantContextHolder.getTenantId()
+                .orElseThrow(() -> new IllegalArgumentException("Tenant context is required"));
+        List<ScheduleDataModel.ScheduleCompositeId> compositeIds = scheduleIds.stream()
+                .map(id -> new ScheduleDataModel.ScheduleCompositeId(tenantId, id))
+                .toList();
+        List<ScheduleDataModel> foundSchedules = scheduleRepository.findAllById(compositeIds);
         if (foundSchedules.size() != scheduleIds.size()) {
             Set<Long> foundIds = foundSchedules.stream().map(ScheduleDataModel::getScheduleId).collect(Collectors.toSet());
             String missingIds = scheduleIds.stream()

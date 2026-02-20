@@ -11,6 +11,7 @@ import com.akademiaplus.billing.membership.MembershipDataModel;
 import com.akademiaplus.billing.membership.MembershipTutorDataModel;
 import com.akademiaplus.courses.program.CourseDataModel;
 import com.akademiaplus.customer.interfaceadapters.TutorRepository;
+import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.membership.interfaceadapters.MembershipRepository;
 import com.akademiaplus.membership.interfaceadapters.MembershipTutorRepository;
 import com.akademiaplus.program.interfaceadapters.CourseRepository;
@@ -44,10 +45,12 @@ class MembershipTutorCreationUseCaseTest {
     @Mock private MembershipRepository membershipRepository;
     @Mock private CourseRepository courseRepository;
     @Mock private TutorRepository tutorRepository;
+    @Mock private TenantContextHolder tenantContextHolder;
     @Mock private ModelMapper modelMapper;
 
     private MembershipTutorCreationUseCase useCase;
 
+    private static final Long TENANT_ID = 1L;
     private static final LocalDate START_DATE = LocalDate.of(2026, 3, 1);
     private static final LocalDate DUE_DATE = LocalDate.of(2026, 3, 31);
     private static final Long MEMBERSHIP_ID = 2L;
@@ -59,7 +62,8 @@ class MembershipTutorCreationUseCaseTest {
     void setUp() {
         useCase = new MembershipTutorCreationUseCase(
                 applicationContext, repository, membershipRepository,
-                courseRepository, tutorRepository, modelMapper);
+                courseRepository, tutorRepository, tenantContextHolder, modelMapper);
+        lenient().when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
     }
 
     private MembershipTutorCreationRequestDTO buildDto() {
@@ -83,9 +87,9 @@ class MembershipTutorCreationUseCaseTest {
             MembershipTutorCreationRequestDTO dto = buildDto();
             MembershipTutorDataModel prototypeModel = new MembershipTutorDataModel();
             when(applicationContext.getBean(MembershipTutorDataModel.class)).thenReturn(prototypeModel);
-            when(membershipRepository.findById(MEMBERSHIP_ID)).thenReturn(Optional.of(new MembershipDataModel()));
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(new CourseDataModel()));
-            when(tutorRepository.findById(TUTOR_ID)).thenReturn(Optional.of(new TutorDataModel()));
+            when(membershipRepository.findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID))).thenReturn(Optional.of(new MembershipDataModel()));
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(new CourseDataModel()));
+            when(tutorRepository.findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID))).thenReturn(Optional.of(new TutorDataModel()));
 
             // When
             useCase.transform(dto);
@@ -101,9 +105,9 @@ class MembershipTutorCreationUseCaseTest {
             MembershipTutorCreationRequestDTO dto = buildDto();
             MembershipTutorDataModel prototypeModel = new MembershipTutorDataModel();
             when(applicationContext.getBean(MembershipTutorDataModel.class)).thenReturn(prototypeModel);
-            when(membershipRepository.findById(MEMBERSHIP_ID)).thenReturn(Optional.of(new MembershipDataModel()));
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(new CourseDataModel()));
-            when(tutorRepository.findById(TUTOR_ID)).thenReturn(Optional.of(new TutorDataModel()));
+            when(membershipRepository.findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID))).thenReturn(Optional.of(new MembershipDataModel()));
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(new CourseDataModel()));
+            when(tutorRepository.findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID))).thenReturn(Optional.of(new TutorDataModel()));
 
             // When
             MembershipTutorDataModel result = useCase.transform(dto);
@@ -123,9 +127,9 @@ class MembershipTutorCreationUseCaseTest {
             CourseDataModel course = new CourseDataModel();
             TutorDataModel tutor = new TutorDataModel();
             when(applicationContext.getBean(MembershipTutorDataModel.class)).thenReturn(prototypeModel);
-            when(membershipRepository.findById(MEMBERSHIP_ID)).thenReturn(Optional.of(membership));
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(course));
-            when(tutorRepository.findById(TUTOR_ID)).thenReturn(Optional.of(tutor));
+            when(membershipRepository.findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID))).thenReturn(Optional.of(membership));
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(course));
+            when(tutorRepository.findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID))).thenReturn(Optional.of(tutor));
 
             // When
             MembershipTutorDataModel result = useCase.transform(dto);
@@ -143,7 +147,7 @@ class MembershipTutorCreationUseCaseTest {
             MembershipTutorCreationRequestDTO dto = buildDto();
             MembershipTutorDataModel prototypeModel = new MembershipTutorDataModel();
             when(applicationContext.getBean(MembershipTutorDataModel.class)).thenReturn(prototypeModel);
-            when(membershipRepository.findById(MEMBERSHIP_ID)).thenReturn(Optional.empty());
+            when(membershipRepository.findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID))).thenReturn(Optional.empty());
 
             // When / Then
             assertThatThrownBy(() -> useCase.transform(dto))
@@ -169,9 +173,9 @@ class MembershipTutorCreationUseCaseTest {
 
             when(applicationContext.getBean(MembershipTutorDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, MembershipTutorCreationUseCase.MAP_NAME);
-            when(membershipRepository.findById(MEMBERSHIP_ID)).thenReturn(Optional.of(new MembershipDataModel()));
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(new CourseDataModel()));
-            when(tutorRepository.findById(TUTOR_ID)).thenReturn(Optional.of(new TutorDataModel()));
+            when(membershipRepository.findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID))).thenReturn(Optional.of(new MembershipDataModel()));
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(new CourseDataModel()));
+            when(tutorRepository.findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID))).thenReturn(Optional.of(new TutorDataModel()));
             when(repository.save(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, MembershipTutorCreationResponseDTO.class)).thenReturn(expectedDto);
 
@@ -194,9 +198,9 @@ class MembershipTutorCreationUseCaseTest {
 
             when(applicationContext.getBean(MembershipTutorDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, MembershipTutorCreationUseCase.MAP_NAME);
-            when(membershipRepository.findById(MEMBERSHIP_ID)).thenReturn(Optional.of(new MembershipDataModel()));
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(new CourseDataModel()));
-            when(tutorRepository.findById(TUTOR_ID)).thenReturn(Optional.of(new TutorDataModel()));
+            when(membershipRepository.findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID))).thenReturn(Optional.of(new MembershipDataModel()));
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(new CourseDataModel()));
+            when(tutorRepository.findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID))).thenReturn(Optional.of(new TutorDataModel()));
             when(repository.save(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, MembershipTutorCreationResponseDTO.class)).thenReturn(responseDto);
 
@@ -207,9 +211,9 @@ class MembershipTutorCreationUseCaseTest {
             InOrder inOrder = inOrder(applicationContext, modelMapper, membershipRepository, courseRepository, tutorRepository, repository);
             inOrder.verify(applicationContext).getBean(MembershipTutorDataModel.class);
             inOrder.verify(modelMapper).map(dto, prototypeModel, MembershipTutorCreationUseCase.MAP_NAME);
-            inOrder.verify(membershipRepository).findById(MEMBERSHIP_ID);
-            inOrder.verify(courseRepository).findById(COURSE_ID);
-            inOrder.verify(tutorRepository).findById(TUTOR_ID);
+            inOrder.verify(membershipRepository).findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID));
+            inOrder.verify(courseRepository).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            inOrder.verify(tutorRepository).findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID));
             inOrder.verify(repository).save(prototypeModel);
             inOrder.verify(modelMapper).map(savedModel, MembershipTutorCreationResponseDTO.class);
         }

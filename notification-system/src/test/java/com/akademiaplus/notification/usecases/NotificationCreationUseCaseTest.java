@@ -9,6 +9,8 @@ package com.akademiaplus.notification.usecases;
 
 import com.akademiaplus.notification.interfaceadapters.NotificationRepository;
 import com.akademiaplus.notifications.NotificationDataModel;
+import com.akademiaplus.notifications.NotificationPriority;
+import com.akademiaplus.notifications.NotificationType;
 import openapi.akademiaplus.domain.notification.system.dto.NotificationCreationRequestDTO;
 import openapi.akademiaplus.domain.notification.system.dto.NotificationCreationResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -89,6 +91,68 @@ class NotificationCreationUseCaseTest {
             // Then
             verify(modelMapper).map(dto, prototypeModel, NotificationCreationUseCase.MAP_NAME);
             assertThat(result).isSameAs(prototypeModel);
+        }
+
+        @Test
+        @DisplayName("Should convert type string to NotificationType enum")
+        void shouldConvertTypeString_whenTypeIsProvided() {
+            // Given
+            NotificationCreationRequestDTO dto = buildDto();
+            NotificationDataModel prototypeModel = new NotificationDataModel();
+            when(applicationContext.getBean(NotificationDataModel.class)).thenReturn(prototypeModel);
+
+            // When
+            NotificationDataModel result = useCase.transform(dto);
+
+            // Then
+            assertThat(result.getType()).isEqualTo(NotificationType.COURSE_REMINDER);
+        }
+
+        @Test
+        @DisplayName("Should convert priority string to NotificationPriority enum")
+        void shouldConvertPriorityString_whenPriorityIsProvided() {
+            // Given
+            NotificationCreationRequestDTO dto = buildDto();
+            NotificationDataModel prototypeModel = new NotificationDataModel();
+            when(applicationContext.getBean(NotificationDataModel.class)).thenReturn(prototypeModel);
+
+            // When
+            NotificationDataModel result = useCase.transform(dto);
+
+            // Then
+            assertThat(result.getPriority()).isEqualTo(NotificationPriority.HIGH);
+        }
+
+        @Test
+        @DisplayName("Should leave type null when DTO type is null")
+        void shouldLeaveTypeNull_whenDtoTypeIsNull() {
+            // Given
+            NotificationCreationRequestDTO dto = buildDto();
+            dto.setType(null);
+            NotificationDataModel prototypeModel = new NotificationDataModel();
+            when(applicationContext.getBean(NotificationDataModel.class)).thenReturn(prototypeModel);
+
+            // When
+            NotificationDataModel result = useCase.transform(dto);
+
+            // Then
+            assertThat(result.getType()).isNull();
+        }
+
+        @Test
+        @DisplayName("Should leave priority null when DTO priority is null")
+        void shouldLeavePriorityNull_whenDtoPriorityIsNull() {
+            // Given
+            NotificationCreationRequestDTO dto = buildDto();
+            dto.setPriority(null);
+            NotificationDataModel prototypeModel = new NotificationDataModel();
+            when(applicationContext.getBean(NotificationDataModel.class)).thenReturn(prototypeModel);
+
+            // When
+            NotificationDataModel result = useCase.transform(dto);
+
+            // Then
+            assertThat(result.getPriority()).isNull();
         }
     }
 

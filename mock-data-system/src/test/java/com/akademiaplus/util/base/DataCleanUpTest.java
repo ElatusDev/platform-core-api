@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 
 import java.lang.reflect.Field;
 
@@ -24,8 +24,8 @@ import static org.mockito.Mockito.when;
 class DataCleanUpTest {
 
     @Mock private EntityManager entityManager;
-    @Mock private JpaRepository<AnnotatedEntity, Long> repository;
-    @Mock private JpaRepository<UnannotatedEntity, Long> unannotatedRepository;
+    @Mock private TenantScopedRepository<AnnotatedEntity, Long> repository;
+    @Mock private TenantScopedRepository<UnannotatedEntity, Long> unannotatedRepository;
     @Mock private Query nativeQuery;
 
     private DataCleanUp<AnnotatedEntity, Long> dataCleanUp;

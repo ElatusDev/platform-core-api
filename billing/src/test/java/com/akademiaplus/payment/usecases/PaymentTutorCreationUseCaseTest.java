@@ -9,6 +9,7 @@ package com.akademiaplus.payment.usecases;
 
 import com.akademiaplus.billing.customerpayment.PaymentTutorDataModel;
 import com.akademiaplus.billing.membership.MembershipTutorDataModel;
+import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.membership.interfaceadapters.MembershipTutorRepository;
 import com.akademiaplus.membership.interfaceadapters.PaymentTutorRepository;
 import openapi.akademiaplus.domain.billing.dto.PaymentTutorCreationRequestDTO;
@@ -38,10 +39,12 @@ class PaymentTutorCreationUseCaseTest {
     @Mock private ApplicationContext applicationContext;
     @Mock private PaymentTutorRepository paymentRepository;
     @Mock private MembershipTutorRepository membershipTutorRepository;
+    @Mock private TenantContextHolder tenantContextHolder;
     @Mock private ModelMapper modelMapper;
 
     private PaymentTutorCreationUseCase useCase;
 
+    private static final Long TENANT_ID = 1L;
     private static final LocalDate PAYMENT_DATE = LocalDate.of(2026, 3, 15);
     private static final Double AMOUNT = 300.0;
     private static final String PAYMENT_METHOD = "TRANSFER";
@@ -51,7 +54,8 @@ class PaymentTutorCreationUseCaseTest {
     @BeforeEach
     void setUp() {
         useCase = new PaymentTutorCreationUseCase(
-                applicationContext, paymentRepository, membershipTutorRepository, modelMapper);
+                applicationContext, paymentRepository, membershipTutorRepository, tenantContextHolder, modelMapper);
+        lenient().when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
     }
 
     private PaymentTutorCreationRequestDTO buildDto() {
@@ -74,7 +78,7 @@ class PaymentTutorCreationUseCaseTest {
             PaymentTutorCreationRequestDTO dto = buildDto();
             PaymentTutorDataModel prototypeModel = new PaymentTutorDataModel();
             when(applicationContext.getBean(PaymentTutorDataModel.class)).thenReturn(prototypeModel);
-            when(membershipTutorRepository.findById(MEMBERSHIP_TUTOR_ID))
+            when(membershipTutorRepository.findById(new MembershipTutorDataModel.MembershipTutorCompositeId(TENANT_ID, MEMBERSHIP_TUTOR_ID)))
                     .thenReturn(Optional.of(new MembershipTutorDataModel()));
 
             // When
@@ -91,7 +95,7 @@ class PaymentTutorCreationUseCaseTest {
             PaymentTutorCreationRequestDTO dto = buildDto();
             PaymentTutorDataModel prototypeModel = new PaymentTutorDataModel();
             when(applicationContext.getBean(PaymentTutorDataModel.class)).thenReturn(prototypeModel);
-            when(membershipTutorRepository.findById(MEMBERSHIP_TUTOR_ID))
+            when(membershipTutorRepository.findById(new MembershipTutorDataModel.MembershipTutorCompositeId(TENANT_ID, MEMBERSHIP_TUTOR_ID)))
                     .thenReturn(Optional.of(new MembershipTutorDataModel()));
 
             // When
@@ -110,7 +114,7 @@ class PaymentTutorCreationUseCaseTest {
             PaymentTutorDataModel prototypeModel = new PaymentTutorDataModel();
             MembershipTutorDataModel membershipTutor = new MembershipTutorDataModel();
             when(applicationContext.getBean(PaymentTutorDataModel.class)).thenReturn(prototypeModel);
-            when(membershipTutorRepository.findById(MEMBERSHIP_TUTOR_ID))
+            when(membershipTutorRepository.findById(new MembershipTutorDataModel.MembershipTutorCompositeId(TENANT_ID, MEMBERSHIP_TUTOR_ID)))
                     .thenReturn(Optional.of(membershipTutor));
 
             // When
@@ -127,7 +131,7 @@ class PaymentTutorCreationUseCaseTest {
             PaymentTutorCreationRequestDTO dto = buildDto();
             PaymentTutorDataModel prototypeModel = new PaymentTutorDataModel();
             when(applicationContext.getBean(PaymentTutorDataModel.class)).thenReturn(prototypeModel);
-            when(membershipTutorRepository.findById(MEMBERSHIP_TUTOR_ID)).thenReturn(Optional.empty());
+            when(membershipTutorRepository.findById(new MembershipTutorDataModel.MembershipTutorCompositeId(TENANT_ID, MEMBERSHIP_TUTOR_ID))).thenReturn(Optional.empty());
 
             // When / Then
             assertThatThrownBy(() -> useCase.transform(dto))
@@ -153,7 +157,7 @@ class PaymentTutorCreationUseCaseTest {
 
             when(applicationContext.getBean(PaymentTutorDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, PaymentTutorCreationUseCase.MAP_NAME);
-            when(membershipTutorRepository.findById(MEMBERSHIP_TUTOR_ID))
+            when(membershipTutorRepository.findById(new MembershipTutorDataModel.MembershipTutorCompositeId(TENANT_ID, MEMBERSHIP_TUTOR_ID)))
                     .thenReturn(Optional.of(new MembershipTutorDataModel()));
             when(paymentRepository.save(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, PaymentTutorCreationResponseDTO.class)).thenReturn(expectedDto);
@@ -177,7 +181,7 @@ class PaymentTutorCreationUseCaseTest {
 
             when(applicationContext.getBean(PaymentTutorDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, PaymentTutorCreationUseCase.MAP_NAME);
-            when(membershipTutorRepository.findById(MEMBERSHIP_TUTOR_ID))
+            when(membershipTutorRepository.findById(new MembershipTutorDataModel.MembershipTutorCompositeId(TENANT_ID, MEMBERSHIP_TUTOR_ID)))
                     .thenReturn(Optional.of(new MembershipTutorDataModel()));
             when(paymentRepository.save(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, PaymentTutorCreationResponseDTO.class)).thenReturn(responseDto);
@@ -189,7 +193,7 @@ class PaymentTutorCreationUseCaseTest {
             InOrder inOrder = inOrder(applicationContext, modelMapper, membershipTutorRepository, paymentRepository);
             inOrder.verify(applicationContext).getBean(PaymentTutorDataModel.class);
             inOrder.verify(modelMapper).map(dto, prototypeModel, PaymentTutorCreationUseCase.MAP_NAME);
-            inOrder.verify(membershipTutorRepository).findById(MEMBERSHIP_TUTOR_ID);
+            inOrder.verify(membershipTutorRepository).findById(new MembershipTutorDataModel.MembershipTutorCompositeId(TENANT_ID, MEMBERSHIP_TUTOR_ID));
             inOrder.verify(paymentRepository).save(prototypeModel);
             inOrder.verify(modelMapper).map(savedModel, PaymentTutorCreationResponseDTO.class);
         }

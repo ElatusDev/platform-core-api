@@ -50,6 +50,13 @@ public abstract class AbstractEvent extends TenantScoped {
     private String eventDescription;
 
     /**
+     * Foreign key to the schedule this event follows.
+     * Writable column used to persist the FK value during INSERT.
+     */
+    @Column(name = "schedule_id")
+    private Long scheduleId;
+
+    /**
      * Reference to the schedule this event follows.
      * Uses composite foreign key to maintain tenant isolation.
      * <p>

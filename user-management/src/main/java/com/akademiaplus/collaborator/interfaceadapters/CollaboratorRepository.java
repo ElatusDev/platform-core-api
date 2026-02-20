@@ -7,10 +7,10 @@
  */
 package com.akademiaplus.collaborator.interfaceadapters;
 
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface CollaboratorRepository extends JpaRepository<CollaboratorDataModel, Long> {
+public interface CollaboratorRepository extends TenantScopedRepository<CollaboratorDataModel, CollaboratorDataModel.CollaboratorCompositeId> {
 }

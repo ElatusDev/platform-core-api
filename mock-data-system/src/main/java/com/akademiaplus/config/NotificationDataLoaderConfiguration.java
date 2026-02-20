@@ -38,7 +38,7 @@ import org.springframework.context.annotation.Configuration;
 public class NotificationDataLoaderConfiguration {
 
     @Bean
-    public DataLoader<NotificationCreationRequestDTO, NotificationDataModel, Long> notificationDataLoader(
+    public DataLoader<NotificationCreationRequestDTO, NotificationDataModel, NotificationDataModel.NotificationCompositeId> notificationDataLoader(
             NotificationRepository repository,
             DataFactory<NotificationCreationRequestDTO> notificationFactory,
             NotificationCreationUseCase notificationCreationUseCase) {
@@ -47,11 +47,11 @@ public class NotificationDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<NotificationDataModel, Long> notificationDataCleanUp(
+    public DataCleanUp<NotificationDataModel, NotificationDataModel.NotificationCompositeId> notificationDataCleanUp(
             EntityManager entityManager,
             NotificationRepository repository) {
 
-        DataCleanUp<NotificationDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<NotificationDataModel, NotificationDataModel.NotificationCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(NotificationDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
@@ -60,7 +60,7 @@ public class NotificationDataLoaderConfiguration {
     // ── NotificationDelivery (no domain creation use case — direct mapping) ──
 
     @Bean
-    public DataLoader<NotificationDeliveryRequest, NotificationDeliveryDataModel, Long>
+    public DataLoader<NotificationDeliveryRequest, NotificationDeliveryDataModel, NotificationDeliveryDataModel.NotificationDeliveryCompositeId>
             notificationDeliveryDataLoader(
                     NotificationDeliveryRepository repository,
                     DataFactory<NotificationDeliveryRequest> factory,
@@ -81,11 +81,11 @@ public class NotificationDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<NotificationDeliveryDataModel, Long> notificationDeliveryDataCleanUp(
+    public DataCleanUp<NotificationDeliveryDataModel, NotificationDeliveryDataModel.NotificationDeliveryCompositeId> notificationDeliveryDataCleanUp(
             EntityManager entityManager,
             NotificationDeliveryRepository repository) {
 
-        DataCleanUp<NotificationDeliveryDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<NotificationDeliveryDataModel, NotificationDeliveryDataModel.NotificationDeliveryCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(NotificationDeliveryDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
@@ -94,7 +94,7 @@ public class NotificationDataLoaderConfiguration {
     // ── Email (no domain creation use case — direct mapping) ──
 
     @Bean
-    public DataLoader<EmailRequest, EmailDataModel, Long> emailDataLoader(
+    public DataLoader<EmailRequest, EmailDataModel, EmailDataModel.EmailCompositeId> emailDataLoader(
             EmailRepository repository,
             DataFactory<EmailRequest> factory,
             ApplicationContext applicationContext) {
@@ -109,11 +109,11 @@ public class NotificationDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<EmailDataModel, Long> emailDataCleanUp(
+    public DataCleanUp<EmailDataModel, EmailDataModel.EmailCompositeId> emailDataCleanUp(
             EntityManager entityManager,
             EmailRepository repository) {
 
-        DataCleanUp<EmailDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<EmailDataModel, EmailDataModel.EmailCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(EmailDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
@@ -122,7 +122,7 @@ public class NotificationDataLoaderConfiguration {
     // ── EmailRecipient (no domain creation use case — direct mapping) ──
 
     @Bean
-    public DataLoader<EmailRecipientRequest, EmailRecipientDataModel, Long>
+    public DataLoader<EmailRecipientRequest, EmailRecipientDataModel, EmailRecipientDataModel.EmailRecipientCompositeId>
             emailRecipientDataLoader(
                     EmailRecipientRepository repository,
                     DataFactory<EmailRecipientRequest> factory,
@@ -138,11 +138,11 @@ public class NotificationDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<EmailRecipientDataModel, Long> emailRecipientDataCleanUp(
+    public DataCleanUp<EmailRecipientDataModel, EmailRecipientDataModel.EmailRecipientCompositeId> emailRecipientDataCleanUp(
             EntityManager entityManager,
             EmailRecipientRepository repository) {
 
-        DataCleanUp<EmailRecipientDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<EmailRecipientDataModel, EmailRecipientDataModel.EmailRecipientCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(EmailRecipientDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
@@ -151,7 +151,7 @@ public class NotificationDataLoaderConfiguration {
     // ── EmailAttachment (no domain creation use case — direct mapping) ──
 
     @Bean
-    public DataLoader<EmailAttachmentRequest, EmailAttachmentDataModel, Long>
+    public DataLoader<EmailAttachmentRequest, EmailAttachmentDataModel, EmailAttachmentDataModel.EmailAttachmentCompositeId>
             emailAttachmentDataLoader(
                     EmailAttachmentRepository repository,
                     DataFactory<EmailAttachmentRequest> factory,
@@ -167,11 +167,11 @@ public class NotificationDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<EmailAttachmentDataModel, Long> emailAttachmentDataCleanUp(
+    public DataCleanUp<EmailAttachmentDataModel, EmailAttachmentDataModel.EmailAttachmentCompositeId> emailAttachmentDataCleanUp(
             EntityManager entityManager,
             EmailAttachmentRepository repository) {
 
-        DataCleanUp<EmailAttachmentDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<EmailAttachmentDataModel, EmailAttachmentDataModel.EmailAttachmentCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(EmailAttachmentDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;

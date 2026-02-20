@@ -9,6 +9,7 @@ package com.akademiaplus.customer.tutor.usecases;
 
 import com.akademiaplus.customer.interfaceadapters.TutorRepository;
 import com.akademiaplus.customer.minorstudent.interfaceadapters.MinorStudentRepository;
+import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.security.CustomerAuthDataModel;
 import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.customer.MinorStudentDataModel;
@@ -49,6 +50,7 @@ public class TutorCreationUseCase {
     private final ApplicationContext applicationContext;
     private final TutorRepository tutorRepository;
     private final MinorStudentRepository minorStudentRepository;
+    private final TenantContextHolder tenantContextHolder;
     private final ModelMapper modelMapper;
     private final HashingService hashingService;
     private final PiiNormalizer piiNormalizer;
@@ -123,7 +125,10 @@ public class TutorCreationUseCase {
         customerAuth.setToken(dto.getToken());
         model.setCustomerAuth(customerAuth);
 
-        TutorDataModel tutor = tutorRepository.findById(dto.getTutorId())
+        Long tenantId = tenantContextHolder.getTenantId()
+                .orElseThrow(() -> new IllegalArgumentException("Tenant context is required"));
+        TutorDataModel tutor = tutorRepository.findById(
+                        new TutorDataModel.TutorCompositeId(tenantId, dto.getTutorId()))
                 .orElseThrow(() -> new IllegalArgumentException("Tutor not found: " + dto.getTutorId()));
         model.setTutor(tutor);
 

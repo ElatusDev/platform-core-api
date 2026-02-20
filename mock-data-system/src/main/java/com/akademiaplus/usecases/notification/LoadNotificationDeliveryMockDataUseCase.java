@@ -20,12 +20,12 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class LoadNotificationDeliveryMockDataUseCase
-        extends AbstractMockDataUseCase<NotificationDeliveryRequest, NotificationDeliveryDataModel, Long> {
+        extends AbstractMockDataUseCase<NotificationDeliveryRequest, NotificationDeliveryDataModel, NotificationDeliveryDataModel.NotificationDeliveryCompositeId> {
 
     public LoadNotificationDeliveryMockDataUseCase(
-            DataLoader<NotificationDeliveryRequest, NotificationDeliveryDataModel, Long> dataLoader,
+            DataLoader<NotificationDeliveryRequest, NotificationDeliveryDataModel, NotificationDeliveryDataModel.NotificationDeliveryCompositeId> dataLoader,
             @Qualifier("notificationDeliveryDataCleanUp")
-            DataCleanUp<NotificationDeliveryDataModel, Long> dataCleanup) {
+            DataCleanUp<NotificationDeliveryDataModel, NotificationDeliveryDataModel.NotificationDeliveryCompositeId> dataCleanup) {
         super(dataLoader, dataCleanup);
     }
 }

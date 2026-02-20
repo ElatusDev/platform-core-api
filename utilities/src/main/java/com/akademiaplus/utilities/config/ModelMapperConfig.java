@@ -16,6 +16,7 @@ import java.net.URI;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
@@ -29,6 +30,8 @@ import java.time.ZoneOffset;
  *   <li>{@code URI ↔ String} — OpenAPI {@code format: uri} vs JPA VARCHAR</li>
  *   <li>{@code LocalDateTime → OffsetDateTime} — JPA audit fields vs OpenAPI
  *       {@code format: date-time}</li>
+ *   <li>{@code String ↔ LocalTime} — OpenAPI time strings vs JPA
+ *       {@code LocalTime} columns (e.g. schedule start/end times)</li>
  * </ul>
  *
  * @author ElatusDev
@@ -47,6 +50,8 @@ public class ModelMapperConfig {
         addStringToUriConverter(modelMapper);
         addLocalDateTimeToOffsetDateTimeConverter(modelMapper);
         addOffsetDateTimeToLocalDateTimeConverter(modelMapper);
+        addStringToLocalTimeConverter(modelMapper);
+        addLocalTimeToStringConverter(modelMapper);
 
         return modelMapper;
     }
@@ -85,5 +90,17 @@ public class ModelMapperConfig {
         Converter<OffsetDateTime, LocalDateTime> converter = ctx ->
                 ctx.getSource() == null ? null : ctx.getSource().toLocalDateTime();
         modelMapper.addConverter(converter, OffsetDateTime.class, LocalDateTime.class);
+    }
+
+    private void addStringToLocalTimeConverter(ModelMapper modelMapper) {
+        Converter<String, LocalTime> converter = ctx ->
+                ctx.getSource() == null ? null : LocalTime.parse(ctx.getSource());
+        modelMapper.addConverter(converter, String.class, LocalTime.class);
+    }
+
+    private void addLocalTimeToStringConverter(ModelMapper modelMapper) {
+        Converter<LocalTime, String> converter = ctx ->
+                ctx.getSource() == null ? null : ctx.getSource().toString();
+        modelMapper.addConverter(converter, LocalTime.class, String.class);
     }
 }

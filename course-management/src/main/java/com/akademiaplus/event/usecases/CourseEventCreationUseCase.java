@@ -12,6 +12,7 @@ import com.akademiaplus.courses.event.CourseEventDataModel;
 import com.akademiaplus.courses.program.CourseDataModel;
 import com.akademiaplus.courses.program.ScheduleDataModel;
 import com.akademiaplus.event.interfaceadapters.CourseEventRepository;
+import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.program.interfaceadapters.CourseRepository;
 import com.akademiaplus.program.interfaceadapters.ScheduleRepository;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
@@ -42,6 +43,7 @@ public class CourseEventCreationUseCase {
     private final CourseRepository courseRepository;
     private final ScheduleRepository scheduleRepository;
     private final CollaboratorRepository collaboratorRepository;
+    private final TenantContextHolder tenantContextHolder;
     private final ModelMapper modelMapper;
 
     /**
@@ -70,15 +72,21 @@ public class CourseEventCreationUseCase {
         final CourseEventDataModel model = applicationContext.getBean(CourseEventDataModel.class);
         modelMapper.map(dto, model, MAP_NAME);
 
-        CourseDataModel course = courseRepository.findById(dto.getCourseId())
+        Long tenantId = tenantContextHolder.getTenantId()
+                .orElseThrow(() -> new IllegalArgumentException("Tenant context is required"));
+
+        CourseDataModel course = courseRepository.findById(
+                        new CourseDataModel.CourseCompositeId(tenantId, dto.getCourseId()))
                 .orElseThrow(() -> new IllegalArgumentException("Course not found: " + dto.getCourseId()));
         model.setCourse(course);
 
-        CollaboratorDataModel collaborator = collaboratorRepository.findById(dto.getInstructorId())
+        CollaboratorDataModel collaborator = collaboratorRepository.findById(
+                        new CollaboratorDataModel.CollaboratorCompositeId(tenantId, dto.getInstructorId()))
                 .orElseThrow(() -> new IllegalArgumentException("Collaborator not found: " + dto.getInstructorId()));
         model.setCollaborator(collaborator);
 
-        ScheduleDataModel schedule = scheduleRepository.findById(dto.getScheduleId())
+        ScheduleDataModel schedule = scheduleRepository.findById(
+                        new ScheduleDataModel.ScheduleCompositeId(tenantId, dto.getScheduleId()))
                 .orElseThrow(() -> new IllegalArgumentException("Schedule not found: " + dto.getScheduleId()));
         model.setSchedule(schedule);
 

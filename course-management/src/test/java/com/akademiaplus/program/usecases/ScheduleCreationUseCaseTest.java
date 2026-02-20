@@ -9,6 +9,7 @@ package com.akademiaplus.program.usecases;
 
 import com.akademiaplus.courses.program.CourseDataModel;
 import com.akademiaplus.courses.program.ScheduleDataModel;
+import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.program.interfaceadapters.CourseRepository;
 import com.akademiaplus.program.interfaceadapters.ScheduleRepository;
 import openapi.akademiaplus.domain.course.management.dto.ScheduleCreationRequestDTO;
@@ -37,10 +38,12 @@ class ScheduleCreationUseCaseTest {
     @Mock private ApplicationContext applicationContext;
     @Mock private ScheduleRepository scheduleRepository;
     @Mock private CourseRepository courseRepository;
+    @Mock private TenantContextHolder tenantContextHolder;
     @Mock private ModelMapper modelMapper;
 
     private ScheduleCreationUseCase useCase;
 
+    private static final Long TENANT_ID = 1L;
     private static final String SCHEDULE_DAY = "Monday";
     private static final String START_TIME = "09:00";
     private static final String END_TIME = "10:30";
@@ -49,7 +52,8 @@ class ScheduleCreationUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        useCase = new ScheduleCreationUseCase(applicationContext, scheduleRepository, courseRepository, modelMapper);
+        useCase = new ScheduleCreationUseCase(applicationContext, scheduleRepository, courseRepository, tenantContextHolder, modelMapper);
+        lenient().when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
     }
 
     private ScheduleCreationRequestDTO buildDto() {
@@ -73,7 +77,7 @@ class ScheduleCreationUseCaseTest {
             ScheduleDataModel prototypeModel = new ScheduleDataModel();
             CourseDataModel course = new CourseDataModel();
             when(applicationContext.getBean(ScheduleDataModel.class)).thenReturn(prototypeModel);
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(course));
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(course));
 
             // When
             useCase.transform(dto);
@@ -90,7 +94,7 @@ class ScheduleCreationUseCaseTest {
             ScheduleDataModel prototypeModel = new ScheduleDataModel();
             CourseDataModel course = new CourseDataModel();
             when(applicationContext.getBean(ScheduleDataModel.class)).thenReturn(prototypeModel);
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(course));
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(course));
 
             // When
             ScheduleDataModel result = useCase.transform(dto);
@@ -108,13 +112,13 @@ class ScheduleCreationUseCaseTest {
             ScheduleDataModel prototypeModel = new ScheduleDataModel();
             CourseDataModel course = new CourseDataModel();
             when(applicationContext.getBean(ScheduleDataModel.class)).thenReturn(prototypeModel);
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(course));
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(course));
 
             // When
             ScheduleDataModel result = useCase.transform(dto);
 
             // Then
-            verify(courseRepository).findById(COURSE_ID);
+            verify(courseRepository).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
             assertThat(result.getCourse()).isSameAs(course);
         }
 
@@ -125,7 +129,7 @@ class ScheduleCreationUseCaseTest {
             ScheduleCreationRequestDTO dto = buildDto();
             ScheduleDataModel prototypeModel = new ScheduleDataModel();
             when(applicationContext.getBean(ScheduleDataModel.class)).thenReturn(prototypeModel);
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.empty());
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.empty());
 
             // When / Then
             assertThatThrownBy(() -> useCase.transform(dto))
@@ -152,7 +156,7 @@ class ScheduleCreationUseCaseTest {
 
             when(applicationContext.getBean(ScheduleDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, ScheduleCreationUseCase.MAP_NAME);
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(course));
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(course));
             when(scheduleRepository.save(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, ScheduleCreationResponseDTO.class)).thenReturn(expectedDto);
 
@@ -177,7 +181,7 @@ class ScheduleCreationUseCaseTest {
 
             when(applicationContext.getBean(ScheduleDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, ScheduleCreationUseCase.MAP_NAME);
-            when(courseRepository.findById(COURSE_ID)).thenReturn(Optional.of(course));
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(course));
             when(scheduleRepository.save(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, ScheduleCreationResponseDTO.class)).thenReturn(responseDto);
 
@@ -188,7 +192,7 @@ class ScheduleCreationUseCaseTest {
             InOrder inOrder = inOrder(applicationContext, modelMapper, courseRepository, scheduleRepository);
             inOrder.verify(applicationContext).getBean(ScheduleDataModel.class);
             inOrder.verify(modelMapper).map(dto, prototypeModel, ScheduleCreationUseCase.MAP_NAME);
-            inOrder.verify(courseRepository).findById(COURSE_ID);
+            inOrder.verify(courseRepository).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
             inOrder.verify(scheduleRepository).save(prototypeModel);
             inOrder.verify(modelMapper).map(savedModel, ScheduleCreationResponseDTO.class);
         }

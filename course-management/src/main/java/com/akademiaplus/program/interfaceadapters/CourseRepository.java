@@ -8,7 +8,7 @@
 package com.akademiaplus.program.interfaceadapters;
 
 import com.akademiaplus.courses.program.CourseDataModel;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 
-public interface CourseRepository extends JpaRepository<CourseDataModel, Long> {
+public interface CourseRepository extends TenantScopedRepository<CourseDataModel, CourseDataModel.CourseCompositeId> {
 }

@@ -8,9 +8,9 @@
 package com.akademiaplus.event.interfaceadapters;
 
 import com.akademiaplus.courses.event.CourseEventDataModel;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface CourseEventRepository extends JpaRepository<CourseEventDataModel, Long> {
+public interface CourseEventRepository extends TenantScopedRepository<CourseEventDataModel, CourseEventDataModel.CourseEventCompositeId> {
 }

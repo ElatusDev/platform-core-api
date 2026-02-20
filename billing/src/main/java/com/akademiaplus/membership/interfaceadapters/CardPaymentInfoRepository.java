@@ -8,7 +8,7 @@
 package com.akademiaplus.membership.interfaceadapters;
 
 import com.akademiaplus.billing.customerpayment.CardPaymentInfoDataModel;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 
-public interface CardPaymentInfoRepository extends JpaRepository<CardPaymentInfoDataModel, Long> {
+public interface CardPaymentInfoRepository extends TenantScopedRepository<CardPaymentInfoDataModel, CardPaymentInfoDataModel.CardPaymentInfoCompositeId> {
 }

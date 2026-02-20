@@ -2,6 +2,7 @@ package com.akademiaplus.customer.tutor.usecases;
 
 import com.akademiaplus.customer.interfaceadapters.TutorRepository;
 import com.akademiaplus.customer.minorstudent.interfaceadapters.MinorStudentRepository;
+import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.security.CustomerAuthDataModel;
 import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.customer.MinorStudentDataModel;
@@ -37,12 +38,14 @@ class TutorCreationUseCaseTest {
     @Mock private ApplicationContext applicationContext;
     @Mock private TutorRepository tutorRepository;
     @Mock private MinorStudentRepository minorStudentRepository;
+    @Mock private TenantContextHolder tenantContextHolder;
     @Mock private ModelMapper modelMapper;
     @Mock private HashingService hashingService;
     @Mock private PiiNormalizer piiNormalizer;
 
     private TutorCreationUseCase useCase;
 
+    private static final Long TENANT_ID = 1L;
     private static final String TEST_EMAIL = "jdoe@example.com";
     private static final String TEST_PHONE = "5551234567";
     private static final String NORMALIZED_EMAIL = "jdoe@example.com";
@@ -56,6 +59,7 @@ class TutorCreationUseCaseTest {
                 applicationContext,
                 tutorRepository,
                 minorStudentRepository,
+                tenantContextHolder,
                 modelMapper,
                 hashingService,
                 piiNormalizer
@@ -209,6 +213,8 @@ class TutorCreationUseCaseTest {
             personPII.setEmail(TEST_EMAIL);
             personPII.setPhone(TEST_PHONE);
             existingTutor = new TutorDataModel();
+
+            lenient().when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
         }
 
         @Test
@@ -225,7 +231,7 @@ class TutorCreationUseCaseTest {
             when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
             when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
             when(hashingService.generateHash(NORMALIZED_PHONE)).thenReturn(PHONE_HASH);
-            when(tutorRepository.findById(TUTOR_ID)).thenReturn(Optional.of(existingTutor));
+            when(tutorRepository.findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID))).thenReturn(Optional.of(existingTutor));
 
             // When
             MinorStudentDataModel result = useCase.transformMinorStudent(minorDto);
@@ -253,13 +259,13 @@ class TutorCreationUseCaseTest {
             when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
             when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
             when(hashingService.generateHash(NORMALIZED_PHONE)).thenReturn(PHONE_HASH);
-            when(tutorRepository.findById(TUTOR_ID)).thenReturn(Optional.of(existingTutor));
+            when(tutorRepository.findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID))).thenReturn(Optional.of(existingTutor));
 
             // When
             MinorStudentDataModel result = useCase.transformMinorStudent(minorDto);
 
             // Then
-            verify(tutorRepository).findById(TUTOR_ID);
+            verify(tutorRepository).findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID));
             assertThat(result.getTutor()).isEqualTo(existingTutor);
         }
 
@@ -276,7 +282,7 @@ class TutorCreationUseCaseTest {
             when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
             when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
             when(hashingService.generateHash(NORMALIZED_PHONE)).thenReturn(PHONE_HASH);
-            when(tutorRepository.findById(TUTOR_ID)).thenReturn(Optional.empty());
+            when(tutorRepository.findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID))).thenReturn(Optional.empty());
 
             // When & Then
             assertThatThrownBy(() -> useCase.transformMinorStudent(minorDto))
@@ -297,7 +303,7 @@ class TutorCreationUseCaseTest {
             when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
             when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
             when(hashingService.generateHash(NORMALIZED_PHONE)).thenReturn(PHONE_HASH);
-            when(tutorRepository.findById(TUTOR_ID)).thenReturn(Optional.of(existingTutor));
+            when(tutorRepository.findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID))).thenReturn(Optional.of(existingTutor));
 
             // When
             useCase.transformMinorStudent(minorDto);
@@ -374,6 +380,7 @@ class TutorCreationUseCaseTest {
             MinorStudentDataModel savedMinor = new MinorStudentDataModel();
             MinorStudentCreationResponseDTO expectedResponse = new MinorStudentCreationResponseDTO();
 
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
             when(applicationContext.getBean(PersonPIIDataModel.class)).thenReturn(personPII);
             doNothing().when(modelMapper).map(minorDto, personPII);
             when(applicationContext.getBean(MinorStudentDataModel.class)).thenReturn(minorModel);
@@ -383,7 +390,7 @@ class TutorCreationUseCaseTest {
             when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
             when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
             when(hashingService.generateHash(NORMALIZED_PHONE)).thenReturn(PHONE_HASH);
-            when(tutorRepository.findById(tutorId)).thenReturn(Optional.of(existingTutor));
+            when(tutorRepository.findById(new TutorDataModel.TutorCompositeId(TENANT_ID, tutorId))).thenReturn(Optional.of(existingTutor));
             when(minorStudentRepository.save(minorModel)).thenReturn(savedMinor);
             when(modelMapper.map(savedMinor, MinorStudentCreationResponseDTO.class)).thenReturn(expectedResponse);
 

@@ -51,7 +51,7 @@ public class BillingDataLoaderConfiguration {
     // ── Compensation ──
 
     @Bean
-    public DataLoader<CompensationCreationRequestDTO, CompensationDataModel, Long> compensationDataLoader(
+    public DataLoader<CompensationCreationRequestDTO, CompensationDataModel, CompensationDataModel.CompensationCompositeId> compensationDataLoader(
             CompensationRepository repository,
             DataFactory<CompensationCreationRequestDTO> compensationFactory,
             CompensationCreationUseCase compensationCreationUseCase) {
@@ -60,11 +60,11 @@ public class BillingDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<CompensationDataModel, Long> compensationDataCleanUp(
+    public DataCleanUp<CompensationDataModel, CompensationDataModel.CompensationCompositeId> compensationDataCleanUp(
             EntityManager entityManager,
             CompensationRepository repository) {
 
-        DataCleanUp<CompensationDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<CompensationDataModel, CompensationDataModel.CompensationCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(CompensationDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
@@ -73,7 +73,7 @@ public class BillingDataLoaderConfiguration {
     // ── Membership ──
 
     @Bean
-    public DataLoader<MembershipCreationRequestDTO, MembershipDataModel, Long> membershipDataLoader(
+    public DataLoader<MembershipCreationRequestDTO, MembershipDataModel, MembershipDataModel.MembershipCompositeId> membershipDataLoader(
             MembershipRepository repository,
             DataFactory<MembershipCreationRequestDTO> membershipFactory,
             MembershipCreationUseCase membershipCreationUseCase) {
@@ -82,11 +82,11 @@ public class BillingDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<MembershipDataModel, Long> membershipDataCleanUp(
+    public DataCleanUp<MembershipDataModel, MembershipDataModel.MembershipCompositeId> membershipDataCleanUp(
             EntityManager entityManager,
             MembershipRepository repository) {
 
-        DataCleanUp<MembershipDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<MembershipDataModel, MembershipDataModel.MembershipCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(MembershipDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
@@ -95,7 +95,7 @@ public class BillingDataLoaderConfiguration {
     // ── MembershipAdultStudent ──
 
     @Bean
-    public DataLoader<MembershipAdultStudentCreationRequestDTO, MembershipAdultStudentDataModel, Long>
+    public DataLoader<MembershipAdultStudentCreationRequestDTO, MembershipAdultStudentDataModel, MembershipAdultStudentDataModel.MembershipAdultStudentCompositeId>
             membershipAdultStudentDataLoader(
                     MembershipAdultStudentRepository repository,
                     DataFactory<MembershipAdultStudentCreationRequestDTO> factory,
@@ -105,11 +105,11 @@ public class BillingDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<MembershipAdultStudentDataModel, Long> membershipAdultStudentDataCleanUp(
+    public DataCleanUp<MembershipAdultStudentDataModel, MembershipAdultStudentDataModel.MembershipAdultStudentCompositeId> membershipAdultStudentDataCleanUp(
             EntityManager entityManager,
             MembershipAdultStudentRepository repository) {
 
-        DataCleanUp<MembershipAdultStudentDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<MembershipAdultStudentDataModel, MembershipAdultStudentDataModel.MembershipAdultStudentCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(MembershipAdultStudentDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
@@ -118,7 +118,7 @@ public class BillingDataLoaderConfiguration {
     // ── MembershipTutor ──
 
     @Bean
-    public DataLoader<MembershipTutorCreationRequestDTO, MembershipTutorDataModel, Long>
+    public DataLoader<MembershipTutorCreationRequestDTO, MembershipTutorDataModel, MembershipTutorDataModel.MembershipTutorCompositeId>
             membershipTutorDataLoader(
                     MembershipTutorRepository repository,
                     DataFactory<MembershipTutorCreationRequestDTO> factory,
@@ -128,11 +128,11 @@ public class BillingDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<MembershipTutorDataModel, Long> membershipTutorDataCleanUp(
+    public DataCleanUp<MembershipTutorDataModel, MembershipTutorDataModel.MembershipTutorCompositeId> membershipTutorDataCleanUp(
             EntityManager entityManager,
             MembershipTutorRepository repository) {
 
-        DataCleanUp<MembershipTutorDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<MembershipTutorDataModel, MembershipTutorDataModel.MembershipTutorCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(MembershipTutorDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
@@ -141,7 +141,7 @@ public class BillingDataLoaderConfiguration {
     // ── PaymentAdultStudent ──
 
     @Bean
-    public DataLoader<PaymentAdultStudentCreationRequestDTO, PaymentAdultStudentDataModel, Long>
+    public DataLoader<PaymentAdultStudentCreationRequestDTO, PaymentAdultStudentDataModel, PaymentAdultStudentDataModel.PaymentAdultStudentCompositeId>
             paymentAdultStudentDataLoader(
                     PaymentAdultStudentRepository repository,
                     DataFactory<PaymentAdultStudentCreationRequestDTO> factory,
@@ -151,11 +151,11 @@ public class BillingDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<PaymentAdultStudentDataModel, Long> paymentAdultStudentDataCleanUp(
+    public DataCleanUp<PaymentAdultStudentDataModel, PaymentAdultStudentDataModel.PaymentAdultStudentCompositeId> paymentAdultStudentDataCleanUp(
             EntityManager entityManager,
             PaymentAdultStudentRepository repository) {
 
-        DataCleanUp<PaymentAdultStudentDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<PaymentAdultStudentDataModel, PaymentAdultStudentDataModel.PaymentAdultStudentCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(PaymentAdultStudentDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
@@ -164,7 +164,7 @@ public class BillingDataLoaderConfiguration {
     // ── PaymentTutor ──
 
     @Bean
-    public DataLoader<PaymentTutorCreationRequestDTO, PaymentTutorDataModel, Long>
+    public DataLoader<PaymentTutorCreationRequestDTO, PaymentTutorDataModel, PaymentTutorDataModel.PaymentTutorCompositeId>
             paymentTutorDataLoader(
                     PaymentTutorRepository repository,
                     DataFactory<PaymentTutorCreationRequestDTO> factory,
@@ -174,11 +174,11 @@ public class BillingDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<PaymentTutorDataModel, Long> paymentTutorDataCleanUp(
+    public DataCleanUp<PaymentTutorDataModel, PaymentTutorDataModel.PaymentTutorCompositeId> paymentTutorDataCleanUp(
             EntityManager entityManager,
             PaymentTutorRepository repository) {
 
-        DataCleanUp<PaymentTutorDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<PaymentTutorDataModel, PaymentTutorDataModel.PaymentTutorCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(PaymentTutorDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
@@ -187,7 +187,7 @@ public class BillingDataLoaderConfiguration {
     // ── CardPaymentInfo (no domain creation use case — direct mapping) ──
 
     @Bean
-    public DataLoader<CardPaymentInfoRequest, CardPaymentInfoDataModel, Long>
+    public DataLoader<CardPaymentInfoRequest, CardPaymentInfoDataModel, CardPaymentInfoDataModel.CardPaymentInfoCompositeId>
             cardPaymentInfoDataLoader(
                     CardPaymentInfoRepository repository,
                     DataFactory<CardPaymentInfoRequest> factory,
@@ -203,11 +203,11 @@ public class BillingDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<CardPaymentInfoDataModel, Long> cardPaymentInfoDataCleanUp(
+    public DataCleanUp<CardPaymentInfoDataModel, CardPaymentInfoDataModel.CardPaymentInfoCompositeId> cardPaymentInfoDataCleanUp(
             EntityManager entityManager,
             CardPaymentInfoRepository repository) {
 
-        DataCleanUp<CardPaymentInfoDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<CardPaymentInfoDataModel, CardPaymentInfoDataModel.CardPaymentInfoCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(CardPaymentInfoDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;

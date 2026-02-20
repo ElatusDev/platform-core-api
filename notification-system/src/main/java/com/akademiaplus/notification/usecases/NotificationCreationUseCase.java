@@ -9,6 +9,8 @@ package com.akademiaplus.notification.usecases;
 
 import com.akademiaplus.notification.interfaceadapters.NotificationRepository;
 import com.akademiaplus.notifications.NotificationDataModel;
+import com.akademiaplus.notifications.NotificationPriority;
+import com.akademiaplus.notifications.NotificationType;
 import lombok.RequiredArgsConstructor;
 import openapi.akademiaplus.domain.notification.system.dto.NotificationCreationRequestDTO;
 import openapi.akademiaplus.domain.notification.system.dto.NotificationCreationResponseDTO;
@@ -40,9 +42,28 @@ public class NotificationCreationUseCase {
         return modelMapper.map(saved, NotificationCreationResponseDTO.class);
     }
 
+    /**
+     * Transforms the request DTO into a persistence data model.
+     * <p>
+     * {@code type} and {@code priority} are converted manually because
+     * ModelMapper cannot auto-convert {@link String} to Java enum types.
+     * These fields are skipped in the named TypeMap and set here via
+     * {@link NotificationType#valueOf} / {@link NotificationPriority#valueOf}.
+     *
+     * @param dto the creation request DTO
+     * @return a populated data model ready for persistence
+     */
     public NotificationDataModel transform(NotificationCreationRequestDTO dto) {
         final NotificationDataModel model = applicationContext.getBean(NotificationDataModel.class);
         modelMapper.map(dto, model, MAP_NAME);
+
+        if (dto.getType() != null) {
+            model.setType(NotificationType.valueOf(dto.getType()));
+        }
+        if (dto.getPriority() != null) {
+            model.setPriority(NotificationPriority.valueOf(dto.getPriority()));
+        }
+
         return model;
     }
 }

@@ -7,13 +7,13 @@
  */
 package com.akademiaplus.notification.interfaceadapters;
 
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import com.akademiaplus.notifications.NotificationDeliveryDataModel;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 /**
  * JPA repository for {@link NotificationDeliveryDataModel} entities.
  */
 @Repository
-public interface NotificationDeliveryRepository extends JpaRepository<NotificationDeliveryDataModel, Long> {
+public interface NotificationDeliveryRepository extends TenantScopedRepository<NotificationDeliveryDataModel, NotificationDeliveryDataModel.NotificationDeliveryCompositeId> {
 }

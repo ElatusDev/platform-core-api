@@ -15,13 +15,16 @@ import jakarta.transaction.Transactional;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.springframework.context.annotation.Scope;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Component;
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 
-@Component
+/**
+ * Generic utility for cleaning up (deleting) all rows from a JPA entity table
+ * and resetting the auto-increment counter.
+ *
+ * <p>Instances are created as {@code @Bean} definitions in the DataLoaderConfiguration classes,
+ * not through component scanning.</p>
+ */
 @RequiredArgsConstructor
-@Scope("prototype")
 public class DataCleanUp<M, I> {
     private static final String ANNOTATION_MISSING = "missing table annotation";
 
@@ -32,7 +35,7 @@ public class DataCleanUp<M, I> {
     private Class<M> dataModel;
 
     @Setter
-    private JpaRepository<@NonNull M, @NonNull I> repository;
+    private TenantScopedRepository<@NonNull M, @NonNull I> repository;
 
     @Transactional
     public void clean() {

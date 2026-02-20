@@ -7,14 +7,14 @@
  */
 package com.akademiaplus.internal.interfaceadapters;
 
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import com.akademiaplus.security.InternalAuthDataModel;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface InternalAuthRepository extends JpaRepository<InternalAuthDataModel, Long> {
+public interface InternalAuthRepository extends TenantScopedRepository<InternalAuthDataModel, InternalAuthDataModel.InternalAuthCompositeId> {
     Optional<InternalAuthDataModel> findByUsernameHash(String usernameHash);
 
 }

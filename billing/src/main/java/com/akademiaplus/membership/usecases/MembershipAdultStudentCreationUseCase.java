@@ -11,6 +11,7 @@ import com.akademiaplus.billing.membership.MembershipAdultStudentDataModel;
 import com.akademiaplus.billing.membership.MembershipDataModel;
 import com.akademiaplus.courses.program.CourseDataModel;
 import com.akademiaplus.customer.adultstudent.interfaceadapters.AdultStudentRepository;
+import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.membership.interfaceadapters.MembershipAdultStudentRepository;
 import com.akademiaplus.membership.interfaceadapters.MembershipRepository;
 import com.akademiaplus.program.interfaceadapters.CourseRepository;
@@ -42,6 +43,7 @@ public class MembershipAdultStudentCreationUseCase {
     private final MembershipRepository membershipRepository;
     private final CourseRepository courseRepository;
     private final AdultStudentRepository adultStudentRepository;
+    private final TenantContextHolder tenantContextHolder;
     private final ModelMapper modelMapper;
 
     @Transactional
@@ -55,15 +57,21 @@ public class MembershipAdultStudentCreationUseCase {
                 applicationContext.getBean(MembershipAdultStudentDataModel.class);
         modelMapper.map(dto, model, MAP_NAME);
 
-        MembershipDataModel membership = membershipRepository.findById(dto.getMembershipId())
+        Long tenantId = tenantContextHolder.getTenantId()
+                .orElseThrow(() -> new IllegalArgumentException("Tenant context is required"));
+
+        MembershipDataModel membership = membershipRepository.findById(
+                        new MembershipDataModel.MembershipCompositeId(tenantId, dto.getMembershipId()))
                 .orElseThrow(() -> new IllegalArgumentException("Membership not found: " + dto.getMembershipId()));
         model.setMembership(membership);
 
-        CourseDataModel course = courseRepository.findById(dto.getCourseId())
+        CourseDataModel course = courseRepository.findById(
+                        new CourseDataModel.CourseCompositeId(tenantId, dto.getCourseId()))
                 .orElseThrow(() -> new IllegalArgumentException("Course not found: " + dto.getCourseId()));
         model.setCourse(course);
 
-        AdultStudentDataModel adultStudent = adultStudentRepository.findById(dto.getAdultStudentId())
+        AdultStudentDataModel adultStudent = adultStudentRepository.findById(
+                        new AdultStudentDataModel.AdultStudentCompositeId(tenantId, dto.getAdultStudentId()))
                 .orElseThrow(() -> new IllegalArgumentException("Adult student not found: " + dto.getAdultStudentId()));
         model.setAdultStudent(adultStudent);
 

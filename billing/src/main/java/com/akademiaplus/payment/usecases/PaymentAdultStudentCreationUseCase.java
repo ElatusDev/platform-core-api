@@ -9,6 +9,7 @@ package com.akademiaplus.payment.usecases;
 
 import com.akademiaplus.billing.customerpayment.PaymentAdultStudentDataModel;
 import com.akademiaplus.billing.membership.MembershipAdultStudentDataModel;
+import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.membership.interfaceadapters.MembershipAdultStudentRepository;
 import com.akademiaplus.membership.interfaceadapters.PaymentAdultStudentRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class PaymentAdultStudentCreationUseCase {
     private final ApplicationContext applicationContext;
     private final PaymentAdultStudentRepository paymentRepository;
     private final MembershipAdultStudentRepository membershipAdultStudentRepository;
+    private final TenantContextHolder tenantContextHolder;
     private final ModelMapper modelMapper;
 
     @Transactional
@@ -49,8 +51,11 @@ public class PaymentAdultStudentCreationUseCase {
                 applicationContext.getBean(PaymentAdultStudentDataModel.class);
         modelMapper.map(dto, model, MAP_NAME);
 
+        Long tenantId = tenantContextHolder.getTenantId()
+                .orElseThrow(() -> new IllegalArgumentException("Tenant context is required"));
         MembershipAdultStudentDataModel membershipAdultStudent =
-                membershipAdultStudentRepository.findById(dto.getMembershipAdultStudentId())
+                membershipAdultStudentRepository.findById(
+                                new MembershipAdultStudentDataModel.MembershipAdultStudentCompositeId(tenantId, dto.getMembershipAdultStudentId()))
                         .orElseThrow(() -> new IllegalArgumentException(
                                 "MembershipAdultStudent not found: " + dto.getMembershipAdultStudentId()));
         model.setMembershipAdultStudent(membershipAdultStudent);

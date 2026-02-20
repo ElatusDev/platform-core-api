@@ -20,12 +20,12 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class LoadCompensationMockDataUseCase
-        extends AbstractMockDataUseCase<CompensationCreationRequestDTO, CompensationDataModel, Long> {
+        extends AbstractMockDataUseCase<CompensationCreationRequestDTO, CompensationDataModel, CompensationDataModel.CompensationCompositeId> {
 
     public LoadCompensationMockDataUseCase(
-            DataLoader<CompensationCreationRequestDTO, CompensationDataModel, Long> dataLoader,
+            DataLoader<CompensationCreationRequestDTO, CompensationDataModel, CompensationDataModel.CompensationCompositeId> dataLoader,
             @Qualifier("compensationDataCleanUp")
-            DataCleanUp<CompensationDataModel, Long> dataCleanup) {
+            DataCleanUp<CompensationDataModel, CompensationDataModel.CompensationCompositeId> dataCleanup) {
         super(dataLoader, dataCleanup);
     }
 }

@@ -57,6 +57,13 @@ public class CollaboratorDataModel extends AbstractUser {
     private String skills;
 
     /**
+     * Foreign key to the collaborator's internal authentication record.
+     * Writable column used to persist the FK value during INSERT.
+     */
+    @Column(name = "internal_auth_id")
+    private Long internalAuthId;
+
+    /**
      * Reference to the collaborator's internal authentication credentials.
      * Uses composite foreign key to maintain tenant isolation.
      * <p>

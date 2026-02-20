@@ -42,12 +42,19 @@ public class PaymentAdultStudentDataModel extends BasePayment {
     private Long paymentAdultStudentId;
 
     /**
+     * Foreign key to the adult student membership this payment is for.
+     * Writable column used to persist the FK value during INSERT.
+     */
+    @Column(name = "membership_adult_student_id")
+    private Long membershipAdultStudentId;
+
+    /**
      * Reference to the adult student membership this payment is for.
      * Uses composite foreign key to maintain tenant isolation.
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id")
-    @JoinColumn(name = "membership_adult_student_id", referencedColumnName = "membership_adult_student_id")
+    @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable = false, updatable = false)
+    @JoinColumn(name = "membership_adult_student_id", referencedColumnName = "membership_adult_student_id", insertable = false, updatable = false)
     private MembershipAdultStudentDataModel membershipAdultStudent;
 
     /**

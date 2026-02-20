@@ -11,6 +11,7 @@ import com.akademiaplus.billing.membership.MembershipDataModel;
 import com.akademiaplus.billing.membership.MembershipTutorDataModel;
 import com.akademiaplus.courses.program.CourseDataModel;
 import com.akademiaplus.customer.interfaceadapters.TutorRepository;
+import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.membership.interfaceadapters.MembershipRepository;
 import com.akademiaplus.membership.interfaceadapters.MembershipTutorRepository;
 import com.akademiaplus.program.interfaceadapters.CourseRepository;
@@ -42,6 +43,7 @@ public class MembershipTutorCreationUseCase {
     private final MembershipRepository membershipRepository;
     private final CourseRepository courseRepository;
     private final TutorRepository tutorRepository;
+    private final TenantContextHolder tenantContextHolder;
     private final ModelMapper modelMapper;
 
     @Transactional
@@ -55,15 +57,21 @@ public class MembershipTutorCreationUseCase {
                 applicationContext.getBean(MembershipTutorDataModel.class);
         modelMapper.map(dto, model, MAP_NAME);
 
-        MembershipDataModel membership = membershipRepository.findById(dto.getMembershipId())
+        Long tenantId = tenantContextHolder.getTenantId()
+                .orElseThrow(() -> new IllegalArgumentException("Tenant context is required"));
+
+        MembershipDataModel membership = membershipRepository.findById(
+                        new MembershipDataModel.MembershipCompositeId(tenantId, dto.getMembershipId()))
                 .orElseThrow(() -> new IllegalArgumentException("Membership not found: " + dto.getMembershipId()));
         model.setMembership(membership);
 
-        CourseDataModel course = courseRepository.findById(dto.getCourseId())
+        CourseDataModel course = courseRepository.findById(
+                        new CourseDataModel.CourseCompositeId(tenantId, dto.getCourseId()))
                 .orElseThrow(() -> new IllegalArgumentException("Course not found: " + dto.getCourseId()));
         model.setCourse(course);
 
-        TutorDataModel tutor = tutorRepository.findById(dto.getTutorId())
+        TutorDataModel tutor = tutorRepository.findById(
+                        new TutorDataModel.TutorCompositeId(tenantId, dto.getTutorId()))
                 .orElseThrow(() -> new IllegalArgumentException("Tutor not found: " + dto.getTutorId()));
         model.setTutor(tutor);
 

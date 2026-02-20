@@ -66,6 +66,13 @@ public class ScheduleDataModel extends TenantScoped {
     private LocalTime endTime;
 
     /**
+     * Foreign key to the course this schedule belongs to.
+     * Writable column used to persist the FK value during INSERT.
+     */
+    @Column(name = "course_id")
+    private Long courseId;
+
+    /**
      * Reference to the course this schedule belongs to.
      * Uses composite foreign key to maintain tenant isolation.
      */

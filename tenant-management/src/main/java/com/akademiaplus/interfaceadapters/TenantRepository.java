@@ -2,7 +2,7 @@ package com.akademiaplus.interfaceadapters;
 
 import com.akademiaplus.tenancy.TenantDataModel;
 import lombok.NonNull;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 
-public interface TenantRepository extends JpaRepository<@NonNull TenantDataModel, @NonNull Long> {
+public interface TenantRepository extends TenantScopedRepository<@NonNull TenantDataModel, @NonNull Long> {
 }

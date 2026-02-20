@@ -7,8 +7,8 @@
  */
 package com.akademiaplus.interfaceadapters;
 
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import com.akademiaplus.users.base.PersonPIIDataModel;
-import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface PersonPIIRepository extends JpaRepository<PersonPIIDataModel, Long> {
+public interface PersonPIIRepository extends TenantScopedRepository<PersonPIIDataModel, PersonPIIDataModel.PersonPIICompositeId> {
 }

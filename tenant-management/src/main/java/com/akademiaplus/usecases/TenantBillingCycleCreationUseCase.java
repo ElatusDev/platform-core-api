@@ -17,6 +17,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 /**
  * Handles tenant billing cycle creation by transforming the OpenAPI request DTO
  * into the persistence data model.
@@ -29,6 +32,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class TenantBillingCycleCreationUseCase {
     public static final String MAP_NAME = "tenantBillingCycleMap";
+
+    /**
+     * Formatter for the billing month string ({@code YYYY-MM}) received from
+     * the OpenAPI DTO. Appended with {@code -01} to produce a valid
+     * {@link LocalDate} representing the first day of the billing month.
+     */
+    public static final DateTimeFormatter BILLING_MONTH_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private final ApplicationContext applicationContext;
     private final TenantBillingCycleRepository repository;
@@ -52,6 +63,12 @@ public class TenantBillingCycleCreationUseCase {
      * Uses a named TypeMap to prevent deep-matching of DTO fields
      * into the entity ID. The billing status defaults to PENDING as
      * defined in the entity.
+     * <p>
+     * The {@code billingMonth} field is a {@code String} in the DTO
+     * (OpenAPI {@code pattern: ^[0-9]{4}-[0-9]{2}$}, e.g. {@code "2025-01"})
+     * but a {@code LocalDate} in the entity. ModelMapper cannot convert
+     * this automatically, so the TypeMap skips it and this method parses
+     * the string manually, using the first day of the month.
      *
      * @param dto the creation request
      * @return populated data model ready for persistence
@@ -60,6 +77,12 @@ public class TenantBillingCycleCreationUseCase {
         final TenantBillingCycleDataModel model =
                 applicationContext.getBean(TenantBillingCycleDataModel.class);
         modelMapper.map(dto, model, MAP_NAME);
+
+        if (dto.getBillingMonth() != null) {
+            model.setBillingMonth(
+                    LocalDate.parse(dto.getBillingMonth() + "-01", BILLING_MONTH_FORMATTER));
+        }
+
         return model;
     }
 }

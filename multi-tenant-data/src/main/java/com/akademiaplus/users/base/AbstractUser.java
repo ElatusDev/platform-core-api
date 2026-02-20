@@ -30,6 +30,13 @@ import java.time.LocalDate;
 public abstract class AbstractUser extends TenantScoped {
 
     /**
+     * Foreign key to the user's personal information record.
+     * Writable column used to persist the FK value during INSERT.
+     */
+    @Column(name = "person_pii_id")
+    private Long personPiiId;
+
+    /**
      * Reference to the user's personal and private information.
      * Uses composite foreign key to maintain tenant isolation.
      * All user types require personal information for identification and contact.

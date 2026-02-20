@@ -40,6 +40,13 @@ public abstract class MembershipAssociationBase extends TenantScoped {
     private LocalDate dueDate;
 
     /**
+     * Foreign key to the membership type for this association.
+     * Writable column used to persist the FK value during INSERT.
+     */
+    @Column(name = "membership_id")
+    private Long membershipId;
+
+    /**
      * Reference to the membership type for this association.
      * Uses composite foreign key to maintain tenant isolation.
      */
@@ -47,6 +54,13 @@ public abstract class MembershipAssociationBase extends TenantScoped {
     @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false)
     @JoinColumn(name = "membership_id", referencedColumnName = "membership_id", insertable=false, updatable=false)
     protected MembershipDataModel membership;
+
+    /**
+     * Foreign key to a specific course for this membership.
+     * Writable column used to persist the FK value during INSERT.
+     */
+    @Column(name = "course_id")
+    private Long courseId;
 
     /**
      * Optional reference to a specific course for this membership.

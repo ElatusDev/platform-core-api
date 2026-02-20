@@ -8,9 +8,9 @@
 package com.akademiaplus.program.interfaceadapters;
 
 import com.akademiaplus.courses.program.ScheduleDataModel;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ScheduleRepository extends JpaRepository<ScheduleDataModel, Long> {
+public interface ScheduleRepository extends TenantScopedRepository<ScheduleDataModel, ScheduleDataModel.ScheduleCompositeId> {
 }

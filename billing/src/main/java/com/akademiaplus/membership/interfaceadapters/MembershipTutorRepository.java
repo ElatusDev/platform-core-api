@@ -8,9 +8,9 @@
 package com.akademiaplus.membership.interfaceadapters;
 
 import com.akademiaplus.billing.membership.MembershipTutorDataModel;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface MembershipTutorRepository extends JpaRepository<MembershipTutorDataModel, Long> {
+public interface MembershipTutorRepository extends TenantScopedRepository<MembershipTutorDataModel, MembershipTutorDataModel.MembershipTutorCompositeId> {
 }

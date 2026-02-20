@@ -76,8 +76,18 @@ public class SecurityConfig {
         return source;
     }
 
+    /**
+     * Security filter chain for the internal mock-data service.
+     *
+     * <p>This service is internal infrastructure invoked only by CI pipelines
+     * (e.g. GitHub Actions) or local developer scripts. It requires no
+     * authentication, no JWT, and no {@code X-Tenant-Id} header. The
+     * {@link com.akademiaplus.infra.persistence.config.TenantContextLoader}
+     * filter is disabled separately via
+     * {@code MockDataTenantConfiguration}.</p>
+     */
     @Bean
-    @Profile({"mock-data-service"}) // Use the profile you are activating
+    @Profile({"mock-data-service"})
     public SecurityFilterChain securityFilterChainForMockDataService(HttpSecurity http) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
@@ -90,18 +100,24 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * CORS configuration for the internal mock-data service.
+     *
+     * <p>Allows POST from localhost (local dev) and any origin (CI runners).
+     * This service is never exposed to the public internet.</p>
+     */
     @Bean
     @Profile({"mock-data-service"})
     public CorsConfigurationSource corsConfigurationSourceForMockDataService() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
-        CorsConfiguration defaultCorsConfig = new CorsConfiguration();
-        defaultCorsConfig.setAllowedOriginPatterns(List.of("http://localhost:*", "https://localhost:*"));
-        defaultCorsConfig.setAllowedMethods(List.of("POST"));
-        defaultCorsConfig.setAllowedHeaders(List.of("*"));
-        defaultCorsConfig.setAllowCredentials(false);
+        CorsConfiguration corsConfig = new CorsConfiguration();
+        corsConfig.setAllowedOriginPatterns(List.of("*"));
+        corsConfig.setAllowedMethods(List.of("POST"));
+        corsConfig.setAllowedHeaders(List.of("*"));
+        corsConfig.setAllowCredentials(false);
 
-        source.registerCorsConfiguration("/infra/v1/mock-data/generate/**", defaultCorsConfig);
+        source.registerCorsConfiguration("/**", corsConfig);
         return source;
     }
 }

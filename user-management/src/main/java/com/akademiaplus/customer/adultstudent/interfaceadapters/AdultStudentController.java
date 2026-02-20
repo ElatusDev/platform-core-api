@@ -15,6 +15,7 @@ import openapi.akademiaplus.domain.user.management.api.AdultStudentsApi;
 import openapi.akademiaplus.domain.user.management.dto.AdultStudentCreationRequestDTO;
 import openapi.akademiaplus.domain.user.management.dto.AdultStudentCreationResponseDTO;
 import openapi.akademiaplus.domain.user.management.dto.GetAdultStudentResponseDTO;
+import openapi.akademiaplus.domain.user.management.dto.GetAllAdultStudents200ResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -55,6 +56,15 @@ public class AdultStudentController implements AdultStudentsApi {
     @Override
     public ResponseEntity<GetAdultStudentResponseDTO> getAdultStudent(Long adultStudentId){
         return ResponseEntity.ok(getAdultStudentByIdUseCase.get(adultStudentId));
+    }
+
+    @Override
+    public ResponseEntity<GetAllAdultStudents200ResponseDTO> getAllAdultStudents(
+            Integer page, Integer size) {
+        List<GetAdultStudentResponseDTO> adultStudents = getAllAdultStudentsUseCase.getAll();
+        GetAllAdultStudents200ResponseDTO response = new GetAllAdultStudents200ResponseDTO();
+        response.setData(adultStudents);
+        return ResponseEntity.ok(response);
     }
 
 }

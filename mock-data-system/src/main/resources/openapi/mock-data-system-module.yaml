@@ -1,25 +1,36 @@
 openapi: 3.0.0
 info:
-  title: Mock Data Service API
+  title: Mock Data Service API (Internal)
   version: 1.0.0
-  description: API for generating mock data for development and testing environments.
+  description: >
+    Internal infrastructure API for generating mock data in development and
+    testing environments. This service is never exposed to the public internet.
+    It is invoked by CI pipelines (e.g. GitHub Actions) or local developer
+    scripts. No authentication (JWT) or tenant header (X-Tenant-Id) is
+    required — the service creates tenants as part of its pipeline and manages
+    tenant context internally.
 tags:
   - name: MockData
-    description: Operations for generating mock data
+    description: Internal operations for generating mock data
 
 paths:
   /mock-data/generate/all:
     post:
-      summary: Generates and loads all mock data into the database
+      summary: Wipes and repopulates the database with a full set of mock data
       operationId: generateAllMockData
       tags:
         - Mock Data
-      description: This endpoint triggers the MockDataService to wipe and repopulate the database with a full set of mock data. This operation is designed for development and testing environments only.
+      description: >
+        Triggers the mock-data pipeline to clean all existing data and generate
+        fresh records for every entity type across all domains. Intended for
+        internal use only — no authentication or tenant header required. The
+        orchestrator creates tenants, then loads tenant-scoped entities in
+        FK-safe topological order.
       parameters:
         - name: count
           in: query
           required: false
-          description: Number of records to generate per entity type (employees, collaborators, adult students).
+          description: Number of records to generate per entity type per tenant.
           schema:
             type: integer
             default: 50
@@ -32,7 +43,7 @@ paths:
             application/json:
               schema:
                 type: string
-                example: "Mock data generation completed successfully."
+                example: "Mock data generated: 50 records per entity type for 1 tenant."
         '500':
           description: An unexpected error occurred during data generation
           content:

@@ -52,6 +52,11 @@ public class TenantSubscriptionCreationUseCase {
      * Uses a named TypeMap to prevent deep-matching of DTO fields
      * into the entity ID. The subscription type enum is mapped by
      * ModelMapper's implicit conversion from the DTO's string-backed enum.
+     * <p>
+     * The {@code maxUsers} field is a {@code JsonNullable<Integer>} in the DTO
+     * (OpenAPI {@code nullable: true}) and is skipped by the TypeMap to avoid
+     * ModelMapper's inability to convert {@code JsonNullable} wrappers. It is
+     * manually unwrapped here instead.
      *
      * @param dto the creation request
      * @return populated data model ready for persistence
@@ -60,6 +65,11 @@ public class TenantSubscriptionCreationUseCase {
         final TenantSubscriptionDataModel model =
                 applicationContext.getBean(TenantSubscriptionDataModel.class);
         modelMapper.map(dto, model, MAP_NAME);
+
+        if (dto.getMaxUsers() != null && dto.getMaxUsers().isPresent()) {
+            model.setMaxUsers(dto.getMaxUsers().get());
+        }
+
         return model;
     }
 }

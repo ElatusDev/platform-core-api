@@ -9,6 +9,8 @@ package com.akademiaplus.config;
 
 import com.akademiaplus.collaborator.interfaceadapters.CollaboratorController;
 import com.akademiaplus.customer.adultstudent.interfaceadapters.AdultStudentController;
+import com.akademiaplus.customer.minorstudent.interfaceadapters.MinorStudentController;
+import com.akademiaplus.customer.tutor.interfaceadapters.TutorController;
 import com.akademiaplus.employee.interfaceadapters.EmployeeController;
 import com.akademiaplus.exception.*;
 import com.akademiaplus.utilities.MessageService;
@@ -23,7 +25,8 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice(basePackageClasses= {EmployeeController.class, CollaboratorController.class,
-                    AdultStudentController.class})
+                    AdultStudentController.class, TutorController.class,
+                    MinorStudentController.class})
 public class PeopleControllerAdvice {
     private final MessageService messageService;
 
@@ -74,6 +77,16 @@ public class PeopleControllerAdvice {
     @ExceptionHandler
     public ResponseEntity<ErrorResponseDTO> handleEmployeeNotFoundException(EmployeeNotFoundException ex) {
         return new ResponseEntity<>(new ErrorResponseDTO(messageService.getEmployeeNotFound(ex.getMessage())), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> handleTutorNotFoundException(TutorNotFoundException ex) {
+        return new ResponseEntity<>(new ErrorResponseDTO(messageService.getTutorNotFound(ex.getMessage())), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> handleMinorStudentNotFoundException(MinorStudentNotFoundException ex) {
+        return new ResponseEntity<>(new ErrorResponseDTO(messageService.getMinorStudentNotFound(ex.getMessage())), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

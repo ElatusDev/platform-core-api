@@ -44,6 +44,13 @@ public class MembershipTutorDataModel extends MembershipAssociationBase {
     private Long membershipTutorId;
 
     /**
+     * Foreign key to the tutor associated with this membership.
+     * Writable column used to persist the FK value during INSERT.
+     */
+    @Column(name = "tutor_id")
+    private Long tutorId;
+
+    /**
      * Reference to the tutor associated with this membership.
      * Part of the composite primary key and uses tenant-aware join.
      */

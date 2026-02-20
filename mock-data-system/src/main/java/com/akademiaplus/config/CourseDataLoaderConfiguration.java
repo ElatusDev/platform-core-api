@@ -39,7 +39,7 @@ public class CourseDataLoaderConfiguration {
     // ── Course (no domain creation use case — direct mapping) ──
 
     @Bean
-    public DataLoader<CourseCreationRequestDTO, CourseDataModel, Long> courseDataLoader(
+    public DataLoader<CourseCreationRequestDTO, CourseDataModel, CourseDataModel.CourseCompositeId> courseDataLoader(
             CourseRepository repository,
             DataFactory<CourseCreationRequestDTO> courseFactory,
             ApplicationContext applicationContext) {
@@ -54,11 +54,11 @@ public class CourseDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<CourseDataModel, Long> courseDataCleanUp(
+    public DataCleanUp<CourseDataModel, CourseDataModel.CourseCompositeId> courseDataCleanUp(
             EntityManager entityManager,
             CourseRepository repository) {
 
-        DataCleanUp<CourseDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<CourseDataModel, CourseDataModel.CourseCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(CourseDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
@@ -67,7 +67,7 @@ public class CourseDataLoaderConfiguration {
     // ── Schedule ──
 
     @Bean
-    public DataLoader<ScheduleCreationRequestDTO, ScheduleDataModel, Long> scheduleDataLoader(
+    public DataLoader<ScheduleCreationRequestDTO, ScheduleDataModel, ScheduleDataModel.ScheduleCompositeId> scheduleDataLoader(
             ScheduleRepository repository,
             DataFactory<ScheduleCreationRequestDTO> scheduleFactory,
             ScheduleCreationUseCase scheduleCreationUseCase) {
@@ -76,11 +76,11 @@ public class CourseDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<ScheduleDataModel, Long> scheduleDataCleanUp(
+    public DataCleanUp<ScheduleDataModel, ScheduleDataModel.ScheduleCompositeId> scheduleDataCleanUp(
             EntityManager entityManager,
             ScheduleRepository repository) {
 
-        DataCleanUp<ScheduleDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<ScheduleDataModel, ScheduleDataModel.ScheduleCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(ScheduleDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
@@ -89,7 +89,7 @@ public class CourseDataLoaderConfiguration {
     // ── CourseEvent ──
 
     @Bean
-    public DataLoader<CourseEventCreateRequestDTO, CourseEventDataModel, Long> courseEventDataLoader(
+    public DataLoader<CourseEventCreateRequestDTO, CourseEventDataModel, CourseEventDataModel.CourseEventCompositeId> courseEventDataLoader(
             CourseEventRepository repository,
             DataFactory<CourseEventCreateRequestDTO> courseEventFactory,
             CourseEventCreationUseCase courseEventCreationUseCase) {
@@ -98,11 +98,11 @@ public class CourseDataLoaderConfiguration {
     }
 
     @Bean
-    public DataCleanUp<CourseEventDataModel, Long> courseEventDataCleanUp(
+    public DataCleanUp<CourseEventDataModel, CourseEventDataModel.CourseEventCompositeId> courseEventDataCleanUp(
             EntityManager entityManager,
             CourseEventRepository repository) {
 
-        DataCleanUp<CourseEventDataModel, Long> cleanup = new DataCleanUp<>(entityManager);
+        DataCleanUp<CourseEventDataModel, CourseEventDataModel.CourseEventCompositeId> cleanup = new DataCleanUp<>(entityManager);
         cleanup.setDataModel(CourseEventDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;

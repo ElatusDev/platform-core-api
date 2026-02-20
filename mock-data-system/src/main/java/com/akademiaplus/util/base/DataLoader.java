@@ -12,19 +12,21 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Scope;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Component;
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 
 import java.util.List;
 import java.util.function.Function;
 
+/**
+ * Generic data loader that generates mock entities and persists them via a JPA repository.
+ *
+ * <p>Instances are created as {@code @Bean} definitions in the DataLoaderConfiguration classes,
+ * not through component scanning, to allow Spring to resolve the correct repository by type.</p>
+ */
 @Slf4j
-@Component
 @AllArgsConstructor
-@Scope("prototype")
 public class DataLoader<D, M, I> {
-    private JpaRepository<@NonNull M, @NonNull I> repository;
+    private TenantScopedRepository<@NonNull M, @NonNull I> repository;
     private Function<D, M> transformer;
     private DataFactory<D> factory;
 

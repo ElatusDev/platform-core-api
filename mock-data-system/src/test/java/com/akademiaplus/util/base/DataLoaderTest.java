@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 
 import java.util.List;
 import java.util.function.Function;
@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class DataLoaderTest {
 
-    @Mock private JpaRepository<ModelStub, Long> repository;
+    @Mock private TenantScopedRepository<ModelStub, Long> repository;
     @Mock private Function<DtoStub, ModelStub> transformer;
     @Mock private DataFactory<DtoStub> factory;
 

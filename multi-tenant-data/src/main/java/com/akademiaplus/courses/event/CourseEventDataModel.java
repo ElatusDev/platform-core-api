@@ -49,6 +49,13 @@ public class CourseEventDataModel extends AbstractEvent {
     private Long courseEventId;
 
     /**
+     * Foreign key to the course this event belongs to.
+     * Writable column used to persist the FK value during INSERT.
+     */
+    @Column(name = "course_id")
+    private Long courseId;
+
+    /**
      * Reference to the course this event belongs to.
      * Uses composite foreign key to maintain tenant isolation.
      */
@@ -56,6 +63,13 @@ public class CourseEventDataModel extends AbstractEvent {
     @JoinColumn(name = "tenant_id", referencedColumnName = "tenant_id", insertable=false, updatable=false)
     @JoinColumn(name = "course_id", referencedColumnName = "course_id", insertable=false, updatable=false)
     private CourseDataModel course;
+
+    /**
+     * Foreign key to the collaborator conducting this event.
+     * Writable column used to persist the FK value during INSERT.
+     */
+    @Column(name = "collaborator_id")
+    private Long collaboratorId;
 
     /**
      * Reference to the collaborator conducting this event.

@@ -25,11 +25,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 class NotificationDataGeneratorTest {
 
     private static final List<String> VALID_TYPES = List.of(
-            "SYSTEM", "ACADEMIC", "BILLING", "EVENT", "ANNOUNCEMENT"
+            "COURSE_REMINDER", "PAYMENT_DUE", "ENROLLMENT_CONFIRMATION",
+            "SCHEDULE_CHANGE", "SYSTEM_MAINTENANCE", "PROMOTIONAL",
+            "ANNOUNCEMENT", "ASSIGNMENT_REMINDER", "GRADE_NOTIFICATION"
     );
 
     private static final List<String> VALID_PRIORITIES = List.of(
-            "LOW", "MEDIUM", "HIGH", "URGENT"
+            "LOW", "NORMAL", "HIGH", "URGENT"
     );
 
     private NotificationDataGenerator generator;

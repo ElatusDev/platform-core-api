@@ -44,6 +44,13 @@ public class MembershipAdultStudentDataModel extends MembershipAssociationBase {
     private Long membershipAdultStudentId;
 
     /**
+     * Foreign key to the adult student associated with this membership.
+     * Writable column used to persist the FK value during INSERT.
+     */
+    @Column(name = "adult_student_id")
+    private Long adultStudentId;
+
+    /**
      * Reference to the adult student associated with this membership.
      * Part of the composite primary key and uses tenant-aware join.
      */

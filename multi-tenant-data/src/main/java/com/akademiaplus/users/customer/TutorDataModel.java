@@ -47,6 +47,13 @@ public class TutorDataModel extends AbstractUser {
     private Long tutorId;
 
     /**
+     * Foreign key to the tutor's customer authentication record.
+     * Writable column used to persist the FK value during INSERT.
+     */
+    @Column(name = "customer_auth_id")
+    private Long customerAuthId;
+
+    /**
      * Reference to the tutor's customer authentication credentials.
      * Uses composite foreign key to maintain tenant isolation.
      * <p>

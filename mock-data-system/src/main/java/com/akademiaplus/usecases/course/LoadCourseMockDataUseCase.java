@@ -24,12 +24,12 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class LoadCourseMockDataUseCase
-        extends AbstractMockDataUseCase<CourseCreationRequestDTO, CourseDataModel, Long> {
+        extends AbstractMockDataUseCase<CourseCreationRequestDTO, CourseDataModel, CourseDataModel.CourseCompositeId> {
 
     public LoadCourseMockDataUseCase(
-            DataLoader<CourseCreationRequestDTO, CourseDataModel, Long> dataLoader,
+            DataLoader<CourseCreationRequestDTO, CourseDataModel, CourseDataModel.CourseCompositeId> dataLoader,
             @Qualifier("courseDataCleanUp")
-            DataCleanUp<CourseDataModel, Long> dataCleanup) {
+            DataCleanUp<CourseDataModel, CourseDataModel.CourseCompositeId> dataCleanup) {
         super(dataLoader, dataCleanup);
     }
 }
