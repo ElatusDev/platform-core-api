@@ -134,7 +134,7 @@ paths:
       responses:
         '204':
           description: Tutor deleted successfully
-        '400':
+        '409':
           description: Cannot delete tutor with active students
           content:
             application/json:

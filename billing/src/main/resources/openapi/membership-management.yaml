@@ -257,6 +257,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Deletion conflicts with current resource state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '500':
           description: An unexpected error occurred
           content:
@@ -399,6 +405,12 @@ paths:
           description: Tutor membership association deleted successfully
         '404':
           description: Tutor membership association not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Deletion conflicts with current resource state
           content:
             application/json:
               schema:

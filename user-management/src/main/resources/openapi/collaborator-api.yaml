@@ -153,6 +153,8 @@ paths:
           $ref: './commons.yaml#/components/responses/Unauthorized'
         '404':
           $ref: './commons.yaml#/components/responses/NotFound'
+        '409':
+          $ref: './commons.yaml#/components/responses/Conflict'
 
   /collaborators/by-skills:
     get:
