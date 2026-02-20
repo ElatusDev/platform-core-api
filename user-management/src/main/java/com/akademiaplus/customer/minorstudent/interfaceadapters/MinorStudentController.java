@@ -7,6 +7,7 @@
  */
 package com.akademiaplus.customer.minorstudent.interfaceadapters;
 
+import com.akademiaplus.customer.minorstudent.usecases.DeleteMinorStudentUseCase;
 import com.akademiaplus.customer.minorstudent.usecases.GetAllMinorStudentsUseCase;
 import com.akademiaplus.customer.minorstudent.usecases.GetMinorStudentByIdUseCase;
 import openapi.akademiaplus.domain.user.management.api.MinorStudentsApi;
@@ -30,11 +31,14 @@ public class MinorStudentController implements MinorStudentsApi {
 
     private final GetAllMinorStudentsUseCase getAllMinorStudentsUseCase;
     private final GetMinorStudentByIdUseCase getMinorStudentByIdUseCase;
+    private final DeleteMinorStudentUseCase deleteMinorStudentUseCase;
 
     public MinorStudentController(GetAllMinorStudentsUseCase getAllMinorStudentsUseCase,
-                                  GetMinorStudentByIdUseCase getMinorStudentByIdUseCase) {
+                                  GetMinorStudentByIdUseCase getMinorStudentByIdUseCase,
+                                  DeleteMinorStudentUseCase deleteMinorStudentUseCase) {
         this.getAllMinorStudentsUseCase = getAllMinorStudentsUseCase;
         this.getMinorStudentByIdUseCase = getMinorStudentByIdUseCase;
+        this.deleteMinorStudentUseCase = deleteMinorStudentUseCase;
     }
 
     @Override
@@ -49,5 +53,11 @@ public class MinorStudentController implements MinorStudentsApi {
     @Override
     public ResponseEntity<GetMinorStudentResponseDTO> getMinorStudent(Long minorStudentId) {
         return ResponseEntity.ok(getMinorStudentByIdUseCase.get(minorStudentId));
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteMinorStudent(Long minorStudentId) {
+        deleteMinorStudentUseCase.delete(minorStudentId);
+        return ResponseEntity.noContent().build();
     }
 }

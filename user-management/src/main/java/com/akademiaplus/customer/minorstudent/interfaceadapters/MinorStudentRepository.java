@@ -11,6 +11,26 @@ import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import com.akademiaplus.users.customer.MinorStudentDataModel;
 import org.springframework.stereotype.Repository;
 
+/**
+ * Repository for {@link MinorStudentDataModel} with tenant-scoped queries.
+ *
+ * @author ElatusDev
+ * @since 1.0
+ */
 @Repository
 public interface MinorStudentRepository extends TenantScopedRepository<MinorStudentDataModel, MinorStudentDataModel.MinorStudentCompositeId> {
+
+    /**
+     * Counts active (non-soft-deleted) minor students linked to a specific tutor
+     * within a tenant. Used by {@link com.akademiaplus.customer.tutor.usecases.DeleteTutorUseCase}
+     * to enforce the pre-delete business rule.
+     * <p>
+     * The {@code @SQLRestriction("deleted_at IS NULL")} on {@link MinorStudentDataModel}
+     * ensures only active students are counted.
+     *
+     * @param tenantId the tenant ID
+     * @param tutorId  the tutor's entity-specific ID
+     * @return the count of active minor students for the given tutor
+     */
+    long countByTenantIdAndTutorId(Long tenantId, Long tutorId);
 }

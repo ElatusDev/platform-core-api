@@ -7,6 +7,7 @@
  */
 package com.akademiaplus.customer.tutor.interfaceadapters;
 
+import com.akademiaplus.customer.tutor.usecases.DeleteTutorUseCase;
 import com.akademiaplus.customer.tutor.usecases.GetAllTutorsUseCase;
 import com.akademiaplus.customer.tutor.usecases.GetTutorByIdUseCase;
 import com.akademiaplus.customer.tutor.usecases.TutorCreationUseCase;
@@ -35,13 +36,16 @@ public class TutorController implements TutorsApi {
     private final TutorCreationUseCase tutorCreationUseCase;
     private final GetAllTutorsUseCase getAllTutorsUseCase;
     private final GetTutorByIdUseCase getTutorByIdUseCase;
+    private final DeleteTutorUseCase deleteTutorUseCase;
 
     public TutorController(TutorCreationUseCase tutorCreationUseCase,
                            GetAllTutorsUseCase getAllTutorsUseCase,
-                           GetTutorByIdUseCase getTutorByIdUseCase) {
+                           GetTutorByIdUseCase getTutorByIdUseCase,
+                           DeleteTutorUseCase deleteTutorUseCase) {
         this.tutorCreationUseCase = tutorCreationUseCase;
         this.getAllTutorsUseCase = getAllTutorsUseCase;
         this.getTutorByIdUseCase = getTutorByIdUseCase;
+        this.deleteTutorUseCase = deleteTutorUseCase;
     }
 
     @Override
@@ -62,5 +66,11 @@ public class TutorController implements TutorsApi {
     @Override
     public ResponseEntity<GetTutorResponseDTO> getTutor(Long tutorId) {
         return ResponseEntity.ok(getTutorByIdUseCase.get(tutorId));
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteTutor(Long tutorId) {
+        deleteTutorUseCase.delete(tutorId);
+        return ResponseEntity.noContent().build();
     }
 }

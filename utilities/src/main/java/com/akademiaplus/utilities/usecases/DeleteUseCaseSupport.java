@@ -9,8 +9,8 @@ package com.akademiaplus.utilities.usecases;
 
 import com.akademiaplus.utilities.exceptions.EntityDeletionNotAllowedException;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  * Shared soft-delete execution logic for all delete use cases.
@@ -37,7 +37,7 @@ public final class DeleteUseCaseSupport {
      * Flow: findById → present? delete : throw 404
      *       delete succeeds? return : catch constraint → throw 409
      *
-     * @param repository  the JPA repository for the entity
+     * @param repository  the tenant-scoped repository for the entity
      * @param compositeId the composite key (tenantId + entityId)
      * @param entityType  message key from {@link com.akademiaplus.utilities.EntityType}
      * @param entityId    the entity ID as display string
@@ -47,7 +47,7 @@ public final class DeleteUseCaseSupport {
      * @throws EntityDeletionNotAllowedException if a database constraint prevents deletion
      */
     public static <T, ID> void executeDelete(
-            JpaRepository<T, ID> repository,
+            TenantScopedRepository<T, ID> repository,
             ID compositeId,
             String entityType,
             String entityId) {
@@ -69,7 +69,7 @@ public final class DeleteUseCaseSupport {
      * The use case performs business checks on the returned entity, then
      * calls {@link #executeDelete} or {@code repository.delete()} directly.
      *
-     * @param repository  the JPA repository
+     * @param repository  the tenant-scoped repository
      * @param compositeId the composite key
      * @param entityType  message key from {@link com.akademiaplus.utilities.EntityType}
      * @param entityId    the entity ID as display string
@@ -79,7 +79,7 @@ public final class DeleteUseCaseSupport {
      * @throws EntityNotFoundException if no entity exists with the given composite key
      */
     public static <T, ID> T findOrThrow(
-            JpaRepository<T, ID> repository,
+            TenantScopedRepository<T, ID> repository,
             ID compositeId,
             String entityType,
             String entityId) {

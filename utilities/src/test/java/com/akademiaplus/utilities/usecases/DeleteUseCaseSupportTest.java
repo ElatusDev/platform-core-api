@@ -16,8 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
@@ -42,7 +42,7 @@ class DeleteUseCaseSupportTest {
     private static final Long COMPOSITE_ID = 42L;
 
     @Mock
-    private JpaRepository<Object, Long> repository;
+    private TenantScopedRepository<Object, Long> repository;
 
     @Nested
     @DisplayName("executeDelete")

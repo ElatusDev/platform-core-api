@@ -8,6 +8,7 @@
 package com.akademiaplus.customer.minorstudent.interfaceadapters;
 
 import com.akademiaplus.config.PeopleControllerAdvice;
+import com.akademiaplus.customer.minorstudent.usecases.DeleteMinorStudentUseCase;
 import com.akademiaplus.customer.minorstudent.usecases.GetAllMinorStudentsUseCase;
 import com.akademiaplus.customer.minorstudent.usecases.GetMinorStudentByIdUseCase;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
@@ -58,6 +59,9 @@ class MinorStudentControllerTest {
     private GetMinorStudentByIdUseCase getMinorStudentByIdUseCase;
 
     @Mock
+    private DeleteMinorStudentUseCase deleteMinorStudentUseCase;
+
+    @Mock
     private MessageService messageService;
 
     private MockMvc mockMvc;
@@ -65,7 +69,8 @@ class MinorStudentControllerTest {
     @BeforeEach
     void setUp() {
         MinorStudentController controller = new MinorStudentController(
-                getAllMinorStudentsUseCase, getMinorStudentByIdUseCase);
+                getAllMinorStudentsUseCase, getMinorStudentByIdUseCase,
+                deleteMinorStudentUseCase);
         PeopleControllerAdvice controllerAdvice = new PeopleControllerAdvice(messageService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(controllerAdvice)

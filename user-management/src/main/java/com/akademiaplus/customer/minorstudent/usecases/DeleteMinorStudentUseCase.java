@@ -5,18 +5,18 @@
  * This code is proprietary and confidential.
  * Unauthorized copying, distribution, or modification is strictly prohibited.
  */
-package com.akademiaplus.collaborator.usecases;
+package com.akademiaplus.customer.minorstudent.usecases;
 
-import com.akademiaplus.collaborator.interfaceadapters.CollaboratorRepository;
+import com.akademiaplus.customer.minorstudent.interfaceadapters.MinorStudentRepository;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
-import com.akademiaplus.users.collaborator.CollaboratorDataModel;
+import com.akademiaplus.users.customer.MinorStudentDataModel;
 import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.usecases.DeleteUseCaseSupport;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Handles soft-deletion of a {@link CollaboratorDataModel} by composite key.
+ * Handles soft-deletion of a {@link MinorStudentDataModel} by composite key.
  * <p>
  * Delegates to {@link DeleteUseCaseSupport#executeDelete} for the
  * find-or-404 → delete → catch-constraint-409 pattern.
@@ -25,36 +25,36 @@ import org.springframework.transaction.annotation.Transactional;
  * @since 1.0
  */
 @Service
-public class DeleteCollaboratorUseCase {
+public class DeleteMinorStudentUseCase {
 
-    private final CollaboratorRepository repository;
+    private final MinorStudentRepository minorStudentRepository;
     private final TenantContextHolder tenantContextHolder;
 
-    public DeleteCollaboratorUseCase(CollaboratorRepository repository,
+    public DeleteMinorStudentUseCase(MinorStudentRepository minorStudentRepository,
                                      TenantContextHolder tenantContextHolder) {
-        this.repository = repository;
+        this.minorStudentRepository = minorStudentRepository;
         this.tenantContextHolder = tenantContextHolder;
     }
 
     /**
-     * Soft-deletes the {@link CollaboratorDataModel} identified by the given ID
+     * Soft-deletes the {@link MinorStudentDataModel} identified by the given ID
      * within the current tenant context.
      *
-     * @param collaboratorId the collaborator's entity-specific ID
+     * @param minorStudentId the minor student's entity-specific ID
      * @throws com.akademiaplus.utilities.exceptions.EntityNotFoundException
-     *         if no collaborator exists with the given composite key
+     *         if no minor student exists with the given composite key
      * @throws com.akademiaplus.utilities.exceptions.EntityDeletionNotAllowedException
      *         if a database constraint prevents deletion
      * @throws com.akademiaplus.utilities.exceptions.InvalidTenantException
      *         if no tenant context is set
      */
     @Transactional
-    public void delete(Long collaboratorId) {
+    public void delete(Long minorStudentId) {
         Long tenantId = tenantContextHolder.requireTenantId();
         DeleteUseCaseSupport.executeDelete(
-                repository,
-                new CollaboratorDataModel.CollaboratorCompositeId(tenantId, collaboratorId),
-                EntityType.COLLABORATOR,
-                String.valueOf(collaboratorId));
+                minorStudentRepository,
+                new MinorStudentDataModel.MinorStudentCompositeId(tenantId, minorStudentId),
+                EntityType.MINOR_STUDENT,
+                String.valueOf(minorStudentId));
     }
 }

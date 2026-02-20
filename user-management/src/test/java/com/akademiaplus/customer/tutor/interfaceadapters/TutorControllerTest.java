@@ -8,6 +8,7 @@
 package com.akademiaplus.customer.tutor.interfaceadapters;
 
 import com.akademiaplus.config.PeopleControllerAdvice;
+import com.akademiaplus.customer.tutor.usecases.DeleteTutorUseCase;
 import com.akademiaplus.customer.tutor.usecases.GetAllTutorsUseCase;
 import com.akademiaplus.customer.tutor.usecases.GetTutorByIdUseCase;
 import com.akademiaplus.customer.tutor.usecases.TutorCreationUseCase;
@@ -62,6 +63,9 @@ class TutorControllerTest {
     private GetTutorByIdUseCase getTutorByIdUseCase;
 
     @Mock
+    private DeleteTutorUseCase deleteTutorUseCase;
+
+    @Mock
     private MessageService messageService;
 
     private MockMvc mockMvc;
@@ -69,7 +73,8 @@ class TutorControllerTest {
     @BeforeEach
     void setUp() {
         TutorController controller = new TutorController(
-                tutorCreationUseCase, getAllTutorsUseCase, getTutorByIdUseCase);
+                tutorCreationUseCase, getAllTutorsUseCase, getTutorByIdUseCase,
+                deleteTutorUseCase);
         PeopleControllerAdvice controllerAdvice = new PeopleControllerAdvice(messageService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(controllerAdvice)
