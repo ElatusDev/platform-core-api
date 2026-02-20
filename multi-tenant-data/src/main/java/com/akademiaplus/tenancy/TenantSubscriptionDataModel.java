@@ -33,7 +33,7 @@ import java.time.LocalDate;
 @Component
 @Entity
 @Table(name = "tenant_subscriptions")
-@SQLDelete(sql = "UPDATE tenant_subscriptions SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@SQLDelete(sql = "UPDATE tenant_subscriptions SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ? AND tenant_subscription_id = ?")
 @IdClass(TenantSubscriptionDataModel.TenantSubscriptionCompositeId.class)
 public class TenantSubscriptionDataModel extends TenantScoped {
 

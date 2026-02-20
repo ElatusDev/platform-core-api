@@ -33,7 +33,7 @@ import java.time.LocalDateTime;
 @Component
 @Entity
 @Table(name = "notification_deliveries")
-@SQLDelete(sql = "UPDATE notification_deliveries SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@SQLDelete(sql = "UPDATE notification_deliveries SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ? AND notification_delivery_id = ?")
 @IdClass(NotificationDeliveryDataModel.NotificationDeliveryCompositeId.class)
 public class NotificationDeliveryDataModel extends TenantScoped {
 

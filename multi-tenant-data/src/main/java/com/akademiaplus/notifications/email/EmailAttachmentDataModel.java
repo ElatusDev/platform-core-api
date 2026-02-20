@@ -31,7 +31,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Entity
 @Table(name = "email_attachments")
-@SQLDelete(sql = "UPDATE email_attachments SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@SQLDelete(sql = "UPDATE email_attachments SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ? AND email_id = ? AND attachment_url = ?")
 @IdClass(EmailAttachmentDataModel.EmailAttachmentCompositeId.class)
 public class EmailAttachmentDataModel extends TenantScoped {
 

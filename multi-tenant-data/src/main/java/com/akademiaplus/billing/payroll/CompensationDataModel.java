@@ -35,7 +35,7 @@ import java.util.List;
 @Component
 @Entity
 @Table(name = "compensations")
-@SQLDelete(sql = "UPDATE compensations SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@SQLDelete(sql = "UPDATE compensations SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ? AND compensation_id = ?")
 @IdClass(CompensationDataModel.CompensationCompositeId.class)
 public class CompensationDataModel extends TenantScoped {
 

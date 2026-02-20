@@ -33,7 +33,7 @@ import java.io.Serializable;
 @Component
 @Entity
 @Table(name = "internal_auths")
-@SQLDelete(sql = "UPDATE internal_auths SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@SQLDelete(sql = "UPDATE internal_auths SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ? AND internal_auth_id = ?")
 @IdClass(InternalAuthDataModel.InternalAuthCompositeId.class)
 public class InternalAuthDataModel extends TenantScoped {
 

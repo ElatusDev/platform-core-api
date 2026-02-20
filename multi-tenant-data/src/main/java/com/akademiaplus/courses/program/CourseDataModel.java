@@ -34,7 +34,7 @@ import java.util.List;
 @Component
 @Entity
 @Table(name = "courses")
-@SQLDelete(sql = "UPDATE courses SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@SQLDelete(sql = "UPDATE courses SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ? AND course_id = ?")
 @IdClass(CourseDataModel.CourseCompositeId.class)
 public class CourseDataModel extends TenantScoped {
 

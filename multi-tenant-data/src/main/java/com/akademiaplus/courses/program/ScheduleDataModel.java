@@ -32,7 +32,7 @@ import java.time.LocalTime;
 @Component
 @Entity
 @Table(name = "schedules")
-@SQLDelete(sql = "UPDATE schedules SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@SQLDelete(sql = "UPDATE schedules SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ? AND schedule_id = ?")
 @IdClass(ScheduleDataModel.ScheduleCompositeId.class)
 public class ScheduleDataModel extends TenantScoped {
 

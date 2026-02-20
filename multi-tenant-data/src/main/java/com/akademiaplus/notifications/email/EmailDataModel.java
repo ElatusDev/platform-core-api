@@ -32,7 +32,7 @@ import java.util.List;
 @Component
 @Entity
 @Table(name = "emails")
-@SQLDelete(sql = "UPDATE emails SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@SQLDelete(sql = "UPDATE emails SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ? AND email_id = ?")
 @IdClass(EmailDataModel.EmailCompositeId.class)
 public class EmailDataModel extends TenantScoped {
 

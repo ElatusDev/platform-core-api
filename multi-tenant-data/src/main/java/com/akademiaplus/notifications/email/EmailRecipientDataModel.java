@@ -30,7 +30,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Entity
 @Table(name = "email_recipients")
-@SQLDelete(sql = "UPDATE email_recipients SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@SQLDelete(sql = "UPDATE email_recipients SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ? AND email_id = ? AND recipient_email = ?")
 @IdClass(EmailRecipientDataModel.EmailRecipientCompositeId.class)
 public class EmailRecipientDataModel extends TenantScoped {
 

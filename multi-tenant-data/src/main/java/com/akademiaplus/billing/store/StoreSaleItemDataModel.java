@@ -33,7 +33,7 @@ import java.math.BigDecimal;
 @Component
 @Entity
 @Table(name = "store_sale_items")
-@SQLDelete(sql = "UPDATE store_sale_items SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@SQLDelete(sql = "UPDATE store_sale_items SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ? AND store_sale_item_id = ?")
 @IdClass(StoreSaleItemDataModel.SaleItemCompositeId.class)
 public class StoreSaleItemDataModel extends TenantScoped {
 

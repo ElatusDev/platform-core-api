@@ -32,7 +32,7 @@ import java.util.List;
 @Component
 @Entity
 @Table(name = "memberships")
-@SQLDelete(sql = "UPDATE memberships SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@SQLDelete(sql = "UPDATE memberships SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ? AND membership_id = ?")
 @IdClass(MembershipDataModel.MembershipCompositeId.class)
 public class MembershipDataModel extends TenantScoped {
 

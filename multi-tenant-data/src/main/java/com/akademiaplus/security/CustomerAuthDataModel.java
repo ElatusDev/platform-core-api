@@ -32,7 +32,7 @@ import java.io.Serializable;
 @Component
 @Entity
 @Table(name = "customer_auths")
-@SQLDelete(sql = "UPDATE customer_auths SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@SQLDelete(sql = "UPDATE customer_auths SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ? AND customer_auth_id = ?")
 @IdClass(CustomerAuthDataModel.CustomerAuthCompositeId.class)
 public class CustomerAuthDataModel extends TenantScoped {
 

@@ -36,7 +36,7 @@ import java.util.List;
 @Component
 @Entity
 @Table(name = "store_transactions")
-@SQLDelete(sql = "UPDATE store_transactions SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@SQLDelete(sql = "UPDATE store_transactions SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ? AND store_transaction_id = ?")
 @IdClass(StoreTransactionDataModel.StoreTransactionCompositeId.class)
 public class StoreTransactionDataModel extends TenantScoped {
 

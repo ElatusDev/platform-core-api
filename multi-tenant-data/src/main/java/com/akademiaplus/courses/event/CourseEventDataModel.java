@@ -36,7 +36,7 @@ import java.util.List;
 @Component
 @Entity
 @Table(name = "course_events")
-@SQLDelete(sql = "UPDATE course_events SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@SQLDelete(sql = "UPDATE course_events SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ? AND course_event_id = ?")
 @IdClass(CourseEventDataModel.CourseEventCompositeId.class)
 public class CourseEventDataModel extends AbstractEvent {
 

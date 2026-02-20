@@ -31,7 +31,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Entity
 @Table(name = "membership_tutors")
-@SQLDelete(sql = "UPDATE membership_tutors SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@SQLDelete(sql = "UPDATE membership_tutors SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ? AND membership_tutor_id = ?")
 @IdClass(MembershipTutorDataModel.MembershipTutorCompositeId.class)
 public class MembershipTutorDataModel extends MembershipAssociationBase {
 

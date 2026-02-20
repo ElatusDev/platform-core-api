@@ -29,7 +29,7 @@ import java.io.Serializable;
 @Component
 @Entity
 @Table(name = "payment_tutors")
-@SQLDelete(sql = "UPDATE payment_tutors SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@SQLDelete(sql = "UPDATE payment_tutors SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ? AND payment_tutor_id = ?")
 @IdClass(PaymentTutorDataModel.PaymentTutorCompositeId.class)
 public class PaymentTutorDataModel extends BasePayment {
 

@@ -33,7 +33,7 @@ import java.io.Serializable;
 @Component
 @Entity
 @Table(name = "person_piis")
-@SQLDelete(sql = "UPDATE person_piis SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@SQLDelete(sql = "UPDATE person_piis SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ? AND person_pii_id = ?")
 @IdClass(PersonPIIDataModel.PersonPIICompositeId.class)
 public class PersonPIIDataModel extends TenantScoped {
 

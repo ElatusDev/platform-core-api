@@ -34,7 +34,7 @@ import java.io.Serializable;
 @Component
 @Entity
 @Table(name = "collaborators")
-@SQLDelete(sql = "UPDATE collaborators SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ?")
+@SQLDelete(sql = "UPDATE collaborators SET deleted_at = CURRENT_TIMESTAMP WHERE tenant_id = ? AND collaborator_id = ?")
 @IdClass(CollaboratorDataModel.CollaboratorCompositeId.class)
 public class CollaboratorDataModel extends AbstractUser {
 
