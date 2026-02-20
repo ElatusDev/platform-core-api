@@ -75,6 +75,62 @@ class MockDataOrchestratorComponentTest extends AbstractIntegrationTest {
                     "tutors table should contain exactly " + ENTITIES_PER_TENANT + " rows");
             assertEquals(ENTITIES_PER_TENANT, nativeCount("minor_students"),
                     "minor_students table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+
+            // Tenant-management tables
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("tenant_subscriptions"),
+                    "tenant_subscriptions table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("tenant_billing_cycles"),
+                    "tenant_billing_cycles table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+
+            // Billing tables
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("compensations"),
+                    "compensations table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("memberships"),
+                    "memberships table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("membership_adult_students"),
+                    "membership_adult_students table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("membership_tutors"),
+                    "membership_tutors table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("payment_adult_students"),
+                    "payment_adult_students table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("payment_tutors"),
+                    "payment_tutors table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+
+            // Course-management tables
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("courses"),
+                    "courses table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("schedules"),
+                    "schedules table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("course_events"),
+                    "course_events table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+
+            // POS tables
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("store_products"),
+                    "store_products table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("store_transactions"),
+                    "store_transactions table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+
+            // Notification tables
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("notifications"),
+                    "notifications table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("notification_deliveries"),
+                    "notification_deliveries table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+
+            // Card payment info table
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("card_payment_infos"),
+                    "card_payment_infos table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+
+            // Store sale items table
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("store_sale_items"),
+                    "store_sale_items table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+
+            // Email tables
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("emails"),
+                    "emails table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("email_recipients"),
+                    "email_recipients table should contain exactly " + ENTITIES_PER_TENANT + " rows");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("email_attachments"),
+                    "email_attachments table should contain exactly " + ENTITIES_PER_TENANT + " rows");
         }
 
         @Test
@@ -112,6 +168,18 @@ class MockDataOrchestratorComponentTest extends AbstractIntegrationTest {
                     "employees count should be exactly " + ENTITIES_PER_TENANT + " after clean-and-reload");
             assertEquals(ENTITIES_PER_TENANT, nativeCount("minor_students"),
                     "minor_students count should be exactly " + ENTITIES_PER_TENANT + " after clean-and-reload");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("courses"),
+                    "courses count should be exactly " + ENTITIES_PER_TENANT + " after clean-and-reload");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("memberships"),
+                    "memberships count should be exactly " + ENTITIES_PER_TENANT + " after clean-and-reload");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("notifications"),
+                    "notifications count should be exactly " + ENTITIES_PER_TENANT + " after clean-and-reload");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("card_payment_infos"),
+                    "card_payment_infos count should be exactly " + ENTITIES_PER_TENANT + " after clean-and-reload");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("store_sale_items"),
+                    "store_sale_items count should be exactly " + ENTITIES_PER_TENANT + " after clean-and-reload");
+            assertEquals(ENTITIES_PER_TENANT, nativeCount("emails"),
+                    "emails count should be exactly " + ENTITIES_PER_TENANT + " after clean-and-reload");
         }
     }
 

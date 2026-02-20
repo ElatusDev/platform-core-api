@@ -5,7 +5,7 @@
  * This code is proprietary and confidential.
  * Unauthorized copying, distribution, or modification is strictly prohibited.
  */
-package com.akademiaplus.users.usecases;
+package com.akademiaplus.usecases.users;
 
 import com.akademiaplus.users.customer.MinorStudentDataModel;
 import com.akademiaplus.util.base.AbstractMockDataUseCase;

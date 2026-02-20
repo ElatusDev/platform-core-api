@@ -42,6 +42,15 @@ public enum MockEntityType {
     INTERNAL_AUTH(false, true, TENANT),
     CUSTOMER_AUTH(false, true, TENANT),
 
+    // ── Level 1: tenant-scoped standalone entities ──
+    TENANT_SUBSCRIPTION(true, true, TENANT),
+    TENANT_BILLING_CYCLE(true, true, TENANT),
+    COMPENSATION(true, true, TENANT),
+    MEMBERSHIP(true, true, TENANT),
+    STORE_PRODUCT(true, true, TENANT),
+    NOTIFICATION(true, true, TENANT),
+    COURSE(true, true, TENANT),
+
     // ── Level 1: people with internal auth (FK → INTERNAL_AUTH, PERSON_PII) ──
     EMPLOYEE(true, true, INTERNAL_AUTH, PERSON_PII),
     COLLABORATOR(true, true, INTERNAL_AUTH, PERSON_PII),
@@ -51,7 +60,38 @@ public enum MockEntityType {
     TUTOR(true, true, CUSTOMER_AUTH, PERSON_PII),
 
     // ── Level 2: depends on TUTOR ──
-    MINOR_STUDENT(true, true, TUTOR);
+    MINOR_STUDENT(true, true, TUTOR),
+
+    // ── Level 2: course-dependent entities ──
+    SCHEDULE(true, true, COURSE),
+    STORE_TRANSACTION(true, true, TENANT),
+
+    // ── Level 3: membership associations (FK → MEMBERSHIP, COURSE, user) ──
+    MEMBERSHIP_ADULT_STUDENT(true, true, MEMBERSHIP, COURSE, ADULT_STUDENT),
+    MEMBERSHIP_TUTOR(true, true, MEMBERSHIP, COURSE, TUTOR),
+
+    // ── Level 3: course event (FK → SCHEDULE, COURSE, COLLABORATOR) ──
+    COURSE_EVENT(true, true, SCHEDULE, COURSE, COLLABORATOR),
+
+    // ── Level 4: payments (FK → membership association) ──
+    PAYMENT_ADULT_STUDENT(true, true, MEMBERSHIP_ADULT_STUDENT),
+    PAYMENT_TUTOR(true, true, MEMBERSHIP_TUTOR),
+
+    // ── Level 5: card payment info (FK → payment) ──
+    CARD_PAYMENT_INFO(true, true, PAYMENT_ADULT_STUDENT),
+
+    // ── Level 3: store sale items (FK → transaction + product) ──
+    STORE_SALE_ITEM(true, true, STORE_TRANSACTION, STORE_PRODUCT),
+
+    // ── Level 2: notification delivery (FK → notification) ──
+    NOTIFICATION_DELIVERY(true, true, NOTIFICATION),
+
+    // ── Level 1: email (FK → TENANT) ──
+    EMAIL(true, true, TENANT),
+
+    // ── Level 2: email children (FK → EMAIL) ──
+    EMAIL_RECIPIENT(true, true, EMAIL),
+    EMAIL_ATTACHMENT(true, true, EMAIL);
 
     private final boolean loadable;
     private final boolean cleanable;

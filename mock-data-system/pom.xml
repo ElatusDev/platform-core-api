@@ -72,6 +72,26 @@
         </dependency>
         <dependency>
             <groupId>com.akademiaplus</groupId>
+            <artifactId>billing</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.akademiaplus</groupId>
+            <artifactId>course-management</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.akademiaplus</groupId>
+            <artifactId>notification-system</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.akademiaplus</groupId>
+            <artifactId>pos-system</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.akademiaplus</groupId>
             <artifactId>multi-tenant-data</artifactId>
             <version>1.0</version>
         </dependency>

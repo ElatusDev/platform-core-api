@@ -46,6 +46,20 @@ public class StoreSaleItemDataModel extends TenantScoped {
     private Long storeSaleItemId;
 
     /**
+     * Foreign key to the parent store transaction.
+     * Insertable column used by the mock-data pipeline to set the FK value.
+     */
+    @Column(name = "store_transaction_id", nullable = false)
+    private Long storeTransactionId;
+
+    /**
+     * Foreign key to the product being sold.
+     * Insertable column used by the mock-data pipeline to set the FK value.
+     */
+    @Column(name = "store_product_id", nullable = false)
+    private Long storeProductId;
+
+    /**
      * Reference to the parent store transaction containing this sale item.
      * Uses tenant-aware join to maintain data isolation across tenants.
      */
