@@ -8,11 +8,12 @@
 package com.akademiaplus.program.interfaceadapters;
 
 import com.akademiaplus.config.CoordinationControllerAdvice;
-import com.akademiaplus.exception.ScheduleNotFoundException;
 import com.akademiaplus.program.usecases.GetAllSchedulesUseCase;
 import com.akademiaplus.program.usecases.GetScheduleByIdUseCase;
 import com.akademiaplus.program.usecases.ScheduleCreationUseCase;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.MessageService;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.course.management.dto.GetScheduleResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -128,8 +129,8 @@ class ScheduleControllerTest {
         void shouldReturn404_whenScheduleNotFound() throws Exception {
             // Given
             when(getScheduleByIdUseCase.get(SCHEDULE_ID))
-                    .thenThrow(new ScheduleNotFoundException(String.valueOf(SCHEDULE_ID)));
-            when(messageService.getScheduleNotFound(String.valueOf(SCHEDULE_ID)))
+                    .thenThrow(new EntityNotFoundException(EntityType.SCHEDULE, String.valueOf(SCHEDULE_ID)));
+            when(messageService.getEntityNotFound(EntityType.SCHEDULE, String.valueOf(SCHEDULE_ID)))
                     .thenReturn("Schedule not found");
 
             // When & Then
@@ -138,7 +139,7 @@ class ScheduleControllerTest {
                     .andExpect(status().isNotFound());
 
             verify(getScheduleByIdUseCase).get(SCHEDULE_ID);
-            verify(messageService).getScheduleNotFound(String.valueOf(SCHEDULE_ID));
+            verify(messageService).getEntityNotFound(EntityType.SCHEDULE, String.valueOf(SCHEDULE_ID));
             verifyNoMoreInteractions(getScheduleByIdUseCase, messageService);
         }
     }

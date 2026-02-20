@@ -8,9 +8,10 @@
 package com.akademiaplus.program.usecases;
 
 import com.akademiaplus.courses.program.ScheduleDataModel;
-import com.akademiaplus.exception.ScheduleNotFoundException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.program.interfaceadapters.ScheduleRepository;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.course.management.dto.GetScheduleResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -78,8 +79,8 @@ class GetScheduleByIdUseCaseTest {
     class NotFound {
 
         @Test
-        @DisplayName("Should throw ScheduleNotFoundException when schedule not found")
-        void shouldThrowScheduleNotFoundException_whenScheduleNotFound() {
+        @DisplayName("Should throw EntityNotFoundException when schedule not found")
+        void shouldThrowEntityNotFoundException_whenScheduleNotFound() {
             // Given
             when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
             when(scheduleRepository.findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID)))
@@ -87,8 +88,12 @@ class GetScheduleByIdUseCaseTest {
 
             // When & Then
             assertThatThrownBy(() -> useCase.get(SCHEDULE_ID))
-                    .isInstanceOf(ScheduleNotFoundException.class)
-                    .hasMessage(String.valueOf(SCHEDULE_ID));
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .satisfies(exception -> {
+                        EntityNotFoundException ex = (EntityNotFoundException) exception;
+                        assertThat(ex.getEntityType()).isEqualTo(EntityType.SCHEDULE);
+                        assertThat(ex.getEntityId()).isEqualTo(String.valueOf(SCHEDULE_ID));
+                    });
             verify(tenantContextHolder).getTenantId();
             verify(scheduleRepository).findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID));
             verifyNoMoreInteractions(tenantContextHolder, scheduleRepository, modelMapper);

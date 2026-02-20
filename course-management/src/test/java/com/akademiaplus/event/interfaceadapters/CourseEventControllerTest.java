@@ -8,11 +8,12 @@
 package com.akademiaplus.event.interfaceadapters;
 
 import com.akademiaplus.config.CoordinationControllerAdvice;
-import com.akademiaplus.exception.CourseEventNotFoundException;
 import com.akademiaplus.event.usecases.CourseEventCreationUseCase;
 import com.akademiaplus.event.usecases.GetAllCourseEventsUseCase;
 import com.akademiaplus.event.usecases.GetCourseEventByIdUseCase;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.MessageService;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.course.management.dto.GetCourseEventResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -128,8 +129,8 @@ class CourseEventControllerTest {
         void shouldReturn404_whenCourseEventNotFound() throws Exception {
             // Given
             when(getCourseEventByIdUseCase.get(COURSE_EVENT_ID))
-                    .thenThrow(new CourseEventNotFoundException(String.valueOf(COURSE_EVENT_ID)));
-            when(messageService.getCourseEventNotFound(String.valueOf(COURSE_EVENT_ID)))
+                    .thenThrow(new EntityNotFoundException(EntityType.COURSE_EVENT, String.valueOf(COURSE_EVENT_ID)));
+            when(messageService.getEntityNotFound(EntityType.COURSE_EVENT, String.valueOf(COURSE_EVENT_ID)))
                     .thenReturn("Course event not found");
 
             // When & Then
@@ -138,7 +139,7 @@ class CourseEventControllerTest {
                     .andExpect(status().isNotFound());
 
             verify(getCourseEventByIdUseCase).get(COURSE_EVENT_ID);
-            verify(messageService).getCourseEventNotFound(String.valueOf(COURSE_EVENT_ID));
+            verify(messageService).getEntityNotFound(EntityType.COURSE_EVENT, String.valueOf(COURSE_EVENT_ID));
             verifyNoMoreInteractions(getCourseEventByIdUseCase, messageService);
         }
     }

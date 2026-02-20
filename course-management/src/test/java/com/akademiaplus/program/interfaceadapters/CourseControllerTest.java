@@ -8,11 +8,12 @@
 package com.akademiaplus.program.interfaceadapters;
 
 import com.akademiaplus.config.CoordinationControllerAdvice;
-import com.akademiaplus.exception.CourseNotFoundException;
 import com.akademiaplus.program.usecases.CreateCourseUseCase;
 import com.akademiaplus.program.usecases.GetAllCoursesUseCase;
 import com.akademiaplus.program.usecases.GetCourseByIdUseCase;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.MessageService;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.course.management.dto.GetCourseResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -128,8 +129,8 @@ class CourseControllerTest {
         void shouldReturn404_whenCourseNotFound() throws Exception {
             // Given
             when(getCourseByIdUseCase.get(COURSE_ID))
-                    .thenThrow(new CourseNotFoundException(String.valueOf(COURSE_ID)));
-            when(messageService.getCourseNotFound(String.valueOf(COURSE_ID)))
+                    .thenThrow(new EntityNotFoundException(EntityType.COURSE, String.valueOf(COURSE_ID)));
+            when(messageService.getEntityNotFound(EntityType.COURSE, String.valueOf(COURSE_ID)))
                     .thenReturn("Course not found");
 
             // When & Then
@@ -138,7 +139,7 @@ class CourseControllerTest {
                     .andExpect(status().isNotFound());
 
             verify(getCourseByIdUseCase).get(COURSE_ID);
-            verify(messageService).getCourseNotFound(String.valueOf(COURSE_ID));
+            verify(messageService).getEntityNotFound(EntityType.COURSE, String.valueOf(COURSE_ID));
             verifyNoMoreInteractions(getCourseByIdUseCase, messageService);
         }
     }

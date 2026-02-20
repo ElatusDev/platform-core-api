@@ -8,9 +8,10 @@
 package com.akademiaplus.program.usecases;
 
 import com.akademiaplus.courses.program.ScheduleDataModel;
-import com.akademiaplus.exception.ScheduleNotFoundException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.program.interfaceadapters.ScheduleRepository;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.course.management.dto.GetScheduleResponseDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -50,8 +51,8 @@ public class GetScheduleByIdUseCase {
      *
      * @param scheduleId the unique identifier of the schedule
      * @return the schedule response DTO
-     * @throws IllegalArgumentException  if tenant context is not available
-     * @throws ScheduleNotFoundException if no schedule is found with the given identifier
+     * @throws IllegalArgumentException if tenant context is not available
+     * @throws EntityNotFoundException  if no schedule is found with the given identifier
      */
     public GetScheduleResponseDTO get(Long scheduleId) {
         Long tenantId = tenantContextHolder.getTenantId()
@@ -62,7 +63,7 @@ public class GetScheduleByIdUseCase {
             ScheduleDataModel found = queryResult.get();
             return modelMapper.map(found, GetScheduleResponseDTO.class);
         } else {
-            throw new ScheduleNotFoundException(String.valueOf(scheduleId));
+            throw new EntityNotFoundException(EntityType.SCHEDULE, String.valueOf(scheduleId));
         }
     }
 }

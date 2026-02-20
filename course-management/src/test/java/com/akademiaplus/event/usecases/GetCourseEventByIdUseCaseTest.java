@@ -8,9 +8,10 @@
 package com.akademiaplus.event.usecases;
 
 import com.akademiaplus.courses.event.CourseEventDataModel;
-import com.akademiaplus.exception.CourseEventNotFoundException;
-import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.event.interfaceadapters.CourseEventRepository;
+import com.akademiaplus.infra.persistence.config.TenantContextHolder;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.course.management.dto.GetCourseEventResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -78,8 +79,8 @@ class GetCourseEventByIdUseCaseTest {
     class NotFound {
 
         @Test
-        @DisplayName("Should throw CourseEventNotFoundException when course event not found")
-        void shouldThrowCourseEventNotFoundException_whenCourseEventNotFound() {
+        @DisplayName("Should throw EntityNotFoundException when course event not found")
+        void shouldThrowEntityNotFoundException_whenCourseEventNotFound() {
             // Given
             when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
             when(courseEventRepository.findById(new CourseEventDataModel.CourseEventCompositeId(TENANT_ID, COURSE_EVENT_ID)))
@@ -87,8 +88,12 @@ class GetCourseEventByIdUseCaseTest {
 
             // When & Then
             assertThatThrownBy(() -> useCase.get(COURSE_EVENT_ID))
-                    .isInstanceOf(CourseEventNotFoundException.class)
-                    .hasMessage(String.valueOf(COURSE_EVENT_ID));
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .satisfies(exception -> {
+                        EntityNotFoundException ex = (EntityNotFoundException) exception;
+                        assertThat(ex.getEntityType()).isEqualTo(EntityType.COURSE_EVENT);
+                        assertThat(ex.getEntityId()).isEqualTo(String.valueOf(COURSE_EVENT_ID));
+                    });
             verify(tenantContextHolder).getTenantId();
             verify(courseEventRepository).findById(new CourseEventDataModel.CourseEventCompositeId(TENANT_ID, COURSE_EVENT_ID));
             verifyNoMoreInteractions(tenantContextHolder, courseEventRepository, modelMapper);

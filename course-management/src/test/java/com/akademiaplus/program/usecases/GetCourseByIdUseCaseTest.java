@@ -8,9 +8,10 @@
 package com.akademiaplus.program.usecases;
 
 import com.akademiaplus.courses.program.CourseDataModel;
-import com.akademiaplus.exception.CourseNotFoundException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.program.interfaceadapters.CourseRepository;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.course.management.dto.GetCourseResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -78,8 +79,8 @@ class GetCourseByIdUseCaseTest {
     class NotFound {
 
         @Test
-        @DisplayName("Should throw CourseNotFoundException when course not found")
-        void shouldThrowCourseNotFoundException_whenCourseNotFound() {
+        @DisplayName("Should throw EntityNotFoundException when course not found")
+        void shouldThrowEntityNotFoundException_whenCourseNotFound() {
             // Given
             when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
             when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID)))
@@ -87,8 +88,12 @@ class GetCourseByIdUseCaseTest {
 
             // When & Then
             assertThatThrownBy(() -> useCase.get(COURSE_ID))
-                    .isInstanceOf(CourseNotFoundException.class)
-                    .hasMessage(String.valueOf(COURSE_ID));
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .satisfies(exception -> {
+                        EntityNotFoundException ex = (EntityNotFoundException) exception;
+                        assertThat(ex.getEntityType()).isEqualTo(EntityType.COURSE);
+                        assertThat(ex.getEntityId()).isEqualTo(String.valueOf(COURSE_ID));
+                    });
             verify(tenantContextHolder).getTenantId();
             verify(courseRepository).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
             verifyNoMoreInteractions(tenantContextHolder, courseRepository, modelMapper);

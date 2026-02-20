@@ -8,9 +8,10 @@
 package com.akademiaplus.program.usecases;
 
 import com.akademiaplus.courses.program.CourseDataModel;
-import com.akademiaplus.exception.CourseNotFoundException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.program.interfaceadapters.CourseRepository;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.course.management.dto.GetCourseResponseDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -51,7 +52,7 @@ public class GetCourseByIdUseCase {
      * @param courseId the unique identifier of the course
      * @return the course response DTO
      * @throws IllegalArgumentException if tenant context is not available
-     * @throws CourseNotFoundException  if no course is found with the given identifier
+     * @throws EntityNotFoundException  if no course is found with the given identifier
      */
     public GetCourseResponseDTO get(Long courseId) {
         Long tenantId = tenantContextHolder.getTenantId()
@@ -62,7 +63,7 @@ public class GetCourseByIdUseCase {
             CourseDataModel found = queryResult.get();
             return modelMapper.map(found, GetCourseResponseDTO.class);
         } else {
-            throw new CourseNotFoundException(String.valueOf(courseId));
+            throw new EntityNotFoundException(EntityType.COURSE, String.valueOf(courseId));
         }
     }
 }
