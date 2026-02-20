@@ -7,6 +7,7 @@
  */
 package com.akademiaplus.notification.interfaceadapters;
 
+import com.akademiaplus.notification.usecases.DeleteNotificationUseCase;
 import com.akademiaplus.notification.usecases.GetAllNotificationsUseCase;
 import com.akademiaplus.notification.usecases.GetNotificationByIdUseCase;
 import com.akademiaplus.notification.usecases.NotificationCreationUseCase;
@@ -34,13 +35,16 @@ public class NotificationController implements NotificationsApi {
     private final NotificationCreationUseCase notificationCreationUseCase;
     private final GetAllNotificationsUseCase getAllNotificationsUseCase;
     private final GetNotificationByIdUseCase getNotificationByIdUseCase;
+    private final DeleteNotificationUseCase deleteNotificationUseCase;
 
     public NotificationController(NotificationCreationUseCase notificationCreationUseCase,
                                   GetAllNotificationsUseCase getAllNotificationsUseCase,
-                                  GetNotificationByIdUseCase getNotificationByIdUseCase) {
+                                  GetNotificationByIdUseCase getNotificationByIdUseCase,
+                                  DeleteNotificationUseCase deleteNotificationUseCase) {
         this.notificationCreationUseCase = notificationCreationUseCase;
         this.getAllNotificationsUseCase = getAllNotificationsUseCase;
         this.getNotificationByIdUseCase = getNotificationByIdUseCase;
+        this.deleteNotificationUseCase = deleteNotificationUseCase;
     }
 
     @Override
@@ -58,5 +62,11 @@ public class NotificationController implements NotificationsApi {
     @Override
     public ResponseEntity<GetNotificationResponseDTO> getNotificationById(Long notificationId) {
         return ResponseEntity.ok(getNotificationByIdUseCase.get(notificationId));
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteNotification(Long notificationId) {
+        deleteNotificationUseCase.delete(notificationId);
+        return ResponseEntity.noContent().build();
     }
 }

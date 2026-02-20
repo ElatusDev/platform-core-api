@@ -8,6 +8,7 @@
 package com.akademiaplus.notification.interfaceadapters;
 
 import com.akademiaplus.config.NotificationControllerAdvice;
+import com.akademiaplus.notification.usecases.DeleteNotificationUseCase;
 import com.akademiaplus.notification.usecases.GetAllNotificationsUseCase;
 import com.akademiaplus.notification.usecases.GetNotificationByIdUseCase;
 import com.akademiaplus.notification.usecases.NotificationCreationUseCase;
@@ -42,6 +43,7 @@ class NotificationControllerTest {
     private static final String BASE_PATH = "/v1/notification-system/notifications";
 
     @Mock private NotificationCreationUseCase notificationCreationUseCase;
+    @Mock private DeleteNotificationUseCase deleteNotificationUseCase;
     @Mock private GetAllNotificationsUseCase getAllNotificationsUseCase;
     @Mock private GetNotificationByIdUseCase getNotificationByIdUseCase;
     @Mock private MessageService messageService;
@@ -51,7 +53,8 @@ class NotificationControllerTest {
     @BeforeEach
     void setUp() {
         NotificationController controller = new NotificationController(
-                notificationCreationUseCase, getAllNotificationsUseCase, getNotificationByIdUseCase);
+                notificationCreationUseCase, getAllNotificationsUseCase, getNotificationByIdUseCase,
+                deleteNotificationUseCase);
         NotificationControllerAdvice controllerAdvice = new NotificationControllerAdvice(messageService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(controllerAdvice)
