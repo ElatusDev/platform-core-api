@@ -7,6 +7,7 @@
  */
 package com.akademiaplus.membership.interfaceadapters;
 
+import com.akademiaplus.membership.usecases.DeleteMembershipUseCase;
 import com.akademiaplus.membership.usecases.GetAllMembershipsUseCase;
 import com.akademiaplus.membership.usecases.GetMembershipByIdUseCase;
 import com.akademiaplus.membership.usecases.MembershipCreationUseCase;
@@ -34,13 +35,16 @@ public class MembershipController implements MembershipsApi {
     private final MembershipCreationUseCase membershipCreationUseCase;
     private final GetAllMembershipsUseCase getAllMembershipsUseCase;
     private final GetMembershipByIdUseCase getMembershipByIdUseCase;
+    private final DeleteMembershipUseCase deleteMembershipUseCase;
 
     public MembershipController(MembershipCreationUseCase membershipCreationUseCase,
                                 GetAllMembershipsUseCase getAllMembershipsUseCase,
-                                GetMembershipByIdUseCase getMembershipByIdUseCase) {
+                                GetMembershipByIdUseCase getMembershipByIdUseCase,
+                                DeleteMembershipUseCase deleteMembershipUseCase) {
         this.membershipCreationUseCase = membershipCreationUseCase;
         this.getAllMembershipsUseCase = getAllMembershipsUseCase;
         this.getMembershipByIdUseCase = getMembershipByIdUseCase;
+        this.deleteMembershipUseCase = deleteMembershipUseCase;
     }
 
     @Override
@@ -58,5 +62,11 @@ public class MembershipController implements MembershipsApi {
     @Override
     public ResponseEntity<GetMembershipResponseDTO> getMembershipById(Long membershipId) {
         return ResponseEntity.ok(getMembershipByIdUseCase.get(membershipId));
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteMembership(Long membershipId) {
+        deleteMembershipUseCase.delete(membershipId);
+        return ResponseEntity.noContent().build();
     }
 }

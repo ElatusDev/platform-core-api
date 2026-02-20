@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.akademiaplus.config.BillingControllerAdvice;
+import com.akademiaplus.membership.usecases.DeleteMembershipTutorUseCase;
 import com.akademiaplus.membership.usecases.GetAllMembershipTutorsUseCase;
 import com.akademiaplus.membership.usecases.GetMembershipTutorByIdUseCase;
 import com.akademiaplus.membership.usecases.MembershipTutorCreationUseCase;
@@ -51,6 +52,7 @@ class MembershipTutorControllerTest {
     @Mock private MembershipTutorCreationUseCase creationUseCase;
     @Mock private GetAllMembershipTutorsUseCase getAllUseCase;
     @Mock private GetMembershipTutorByIdUseCase getByIdUseCase;
+    @Mock private DeleteMembershipTutorUseCase deleteMembershipTutorUseCase;
     @Mock private MessageService messageService;
 
     private MockMvc mockMvc;
@@ -59,7 +61,7 @@ class MembershipTutorControllerTest {
     @BeforeEach
     void setUp() {
         MembershipTutorController controller = new MembershipTutorController(
-                creationUseCase, getAllUseCase, getByIdUseCase);
+                creationUseCase, getAllUseCase, getByIdUseCase, deleteMembershipTutorUseCase);
         BillingControllerAdvice controllerAdvice = new BillingControllerAdvice(messageService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(controllerAdvice)

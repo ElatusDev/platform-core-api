@@ -18,6 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.akademiaplus.config.BillingControllerAdvice;
 import com.akademiaplus.payroll.usecases.CompensationCreationUseCase;
+import com.akademiaplus.payroll.usecases.DeleteCompensationUseCase;
 import com.akademiaplus.payroll.usecases.GetAllCompensationsUseCase;
 import com.akademiaplus.payroll.usecases.GetCompensationByIdUseCase;
 import com.akademiaplus.utilities.EntityType;
@@ -50,6 +51,7 @@ class CompensationControllerTest {
     @Mock private CompensationCreationUseCase creationUseCase;
     @Mock private GetAllCompensationsUseCase getAllUseCase;
     @Mock private GetCompensationByIdUseCase getByIdUseCase;
+    @Mock private DeleteCompensationUseCase deleteCompensationUseCase;
     @Mock private MessageService messageService;
 
     private MockMvc mockMvc;
@@ -58,7 +60,7 @@ class CompensationControllerTest {
     @BeforeEach
     void setUp() {
         CompensationController controller = new CompensationController(
-                creationUseCase, getAllUseCase, getByIdUseCase);
+                creationUseCase, getAllUseCase, getByIdUseCase, deleteCompensationUseCase);
         BillingControllerAdvice controllerAdvice = new BillingControllerAdvice(messageService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(controllerAdvice)

@@ -8,6 +8,7 @@
 package com.akademiaplus.payroll.interfaceadapters;
 
 import com.akademiaplus.payroll.usecases.CompensationCreationUseCase;
+import com.akademiaplus.payroll.usecases.DeleteCompensationUseCase;
 import com.akademiaplus.payroll.usecases.GetAllCompensationsUseCase;
 import com.akademiaplus.payroll.usecases.GetCompensationByIdUseCase;
 import openapi.akademiaplus.domain.billing.api.CompensationsApi;
@@ -34,13 +35,16 @@ public class CompensationController implements CompensationsApi {
     private final CompensationCreationUseCase compensationCreationUseCase;
     private final GetAllCompensationsUseCase getAllCompensationsUseCase;
     private final GetCompensationByIdUseCase getCompensationByIdUseCase;
+    private final DeleteCompensationUseCase deleteCompensationUseCase;
 
     public CompensationController(CompensationCreationUseCase compensationCreationUseCase,
                                   GetAllCompensationsUseCase getAllCompensationsUseCase,
-                                  GetCompensationByIdUseCase getCompensationByIdUseCase) {
+                                  GetCompensationByIdUseCase getCompensationByIdUseCase,
+                                  DeleteCompensationUseCase deleteCompensationUseCase) {
         this.compensationCreationUseCase = compensationCreationUseCase;
         this.getAllCompensationsUseCase = getAllCompensationsUseCase;
         this.getCompensationByIdUseCase = getCompensationByIdUseCase;
+        this.deleteCompensationUseCase = deleteCompensationUseCase;
     }
 
     @Override
@@ -58,5 +62,11 @@ public class CompensationController implements CompensationsApi {
     @Override
     public ResponseEntity<GetCompensationResponseDTO> getCompensationById(Long compensationId) {
         return ResponseEntity.ok(getCompensationByIdUseCase.get(compensationId));
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteCompensation(Long compensationId) {
+        deleteCompensationUseCase.delete(compensationId);
+        return ResponseEntity.noContent().build();
     }
 }

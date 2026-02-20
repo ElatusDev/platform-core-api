@@ -7,6 +7,7 @@
  */
 package com.akademiaplus.membership.interfaceadapters;
 
+import com.akademiaplus.membership.usecases.DeleteMembershipAdultStudentUseCase;
 import com.akademiaplus.membership.usecases.GetAllMembershipAdultStudentsUseCase;
 import com.akademiaplus.membership.usecases.GetMembershipAdultStudentByIdUseCase;
 import com.akademiaplus.membership.usecases.MembershipAdultStudentCreationUseCase;
@@ -34,14 +35,17 @@ public class MembershipAdultStudentController implements MembershipAdultStudents
     private final MembershipAdultStudentCreationUseCase membershipAdultStudentCreationUseCase;
     private final GetAllMembershipAdultStudentsUseCase getAllMembershipAdultStudentsUseCase;
     private final GetMembershipAdultStudentByIdUseCase getMembershipAdultStudentByIdUseCase;
+    private final DeleteMembershipAdultStudentUseCase deleteMembershipAdultStudentUseCase;
 
     public MembershipAdultStudentController(
             MembershipAdultStudentCreationUseCase membershipAdultStudentCreationUseCase,
             GetAllMembershipAdultStudentsUseCase getAllMembershipAdultStudentsUseCase,
-            GetMembershipAdultStudentByIdUseCase getMembershipAdultStudentByIdUseCase) {
+            GetMembershipAdultStudentByIdUseCase getMembershipAdultStudentByIdUseCase,
+            DeleteMembershipAdultStudentUseCase deleteMembershipAdultStudentUseCase) {
         this.membershipAdultStudentCreationUseCase = membershipAdultStudentCreationUseCase;
         this.getAllMembershipAdultStudentsUseCase = getAllMembershipAdultStudentsUseCase;
         this.getMembershipAdultStudentByIdUseCase = getMembershipAdultStudentByIdUseCase;
+        this.deleteMembershipAdultStudentUseCase = deleteMembershipAdultStudentUseCase;
     }
 
     @Override
@@ -60,5 +64,11 @@ public class MembershipAdultStudentController implements MembershipAdultStudents
     public ResponseEntity<GetMembershipAdultStudentResponseDTO> getMembershipAdultStudentById(
             Long membershipAdultStudentId) {
         return ResponseEntity.ok(getMembershipAdultStudentByIdUseCase.get(membershipAdultStudentId));
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteMembershipAdultStudent(Long membershipAdultStudentId) {
+        deleteMembershipAdultStudentUseCase.delete(membershipAdultStudentId);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -7,6 +7,7 @@
  */
 package com.akademiaplus.payment.interfaceadapters;
 
+import com.akademiaplus.payment.usecases.DeletePaymentAdultStudentUseCase;
 import com.akademiaplus.payment.usecases.GetAllPaymentAdultStudentsUseCase;
 import com.akademiaplus.payment.usecases.GetPaymentAdultStudentByIdUseCase;
 import com.akademiaplus.payment.usecases.PaymentAdultStudentCreationUseCase;
@@ -34,14 +35,17 @@ public class PaymentAdultStudentController implements PaymentAdultStudentsApi {
     private final PaymentAdultStudentCreationUseCase paymentAdultStudentCreationUseCase;
     private final GetAllPaymentAdultStudentsUseCase getAllPaymentAdultStudentsUseCase;
     private final GetPaymentAdultStudentByIdUseCase getPaymentAdultStudentByIdUseCase;
+    private final DeletePaymentAdultStudentUseCase deletePaymentAdultStudentUseCase;
 
     public PaymentAdultStudentController(
             PaymentAdultStudentCreationUseCase paymentAdultStudentCreationUseCase,
             GetAllPaymentAdultStudentsUseCase getAllPaymentAdultStudentsUseCase,
-            GetPaymentAdultStudentByIdUseCase getPaymentAdultStudentByIdUseCase) {
+            GetPaymentAdultStudentByIdUseCase getPaymentAdultStudentByIdUseCase,
+            DeletePaymentAdultStudentUseCase deletePaymentAdultStudentUseCase) {
         this.paymentAdultStudentCreationUseCase = paymentAdultStudentCreationUseCase;
         this.getAllPaymentAdultStudentsUseCase = getAllPaymentAdultStudentsUseCase;
         this.getPaymentAdultStudentByIdUseCase = getPaymentAdultStudentByIdUseCase;
+        this.deletePaymentAdultStudentUseCase = deletePaymentAdultStudentUseCase;
     }
 
     @Override
@@ -60,5 +64,11 @@ public class PaymentAdultStudentController implements PaymentAdultStudentsApi {
     public ResponseEntity<GetPaymentAdultStudentResponseDTO> getPaymentAdultStudentById(
             Long paymentAdultStudentId) {
         return ResponseEntity.ok(getPaymentAdultStudentByIdUseCase.get(paymentAdultStudentId));
+    }
+
+    @Override
+    public ResponseEntity<Void> deletePaymentAdultStudent(Long paymentAdultStudentId) {
+        deletePaymentAdultStudentUseCase.delete(paymentAdultStudentId);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -7,6 +7,7 @@
  */
 package com.akademiaplus.membership.interfaceadapters;
 
+import com.akademiaplus.membership.usecases.DeleteMembershipTutorUseCase;
 import com.akademiaplus.membership.usecases.GetAllMembershipTutorsUseCase;
 import com.akademiaplus.membership.usecases.GetMembershipTutorByIdUseCase;
 import com.akademiaplus.membership.usecases.MembershipTutorCreationUseCase;
@@ -34,14 +35,17 @@ public class MembershipTutorController implements MembershipTutorsApi {
     private final MembershipTutorCreationUseCase membershipTutorCreationUseCase;
     private final GetAllMembershipTutorsUseCase getAllMembershipTutorsUseCase;
     private final GetMembershipTutorByIdUseCase getMembershipTutorByIdUseCase;
+    private final DeleteMembershipTutorUseCase deleteMembershipTutorUseCase;
 
     public MembershipTutorController(
             MembershipTutorCreationUseCase membershipTutorCreationUseCase,
             GetAllMembershipTutorsUseCase getAllMembershipTutorsUseCase,
-            GetMembershipTutorByIdUseCase getMembershipTutorByIdUseCase) {
+            GetMembershipTutorByIdUseCase getMembershipTutorByIdUseCase,
+            DeleteMembershipTutorUseCase deleteMembershipTutorUseCase) {
         this.membershipTutorCreationUseCase = membershipTutorCreationUseCase;
         this.getAllMembershipTutorsUseCase = getAllMembershipTutorsUseCase;
         this.getMembershipTutorByIdUseCase = getMembershipTutorByIdUseCase;
+        this.deleteMembershipTutorUseCase = deleteMembershipTutorUseCase;
     }
 
     @Override
@@ -60,5 +64,11 @@ public class MembershipTutorController implements MembershipTutorsApi {
     public ResponseEntity<GetMembershipTutorResponseDTO> getMembershipTutorById(
             Long membershipTutorId) {
         return ResponseEntity.ok(getMembershipTutorByIdUseCase.get(membershipTutorId));
+    }
+
+    @Override
+    public ResponseEntity<Void> deleteMembershipTutor(Long membershipTutorId) {
+        deleteMembershipTutorUseCase.delete(membershipTutorId);
+        return ResponseEntity.noContent().build();
     }
 }

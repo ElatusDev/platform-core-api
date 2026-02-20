@@ -7,6 +7,7 @@
  */
 package com.akademiaplus.payment.interfaceadapters;
 
+import com.akademiaplus.payment.usecases.DeletePaymentTutorUseCase;
 import com.akademiaplus.payment.usecases.GetAllPaymentTutorsUseCase;
 import com.akademiaplus.payment.usecases.GetPaymentTutorByIdUseCase;
 import com.akademiaplus.payment.usecases.PaymentTutorCreationUseCase;
@@ -34,14 +35,17 @@ public class PaymentTutorController implements PaymentTutorsApi {
     private final PaymentTutorCreationUseCase paymentTutorCreationUseCase;
     private final GetAllPaymentTutorsUseCase getAllPaymentTutorsUseCase;
     private final GetPaymentTutorByIdUseCase getPaymentTutorByIdUseCase;
+    private final DeletePaymentTutorUseCase deletePaymentTutorUseCase;
 
     public PaymentTutorController(
             PaymentTutorCreationUseCase paymentTutorCreationUseCase,
             GetAllPaymentTutorsUseCase getAllPaymentTutorsUseCase,
-            GetPaymentTutorByIdUseCase getPaymentTutorByIdUseCase) {
+            GetPaymentTutorByIdUseCase getPaymentTutorByIdUseCase,
+            DeletePaymentTutorUseCase deletePaymentTutorUseCase) {
         this.paymentTutorCreationUseCase = paymentTutorCreationUseCase;
         this.getAllPaymentTutorsUseCase = getAllPaymentTutorsUseCase;
         this.getPaymentTutorByIdUseCase = getPaymentTutorByIdUseCase;
+        this.deletePaymentTutorUseCase = deletePaymentTutorUseCase;
     }
 
     @Override
@@ -60,5 +64,11 @@ public class PaymentTutorController implements PaymentTutorsApi {
     public ResponseEntity<GetPaymentTutorResponseDTO> getPaymentTutorById(
             Long paymentTutorId) {
         return ResponseEntity.ok(getPaymentTutorByIdUseCase.get(paymentTutorId));
+    }
+
+    @Override
+    public ResponseEntity<Void> deletePaymentTutor(Long paymentTutorId) {
+        deletePaymentTutorUseCase.delete(paymentTutorId);
+        return ResponseEntity.noContent().build();
     }
 }
