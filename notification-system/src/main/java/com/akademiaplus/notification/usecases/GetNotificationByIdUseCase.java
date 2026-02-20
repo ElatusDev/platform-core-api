@@ -7,10 +7,11 @@
  */
 package com.akademiaplus.notification.usecases;
 
-import com.akademiaplus.exception.NotificationNotFoundException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.notification.interfaceadapters.NotificationRepository;
 import com.akademiaplus.notifications.NotificationDataModel;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.notification.system.dto.GetNotificationResponseDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -50,8 +51,8 @@ public class GetNotificationByIdUseCase {
      *
      * @param notificationId the unique identifier of the notification
      * @return the notification response DTO
-     * @throws IllegalArgumentException         if tenant context is not available
-     * @throws NotificationNotFoundException    if no notification is found with the given identifier
+     * @throws IllegalArgumentException    if tenant context is not available
+     * @throws EntityNotFoundException     if no notification is found with the given identifier
      */
     public GetNotificationResponseDTO get(Long notificationId) {
         Long tenantId = tenantContextHolder.getTenantId()
@@ -62,7 +63,7 @@ public class GetNotificationByIdUseCase {
             NotificationDataModel found = queryResult.get();
             return modelMapper.map(found, GetNotificationResponseDTO.class);
         } else {
-            throw new NotificationNotFoundException(String.valueOf(notificationId));
+            throw new EntityNotFoundException(EntityType.NOTIFICATION, String.valueOf(notificationId));
         }
     }
 }

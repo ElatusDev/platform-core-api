@@ -8,11 +8,12 @@
 package com.akademiaplus.notification.interfaceadapters;
 
 import com.akademiaplus.config.NotificationControllerAdvice;
-import com.akademiaplus.exception.NotificationNotFoundException;
 import com.akademiaplus.notification.usecases.GetAllNotificationsUseCase;
 import com.akademiaplus.notification.usecases.GetNotificationByIdUseCase;
 import com.akademiaplus.notification.usecases.NotificationCreationUseCase;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.MessageService;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.notification.system.dto.GetNotificationResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -122,8 +123,8 @@ class NotificationControllerTest {
         void shouldReturn404_whenNotificationNotFound() throws Exception {
             // Given
             when(getNotificationByIdUseCase.get(NOTIFICATION_ID))
-                    .thenThrow(new NotificationNotFoundException(String.valueOf(NOTIFICATION_ID)));
-            when(messageService.getNotificationNotFound(String.valueOf(NOTIFICATION_ID)))
+                    .thenThrow(new EntityNotFoundException(EntityType.NOTIFICATION, String.valueOf(NOTIFICATION_ID)));
+            when(messageService.getEntityNotFound(EntityType.NOTIFICATION, String.valueOf(NOTIFICATION_ID)))
                     .thenReturn("Notification not found: " + NOTIFICATION_ID);
 
             // When & Then
@@ -132,7 +133,7 @@ class NotificationControllerTest {
                     .andExpect(status().isNotFound());
 
             verify(getNotificationByIdUseCase).get(NOTIFICATION_ID);
-            verify(messageService).getNotificationNotFound(String.valueOf(NOTIFICATION_ID));
+            verify(messageService).getEntityNotFound(EntityType.NOTIFICATION, String.valueOf(NOTIFICATION_ID));
             verifyNoMoreInteractions(getNotificationByIdUseCase, messageService);
         }
     }

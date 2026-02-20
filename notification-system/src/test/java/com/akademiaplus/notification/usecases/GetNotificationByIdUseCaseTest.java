@@ -7,10 +7,11 @@
  */
 package com.akademiaplus.notification.usecases;
 
-import com.akademiaplus.exception.NotificationNotFoundException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.notification.interfaceadapters.NotificationRepository;
 import com.akademiaplus.notifications.NotificationDataModel;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.notification.system.dto.GetNotificationResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -80,8 +81,8 @@ class GetNotificationByIdUseCaseTest {
     class NotFound {
 
         @Test
-        @DisplayName("Should throw NotificationNotFoundException when notification not found")
-        void shouldThrowNotificationNotFoundException_whenNotificationNotFound() {
+        @DisplayName("Should throw EntityNotFoundException when notification not found")
+        void shouldThrowEntityNotFoundException_whenNotificationNotFound() {
             // Given
             when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
             when(notificationRepository.findById(
@@ -90,8 +91,9 @@ class GetNotificationByIdUseCaseTest {
 
             // When & Then
             assertThatThrownBy(() -> useCase.get(NOTIFICATION_ID))
-                    .isInstanceOf(NotificationNotFoundException.class)
-                    .hasMessage(String.valueOf(NOTIFICATION_ID));
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasFieldOrPropertyWithValue("entityType", EntityType.NOTIFICATION)
+                    .hasFieldOrPropertyWithValue("entityId", String.valueOf(NOTIFICATION_ID));
             verify(tenantContextHolder).getTenantId();
             verify(notificationRepository).findById(
                     new NotificationDataModel.NotificationCompositeId(TENANT_ID, NOTIFICATION_ID));
