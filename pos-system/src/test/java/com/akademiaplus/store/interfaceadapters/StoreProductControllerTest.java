@@ -8,11 +8,12 @@
 package com.akademiaplus.store.interfaceadapters;
 
 import com.akademiaplus.config.PosControllerAdvice;
-import com.akademiaplus.exception.StoreProductNotFoundException;
 import com.akademiaplus.store.usecases.GetAllStoreProductsUseCase;
 import com.akademiaplus.store.usecases.GetStoreProductByIdUseCase;
 import com.akademiaplus.store.usecases.StoreProductCreationUseCase;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.MessageService;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.pos.system.dto.GetStoreProductResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -122,8 +123,8 @@ class StoreProductControllerTest {
         void shouldReturn404_whenStoreProductNotFound() throws Exception {
             // Given
             when(getStoreProductByIdUseCase.get(STORE_PRODUCT_ID))
-                    .thenThrow(new StoreProductNotFoundException(String.valueOf(STORE_PRODUCT_ID)));
-            when(messageService.getStoreProductNotFound(String.valueOf(STORE_PRODUCT_ID)))
+                    .thenThrow(new EntityNotFoundException(EntityType.STORE_PRODUCT, String.valueOf(STORE_PRODUCT_ID)));
+            when(messageService.getEntityNotFound(EntityType.STORE_PRODUCT, String.valueOf(STORE_PRODUCT_ID)))
                     .thenReturn("Store product not found: " + STORE_PRODUCT_ID);
 
             // When & Then
@@ -132,7 +133,7 @@ class StoreProductControllerTest {
                     .andExpect(status().isNotFound());
 
             verify(getStoreProductByIdUseCase).get(STORE_PRODUCT_ID);
-            verify(messageService).getStoreProductNotFound(String.valueOf(STORE_PRODUCT_ID));
+            verify(messageService).getEntityNotFound(EntityType.STORE_PRODUCT, String.valueOf(STORE_PRODUCT_ID));
             verifyNoMoreInteractions(getStoreProductByIdUseCase, messageService);
         }
     }

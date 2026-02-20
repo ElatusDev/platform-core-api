@@ -8,9 +8,10 @@
 package com.akademiaplus.store.usecases;
 
 import com.akademiaplus.billing.store.StoreProductDataModel;
-import com.akademiaplus.exception.StoreProductNotFoundException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.store.interfaceadapters.StoreProductRepository;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.pos.system.dto.GetStoreProductResponseDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -50,8 +51,8 @@ public class GetStoreProductByIdUseCase {
      *
      * @param storeProductId the unique identifier of the store product
      * @return the store product response DTO
-     * @throws IllegalArgumentException         if tenant context is not available
-     * @throws StoreProductNotFoundException    if no store product is found with the given identifier
+     * @throws IllegalArgumentException    if tenant context is not available
+     * @throws EntityNotFoundException     if no store product is found with the given identifier
      */
     public GetStoreProductResponseDTO get(Long storeProductId) {
         Long tenantId = tenantContextHolder.getTenantId()
@@ -62,7 +63,7 @@ public class GetStoreProductByIdUseCase {
             StoreProductDataModel found = queryResult.get();
             return modelMapper.map(found, GetStoreProductResponseDTO.class);
         } else {
-            throw new StoreProductNotFoundException(String.valueOf(storeProductId));
+            throw new EntityNotFoundException(EntityType.STORE_PRODUCT, String.valueOf(storeProductId));
         }
     }
 }

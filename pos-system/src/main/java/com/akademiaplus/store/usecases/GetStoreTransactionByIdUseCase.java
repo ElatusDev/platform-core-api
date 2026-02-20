@@ -8,9 +8,10 @@
 package com.akademiaplus.store.usecases;
 
 import com.akademiaplus.billing.store.StoreTransactionDataModel;
-import com.akademiaplus.exception.StoreTransactionNotFoundException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.store.interfaceadapters.StoreTransactionRepository;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.pos.system.dto.GetStoreTransactionResponseDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -50,8 +51,8 @@ public class GetStoreTransactionByIdUseCase {
      *
      * @param storeTransactionId the unique identifier of the store transaction
      * @return the store transaction response DTO
-     * @throws IllegalArgumentException              if tenant context is not available
-     * @throws StoreTransactionNotFoundException     if no store transaction is found with the given identifier
+     * @throws IllegalArgumentException    if tenant context is not available
+     * @throws EntityNotFoundException     if no store transaction is found with the given identifier
      */
     public GetStoreTransactionResponseDTO get(Long storeTransactionId) {
         Long tenantId = tenantContextHolder.getTenantId()
@@ -62,7 +63,7 @@ public class GetStoreTransactionByIdUseCase {
             StoreTransactionDataModel found = queryResult.get();
             return modelMapper.map(found, GetStoreTransactionResponseDTO.class);
         } else {
-            throw new StoreTransactionNotFoundException(String.valueOf(storeTransactionId));
+            throw new EntityNotFoundException(EntityType.STORE_TRANSACTION, String.valueOf(storeTransactionId));
         }
     }
 }

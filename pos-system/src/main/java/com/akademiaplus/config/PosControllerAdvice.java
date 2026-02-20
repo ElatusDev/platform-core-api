@@ -7,44 +7,29 @@
  */
 package com.akademiaplus.config;
 
-import com.akademiaplus.exception.StoreProductNotFoundException;
-import com.akademiaplus.exception.StoreTransactionNotFoundException;
 import com.akademiaplus.store.interfaceadapters.StoreProductController;
 import com.akademiaplus.store.interfaceadapters.StoreTransactionController;
 import com.akademiaplus.utilities.MessageService;
-import openapi.akademiaplus.domain.utilities.dto.ErrorResponseDTO;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.akademiaplus.utilities.web.BaseControllerAdvice;
 import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 
 /**
  * Controller advice for POS system exception handling.
+ * Extends {@link BaseControllerAdvice} to provide centralized exception handling
+ * for the POS system module.
  *
  * @author ElatusDev
  * @since 1.0
  */
-@ControllerAdvice(basePackageClasses = {StoreProductController.class,
-        StoreTransactionController.class})
-public class PosControllerAdvice {
+@ControllerAdvice(basePackageClasses = {StoreProductController.class, StoreTransactionController.class})
+public class PosControllerAdvice extends BaseControllerAdvice {
 
-    private final MessageService messageService;
-
+    /**
+     * Constructs a new PosControllerAdvice with the required message service.
+     *
+     * @param messageService the service for retrieving localized messages
+     */
     public PosControllerAdvice(MessageService messageService) {
-        this.messageService = messageService;
-    }
-
-    @ExceptionHandler
-    public ResponseEntity<ErrorResponseDTO> handleStoreProductNotFoundException(
-            StoreProductNotFoundException ex) {
-        return new ResponseEntity<>(new ErrorResponseDTO(
-                messageService.getStoreProductNotFound(ex.getMessage())), HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler
-    public ResponseEntity<ErrorResponseDTO> handleStoreTransactionNotFoundException(
-            StoreTransactionNotFoundException ex) {
-        return new ResponseEntity<>(new ErrorResponseDTO(
-                messageService.getStoreTransactionNotFound(ex.getMessage())), HttpStatus.NOT_FOUND);
+        super(messageService);
     }
 }

@@ -8,9 +8,10 @@
 package com.akademiaplus.store.usecases;
 
 import com.akademiaplus.billing.store.StoreProductDataModel;
-import com.akademiaplus.exception.StoreProductNotFoundException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.store.interfaceadapters.StoreProductRepository;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.pos.system.dto.GetStoreProductResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -80,8 +81,8 @@ class GetStoreProductByIdUseCaseTest {
     class NotFound {
 
         @Test
-        @DisplayName("Should throw StoreProductNotFoundException when store product not found")
-        void shouldThrowStoreProductNotFoundException_whenStoreProductNotFound() {
+        @DisplayName("Should throw EntityNotFoundException when store product not found")
+        void shouldThrowEntityNotFoundException_whenStoreProductNotFound() {
             // Given
             when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
             when(storeProductRepository.findById(
@@ -90,8 +91,9 @@ class GetStoreProductByIdUseCaseTest {
 
             // When & Then
             assertThatThrownBy(() -> useCase.get(STORE_PRODUCT_ID))
-                    .isInstanceOf(StoreProductNotFoundException.class)
-                    .hasMessage(String.valueOf(STORE_PRODUCT_ID));
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasFieldOrPropertyWithValue("entityType", EntityType.STORE_PRODUCT)
+                    .hasFieldOrPropertyWithValue("entityId", String.valueOf(STORE_PRODUCT_ID));
             verify(tenantContextHolder).getTenantId();
             verify(storeProductRepository).findById(
                     new StoreProductDataModel.ProductCompositeId(TENANT_ID, STORE_PRODUCT_ID));

@@ -8,11 +8,12 @@
 package com.akademiaplus.store.interfaceadapters;
 
 import com.akademiaplus.config.PosControllerAdvice;
-import com.akademiaplus.exception.StoreTransactionNotFoundException;
 import com.akademiaplus.store.usecases.GetAllStoreTransactionsUseCase;
 import com.akademiaplus.store.usecases.GetStoreTransactionByIdUseCase;
 import com.akademiaplus.store.usecases.StoreTransactionCreationUseCase;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.MessageService;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.pos.system.dto.GetStoreTransactionResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -122,8 +123,8 @@ class StoreTransactionControllerTest {
         void shouldReturn404_whenStoreTransactionNotFound() throws Exception {
             // Given
             when(getStoreTransactionByIdUseCase.get(STORE_TRANSACTION_ID))
-                    .thenThrow(new StoreTransactionNotFoundException(String.valueOf(STORE_TRANSACTION_ID)));
-            when(messageService.getStoreTransactionNotFound(String.valueOf(STORE_TRANSACTION_ID)))
+                    .thenThrow(new EntityNotFoundException(EntityType.STORE_TRANSACTION, String.valueOf(STORE_TRANSACTION_ID)));
+            when(messageService.getEntityNotFound(EntityType.STORE_TRANSACTION, String.valueOf(STORE_TRANSACTION_ID)))
                     .thenReturn("Store transaction not found: " + STORE_TRANSACTION_ID);
 
             // When & Then
@@ -132,7 +133,7 @@ class StoreTransactionControllerTest {
                     .andExpect(status().isNotFound());
 
             verify(getStoreTransactionByIdUseCase).get(STORE_TRANSACTION_ID);
-            verify(messageService).getStoreTransactionNotFound(String.valueOf(STORE_TRANSACTION_ID));
+            verify(messageService).getEntityNotFound(EntityType.STORE_TRANSACTION, String.valueOf(STORE_TRANSACTION_ID));
             verifyNoMoreInteractions(getStoreTransactionByIdUseCase, messageService);
         }
     }

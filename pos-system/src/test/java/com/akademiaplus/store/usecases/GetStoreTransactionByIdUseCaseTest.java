@@ -8,9 +8,10 @@
 package com.akademiaplus.store.usecases;
 
 import com.akademiaplus.billing.store.StoreTransactionDataModel;
-import com.akademiaplus.exception.StoreTransactionNotFoundException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.store.interfaceadapters.StoreTransactionRepository;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.pos.system.dto.GetStoreTransactionResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -80,8 +81,8 @@ class GetStoreTransactionByIdUseCaseTest {
     class NotFound {
 
         @Test
-        @DisplayName("Should throw StoreTransactionNotFoundException when store transaction not found")
-        void shouldThrowStoreTransactionNotFoundException_whenStoreTransactionNotFound() {
+        @DisplayName("Should throw EntityNotFoundException when store transaction not found")
+        void shouldThrowEntityNotFoundException_whenStoreTransactionNotFound() {
             // Given
             when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
             when(storeTransactionRepository.findById(
@@ -90,8 +91,9 @@ class GetStoreTransactionByIdUseCaseTest {
 
             // When & Then
             assertThatThrownBy(() -> useCase.get(STORE_TRANSACTION_ID))
-                    .isInstanceOf(StoreTransactionNotFoundException.class)
-                    .hasMessage(String.valueOf(STORE_TRANSACTION_ID));
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasFieldOrPropertyWithValue("entityType", EntityType.STORE_TRANSACTION)
+                    .hasFieldOrPropertyWithValue("entityId", String.valueOf(STORE_TRANSACTION_ID));
             verify(tenantContextHolder).getTenantId();
             verify(storeTransactionRepository).findById(
                     new StoreTransactionDataModel.StoreTransactionCompositeId(TENANT_ID, STORE_TRANSACTION_ID));
