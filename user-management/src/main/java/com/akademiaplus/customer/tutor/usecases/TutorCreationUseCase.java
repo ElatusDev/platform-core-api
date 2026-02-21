@@ -57,12 +57,12 @@ public class TutorCreationUseCase {
 
     @Transactional
     public TutorCreationResponseDTO create(TutorCreationRequestDTO dto) {
-        return modelMapper.map(tutorRepository.save(transformTutor(dto)), TutorCreationResponseDTO.class);
+        return modelMapper.map(tutorRepository.saveAndFlush(transformTutor(dto)), TutorCreationResponseDTO.class);
     }
 
     @Transactional
     public MinorStudentCreationResponseDTO createMinorStudent(MinorStudentCreationRequestDTO dto) {
-        return modelMapper.map(minorStudentRepository.save(transformMinorStudent(dto)), MinorStudentCreationResponseDTO.class);
+        return modelMapper.map(minorStudentRepository.saveAndFlush(transformMinorStudent(dto)), MinorStudentCreationResponseDTO.class);
     }
 
     /**
@@ -79,6 +79,7 @@ public class TutorCreationUseCase {
     public TutorDataModel transformTutor(TutorCreationRequestDTO dto) {
         final PersonPIIDataModel personPII = applicationContext.getBean(PersonPIIDataModel.class);
         modelMapper.map(dto, personPII);
+        personPII.setPhoneNumber(dto.getPhoneNumber());
 
         final TutorDataModel model = applicationContext.getBean(TutorDataModel.class);
         modelMapper.map(dto, model, TUTOR_MAP_NAME);
@@ -112,6 +113,7 @@ public class TutorCreationUseCase {
     public MinorStudentDataModel transformMinorStudent(MinorStudentCreationRequestDTO dto) {
         final PersonPIIDataModel personPII = applicationContext.getBean(PersonPIIDataModel.class);
         modelMapper.map(dto, personPII);
+        personPII.setPhoneNumber(dto.getPhoneNumber());
 
         final MinorStudentDataModel model = applicationContext.getBean(MinorStudentDataModel.class);
         modelMapper.map(dto, model, MINOR_STUDENT_MAP_NAME);
@@ -139,7 +141,7 @@ public class TutorCreationUseCase {
         String normalizedEmail = piiNormalizer.normalizeEmail(personPII.getEmail());
         personPII.setEmailHash(hashingService.generateHash(normalizedEmail));
 
-        String normalizedPhone = piiNormalizer.normalizePhoneNumber(personPII.getPhone());
+        String normalizedPhone = piiNormalizer.normalizePhoneNumber(personPII.getPhoneNumber());
         personPII.setPhoneHash(hashingService.generateHash(normalizedPhone));
     }
 }

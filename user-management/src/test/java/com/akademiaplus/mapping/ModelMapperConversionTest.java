@@ -192,9 +192,9 @@ class ModelMapperConversionTest {
             // When
             PersonPIIDataModel result = modelMapper.map(dto, PersonPIIDataModel.class);
 
-            // Then — verifies ModelMapper resolves the phoneNumber→phone mismatch
-            assertThat(result.getPhone())
-                    .as("DTO 'phoneNumber' must map to PersonPII 'phone'")
+            // Then — verifies ModelMapper resolves phoneNumber correctly
+            assertThat(result.getPhoneNumber())
+                    .as("DTO 'phoneNumber' must map to PersonPII 'phoneNumber'")
                     .isEqualTo(PHONE_NUMBER);
         }
 
@@ -601,8 +601,8 @@ class ModelMapperConversionTest {
             PersonPIIDataModel result = modelMapper.map(dto, PersonPIIDataModel.class);
 
             // Then
-            assertThat(result.getPhone())
-                    .as("DTO 'phoneNumber' must map to PersonPII 'phone'")
+            assertThat(result.getPhoneNumber())
+                    .as("DTO 'phoneNumber' must map to PersonPII 'phoneNumber'")
                     .isEqualTo(PHONE_NUMBER);
         }
     }

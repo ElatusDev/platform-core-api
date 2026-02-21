@@ -43,7 +43,7 @@ public class AdultStudentCreationUseCase {
 
     @Transactional
     public AdultStudentCreationResponseDTO create(AdultStudentCreationRequestDTO dto) {
-        return modelMapper.map(adultStudentRepository.save(transform(dto)), AdultStudentCreationResponseDTO.class);
+        return modelMapper.map(adultStudentRepository.saveAndFlush(transform(dto)), AdultStudentCreationResponseDTO.class);
     }
 
     /**
@@ -59,6 +59,7 @@ public class AdultStudentCreationUseCase {
     public AdultStudentDataModel transform(AdultStudentCreationRequestDTO dto) {
         final PersonPIIDataModel personPIIDataModel = applicationContext.getBean(PersonPIIDataModel.class);
         modelMapper.map(dto, personPIIDataModel);
+        personPIIDataModel.setPhoneNumber(dto.getPhoneNumber());
 
         final AdultStudentDataModel model = applicationContext.getBean(AdultStudentDataModel.class);
         modelMapper.map(dto, model, MAP_NAME);
@@ -68,7 +69,7 @@ public class AdultStudentCreationUseCase {
         String normalizedEmail = piiNormalizer.normalizeEmail(model.getPersonPII().getEmail());
         model.getPersonPII().setEmailHash(hashingService.generateHash(normalizedEmail));
 
-        String normalizedPhone = piiNormalizer.normalizePhoneNumber(model.getPersonPII().getPhone());
+        String normalizedPhone = piiNormalizer.normalizePhoneNumber(model.getPersonPII().getPhoneNumber());
         model.getPersonPII().setPhoneHash(hashingService.generateHash(normalizedPhone));
 
         CustomerAuthDataModel customerAuth = applicationContext.getBean(CustomerAuthDataModel.class);

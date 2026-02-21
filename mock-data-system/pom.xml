@@ -97,6 +97,13 @@
         </dependency>
         <dependency>
             <groupId>com.akademiaplus</groupId>
+            <artifactId>infra-common</artifactId>
+            <version>1.0</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.akademiaplus</groupId>
             <artifactId>utilities</artifactId>
             <version>1.0</version>
         </dependency>

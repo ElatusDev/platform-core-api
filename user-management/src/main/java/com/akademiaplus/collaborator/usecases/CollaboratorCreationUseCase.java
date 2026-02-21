@@ -51,7 +51,7 @@ public class CollaboratorCreationUseCase {
 
     @Transactional
     public CollaboratorCreationResponseDTO create(CollaboratorCreationRequestDTO dto) {
-        return modelMapper.map(repository.save(transform(dto)), CollaboratorCreationResponseDTO.class);
+        return modelMapper.map(repository.saveAndFlush(transform(dto)), CollaboratorCreationResponseDTO.class);
     }
 
     public CollaboratorDataModel transform(CollaboratorCreationRequestDTO dto) {
@@ -60,6 +60,7 @@ public class CollaboratorCreationUseCase {
 
         final PersonPIIDataModel personPIIDataModel = applicationContext.getBean(PersonPIIDataModel.class);
         modelMapper.map(dto, personPIIDataModel);
+        personPIIDataModel.setPhoneNumber(dto.getPhoneNumber());
 
         final CollaboratorDataModel model = applicationContext.getBean(CollaboratorDataModel.class);
         modelMapper.map(dto, model, TYPE_MAP);
@@ -70,7 +71,7 @@ public class CollaboratorCreationUseCase {
         String normalizedEmail = piiNormalizer.normalizeEmail(model.getPersonPII().getEmail());
         model.getPersonPII().setEmailHash(hashingService.generateHash(normalizedEmail));
 
-        String normalizedPhone = piiNormalizer.normalizePhoneNumber(model.getPersonPII().getPhone());
+        String normalizedPhone = piiNormalizer.normalizePhoneNumber(model.getPersonPII().getPhoneNumber());
         model.getPersonPII().setPhoneHash(hashingService.generateHash(normalizedPhone));
 
         internalAuthDataModel.setUsernameHash(hashingService.generateHash(internalAuthDataModel.getUsername()));

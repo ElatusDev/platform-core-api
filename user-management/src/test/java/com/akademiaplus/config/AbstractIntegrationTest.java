@@ -7,16 +7,20 @@
  */
 package com.akademiaplus.config;
 
-import com.akademiaplus.MockDataApp;
+import com.akademiaplus.UserManagementTestApp;
+import com.akademiaplus.infra.testing.IntegrationTestTenantConfiguration;
+import com.akademiaplus.infra.testing.TestSecurityConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 /**
- * Base class for mock-data-system integration tests.
+ * Base class for user-management integration tests.
  *
  * <p>Extends the shared {@link com.akademiaplus.infra.testing.AbstractIntegrationTest}
- * from {@code infra-common} (test-jar) and adds the mock-data-service–specific
- * Spring Boot configuration: application class and active profile.
+ * from {@code infra-common} (test-jar) and adds the module-specific Spring Boot
+ * configuration: test application class and {@code mock-data-service} profile
+ * to disable authentication/authorization.
  *
  * <p>Subclasses inherit the Testcontainers MariaDB instance, dynamic property
  * registration, encryption and tenant test configurations from the parent.
@@ -25,10 +29,11 @@ import org.springframework.test.context.ActiveProfiles;
  * @since 1.0
  */
 @SpringBootTest(
-        classes = {MockDataApp.class},
+        classes = {UserManagementTestApp.class},
         properties = "spring.main.allow-bean-definition-overriding=true"
 )
 @ActiveProfiles("mock-data-service")
+@Import({TestSecurityConfiguration.class, IntegrationTestTenantConfiguration.class})
 public abstract class AbstractIntegrationTest
         extends com.akademiaplus.infra.testing.AbstractIntegrationTest {
 }

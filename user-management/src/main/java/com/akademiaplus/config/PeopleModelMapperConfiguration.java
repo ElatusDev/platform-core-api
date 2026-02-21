@@ -12,6 +12,7 @@ import com.akademiaplus.customer.adultstudent.usecases.AdultStudentCreationUseCa
 import com.akademiaplus.customer.tutor.usecases.TutorCreationUseCase;
 import com.akademiaplus.employee.usecases.EmployeeCreationUseCase;
 import com.akademiaplus.security.InternalAuthDataModel;
+import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
 import com.akademiaplus.users.customer.AdultStudentDataModel;
 import com.akademiaplus.users.customer.MinorStudentDataModel;

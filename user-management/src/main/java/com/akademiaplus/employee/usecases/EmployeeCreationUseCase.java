@@ -34,7 +34,7 @@ public class EmployeeCreationUseCase {
 
     @Transactional
     public EmployeeCreationResponseDTO create(EmployeeCreationRequestDTO dto)  {
-        return modelMapper.map(employeeRepository.save(transform(dto)), EmployeeCreationResponseDTO.class);
+        return modelMapper.map(employeeRepository.saveAndFlush(transform(dto)), EmployeeCreationResponseDTO.class);
     }
 
     public EmployeeDataModel transform(EmployeeCreationRequestDTO dto) {
@@ -43,6 +43,7 @@ public class EmployeeCreationUseCase {
 
         final PersonPIIDataModel personPIIDataModel = applicationContext.getBean(PersonPIIDataModel.class);
         modelMapper.map(dto, personPIIDataModel);
+        personPIIDataModel.setPhoneNumber(dto.getPhoneNumber());
 
         final EmployeeDataModel model = applicationContext.getBean(EmployeeDataModel.class);
         modelMapper.map(dto, model, MAP_NAME);
@@ -52,7 +53,7 @@ public class EmployeeCreationUseCase {
         String normalizedEmail = piiNormalizer.normalizeEmail(model.getPersonPII().getEmail());
         model.getPersonPII().setEmailHash(hashingService.generateHash(normalizedEmail));
 
-        String normalizedPhone = piiNormalizer.normalizePhoneNumber(model.getPersonPII().getPhone());
+        String normalizedPhone = piiNormalizer.normalizePhoneNumber(model.getPersonPII().getPhoneNumber());
         model.getPersonPII().setPhoneHash(hashingService.generateHash(normalizedPhone));
 
         internalAuthDataModel.setUsernameHash(hashingService.generateHash(internalAuthDataModel.getUsername()));

@@ -86,7 +86,7 @@ class TutorCreationUseCaseTest {
             tutorModel = new TutorDataModel();
             personPII = new PersonPIIDataModel();
             personPII.setEmail(TEST_EMAIL);
-            personPII.setPhone(TEST_PHONE);
+            personPII.setPhoneNumber(TEST_PHONE);
         }
 
         @Test
@@ -211,7 +211,7 @@ class TutorCreationUseCaseTest {
             minorModel = new MinorStudentDataModel();
             personPII = new PersonPIIDataModel();
             personPII.setEmail(TEST_EMAIL);
-            personPII.setPhone(TEST_PHONE);
+            personPII.setPhoneNumber(TEST_PHONE);
             existingTutor = new TutorDataModel();
 
             lenient().when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
@@ -335,7 +335,7 @@ class TutorCreationUseCaseTest {
             TutorDataModel tutorModel = new TutorDataModel();
             PersonPIIDataModel personPII = new PersonPIIDataModel();
             personPII.setEmail(TEST_EMAIL);
-            personPII.setPhone(TEST_PHONE);
+            personPII.setPhoneNumber(TEST_PHONE);
             TutorDataModel savedTutor = new TutorDataModel();
             TutorCreationResponseDTO expectedResponse = new TutorCreationResponseDTO();
 
@@ -347,14 +347,14 @@ class TutorCreationUseCaseTest {
             when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
             when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
             when(hashingService.generateHash(NORMALIZED_PHONE)).thenReturn(PHONE_HASH);
-            when(tutorRepository.save(tutorModel)).thenReturn(savedTutor);
+            when(tutorRepository.saveAndFlush(tutorModel)).thenReturn(savedTutor);
             when(modelMapper.map(savedTutor, TutorCreationResponseDTO.class)).thenReturn(expectedResponse);
 
             // When
             TutorCreationResponseDTO result = useCase.create(tutorDto);
 
             // Then
-            verify(tutorRepository).save(tutorModel);
+            verify(tutorRepository).saveAndFlush(tutorModel);
             assertThat(result).isEqualTo(expectedResponse);
         }
 
@@ -374,7 +374,7 @@ class TutorCreationUseCaseTest {
             MinorStudentDataModel minorModel = new MinorStudentDataModel();
             PersonPIIDataModel personPII = new PersonPIIDataModel();
             personPII.setEmail(TEST_EMAIL);
-            personPII.setPhone(TEST_PHONE);
+            personPII.setPhoneNumber(TEST_PHONE);
             TutorDataModel existingTutor = new TutorDataModel();
             CustomerAuthDataModel customerAuth = new CustomerAuthDataModel();
             MinorStudentDataModel savedMinor = new MinorStudentDataModel();
@@ -391,14 +391,14 @@ class TutorCreationUseCaseTest {
             when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
             when(hashingService.generateHash(NORMALIZED_PHONE)).thenReturn(PHONE_HASH);
             when(tutorRepository.findById(new TutorDataModel.TutorCompositeId(TENANT_ID, tutorId))).thenReturn(Optional.of(existingTutor));
-            when(minorStudentRepository.save(minorModel)).thenReturn(savedMinor);
+            when(minorStudentRepository.saveAndFlush(minorModel)).thenReturn(savedMinor);
             when(modelMapper.map(savedMinor, MinorStudentCreationResponseDTO.class)).thenReturn(expectedResponse);
 
             // When
             MinorStudentCreationResponseDTO result = useCase.createMinorStudent(minorDto);
 
             // Then
-            verify(minorStudentRepository).save(minorModel);
+            verify(minorStudentRepository).saveAndFlush(minorModel);
             assertThat(result).isEqualTo(expectedResponse);
         }
     }

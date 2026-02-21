@@ -83,7 +83,7 @@ public class PersonPIIDataModel extends TenantScoped {
      */
     @Convert(converter = StringEncryptor.class)
     @Column(name = "encrypted_phone_number", nullable = false, length = 500)
-    private String phone;
+    private String phoneNumber;
 
     /**
      * Encrypted address of the person.
