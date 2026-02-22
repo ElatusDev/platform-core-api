@@ -5,26 +5,30 @@ info:
   description: API for requesting and managing certificates for other microservices.
 tags:
   - name: Certificate Authority
-    description: API for requesting and managing certificates
+    description: API for signing CSRs and retrieving the root CA certificate
+  - name: Enrollment
+    description: One-time bootstrap enrollment for new services
 
 paths:
   /ca/sign-cert:
     post:
-      summary: Signs a Certificate Signing Request (CSR)
+      tags:
+        - Certificate Authority
+      summary: Signs a Certificate Signing Request (CSR) via mTLS-authenticated channel
       operationId: signCertificate
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CertificateRequestDTO'
+              $ref: '#/components/schemas/CertificateRequest'
       responses:
         '200':
           description: Certificate signed successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CertificateResponseDTO'
+                $ref: '#/components/schemas/CertificateResponse'
         '400':
           description: Invalid request data or CSR
           content:
@@ -40,13 +44,15 @@ paths:
 
   /ca/ca.crt:
     get:
-      summary: Retrieves the Root CA certificate
+      tags:
+        - Certificate Authority
+      summary: Retrieves the Root CA certificate in PEM format (unauthenticated)
       operationId: getCaCertificate
       responses:
         '200':
           description: Root CA certificate retrieved successfully
           content:
-            application/json: # Returning the certificate as plain text
+            text/plain:
               schema:
                 type: string
         '500':
@@ -56,41 +62,107 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /ca/enroll:
+    post:
+      tags:
+        - Enrollment
+      summary: One-time bootstrap enrollment for new services
+      operationId: enrollService
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EnrollmentRequest'
+      responses:
+        '200':
+          description: Enrollment successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CertificateResponse'
+        '400':
+          description: Invalid CSR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid or expired bootstrap token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Token CN mismatch or token already used
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   schemas:
-    CertificateRequestDTO:
+    CertificateRequest:
       type: object
-      description: DTO for requesting a new signed certificate
+      description: DTO for requesting a new signed certificate via mTLS-authenticated channel
       properties:
         commonName:
           type: string
           description: The Common Name (CN) for the new certificate
-          example: "makani-api"
+          example: "platform-core-api"
         organization:
           type: string
           description: The Organization (O) for the new certificate
-          example: "Makani Academy"
+          example: "ElatusDev"
         certificateSigningRequest:
           type: string
-          description: The Base64 encoded Certificate Signing Request (CSR)
+          description: Base64-encoded PKCS#10 CSR (base64 of PEM-formatted CSR)
       required:
         - commonName
         - organization
         - certificateSigningRequest
 
-    CertificateResponseDTO:
+    EnrollmentRequest:
+      type: object
+      description: DTO for one-time bootstrap enrollment using a pre-issued token
+      properties:
+        bootstrapToken:
+          type: string
+          description: One-time enrollment token bound to this service's CN
+        commonName:
+          type: string
+          description: The Common Name (CN) for the new certificate — must match the token's bound CN
+          example: "platform-core-api"
+        organization:
+          type: string
+          description: The Organization (O) for the new certificate
+          example: "ElatusDev"
+        certificateSigningRequest:
+          type: string
+          description: Base64-encoded PKCS#10 CSR (base64 of PEM-formatted CSR)
+      required:
+        - bootstrapToken
+        - commonName
+        - certificateSigningRequest
+
+    CertificateResponse:
       type: object
       description: DTO for the signed certificate response
       properties:
         signedCertificate:
           type: string
-          description: The Base64 encoded signed certificate (.crt file)
+          description: Base64-encoded PEM signed certificate
         caCertificate:
           type: string
-          description: The Base64 encoded root CA certificate (.crt file)
+          description: Base64-encoded PEM root CA certificate
       required:
         - signedCertificate
         - caCertificate
 
     ErrorResponse:
       type: object
+      properties:
+        message:
+          type: string
+          description: Human-readable error message

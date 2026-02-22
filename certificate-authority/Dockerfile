@@ -1,23 +1,27 @@
-# ca-service/Dockerfile
-
-# --- Stage 1: The Build Stage ---
 FROM eclipse-temurin:21-jdk-alpine AS build
+WORKDIR /workspace
 
-WORKDIR /app
-
+# Dependency caching layer
 COPY pom.xml ./
-COPY ca-service/pom.xml ./ca-service/pom.xml
-COPY ca-service/src ./ca-service/src
+COPY certificate-authority/pom.xml ./certificate-authority/
+RUN apk add --no-cache maven && \
+    mvn -f certificate-authority/pom.xml -pl certificate-authority -am dependency:go-offline -q || true
 
-RUN apk add --no-cache maven
-RUN mvn -f ca-service/pom.xml dependency:go-offline -Pca-service
-RUN mvn -f ca-service/pom.xml clean package -Pca-service -DskipTests=true
+# Build
+COPY certificate-authority/src ./certificate-authority/src
+RUN mvn -f certificate-authority/pom.xml -pl certificate-authority -am clean package -DskipTests -q
 
-# --- Stage 2: The Final Runtime Stage ---
+# Runtime — non-root user with curl/openssl for healthcheck
 FROM eclipse-temurin:21-jre-alpine
-RUN apk update && apk add --no-cache bash
+RUN apk update && apk add --no-cache bash curl openssl && \
+    addgroup -S cagroup && adduser -S causer -G cagroup
 
 WORKDIR /app
-COPY --from=build /app/ca-service/target/ca-service-*.jar /app/ca-service.jar
-EXPOSE 8081
-CMD ["java", "-jar", "/app/ca-service.jar"]
+COPY --from=build /workspace/certificate-authority/target/certificate-authority-*.jar \
+    /app/ca-service.jar
+
+RUN mkdir -p /certs && chown causer:cagroup /certs
+USER causer
+
+EXPOSE 8081 8082
+ENTRYPOINT ["java", "-jar", "/app/ca-service.jar"]
