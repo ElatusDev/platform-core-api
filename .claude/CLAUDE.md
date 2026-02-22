@@ -167,10 +167,7 @@ docker compose -f docker-compose.dev.yml up --build
 
 ## Known Technical Debt
 
-1. **Dockerfile** references old module names (communication, coordination, datamodel, people, treasury) — needs update to current names
-2. **docker-compose.dev.yml** references old Docker image `elatusdevops/makani-helpdesk-api:dev`
-3. **SonarQube workflow** references `makani-helpdesk-api` project key — needs update
-4. **Several modules are placeholders**: `etl-system`, `audit-system` only contain `Main.java`
+1. **Several modules are placeholders**: `etl-system`, `audit-system` only contain `Main.java`
 
 ---
 
