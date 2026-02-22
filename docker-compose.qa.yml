@@ -1,21 +1,16 @@
 services:
-  sailpoint-makani-helpdesk-api:
-    image: elatusdevops/makani-helpdesk-api:qa
+  platform-core-api:
+    image: elatusdevops/akademiaplus-platform-core-api:qa
     build:
       context: .
-      dockerfile: QA.Dockerfile
-    container_name: makani-helpdesk-api-qa
+      dockerfile: Dockerfile
+    container_name: platform-core-api-qa
     ports:
-      - "8080:8080"
+      - "8443:8443"
+    env_file:
+      - .env
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
-      ENABLE_DB_INIT: ${ENABLE_DB_INIT}
-      NODE_ENV: ${NODE_ENV}
-      PORT: ${PORT}
-    command: ["java", "-jar", "/app.jar"]
-    volumes:
-      - ./src:/app/src
-      - ./application/src/main/resources:/app/src/main/resources

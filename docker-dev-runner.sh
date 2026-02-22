@@ -70,7 +70,7 @@ _start_db() {
 
 _start_redis() {
     echo "--- Starting Redis service ---"
-    local volume_name="makani-helpdesk-api_redis_data"
+    local volume_name="platform-core-api_redis_data"
     if docker-compose -f "$COMPOSE_FILE" ps -q "$REDIS_SERVICE_NAME" | grep -q .; then
         echo "Stopping and removing existing container: $REDIS_SERVICE_NAME"
         docker-compose -f "$COMPOSE_FILE" stop "$REDIS_SERVICE_NAME"
@@ -86,7 +86,7 @@ _start_redis() {
 
 _start_ca() {
     echo "--- Starting Certificate Authority service ---"
-    local volume_name="makani-helpdesk-api_ca_certs"
+    local volume_name="platform-core-api_ca_certs"
 
     # The 'up --force-recreate' flag handles removing the old container,
     # so we only need to check for and remove the volume explicitly.

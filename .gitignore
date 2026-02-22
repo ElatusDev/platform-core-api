@@ -19,6 +19,9 @@ utilities/target/
 ### docker related ###
 .env
 
+### secrets — never commit bootstrap tokens or CA private keys ###
+secrets/
+
 ### Mac OS ###
 .DS_Store
 

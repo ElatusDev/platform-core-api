@@ -1,38 +1,65 @@
+networks:
+  akademia-internal:
+    driver: bridge
+    internal: true
+  akademia-external:
+    driver: bridge
+
 services:
+  ca-service:
+    build:
+      context: .
+      dockerfile: certificate-authority/Dockerfile
+    container_name: ca-service
+    # NO host ports — CA is internal-only and unreachable from outside Docker
+    networks:
+      - akademia-internal
+    volumes:
+      - ca_certs:/certs
+    environment:
+      SPRING_PROFILES_ACTIVE: ca-service
+      CA_KEYSTORE_PASS: ${KEYSTORE_PASS}
+    secrets:
+      - ca_bootstrap_tokens
+    healthcheck:
+      test: ["CMD", "curl", "-fk", "https://localhost:8082/ca/ca.crt"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   platform-core-api:
-    image: elatusdevops/makani-helpdesk-api:dev
+    image: elatusdevops/akademiaplus-platform-core-api:dev
     build:
       context: .
       dockerfile: Dockerfile
     container_name: platform-core-api
+    depends_on:
+      ca-service:
+        condition: service_healthy
+    networks:
+      - akademia-internal
+      - akademia-external
     ports:
-      - "8080:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: dev
+      - "8443:8443"
     env_file:
       - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      CA_ENROLL_URL: https://ca-service:8082
+      CA_MTLS_URL: https://ca-service:8081
     volumes:
-      - ./src:/app/src
-      - ./application/src/main/resources:/app/src/main/resources
-    command: >
-      /bin/bash -c "
-      echo '--- Starting Spring Boot application ---';
-      # 4. Start the application with JVM arguments for SSL/TLS
-      java -Dserver.port=8443 \
-      -Dserver.ssl.enabled=true \
-      -Dserver.ssl.key-store=/app/keystore.p12 \
-      -Dserver.ssl.key-store-type=PKCS12 \
-      -Dserver.ssl.key-store-password=$KEYSTORE_PASS \
-      -Dserver.ssl.key-alias=$KEY_ALIAS \
-      -Dserver.ssl.key-password=$KEYSTORE_PASS \
-      -Djavax.net.ssl.trustStore=/app/truststore.p12 \
-      -Djavax.net.ssl.trustStorePassword=$KEYSTORE_PASS \
-      -jar /app.jar
-      "
+      - app_certs:/app/certs
+    secrets:
+      - platform_core_bootstrap_token
+    entrypoint: ["/app/docker-entrypoint.sh"]
+
   multi_tenant_db:
     image: mariadb:latest
     container_name: multi_tenant_db
     restart: always
+    networks:
+      - akademia-internal
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: multi_tenant_db
@@ -54,40 +81,21 @@ services:
     image: redis:6-alpine
     container_name: platform-core-redis
     restart: always
+    networks:
+      - akademia-internal
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
 
-  ca-service:
-    image: alpine:3.18
-    container_name: ca-service
-    ports:
-      - "8081:8081"
-    build:
-      context: .
-      dockerfile: ./ca-service/Dockerfile
-    env_file:
-      - .env
-    volumes:
-      - ca_certs:/certs # Persist the CA's files
-    command: >
-      /bin/bash -c "
-      # Ensure KEYSTORE_PASS is at least 6 characters.
+secrets:
+  ca_bootstrap_tokens:
+    file: ./secrets/ca-bootstrap-tokens.json
+  platform_core_bootstrap_token:
+    file: ./secrets/platform-core-api-token.txt
 
-      if [ ! -f /certs/ca.crt ]; then
-          echo '--- Generating self-signed root CA certificate and key ---';
-          openssl req -x509 -sha256 -nodes -days 3650 -newkey rsa:2048 -subj '/CN=Makani CA/O=ElatusDev/OU=Makani/L=GDL/ST=JALISCO/C=MX' -keyout /certs/ca.key -out /certs/ca.crt;
-      fi
-      
-      echo '--- Generating application key pair and truststore ---';
-      keytool -genkeypair -alias $KEY_ALIAS -keyalg RSA -keysize 2048 -storetype PKCS12 -keystore /certs/keystore.p12 -storepass $KEYSTORE_PASS -keypass $KEYSTORE_PASS -dname 'CN=makani-api, OU=Makani, O=ElatusDev, L=GDL, ST=JALISCO, C=MX' -validity 3650;
-      keytool -importcert -trustcacerts -keystore /certs/truststore.p12 -storetype PKCS12 -storepass $KEYSTORE_PASS -noprompt -alias makani-ca -file /certs/ca.crt;
-
-      echo '--- Starting Spring Boot CA application ---';
-      java -Dserver.port=8081 -Dserver.ssl.enabled=true -Dserver.ssl.key-store=/certs/keystore.p12 -Dserver.ssl.key-store-type=PKCS12 -Dserver.ssl.key-store-password=$KEYSTORE_PASS -Dserver.ssl.key-alias=$KEY_ALIAS -Dserver.ssl.key-password=$KEYSTORE_PASS -Djavax.net.ssl.trustStore=/certs/truststore.p12 -Djavax.net.ssl.trustStorePassword=$KEYSTORE_PASS -jar /app/ca-service.jar
-      "
 volumes:
   db_data: {}
   redis_data: {}
   ca_certs: {}
+  app_certs: {}

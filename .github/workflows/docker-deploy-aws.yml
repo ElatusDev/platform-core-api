@@ -58,11 +58,11 @@ jobs:
             # Pull the image
             docker pull ${{ needs.build-and-push.outputs.image_tag }}
 
-            # Stop and remove the old container (if running) - Adjust as needed!
-            docker stop makani-helpdesk-api || true # Ignore errors if it's not running
-            docker rm makani-helpdesk-api || true
+            # Stop and remove the old container (if running)
+            docker stop platform-core-api || true
+            docker rm platform-core-api || true
 
-            # Run the new container (adjust the command and ports as necessary)
-            docker run -d --name makani-helpdesk-api -p 8080:8080 ${{ needs.build-and-push.outputs.image_tag }}
+            # Run the new container
+            docker run -d --name platform-core-api -p 8443:8443 ${{ needs.build-and-push.outputs.image_tag }}
 
             echo "Deployment complete."
