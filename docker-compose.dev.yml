@@ -37,6 +37,10 @@ services:
     depends_on:
       ca-service:
         condition: service_healthy
+      multi_tenant_db:
+        condition: service_healthy
+      platform-core-redis:
+        condition: service_healthy
     networks:
       - akademia-internal
       - akademia-external
@@ -48,18 +52,65 @@ services:
       SPRING_PROFILES_ACTIVE: dev
       CA_ENROLL_URL: https://ca-service:8082
       CA_MTLS_URL: https://ca-service:8081
+      # Override host-local paths → container paths (entrypoint generates keystore here)
+      KEYSTORE_PATH: /app/certs/keystore.p12
+      STORE_ALIAS: ${KEY_ALIAS}
     volumes:
       - app_certs:/app/certs
     secrets:
       - platform_core_bootstrap_token
     entrypoint: ["/app/docker-entrypoint.sh"]
+    healthcheck:
+      test: ["CMD", "curl", "-fk", "https://localhost:8443/api/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 6
+      start_period: 60s
+
+  mock-data-system:
+    build:
+      context: .
+      dockerfile: mock-data-system/Dockerfile
+    container_name: mock-data-system
+    depends_on:
+      platform-core-api:
+        condition: service_healthy
+    networks:
+      - akademia-internal
+    ports:
+      - "8180:8180"
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: mock-data-service
+      SPRING_DATASOURCE_URL: jdbc:mariadb://multi_tenant_db:3306/${DATABASE}
+      # Override host-local KEYSTORE_PATH → shared volume created by platform-core-api entrypoint
+      KEYSTORE_PATH: /app/certs/keystore.p12
+      STORE_ALIAS: ${KEY_ALIAS}
+    volumes:
+      - app_certs:/app/certs:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8180/infra/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   multi_tenant_db:
     image: mariadb:latest
     container_name: multi_tenant_db
     restart: always
+    depends_on:
+      ca-service:
+        condition: service_healthy
     networks:
       - akademia-internal
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: multi_tenant_db
@@ -81,12 +132,21 @@ services:
     image: redis:6-alpine
     container_name: platform-core-redis
     restart: always
+    depends_on:
+      multi_tenant_db:
+        condition: service_healthy
     networks:
       - akademia-internal
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 secrets:
   ca_bootstrap_tokens:

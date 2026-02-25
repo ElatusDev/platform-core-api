@@ -1,11 +1,11 @@
 # =============================================================================
-# Dockerfile — platform-core-api (application module)
-# Build context: platform-core-api/
+# Dockerfile — mock-data-system
+# Build context: platform-core-api/  (set by docker-compose context: .)
 #
-# Dependency chain (mvn -pl application -am):
+# Dependency chain (mvn -pl mock-data-system -am):
 #   utilities → infra-common → multi-tenant-data → notification-system
 #   → security → user-management → course-management → billing
-#   → tenant-management → application
+#   → tenant-management → pos-system → mock-data-system
 # =============================================================================
 
 # ── Build stage ──────────────────────────────────────────────────────────────
@@ -13,30 +13,28 @@ FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /app
 
 # Layer 1: POMs only (rarely change → good cache hit rate)
-# Copy all module POMs so the reactor can resolve inter-module dependencies.
-# This is cheap (small files) and avoids reactor resolution failures.
 COPY pom.xml /app/
-COPY application/pom.xml           application/
 COPY billing/pom.xml               billing/
 COPY course-management/pom.xml     course-management/
 COPY infra-common/pom.xml          infra-common/
+COPY mock-data-system/pom.xml      mock-data-system/
 COPY multi-tenant-data/pom.xml     multi-tenant-data/
 COPY notification-system/pom.xml   notification-system/
+COPY pos-system/pom.xml            pos-system/
 COPY security/pom.xml              security/
 COPY tenant-management/pom.xml     tenant-management/
 COPY user-management/pom.xml       user-management/
 COPY utilities/pom.xml             utilities/
 # Placeholder POMs for reactor completeness (no src needed)
+COPY application/pom.xml           application/
 COPY audit-system/pom.xml          audit-system/
 COPY certificate-authority/pom.xml certificate-authority/
 COPY etl-system/pom.xml            etl-system/
-COPY mock-data-system/pom.xml      mock-data-system/
-COPY pos-system/pom.xml            pos-system/
 
 RUN apk add --no-cache maven
-RUN mvn dependency:go-offline -pl application -am -DskipTests -q || true
+RUN mvn dependency:go-offline -pl mock-data-system -am -DskipTests -q || true
 
-# Layer 2: Source trees — ONLY modules in the application dependency chain
+# Layer 2: Source trees — ONLY modules in the mock-data-system dependency chain
 COPY utilities/src              utilities/src
 COPY infra-common/src           infra-common/src
 COPY multi-tenant-data/src      multi-tenant-data/src
@@ -46,21 +44,19 @@ COPY user-management/src        user-management/src
 COPY course-management/src      course-management/src
 COPY billing/src                billing/src
 COPY tenant-management/src      tenant-management/src
-COPY application/src            application/src
+COPY pos-system/src             pos-system/src
+COPY mock-data-system/src       mock-data-system/src
 
-RUN mvn clean install -pl application -am -DskipTests -DskipITs -q
+RUN mvn clean install -pl mock-data-system -am -DskipTests -DskipITs -q
 
 # ── Runtime stage ────────────────────────────────────────────────────────────
-# Includes curl/jq/openssl for docker-entrypoint.sh trust propagation
 FROM eclipse-temurin:21-jre-alpine
-RUN apk update && apk add --no-cache bash curl jq openssl
+RUN apk update && apk add --no-cache bash curl
 
 WORKDIR /app
-COPY --from=build /app/application/target/*.jar /app.jar
-COPY docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh
+COPY --from=build /app/mock-data-system/target/*.jar /app.jar
 
 RUN mkdir -p /app/certs
-EXPOSE 8443
+EXPOSE 8180
 
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+ENTRYPOINT ["java", "-jar", "/app.jar"]

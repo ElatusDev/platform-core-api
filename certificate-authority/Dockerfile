@@ -5,11 +5,11 @@ WORKDIR /workspace
 COPY pom.xml ./
 COPY certificate-authority/pom.xml ./certificate-authority/
 RUN apk add --no-cache maven && \
-    mvn -f certificate-authority/pom.xml -pl certificate-authority -am dependency:go-offline -q || true
+    mvn -f certificate-authority/pom.xml dependency:go-offline -q || true
 
 # Build
 COPY certificate-authority/src ./certificate-authority/src
-RUN mvn -f certificate-authority/pom.xml -pl certificate-authority -am clean package -DskipTests -q
+RUN mvn -f certificate-authority/pom.xml clean package -DskipTests -q
 
 # Runtime — non-root user with curl/openssl for healthcheck
 FROM eclipse-temurin:21-jre-alpine
