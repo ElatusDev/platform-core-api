@@ -1,3 +1,45 @@
+# =============================================================================
+# docker-compose.dev.yml — AkademiaPlus local E2E stack
+#
+# USAGE
+# ─────
+# Cold start (wipe all volumes, fresh cert enrollment, full rebuild):
+#   docker compose -f docker-compose.dev.yml down -v && \
+#   docker compose -f docker-compose.dev.yml up --build
+#
+# Warm start (preserve volumes / already-enrolled certs):
+#   docker compose -f docker-compose.dev.yml up --build
+#
+# Rebuild API only (infra already healthy):
+#   docker compose -f docker-compose.dev.yml up --build platform-core-api
+#
+# Infra only — CA + DB + Redis (for IDE / local profile debugging):
+#   docker compose -f docker-compose.dev.yml up \
+#     ca-service multi_tenant_db redis-cert-init platform-core-redis
+#
+# Tail all logs:
+#   docker compose -f docker-compose.dev.yml logs -f
+#
+# STARTUP ORDER (enforced by depends_on + healthchecks)
+# ──────────────────────────────────────────────────────
+#   ca-service
+#     ├─► redis-cert-init        (one-shot: enrolls Redis TLS cert, exits 0)
+#     └─► multi_tenant_db
+#   redis-cert-init
+#     └─► platform-core-redis   (TLS, cert from redis-cert-init volume)
+#   platform-core-redis + multi_tenant_db + ca-service
+#     └─► platform-core-api     (mTLS, enrolls own cert from CA on startup)
+#   platform-core-api + ca-service
+#     └─► mock-data-system       (TLS, enrolls own cert from CA on startup)
+#
+# TOKEN FRESHNESS
+# ───────────────
+# Bootstrap tokens are one-time-use. After enrollment the CA marks the token
+# used=true in the ca_certs volume. A cold start (down -v) wipes the volume
+# so the CA re-seeds from secrets/ca-bootstrap-tokens.json, which always
+# carries unused tokens. Never run down -v against a production stack.
+# =============================================================================
+
 networks:
   akademia-internal:
     driver: bridge
@@ -6,12 +48,15 @@ networks:
     driver: bridge
 
 services:
+  # ─────────────────────────────────────────────────────────────────────────
+  # CA Service — dual-port PKI (8081 mTLS renewal, 8082 enrollment)
+  # Internal-only: no host port exposure. All services enroll via this CA.
+  # ─────────────────────────────────────────────────────────────────────────
   ca-service:
     build:
       context: .
       dockerfile: certificate-authority/Dockerfile
     container_name: ca-service
-    # NO host ports — CA is internal-only and unreachable from outside Docker
     networks:
       - akademia-internal
     volumes:
@@ -25,84 +70,17 @@ services:
       test: ["CMD", "curl", "-fk", "https://localhost:8082/ca/ca.crt"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  platform-core-api:
-    image: elatusdevops/akademiaplus-platform-core-api:dev
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: platform-core-api
-    depends_on:
-      ca-service:
-        condition: service_healthy
-      multi_tenant_db:
-        condition: service_healthy
-      platform-core-redis:
-        condition: service_healthy
-    networks:
-      - akademia-internal
-      - akademia-external
-    ports:
-      - "8443:8443"
-    env_file:
-      - .env
-    environment:
-      SPRING_PROFILES_ACTIVE: dev
-      CA_ENROLL_URL: https://ca-service:8082
-      CA_MTLS_URL: https://ca-service:8081
-      # Override host-local paths → container paths (entrypoint generates keystore here)
-      KEYSTORE_PATH: /app/certs/keystore.p12
-      STORE_ALIAS: ${KEY_ALIAS}
-    volumes:
-      - app_certs:/app/certs
-    secrets:
-      - platform_core_bootstrap_token
-    entrypoint: ["/app/docker-entrypoint.sh"]
-    healthcheck:
-      test: ["CMD", "curl", "-fk", "https://localhost:8443/api/actuator/health"]
-      interval: 15s
-      timeout: 10s
-      retries: 6
+      retries: 12
       start_period: 60s
 
-  mock-data-system:
-    build:
-      context: .
-      dockerfile: mock-data-system/Dockerfile
-    container_name: mock-data-system
-    depends_on:
-      platform-core-api:
-        condition: service_healthy
-    networks:
-      - akademia-internal
-    ports:
-      - "8180:8180"
-    env_file:
-      - .env
-    environment:
-      SPRING_PROFILES_ACTIVE: mock-data-service
-      SPRING_DATASOURCE_URL: jdbc:mariadb://multi_tenant_db:3306/${DATABASE}
-      # Override host-local KEYSTORE_PATH → shared volume created by platform-core-api entrypoint
-      KEYSTORE_PATH: /app/certs/keystore.p12
-      STORE_ALIAS: ${KEY_ALIAS}
-    volumes:
-      - app_certs:/app/certs:ro
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8180/infra/actuator/health"]
-      interval: 15s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
-
+  # ─────────────────────────────────────────────────────────────────────────
+  # MariaDB — multi-tenant database
+  # No dependency on ca-service; DB does not need TLS from the internal CA.
+  # ─────────────────────────────────────────────────────────────────────────
   multi_tenant_db:
     image: mariadb:latest
     container_name: multi_tenant_db
     restart: always
-    depends_on:
-      ca-service:
-        condition: service_healthy
     networks:
       - akademia-internal
     healthcheck:
@@ -128,34 +106,205 @@ services:
       --slow-query-log-file=/var/lib/mysql/mariadb-slow.log
       --long-query-time=2
 
+  # ─────────────────────────────────────────────────────────────────────────
+  # redis-cert-init — one-shot init container
+  # Enrolls with the CA, writes redis.crt / redis.key / ca.crt to the
+  # redis_certs volume, then exits 0. platform-core-redis will not start
+  # until this exits successfully.
+  # ─────────────────────────────────────────────────────────────────────────
+  redis-cert-init:
+    image: alpine/curl:latest
+    container_name: redis-cert-init
+    restart: "no"
+    depends_on:
+      ca-service:
+        condition: service_healthy
+    networks:
+      - akademia-internal
+    volumes:
+      - redis_certs:/redis-certs
+    secrets:
+      - redis_service_bootstrap_token
+    environment:
+      CA_ENROLL_URL: https://ca-service:8082
+      CERT_DIR: /redis-certs
+      SERVICE_CN: redis-service
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        apk add --no-cache openssl jq > /dev/null 2>&1
+
+        mkdir -p "$${CERT_DIR}"
+
+        echo "[redis-cert-init] Fetching CA root cert..."
+        curl -sk --retry 5 --retry-delay 3 \
+            "$${CA_ENROLL_URL}/ca/ca.crt" -o "$${CERT_DIR}/ca.crt"
+        openssl x509 -in "$${CERT_DIR}/ca.crt" -noout -fingerprint -sha256
+
+        if [ -f "$${CERT_DIR}/redis.crt" ]; then
+            EXPIRY=$$(openssl x509 -in "$${CERT_DIR}/redis.crt" -noout -enddate | cut -d= -f2)
+            EXPIRY_EPOCH=$$(date -d "$${EXPIRY}" +%s 2>/dev/null || date -jf "%b %d %T %Y %Z" "$${EXPIRY}" +%s 2>/dev/null || echo 0)
+            DAYS_LEFT=$$(( ($$(date +%s) - EXPIRY_EPOCH) / 86400 ))
+            if [ "$${DAYS_LEFT}" -gt 30 ]; then
+                echo "[redis-cert-init] Cert valid for $${DAYS_LEFT} days — skipping enrollment."
+                exit 0
+            fi
+        fi
+
+        echo "[redis-cert-init] Generating RSA-3072 key and CSR..."
+        openssl req -new -newkey rsa:3072 -nodes \
+            -keyout "$${CERT_DIR}/redis.key" \
+            -out  "$${CERT_DIR}/redis.csr" \
+            -subj "/CN=$${SERVICE_CN}/OU=AkademiaPlus/O=ElatusDev/L=GDL/ST=JALISCO/C=MX"
+        chmod 600 "$${CERT_DIR}/redis.key"
+
+        BOOTSTRAP_TOKEN=$$(cat /run/secrets/redis_service_bootstrap_token)
+        CSR_B64=$$(base64 -w0 "$${CERT_DIR}/redis.csr" 2>/dev/null || base64 "$${CERT_DIR}/redis.csr")
+
+        echo "[redis-cert-init] Enrolling with CA..."
+        RESPONSE=$$(curl -sk -X POST "$${CA_ENROLL_URL}/ca/enroll" \
+            --cacert "$${CERT_DIR}/ca.crt" \
+            -H "Content-Type: application/json" \
+            -d "{\"bootstrapToken\":\"$${BOOTSTRAP_TOKEN}\",\"commonName\":\"$${SERVICE_CN}\",\"certificateSigningRequest\":\"$${CSR_B64}\"}")
+
+        echo "$${RESPONSE}" | jq -r '.signedCertificate' | base64 -d > "$${CERT_DIR}/redis.crt"
+        openssl x509 -in "$${CERT_DIR}/redis.crt" -noout -serial
+        echo "[redis-cert-init] Done — Redis TLS certificates written to $${CERT_DIR}"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Redis — TLS-only, cert provided by redis-cert-init
+  # ─────────────────────────────────────────────────────────────────────────
   platform-core-redis:
-    image: redis:6-alpine
+    image: redis:7-alpine
     container_name: platform-core-redis
     restart: always
     depends_on:
-      multi_tenant_db:
-        condition: service_healthy
+      redis-cert-init:
+        condition: service_completed_successfully
     networks:
       - akademia-internal
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
+      - redis_certs:/redis-certs:ro
+    command: >
+      redis-server
+      --tls-port 6379
+      --port 0
+      --tls-cert-file /redis-certs/redis.crt
+      --tls-key-file  /redis-certs/redis.key
+      --tls-ca-cert-file /redis-certs/ca.crt
+      --tls-auth-clients no
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "--tls",
+             "--cert", "/redis-certs/redis.crt",
+             "--key",  "/redis-certs/redis.key",
+             "--cacert", "/redis-certs/ca.crt",
+             "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 15s
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # platform-core-api — Spring Boot, mTLS on 8443
+  # ─────────────────────────────────────────────────────────────────────────
+  platform-core-api:
+    image: elatusdevops/akademiaplus-platform-core-api:dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: platform-core-api
+    depends_on:
+      ca-service:
+        condition: service_healthy
+      multi_tenant_db:
+        condition: service_healthy
+      platform-core-redis:
+        condition: service_healthy
+    networks:
+      - akademia-internal
+      - akademia-external
+    ports:
+      - "8443:8443"
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      CA_ENROLL_URL: https://ca-service:8082
+      CA_MTLS_URL: https://ca-service:8081
+      KEYSTORE_PATH: /app/certs/keystore.p12
+      STORE_ALIAS: ${KEY_ALIAS}
+      SPRING_DATA_REDIS_HOST: platform-core-redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_SSL_ENABLED: "true"
+    volumes:
+      - app_certs:/app/certs
+    secrets:
+      - platform_core_bootstrap_token
+    entrypoint: ["/app/docker-entrypoint.sh"]
+    healthcheck:
+      test: ["CMD", "curl", "-fk", "https://localhost:8443/api/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 8
+      start_period: 90s
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # mock-data-system — Spring Boot data seeder, TLS on 8180
+  # ─────────────────────────────────────────────────────────────────────────
+  mock-data-system:
+    build:
+      context: .
+      dockerfile: mock-data-system/Dockerfile
+    container_name: mock-data-system
+    depends_on:
+      ca-service:
+        condition: service_healthy
+      platform-core-api:
+        condition: service_healthy
+    networks:
+      - akademia-internal
+    ports:
+      - "8180:8180"
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: mock-data-service
+      SPRING_DATASOURCE_URL: jdbc:mariadb://multi_tenant_db:3306/${DATABASE}
+      CA_ENROLL_URL: https://ca-service:8082
+      CA_MTLS_URL: https://ca-service:8081
+      KEYSTORE_PATH: /app/certs/keystore.p12
+      STORE_ALIAS: ${KEY_ALIAS}
+    volumes:
+      - mock_data_certs:/app/certs
+    secrets:
+      - mock_data_system_bootstrap_token
+    entrypoint: ["/app/docker-entrypoint.sh"]
+    healthcheck:
+      test: ["CMD", "curl", "-fk", "https://localhost:8180/infra/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
 
 secrets:
   ca_bootstrap_tokens:
     file: ./secrets/ca-bootstrap-tokens.json
   platform_core_bootstrap_token:
     file: ./secrets/platform-core-api-token.txt
+  mock_data_system_bootstrap_token:
+    file: ./secrets/mock-data-system-token.txt
+  redis_service_bootstrap_token:
+    file: ./secrets/redis-service-token.txt
 
 volumes:
   db_data: {}
   redis_data: {}
+  redis_certs: {}
   ca_certs: {}
   app_certs: {}
+  mock_data_certs: {}
