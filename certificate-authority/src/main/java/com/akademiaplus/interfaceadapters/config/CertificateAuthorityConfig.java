@@ -123,15 +123,14 @@ public class CertificateAuthorityConfig {
      * Provides the {@link TokenManifest} bean, loading from the persisted volume or
      * Docker secret on first startup.
      *
-     * @param objectMapper Jackson mapper for JSON serialization
      * @param manifestPath absolute path to the tokens manifest JSON file
      * @return initialized {@link TokenManifest}
      */
     @Bean
     public TokenManifest tokenManifest(
-            ObjectMapper objectMapper,
             @Value("${ca.token-manifest}") String manifestPath) throws IOException {
 
+        ObjectMapper objectMapper = new ObjectMapper();
         Path persistedPath = Path.of(manifestPath);
         Path secretPath = Path.of(FILE_SECRET_TOKENS);
 
