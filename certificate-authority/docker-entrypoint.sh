@@ -75,7 +75,7 @@ echo "[ca-entrypoint] CA material ready — launching Spring Boot..."
 exec java \
     -Dspring.profiles.active="${SPRING_PROFILES_ACTIVE:-ca-service}" \
     -Dca.cert-path="${CERT_DIR}" \
-    -Dserver.ssl.key-store="${KEYSTORE}" \
+    -Dserver.ssl.key-store="file:${KEYSTORE}" \
     -Dserver.ssl.key-store-type=PKCS12 \
     -Dserver.ssl.key-store-password="${CA_KEYSTORE_PASS}" \
     -Dserver.ssl.key-alias="${KEY_ALIAS}" \

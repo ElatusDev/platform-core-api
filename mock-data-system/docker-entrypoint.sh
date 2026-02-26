@@ -115,12 +115,12 @@ echo "[entrypoint] Trust chain established. Starting mock-data-system with TLS o
 exec java \
     -Dserver.port=8180 \
     -Dserver.ssl.enabled=true \
-    -Dserver.ssl.key-store="${KEYSTORE}" \
+    -Dserver.ssl.key-store="file:${KEYSTORE}" \
     -Dserver.ssl.key-store-type=PKCS12 \
     -Dserver.ssl.key-store-password="${KEYSTORE_PASS}" \
     -Dserver.ssl.key-alias="${STORE_ALIAS}" \
     -Dserver.ssl.key-password="${KEYSTORE_PASS}" \
-    -Dserver.ssl.trust-store="${TRUSTSTORE}" \
+    -Dserver.ssl.trust-store="file:${TRUSTSTORE}" \
     -Dserver.ssl.trust-store-password="${KEYSTORE_PASS}" \
     -Dserver.ssl.trust-store-type=PKCS12 \
     -jar /app.jar

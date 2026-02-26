@@ -117,13 +117,13 @@ echo "[entrypoint] Trust chain established. Starting platform-core-api with mTLS
 exec java \
     -Dserver.port=8443 \
     -Dserver.ssl.enabled=true \
-    -Dserver.ssl.key-store="${KEYSTORE}" \
+    -Dserver.ssl.key-store="file:${KEYSTORE}" \
     -Dserver.ssl.key-store-type=PKCS12 \
     -Dserver.ssl.key-store-password="${KEYSTORE_PASS}" \
     -Dserver.ssl.key-alias="${STORE_ALIAS}" \
     -Dserver.ssl.key-password="${KEYSTORE_PASS}" \
     -Dserver.ssl.client-auth=need \
-    -Dserver.ssl.trust-store="${TRUSTSTORE}" \
+    -Dserver.ssl.trust-store="file:${TRUSTSTORE}" \
     -Dserver.ssl.trust-store-password="${KEYSTORE_PASS}" \
     -Dserver.ssl.trust-store-type=PKCS12 \
     -Djwt.keystore.path="${KEYSTORE}" \
