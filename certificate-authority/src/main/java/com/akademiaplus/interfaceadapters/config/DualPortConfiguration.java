@@ -1,9 +1,6 @@
 /*
  * Copyright (c) 2025 ElatusDev
  * All rights reserved.
- *
- * This code is proprietary and confidential.
- * Unauthorized copying, distribution, or modification is strictly prohibited.
  */
 package com.akademiaplus.interfaceadapters.config;
 
@@ -21,67 +18,44 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Configures the dual-port Tomcat setup for the CA service.
+ * Adds the mTLS connector (port 8081) to Tomcat for the CA service.
  *
- * <p>The CA service must serve two distinct TLS profiles simultaneously:
- * <ul>
- *   <li>Port 8082 — one-way TLS, serves {@code /ca/enroll} and {@code /ca/ca.crt}</li>
- *   <li>Port 8081 — mutual TLS (client-auth=required), serves {@code /ca/sign-cert}</li>
- * </ul>
+ * <p>The primary enrollment port (8082) is owned entirely by Spring Boot via
+ * {@code server.ssl.*} JVM -D args passed from the Docker entrypoint after the
+ * CA keystore is written to disk — the same pattern used by all other services.
  *
- * <p>The {@link CertificateAuthority} constructor dependency ensures the CA keystore
- * and truststore files exist on disk before Tomcat attempts to configure SSL.
+ * <p>Manual SSL-on-primary was removed to eliminate the Boot 4.0.0-M3 race where
+ * autoconfiguration and addConnectorCustomizers both configure the default connector,
+ * with autoconfiguration referencing a stale default keystore path.
+ *
+ * <p>{@link CertificateAuthority} dependency guarantees the keystore and truststore
+ * exist on disk before Tomcat attempts to bind either SSL port.
  */
 @Slf4j
 @Configuration
 @RequiredArgsConstructor
 public class DualPortConfiguration {
 
-    /**
-     * Dependency on {@link CertificateAuthority} guarantees that
-     * {@link CertificateAuthorityConfig#certificateAuthority} runs first,
-     * creating the PKCS12 keystore and truststore before Tomcat starts SSL.
-     */
     private final CertificateAuthority certificateAuthority;
 
     private static final String KEYSTORE_TYPE = "PKCS12";
-    private static final String HTTPS_SCHEME = "https";
-    private static final String HTTP_1_1_PROTOCOL = "HTTP/1.1";
+    private static final String HTTPS_SCHEME  = "https";
+    private static final String HTTP_1_1      = "HTTP/1.1";
 
     @Bean
-    public WebServerFactoryCustomizer<TomcatServletWebServerFactory> dualPortCustomizer(
-            @Value("${ca.mtls.port:8081}") int mtlsPort,
-            @Value("${ca.enrollment.port:8082}") int enrollmentPort,
-            @Value("${ca.cert-path}") String certPath,
-            @Value("${CA_KEYSTORE_PASS}") String keystorePass) {
+    public WebServerFactoryCustomizer<TomcatServletWebServerFactory> mtlsConnectorCustomizer(
+            @Value("${ca.mtls.port:8081}") int    mtlsPort,
+            @Value("${ca.cert-path}")      String certPath,
+            @Value("${CA_KEYSTORE_PASS}")  String keystorePass) {
 
         return factory -> {
-            factory.setPort(enrollmentPort);
-
-            factory.addConnectorCustomizers(connector ->
-                    configureOneWayTls(connector, certPath, keystorePass));
-
-            factory.addAdditionalConnectors(
-                    buildMtlsConnector(mtlsPort, certPath, keystorePass));
-
-            log.info("Dual-port SSL configured: enrollment={}  mTLS={}", enrollmentPort, mtlsPort);
+            factory.addAdditionalConnectors(buildMtlsConnector(mtlsPort, certPath, keystorePass));
+            log.info("mTLS connector added on port {}", mtlsPort);
         };
     }
 
-    private void configureOneWayTls(Connector connector, String certPath, String keystorePass) {
-        connector.setScheme(HTTPS_SCHEME);
-        connector.setSecure(true);
-
-        Http11NioProtocol protocol = (Http11NioProtocol) connector.getProtocolHandler();
-        protocol.setSSLEnabled(true);
-
-        SSLHostConfig sslHostConfig = buildSslHostConfig(
-                certPath, keystorePass, SSLHostConfig.CertificateVerification.NONE);
-        protocol.addSslHostConfig(sslHostConfig);
-    }
-
     private Connector buildMtlsConnector(int port, String certPath, String keystorePass) {
-        Connector connector = new Connector(HTTP_1_1_PROTOCOL);
+        Connector connector = new Connector(HTTP_1_1);
         connector.setPort(port);
         connector.setScheme(HTTPS_SCHEME);
         connector.setSecure(true);
@@ -89,32 +63,23 @@ public class DualPortConfiguration {
         Http11NioProtocol protocol = (Http11NioProtocol) connector.getProtocolHandler();
         protocol.setSSLEnabled(true);
 
-        SSLHostConfig sslHostConfig = buildSslHostConfig(
-                certPath, keystorePass, SSLHostConfig.CertificateVerification.REQUIRED);
+        SSLHostConfig sslHostConfig = new SSLHostConfig();
+        sslHostConfig.setCertificateVerification("required");
+
+        sslHostConfig.setTruststoreFile(certPath + "/akademiaplus-truststore.p12");
+        sslHostConfig.setTruststorePassword(keystorePass);
+        sslHostConfig.setTruststoreType(KEYSTORE_TYPE);
+
+        SSLHostConfigCertificate cert = new SSLHostConfigCertificate(
+                sslHostConfig, SSLHostConfigCertificate.Type.EC);
+        cert.setCertificateKeystoreFile(certPath + "/akademiaplus-ca-keystore.p12");
+        cert.setCertificateKeystorePassword(keystorePass);
+        cert.setCertificateKeystoreType(KEYSTORE_TYPE);
+        cert.setCertificateKeyAlias(CertificateAuthority.CA_KEY_ALIAS);
+
+        sslHostConfig.addCertificate(cert);
         protocol.addSslHostConfig(sslHostConfig);
 
         return connector;
-    }
-
-    private SSLHostConfig buildSslHostConfig(String certPath, String keystorePass,
-                                             SSLHostConfig.CertificateVerification clientAuth) {
-        SSLHostConfig sslHostConfig = new SSLHostConfig();
-        sslHostConfig.setCertificateVerification(clientAuth.name().toLowerCase());
-
-        if (clientAuth == SSLHostConfig.CertificateVerification.REQUIRED) {
-            sslHostConfig.setTruststoreFile(certPath + "/truststore.p12");
-            sslHostConfig.setTruststorePassword(keystorePass);
-            sslHostConfig.setTruststoreType(KEYSTORE_TYPE);
-        }
-
-        SSLHostConfigCertificate certificate = new SSLHostConfigCertificate(
-                sslHostConfig, SSLHostConfigCertificate.Type.EC);
-        certificate.setCertificateKeystoreFile(certPath + "/ca-keystore.p12");
-        certificate.setCertificateKeystorePassword(keystorePass);
-        certificate.setCertificateKeystoreType(KEYSTORE_TYPE);
-        certificate.setCertificateKeyAlias(CertificateAuthority.CA_KEY_ALIAS);
-
-        sslHostConfig.addCertificate(certificate);
-        return sslHostConfig;
     }
 }

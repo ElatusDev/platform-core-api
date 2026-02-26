@@ -1,16 +1,15 @@
 #!/bin/bash
-# docker-entrypoint.sh — Trust propagation entrypoint for platform-core-api
-# Fetches the CA root cert, enrolls (or renews) a TLS certificate, builds
-# PKCS12 keystore/truststore, registers JWT public key with the CA JWKS registry,
-# and launches the Spring Boot application with mTLS.
+# docker-entrypoint.sh — Trust propagation entrypoint for mock-data-system
+# Enrolls with the internal CA, builds PKCS12 keystore/truststore, and
+# launches the Spring Boot application with TLS on port 8180.
 
 set -euo pipefail
 
 CERT_DIR="/app/certs"
 CA_ENROLL_URL="${CA_ENROLL_URL:-https://ca-service:8082}"
 CA_MTLS_URL="${CA_MTLS_URL:-https://ca-service:8081}"
-SERVICE_CN="platform-core-api"
-TOKEN_FILE="/run/secrets/platform_core_bootstrap_token"
+SERVICE_CN="mock-data-system"
+TOKEN_FILE="/run/secrets/mock_data_system_bootstrap_token"
 RENEWAL_THRESHOLD_DAYS=30
 
 # ─── Cert file names (akademiaplus-* convention) ─────────────────────────────
@@ -23,7 +22,7 @@ TRUSTSTORE="${CERT_DIR}/akademiaplus-truststore.p12"
 
 mkdir -p "${CERT_DIR}"
 
-# ─── Step 1: Fetch CA root certificate (unauthenticated, public endpoint) ────
+# ─── Step 1: Fetch CA root certificate ───────────────────────────────────────
 echo "[entrypoint] Fetching CA root certificate from ${CA_ENROLL_URL}/ca/ca.crt ..."
 curl -sk --retry 5 --retry-delay 3 \
     "${CA_ENROLL_URL}/ca/ca.crt" -o "${CA_CRT}"
@@ -41,15 +40,15 @@ if [ -f "${APP_CRT}" ]; then
     if [ "${DAYS_LEFT}" -gt "${RENEWAL_THRESHOLD_DAYS}" ]; then
         echo "[entrypoint] Existing cert valid for ${DAYS_LEFT} days. Skipping enrollment."
     else
-        echo "[entrypoint] Cert expires in ${DAYS_LEFT} days. Renewing via mTLS (${CA_MTLS_URL}) ..."
+        echo "[entrypoint] Cert expires in ${DAYS_LEFT} days. Renewing via mTLS ..."
         openssl req -new -key "${APP_KEY}" \
             -out "${APP_CSR}" \
             -subj "/CN=${SERVICE_CN}/OU=AkademiaPlus/O=ElatusDev"
 
         CSR_B64=$(base64 -w0 "${APP_CSR}" 2>/dev/null || base64 -i "${APP_CSR}")
         RESPONSE=$(curl -sk -X POST "${CA_MTLS_URL}/ca/sign-cert" \
-            --cert "${APP_CRT}" \
-            --key  "${APP_KEY}" \
+            --cert   "${APP_CRT}" \
+            --key    "${APP_KEY}" \
             --cacert "${CA_CRT}" \
             -H "Content-Type: application/json" \
             -d "{
@@ -63,7 +62,7 @@ if [ -f "${APP_CRT}" ]; then
     fi
 else
     # ─── Step 3: First-time enrollment via bootstrap token ───────────────────
-    echo "[entrypoint] No existing cert. Enrolling via bootstrap token (${CA_ENROLL_URL}/ca/enroll) ..."
+    echo "[entrypoint] No existing cert. Enrolling via bootstrap token ..."
 
     openssl req -new -newkey rsa:3072 -nodes \
         -keyout "${APP_KEY}" \
@@ -90,7 +89,7 @@ else
     openssl x509 -in "${APP_CRT}" -noout -serial
 fi
 
-# ─── Step 4: Build PKCS12 keystore (used for both mTLS and JWT signing) ──────
+# ─── Step 4: Build PKCS12 keystore ───────────────────────────────────────────
 echo "[entrypoint] Building akademiaplus-keystore.p12 ..."
 openssl pkcs12 -export \
     -in      "${APP_CRT}" \
@@ -110,23 +109,18 @@ keytool -importcert -trustcacerts \
     -noprompt -alias akademiaplus-ca \
     -file "${CA_CRT}"
 
-echo "[entrypoint] Trust chain established. Starting platform-core-api with mTLS on port 8443 ..."
+echo "[entrypoint] Trust chain established. Starting mock-data-system with TLS on port 8180 ..."
 
 # ─── Step 6: Launch the application ──────────────────────────────────────────
-# JWT uses the same enrolled keystore — no separate JWT_KEYSTORE_* env vars needed.
 exec java \
-    -Dserver.port=8443 \
+    -Dserver.port=8180 \
     -Dserver.ssl.enabled=true \
     -Dserver.ssl.key-store="${KEYSTORE}" \
     -Dserver.ssl.key-store-type=PKCS12 \
     -Dserver.ssl.key-store-password="${KEYSTORE_PASS}" \
     -Dserver.ssl.key-alias="${STORE_ALIAS}" \
     -Dserver.ssl.key-password="${KEYSTORE_PASS}" \
-    -Dserver.ssl.client-auth=need \
     -Dserver.ssl.trust-store="${TRUSTSTORE}" \
     -Dserver.ssl.trust-store-password="${KEYSTORE_PASS}" \
     -Dserver.ssl.trust-store-type=PKCS12 \
-    -Djwt.keystore.path="${KEYSTORE}" \
-    -Djwt.keystore.password="${KEYSTORE_PASS}" \
-    -Djwt.keystore.alias="${STORE_ALIAS}" \
     -jar /app.jar

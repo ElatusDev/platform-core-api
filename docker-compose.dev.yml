@@ -32,6 +32,9 @@
 #   platform-core-api + ca-service
 #     └─► mock-data-system       (TLS, enrolls own cert from CA on startup)
 #
+# webapp-service lives in AkademiaPlusWebApp/docker-compose.dev.yml and
+# joins these networks as external after this stack is healthy.
+#
 # TOKEN FRESHNESS
 # ───────────────
 # Bootstrap tokens are one-time-use. After enrollment the CA marks the token
@@ -120,7 +123,8 @@ services:
       ca-service:
         condition: service_healthy
     networks:
-      - akademia-internal
+      - akademia-internal   # reaches ca-service
+      - akademia-external   # apk add needs internet; container exits after enrollment
     volumes:
       - redis_certs:/redis-certs
     secrets:
@@ -158,7 +162,8 @@ services:
             -keyout "$${CERT_DIR}/redis.key" \
             -out  "$${CERT_DIR}/redis.csr" \
             -subj "/CN=$${SERVICE_CN}/OU=AkademiaPlus/O=ElatusDev/L=GDL/ST=JALISCO/C=MX"
-        chmod 600 "$${CERT_DIR}/redis.key"
+        chmod 640 "$${CERT_DIR}/redis.key"
+        chown 999:999 "$${CERT_DIR}/redis.key" "$${CERT_DIR}/redis.crt" "$${CERT_DIR}/ca.crt" 2>/dev/null || true
 
         BOOTSTRAP_TOKEN=$$(cat /run/secrets/redis_service_bootstrap_token)
         CSR_B64=$$(base64 -w0 "$${CERT_DIR}/redis.csr" 2>/dev/null || base64 "$${CERT_DIR}/redis.csr")
@@ -236,8 +241,8 @@ services:
       SPRING_PROFILES_ACTIVE: dev
       CA_ENROLL_URL: https://ca-service:8082
       CA_MTLS_URL: https://ca-service:8081
-      KEYSTORE_PATH: /app/certs/keystore.p12
-      STORE_ALIAS: ${KEY_ALIAS}
+      KEYSTORE_PATH: /app/certs/akademiaplus-keystore.p12
+      STORE_ALIAS: platform-core-api
       SPRING_DATA_REDIS_HOST: platform-core-redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_DATA_REDIS_SSL_ENABLED: "true"
@@ -277,8 +282,8 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mariadb://multi_tenant_db:3306/${DATABASE}
       CA_ENROLL_URL: https://ca-service:8082
       CA_MTLS_URL: https://ca-service:8081
-      KEYSTORE_PATH: /app/certs/keystore.p12
-      STORE_ALIAS: ${KEY_ALIAS}
+      KEYSTORE_PATH: /app/certs/akademiaplus-keystore.p12
+      STORE_ALIAS: mock-data-system
     volumes:
       - mock_data_certs:/app/certs
     secrets:
