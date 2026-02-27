@@ -37,6 +37,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSourceForLogin()))
                 .authorizeHttpRequests(auth -> {
                     auth
+                            .requestMatchers("/actuator/**").permitAll()
                             .requestMatchers("/v1/security/login/internal").permitAll();
                     try {
                         for (ModuleSecurityConfigurator configurator : moduleSecurityConfigurators) {

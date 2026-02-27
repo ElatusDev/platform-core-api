@@ -52,6 +52,22 @@ public class TenantContextLoader extends OncePerRequestFilter {
     }
 
     /**
+     * Skips tenant context extraction for infrastructure endpoints that are not
+     * tenant-scoped (healthchecks, login, OpenAPI docs).
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        // Strip context path (e.g. /api) for matching
+        String contextPath = request.getContextPath();
+        if (contextPath != null && !contextPath.isEmpty()) {
+            path = path.substring(contextPath.length());
+        }
+        return path.startsWith("/actuator")
+                || path.startsWith("/v1/security/login");
+    }
+
+    /**
      * Filters each HTTP request to extract and establish tenant context.
      * <p>
      * The method performs the following operations:

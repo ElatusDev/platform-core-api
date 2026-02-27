@@ -64,6 +64,21 @@ public class HibernateTenantFilter extends OncePerRequestFilter {
     }
 
     /**
+     * Skips tenant filtering for infrastructure endpoints that never touch
+     * tenant-scoped data (healthchecks, login). Avoids noisy debug logs
+     * from Docker healthcheck polling every 5–15 seconds.
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        String contextPath = request.getContextPath();
+        if (contextPath != null && !contextPath.isEmpty()) {
+            path = path.substring(contextPath.length());
+        }
+        return path.startsWith("/actuator");
+    }
+
+    /**
      * Filters each HTTP request to enable Hibernate tenant filtering.
      * <p>
      * The method performs the following operations:
