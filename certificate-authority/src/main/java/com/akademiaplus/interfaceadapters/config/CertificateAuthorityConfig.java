@@ -8,6 +8,7 @@
 package com.akademiaplus.interfaceadapters.config;
 
 import com.akademiaplus.usecases.domain.CertificateAuthority;
+import com.akademiaplus.usecases.domain.JwksRegistry;
 import com.akademiaplus.usecases.domain.TokenManifest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
@@ -69,12 +70,13 @@ public class CertificateAuthorityConfig {
     private static final String EC_CURVE = "secp384r1";
     private static final String SIGNING_ALGORITHM = "SHA384withECDSA";
     private static final String KEYSTORE_TYPE = "PKCS12";
-    private static final String FILE_CA_KEY = "/ca.key";
-    private static final String FILE_CA_CRT = "/ca.crt";
-    private static final String FILE_KEYSTORE = "/ca-keystore.p12";
-    private static final String FILE_TRUSTSTORE = "/truststore.p12";
-    private static final String FILE_SERIAL = "/serial.txt";
-    private static final String FILE_TOKENS = "/tokens.json";
+    private static final String FILE_CA_KEY = "/akademiaplus-ca.key";
+    private static final String FILE_CA_CRT = "/akademiaplus-ca.crt";
+    private static final String FILE_KEYSTORE = "/akademiaplus-ca-keystore.p12";
+    private static final String FILE_TRUSTSTORE = "/akademiaplus-truststore.p12";
+    private static final String FILE_SERIAL = "/akademiaplus-serial.txt";
+    private static final String FILE_TOKENS = "/akademiaplus-tokens.json";
+    private static final String FILE_JWKS = "/akademiaplus-jwks.json";
     private static final String FILE_SECRET_TOKENS = "/run/secrets/ca_bootstrap_tokens";
     private static final String TRUSTSTORE_CA_ALIAS = "akademiaplus-ca";
     private static final long SERIAL_ROOT_CA = 1L;
@@ -153,7 +155,21 @@ public class CertificateAuthorityConfig {
         return new TokenManifest(persistedPath, objectMapper);
     }
 
-    // ─── Private helpers ──────────────────────────────────────────────────────
+    /**
+     * Provides the {@link JwksRegistry} bean, loading persisted entries from the
+     * {@code ca_certs} volume if the file exists.
+     *
+     * @param certPath absolute path to the certificate volume (e.g. {@code /certs})
+     * @return initialized {@link JwksRegistry}
+     */
+    @Bean
+    public JwksRegistry jwksRegistry(
+            @Value("${ca.cert-path}") String certPath) {
+        Path jwksPath = Path.of(certPath + FILE_JWKS);
+        return JwksRegistry.load(jwksPath, new ObjectMapper());
+    }
+
+    // ─── Private helpers ───────────────────────────────────────────────────────
 
     private CertificateAuthority generateAndPersistRootCa(Path caKeyPath, Path caCrtPath,
             Path serialPath, String certPath, String keystorePass,

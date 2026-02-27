@@ -101,6 +101,46 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /ca/.well-known/jwks.json:
+    get:
+      tags:
+        - JWKS
+      summary: Returns all registered JWT public keys in JWKS format (unauthenticated)
+      operationId: getJwks
+      responses:
+        '200':
+          description: JWKS document containing all registered service public keys
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwksDocument'
+
+  /ca/jwks/register:
+    post:
+      tags:
+        - JWKS
+      summary: Register a service JWT public key with the CA trust broker (mTLS)
+      description: |
+        Called by enrolled services after startup to publish their JWT signing
+        public key. Requires a valid client certificate (mTLS port 8081).
+        The CA stores the key indexed by the CN from the client certificate.
+      operationId: registerJwks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JwksRegistrationRequest'
+      responses:
+        '204':
+          description: Public key registered successfully
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   schemas:
     CertificateRequest:
@@ -166,3 +206,64 @@ components:
         message:
           type: string
           description: Human-readable error message
+
+    JwksRegistrationRequest:
+      type: object
+      description: Public key registration payload sent by an enrolled service
+      properties:
+        kid:
+          type: string
+          description: Key ID — typically the service CN (e.g. "platform-core-api")
+          example: "platform-core-api"
+        alg:
+          type: string
+          description: JWT signing algorithm (e.g. ES384, RS256)
+          example: "ES384"
+        publicKeyBase64:
+          type: string
+          description: Base64-encoded DER SubjectPublicKeyInfo (X.509 public key)
+      required:
+        - kid
+        - alg
+        - publicKeyBase64
+
+    JwksDocument:
+      type: object
+      description: RFC 7517 JSON Web Key Set
+      properties:
+        keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/JwkKey'
+
+    JwkKey:
+      type: object
+      description: A single JSON Web Key entry
+      properties:
+        kty:
+          type: string
+          example: "EC"
+        use:
+          type: string
+          example: "sig"
+        kid:
+          type: string
+          example: "platform-core-api"
+        alg:
+          type: string
+          example: "ES384"
+        crv:
+          type: string
+          example: "P-384"
+        x:
+          type: string
+          description: EC public key X coordinate, base64url-encoded
+        y:
+          type: string
+          description: EC public key Y coordinate, base64url-encoded
+        n:
+          type: string
+          description: RSA modulus, base64url-encoded (RSA keys only)
+        e:
+          type: string
+          description: RSA public exponent, base64url-encoded (RSA keys only)
