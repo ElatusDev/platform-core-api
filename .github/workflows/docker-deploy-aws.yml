@@ -9,6 +9,8 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.docker-build-push.outputs.image_tag }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,23 +23,20 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Build with Maven
-        run: mvn clean install -DskipTests
-
       - name: Build and push Docker image
         id: docker-build-push
         run: |
           # Login to Docker Hub
           docker login -u ${{ secrets.DOCKERHUB_USER }} -p ${{ secrets.DOCKERHUB_TOKEN }} docker.io
 
-          # Build the image and tag it with the Git commit SHA
+          # Build the image (multi-stage Dockerfile handles Maven build internally)
           docker build -t ${{ secrets.DOCKERHUB_REPO }}:${{ github.sha }} .
 
           # Push the image to Docker Hub
           docker push ${{ secrets.DOCKERHUB_REPO }}:${{ github.sha }}
 
-          # Set an output for the image tag (for use in later steps)
-          echo "::set-output name=image_tag::${{ secrets.DOCKERHUB_REPO }}:${{ github.sha }}"
+          # Export the image tag for the deploy job
+          echo "image_tag=${{ secrets.DOCKERHUB_REPO }}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
 
   deploy-to-ec2:
     needs: build-and-push
