@@ -36,6 +36,9 @@ public class JwtTokenProvider  {
     @Value("${jwt.token.validity-ms}")
     private long validityInMs;
 
+    @Value("${spring.application.name:platform-core-api}")
+    private String applicationName;
+
     public static final String TENANT_ID_CLAIM = "tenant_id";
 
     private KeyPair keyPair;
@@ -121,6 +124,16 @@ public class JwtTokenProvider  {
     public String getUsername(String token) {
         Claims claims = getClaims(token);
         return claims.getSubject();
+    }
+
+    /** Returns the loaded key pair (used by {@link JwksRegistrationRunner}). */
+    public KeyPair getKeyPair() {
+        return keyPair;
+    }
+
+    /** Returns the service identifier used as the JWKS kid (application name). */
+    public String getServiceId() {
+        return applicationName;
     }
 
     /**
