@@ -51,12 +51,13 @@ RUN mvn clean install -pl mock-data-system -am -DskipTests -DskipITs -q
 
 # ── Runtime stage ────────────────────────────────────────────────────────────
 FROM eclipse-temurin:21-jre-alpine
-RUN apk update && apk add --no-cache bash curl
+RUN apk update && apk add --no-cache bash
 
 WORKDIR /app
 COPY --from=build /app/mock-data-system/target/*.jar /app.jar
+COPY mock-data-system/docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
 
-RUN mkdir -p /app/certs
 EXPOSE 8180
 
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

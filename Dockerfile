@@ -51,16 +51,15 @@ COPY application/src            application/src
 RUN mvn clean install -pl application -am -DskipTests -DskipITs -q
 
 # ── Runtime stage ────────────────────────────────────────────────────────────
-# Includes curl/jq/openssl for docker-entrypoint.sh trust propagation
+# keytool ships with the JRE (needed for JWT keystore generation in entrypoint)
 FROM eclipse-temurin:21-jre-alpine
-RUN apk update && apk add --no-cache bash curl jq openssl
+RUN apk update && apk add --no-cache bash
 
 WORKDIR /app
 COPY --from=build /app/application/target/*.jar /app.jar
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
 
-RUN mkdir -p /app/certs
-EXPOSE 8443
+EXPOSE 8080
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
