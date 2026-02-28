@@ -2,8 +2,8 @@
 
 **Target**: Claude Code CLI
 **Repo**: `/Volumes/ElatusDev/ElatusDev/AkademiaPlus/platform-core-api`
-**Prerequisite**: Read `CLAUDE.md`, `AI-CODE-REF.md`, and `docs/exception-advice-specification.md` before starting.
-**Specification**: All decisions, HTTP mappings, message keys, and code structures are defined in `docs/exception-advice-specification.md`. Do NOT deviate.
+**Prerequisite**: Read `CLAUDE.md`, `AI-CODE-REF.md`, and `docs/design/exception-advice-specification.md` before starting.
+**Specification**: All decisions, HTTP mappings, message keys, and code structures are defined in `docs/design/exception-advice-specification.md`. Do NOT deviate.
 
 ---
 
@@ -644,7 +644,7 @@ Then regenerate: `mvn clean generate-sources -DskipTests`
 
 **File**: `utilities/src/main/java/com/akademiaplus/utilities/web/BaseControllerAdvice.java`
 
-Read the full implementation from `docs/exception-advice-specification.md`, Section 6.1. Copy the complete class verbatim. Adapt setter names to match the actual generated `ErrorResponseDTO` (from Step 4.1).
+Read the full implementation from `docs/design/exception-advice-specification.md`, Section 6.1. Copy the complete class verbatim. Adapt setter names to match the actual generated `ErrorResponseDTO` (from Step 4.1).
 
 **Critical implementation notes:**
 - Do NOT annotate the class with `@ControllerAdvice` — it is abstract. Subclasses carry the annotation.
@@ -1321,7 +1321,7 @@ Run after ALL phases complete:
 
 ## Critical Reminders
 
-1. **Read `docs/exception-advice-specification.md` FIRST** — it contains the complete mapping table, message templates, and code structures. Do not deviate.
+1. **Read `docs/design/exception-advice-specification.md` FIRST** — it contains the complete mapping table, message templates, and code structures. Do not deviate.
 2. **Read `AI-CODE-REF.md` BEFORE writing any code** — testing conventions, naming, constants, Javadoc requirements.
 3. **Process one module at a time** — extend advice → migrate use cases → remove old handlers → compile → test → commit. Never batch multiple modules.
 4. **Verify with `grep`** before deleting anything — zero references in `src/main/java/` to old exception classes before removing them.

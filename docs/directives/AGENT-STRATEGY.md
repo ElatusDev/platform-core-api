@@ -30,7 +30,7 @@ The strategy defines three distinct agent modes:
 
 **Architect Mode** — Planning, specification, ADR authoring. Reads the codebase, analyzes patterns, produces documentation. No source code modification.
 
-**Executor Mode** — Phase-by-phase implementation following a `.claude/prompts/*.md` execution prompt. Strict sequential discipline: read → implement → compile → test → commit.
+**Executor Mode** — Phase-by-phase implementation following a `docs/prompts/*.md` execution prompt. Strict sequential discipline: read → implement → compile → test → commit.
 
 **Auditor Mode** — Post-execution verification. Runs greps, dependency trees, test suites, and validates exit criteria. Reports violations without fixing them.
 
@@ -40,7 +40,7 @@ The strategy defines three distinct agent modes:
 
 ### 2.1 Anatomy of an Execution Prompt
 
-Every `.claude/prompts/*.md` follows this invariant structure:
+Every `docs/prompts/*.md` follows this invariant structure:
 
 ```
 # Title — Claude Code Execution Prompt

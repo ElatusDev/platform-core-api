@@ -2,7 +2,7 @@
 
 **Target**: Claude Code CLI
 **Repo**: `/Volumes/ElatusDev/ElatusDev/AkademiaPlus/platform-core-api`
-**Spec**: `docs/exception-advice-specification.md`
+**Spec**: `docs/design/exception-advice-specification.md`
 **Prerequisite**: Read `CLAUDE.md`, `AI-CODE-REF.md`, and the specification before starting.
 
 ---
@@ -413,7 +413,7 @@ mvn clean compile -pl utilities -am -DskipTests
 
 **Create file**: `utilities/src/main/java/com/akademiaplus/utilities/web/BaseControllerAdvice.java`
 
-Read the exact handler implementations from **Section 6.1** of `docs/exception-advice-specification.md`. The class must:
+Read the exact handler implementations from **Section 6.1** of `docs/design/exception-advice-specification.md`. The class must:
 
 1. Be `public abstract class BaseControllerAdvice` (NOT annotated with `@ControllerAdvice` — subclasses do that)
 2. Constructor-inject `MessageService` only
