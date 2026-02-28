@@ -51,6 +51,7 @@ Specifications, strategies, and architectural decisions.
 
 | Document | Purpose | Status |
 |----------|---------|--------|
+| [DESIGN.md](design/DESIGN.md) | Architecture, module catalog, multi-tenancy model, security layers | 🟢 Active reference |
 | [beta-maturity-design.md](design/beta-maturity-design.md) | 11-wave rollout plan toward beta release | 🟡 In progress — Waves 1-5 done |
 | [delete-usecase-strategy.md](design/delete-usecase-strategy.md) | Strategy for soft-delete across all entities | 🔴 Blocked — @SQLDelete bug |
 | [exception-advice-strategy.md](design/exception-advice-strategy.md) | ControllerAdvice consolidation spec (21 exception classes) | 🟡 Ready to implement |
@@ -123,7 +124,5 @@ Step-by-step implementation plans. Referenced by prompts.
 | Document | Purpose |
 |----------|---------|
 | `CLAUDE.md` | Entry point — redirects to `docs/directives/CLAUDE.md` |
-| `DESIGN.md` | Architecture, module catalog, multi-tenancy model |
-| `CONTRIBUTING.md` | Developer onboarding and contribution guide |
 | `SECURITY.md` | Security policy and vulnerability reporting |
 | `README.md` | Project overview and quick start |

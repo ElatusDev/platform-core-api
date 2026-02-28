@@ -54,4 +54,4 @@ Body explains WHY and WHAT changed. Wrap at 72 chars.
 - Scope list must be maintained as modules are added or renamed
 
 ### Neutral
-- Full convention documented in CONTRIBUTING.md
+- Full convention documented in docs/directives/CLAUDE.md

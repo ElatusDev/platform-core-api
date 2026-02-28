@@ -165,13 +165,26 @@ docker compose -f docker-compose.dev.yml up trust-broker multi_tenant_db platfor
 
 ---
 
+## Pull Request Checklist
+
+- [ ] Code compiles: `mvn clean install -DskipTests`
+- [ ] Tests pass: `mvn test -pl {module}`
+- [ ] New public APIs have Javadoc with `@param`, `@return`, `@throws`
+- [ ] All string literals extracted to constants
+- [ ] Tests follow Given-When-Then with proper naming
+- [ ] No `any()` matchers anywhere in test code
+- [ ] Copyright header present on all new files
+- [ ] Commit messages follow Conventional Commits
+- [ ] No tenant isolation bypass (if touching data layer)
+
+---
+
 ## Essential Docs
 
 | Document | Path | Purpose |
 |----------|------|---------|
 | AI-CODE-REF.md | `docs/directives/` | Coding standards, review rules, detection patterns |
-| DESIGN.md | root | Architecture, module catalog, multi-tenancy model |
-| CONTRIBUTING.md | root | Onboarding, workflow, commit conventions |
+| DESIGN.md | `docs/design/` | Architecture, module catalog, multi-tenancy model |
 | MANIFEST.md | `docs/` | Documentation status tracker |
 
 ---

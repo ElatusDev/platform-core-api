@@ -167,7 +167,7 @@ mvn clean compile -DskipTests
 # (check BETA-MATURITY-PLAN.md entry criteria)
 
 # 4. Load context docs
-cat CLAUDE.md AI-CODE-REF.md DESIGN.md
+cat docs/directives/CLAUDE.md docs/directives/AI-CODE-REF.md docs/design/DESIGN.md
 ```
 
 ### 3.4 Post-Session Verification Protocol
@@ -387,26 +387,30 @@ The final beta gate is the checklist in `BETA-MATURITY-PLAN.md`. Every checkbox 
 
 ```
 platform-core-api/
-├── CLAUDE.md                          ← L0: Quick reference (50 lines)
-├── AI-CODE-REF.md                     ← L0: Full coding standards (956 lines)
-├── DESIGN.md                          ← L0: Architecture (672 lines)
+├── CLAUDE.md                                  ← Entry point → docs/directives/CLAUDE.md
 ├── .claude/
-│   ├── CLAUDE.md                      ← L0: Extended memory (181 lines)
-│   ├── settings.local.json            ← Agent permissions
-│   └── prompts/
-│       ├── auth-bootstrap.md          ← Wave: auth bootstrap
-│       ├── delete-usecase-rollout.md  ← Wave 3
-│       ├── dependency-upgrade.md      ← Wave 0
-│       └── exception-advice-consolidation.md ← Wave 1
+│   ├── settings.json
+│   └── settings.local.json                    ← Agent permissions
 ├── docs/
-│   ├── AGENT-STRATEGY.md             ← This document
-│   ├── BETA-MATURITY-PLAN.md         ← Master execution plan
-│   ├── delete-usecase-strategy.md    ← Wave 3 spec
-│   ├── exception-advice-specification.md ← Wave 1 spec
-│   ├── workflows/
-│   │   └── COMPONENT-TEST-WORKFLOW.md ← Wave 4 template
-│   └── adr/                          ← Architecture Decision Records (7 existing)
-└── {16 Maven modules}                ← Source code
+│   ├── MANIFEST.md                            ← Documentation status tracker
+│   ├── directives/
+│   │   ├── CLAUDE.md                          ← L0: Full project context & coding directives
+│   │   ├── AI-CODE-REF.md                     ← L0: Coding standards (956 lines)
+│   │   └── AGENT-STRATEGY.md                  ← This document
+│   ├── design/
+│   │   ├── DESIGN.md                          ← L0: Architecture, module catalog
+│   │   ├── beta-maturity-design.md            ← Master execution plan
+│   │   ├── delete-usecase-strategy.md         ← Wave 3 spec
+│   │   ├── exception-advice-strategy.md       ← Wave 1 spec
+│   │   ├── adr/                               ← Architecture Decision Records (6 active)
+│   │   └── completed/                         ← Superseded designs
+│   ├── prompts/
+│   │   ├── pending/                           ← Ready-to-execute Claude Code prompts
+│   │   └── completed/                         ← Executed prompts (historical)
+│   └── workflows/
+│       ├── pending/                           ← Ready-to-execute step-by-step plans
+│       └── completed/                         ← Executed workflows (historical)
+└── {14 Maven modules}                         ← Source code
 ```
 
 ## Appendix B: Conventional Commits Reference

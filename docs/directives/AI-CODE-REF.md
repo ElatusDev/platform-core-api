@@ -3,7 +3,7 @@
 **Version**: 4.1  
 **Last Updated**: February 17, 2026  
 **Purpose**: Quick reference for AI code analysis, review, refactoring, and test creation  
-**See also**: [DESIGN.md](DESIGN.md) for architecture and system design
+**See also**: [DESIGN.md](../design/DESIGN.md) for architecture and system design
 
 ---
 

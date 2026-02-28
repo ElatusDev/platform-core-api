@@ -121,7 +121,7 @@ mvn test -pl utilities -Dtest=HashingServiceTest
 
 **OpenAPI-first** — API contracts are defined as YAML specs. Maven generates controller interfaces and DTOs during build. Implementation classes implement the generated interfaces.
 
-For the full architecture deep-dive, see [DESIGN.md](DESIGN.md).
+For the full architecture deep-dive, see [DESIGN.md](docs/design/DESIGN.md).
 
 ---
 
@@ -129,9 +129,8 @@ For the full architecture deep-dive, see [DESIGN.md](DESIGN.md).
 
 | Document | Purpose |
 |----------|---------|
-| [DESIGN.md](DESIGN.md) | Architecture, module catalog, multi-tenancy model, security layers |
+| [DESIGN.md](docs/design/DESIGN.md) | Architecture, module catalog, multi-tenancy model, security layers |
 | [AI-CODE-REF.md](AI-CODE-REF.md) | Coding standards, review rules, detection patterns, test conventions |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Onboarding, git workflow, commit conventions, PR checklist |
 | [SECURITY.md](SECURITY.md) | Vulnerability disclosure policy |
 | [CHANGELOG.md](CHANGELOG.md) | Release history (Keep a Changelog + Conventional Commits) |
 | [docs/adr/](docs/adr/) | Architecture Decision Records for key technical choices |
@@ -157,13 +156,12 @@ This project enforces strict coding standards documented in [AI-CODE-REF.md](AI-
 - **Quality**: Methods < 20 lines, cyclomatic complexity < 10, Javadoc on all public APIs
 - **Data**: All IDs are `Long`, soft-delete only (no physical deletes), audit timestamps on everything
 
-For architecture and system design, see [DESIGN.md](DESIGN.md).
+For architecture and system design, see [DESIGN.md](docs/design/DESIGN.md).
 
 ---
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full onboarding guide, git workflow,
 commit conventions, and PR checklist.
 
 ---
