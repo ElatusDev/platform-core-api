@@ -1,31 +1,33 @@
-# AkademiaPlus Platform Core API — Claude Project Memory
+# CLAUDE.md — Project Context & Coding Directives
 
-## Identity
-
-**Project**: Akademia Plus — Multi-tenant SaaS educational platform  
-**Repository**: `platform-core-api`  
-**Owner**: ElatusDev  
-**Stack**: Java 24, Spring Boot 4.0.3, MariaDB, Maven multi-module  
-**License**: Proprietary — all files carry ElatusDev copyright header
+> **Canonical directive for Claude Code CLI and Claude Project interactions.**
+> Read this file, `AI-CODE-REF.md`, and `DESIGN.md` before writing any code.
 
 ---
 
-## Coding Standards
+## Identity
 
-**CRITICAL**: All code must follow the comprehensive standards in `AI-CODE-REF.md`.
+**Project**: AkademiaPlus — Multi-tenant SaaS educational platform
+**Repository**: `platform-core-api`
+**Owner**: ElatusDev
+**Stack**: Java 24, Spring Boot 4.0.3, MariaDB, Maven multi-module
+**License**: Proprietary — all files carry ElatusDev copyright header
+**Repo path**: `/Volumes/ElatusDev/ElatusDev/AkademiaPlus/platform-core-api`
 
-### Non-Negotiable Rules
+---
 
-1. **Testing pattern**: Given-When-Then (NEVER Arrange-Act-Assert)
-2. **No `any()` matchers**: Use exact values, `verifyNoMoreInteractions()`, or `ArgumentCaptor`
-3. **Mock stubbing**: Stub with EXACT parameters the implementation passes (read the impl first)
-4. **Test naming**: `shouldDoX_whenGivenY()` with `@DisplayName("Should do X when given Y")`
-5. **Test organization**: `@Nested` classes with `@DisplayName` for logical grouping
-6. **Constants**: Extract ALL string literals to `public static final` constants — shared between impl and tests as single source of truth
-7. **Exceptions**: Catch specific exceptions only — never `Exception` or `Throwable`
-8. **Methods**: < 20 lines, cyclomatic complexity < 10
-9. **Javadoc**: Required on all public classes, methods, and constants
-10. **IDs**: ALL IDs use `Long` (never `Integer`)
+## Hard Rules
+
+1. **Testing**: Given-When-Then (NEVER Arrange-Act-Assert), `shouldDoX_whenY()` naming, ZERO `any()` matchers
+2. **Constants**: ALL string literals → `public static final`, shared between impl and tests as single source of truth
+3. **IDs**: Always `Long`, never `Integer`
+4. **Exceptions**: Catch specific types only — never `Exception` or `Throwable`
+5. **Architecture**: `interfaceadapters/` (controllers + repos) and `usecases/` (services)
+6. **Commits**: Conventional Commits — `type(scope): subject` in imperative mood, ≤72 chars
+7. **Methods**: < 20 lines, cyclomatic complexity < 10
+8. **Javadoc**: Required on all public classes, methods, and constants
+9. **Mock stubbing**: Stub with EXACT parameters the implementation passes (read the impl first)
+10. **Test organization**: `@Nested` classes with `@DisplayName` for logical grouping
 
 ### Constant Extraction Pattern
 ```java
@@ -37,7 +39,7 @@ assertThatThrownBy(() -> service.process(null))
     .hasMessage(MyService.ERROR_INPUT_NULL);
 ```
 
-### Copyright Header (Required on ALL files)
+### Copyright Header (required on ALL files)
 ```java
 /*
  * Copyright (c) 2025 ElatusDev
@@ -70,11 +72,10 @@ user-mgmt  billing  course-mgmt  notification  tenant-mgmt  pos-system
 └────┼────────┴─────────────┴──────────────┴───────────────┴──────────────┘
      ↑
 application           ← Spring Boot main class, assembles all modules
-     
+
 (Standalone services)
-certificate-authority ← Separate Spring Boot app for TLS/PKI
-mock-data-system      ← Separate Spring Boot app for test data generation
-etl-system            ← Placeholder for ETL pipelines
+certificate-authority ← Separate Spring Boot app — JWKS trust broker
+mock-data-system      ← Separate Spring Boot app — test data seeding
 audit-system          ← Placeholder for audit logging
 ```
 
@@ -89,10 +90,6 @@ module/
 │   ├── interfaceadapters/     ← Controllers (@RestController) + Repositories (JPA)
 │   └── usecases/              ← Business logic (@Service, @Transactional)
 ```
-
-- **Interface Adapters** = Controllers + Repositories (outer ring)
-- **Use Cases** = Application services (middle ring)
-- **Entities** = `multi-tenant-data` module (inner ring, shared)
 
 ### Multi-Tenancy Model
 
@@ -136,12 +133,11 @@ mvn test -pl utilities
 # Skip tests
 mvn clean install -DskipTests
 
-# Build specific profile
-mvn clean install -P ca-service
-mvn clean install -P mock-data-service
+# Docker (dev stack with e2e)
+docker compose -f docker-compose.dev.yml --profile e2e up --build
 
-# Docker (dev)
-docker compose -f docker-compose.dev.yml up --build
+# Docker (infra only, for IDE debugging)
+docker compose -f docker-compose.dev.yml up trust-broker multi_tenant_db platform-core-redis
 ```
 
 ### Maven Profiles
@@ -149,25 +145,34 @@ docker compose -f docker-compose.dev.yml up --build
 | Profile | Modules | Purpose |
 |---------|---------|---------|
 | `platform-core-api` (default) | notification, course, user, billing, app, security, multi-tenant, utilities | Main platform |
-| `ca-service` | certificate-authority | TLS/PKI standalone service |
+| `ca-service` | certificate-authority | JWKS trust broker |
 | `mock-data-service` | mock-data, multi-tenant, utilities | Test data generation |
 
 ---
 
 ## Key Technical Decisions
 
-1. **Spring Boot 4.0.3**: GA release — stable Foundation layer stack
-2. **Entity inheritance**: `Auditable → SoftDeletable → TenantScoped → AbstractUser → ConcreteUser`
-3. **ID generation**: Custom `SequentialIDGenerator` per-tenant, assigned via Hibernate event listener
-4. **PII protection**: Encrypted at rest + hash columns for indexed search without decryption
-5. **OpenAPI-first**: Contracts defined before implementation, code generated
-6. **Dependency convergence**: `maven-enforcer-plugin` with `DependencyConvergence` + `RequireUpperBoundDeps`
+1. **Spring Boot 4.0.3 GA** — stable Foundation layer stack
+2. **Java 24** — latest LTS, `maven.compiler.release=24`
+3. **Entity inheritance**: `Auditable → SoftDeletable → TenantScoped → AbstractUser → ConcreteUser`
+4. **ID generation**: Custom `SequentialIDGenerator` per-tenant, assigned via Hibernate event listener
+5. **PII protection**: Encrypted at rest + hash columns for indexed search without decryption
+6. **OpenAPI-first**: Contracts defined before implementation, code generated
+7. **Jackson 3**: `tools.jackson.databind.ObjectMapper` — migrated from `com.fasterxml`
+8. **JUnit 6**: `junit-jupiter 6.0.3` with Boot 4.x `spring-boot-starter-webmvc-test`
+9. **Plain HTTP internally**: TLS is an infrastructure concern (reverse proxy / service mesh)
+10. **Trust broker JWKS**: Services register JWT public keys with CA on startup
 
 ---
 
-## Known Technical Debt
+## Essential Docs
 
-1. **Several modules are placeholders**: `etl-system`, `audit-system` only contain `Main.java`
+| Document | Path | Purpose |
+|----------|------|---------|
+| AI-CODE-REF.md | `docs/directives/` | Coding standards, review rules, detection patterns |
+| DESIGN.md | root | Architecture, module catalog, multi-tenancy model |
+| CONTRIBUTING.md | root | Onboarding, workflow, commit conventions |
+| MANIFEST.md | `docs/` | Documentation status tracker |
 
 ---
 

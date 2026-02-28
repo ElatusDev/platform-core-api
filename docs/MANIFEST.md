@@ -9,13 +9,39 @@
 
 ```
 docs/
-├── MANIFEST.md              ← this file
-├── design/                  ← architecture, specs, strategies, ADRs
-├── directives/              ← rules and constraints for Claude Code execution
-├── prompts/                 ← executable Claude Code prompts
-├── workflows/               ← step-by-step implementation plans
-└── completed/               ← historical / superseded documents
+├── MANIFEST.md                          ← this file
+├── design/                              ← architecture, specs, strategies, ADRs
+│   ├── completed/                       ← implemented / superseded designs
+│   └── adr/                             ← architecture decision records
+├── directives/                          ← coding standards & Claude execution rules
+├── prompts/                             ← executable Claude Code prompts
+│   ├── pending/                         ← ready to execute or blocked
+│   └── completed/                       ← executed prompts (historical)
+└── workflows/                           ← step-by-step implementation plans
+    ├── pending/                          ← ready to execute or blocked
+    └── completed/                       ← executed workflows (historical)
 ```
+
+### Naming Conventions
+
+| Directory | Postfix | Example |
+|-----------|---------|---------|
+| `design/` | `-strategy` or `-design` | `delete-usecase-strategy.md` |
+| `workflows/` | `-workflow` | `exception-advice-workflow.md` |
+| `prompts/` | `-prompt` | `auth-bootstrap-prompt.md` |
+| `directives/` | domain name as-is | `AI-CODE-REF.md`, `CLAUDE.md` |
+
+---
+
+## Directives (`docs/directives/`)
+
+Coding standards and execution rules. Read before writing any code.
+
+| Document | Purpose |
+|----------|---------|
+| [CLAUDE.md](directives/CLAUDE.md) | Project context, hard rules, architecture, build commands |
+| [AI-CODE-REF.md](directives/AI-CODE-REF.md) | Coding standards, review rules, detection patterns (v4.1) |
+| [AGENT-STRATEGY.md](directives/AGENT-STRATEGY.md) | Claude Code workflow, automation strategy, execution constraints |
 
 ---
 
@@ -25,9 +51,9 @@ Specifications, strategies, and architectural decisions.
 
 | Document | Purpose | Status |
 |----------|---------|--------|
-| [BETA-MATURITY-PLAN.md](design/BETA-MATURITY-PLAN.md) | 11-wave rollout plan toward beta release | 🟡 In progress — Waves 1-5 done |
+| [beta-maturity-design.md](design/beta-maturity-design.md) | 11-wave rollout plan toward beta release | 🟡 In progress — Waves 1-5 done |
 | [delete-usecase-strategy.md](design/delete-usecase-strategy.md) | Strategy for soft-delete across all entities | 🔴 Blocked — @SQLDelete bug |
-| [exception-advice-specification.md](design/exception-advice-specification.md) | ControllerAdvice consolidation spec (21 exception classes) | 🟡 Ready to implement |
+| [exception-advice-strategy.md](design/exception-advice-strategy.md) | ControllerAdvice consolidation spec (21 exception classes) | 🟡 Ready to implement |
 
 ### Architecture Decision Records (`docs/design/adr/`)
 
@@ -40,29 +66,34 @@ Specifications, strategies, and architectural decisions.
 | [0004](design/adr/0004-given-when-then-testing-standard.md) | Given-When-Then testing standard | 🟢 Implemented |
 | [0005](design/adr/0005-conventional-commits.md) | Conventional Commits | 🟢 Implemented |
 | [0006](design/adr/0006-integration-test-strategy.md) | Integration test strategy (Testcontainers) | 🟢 Implemented |
-| ~~0007~~ | ~~Internal PKI with mTLS bootstrap enrollment~~ | ⚪ Superseded → [completed/](completed/0007-internal-pki-mtls-bootstrap-enrollment.md) |
+| ~~0007~~ | ~~Internal PKI with mTLS bootstrap enrollment~~ | ⚪ Superseded → [completed/](design/completed/0007-internal-pki-mtls-bootstrap-enrollment.md) |
 
----
+### Completed Designs (`docs/design/completed/`)
 
-## Directives (`docs/directives/`)
-
-Rules and constraints that govern how Claude Code executes work on this repository.
-
-| Document | Purpose | Status |
-|----------|---------|--------|
-| [AGENT-STRATEGY.md](directives/AGENT-STRATEGY.md) | Claude Code workflow, automation strategy, and execution constraints | 🟢 Active reference |
+| Document | Original purpose | Completed |
+|----------|-----------------|-----------|
+| [controller-advice-audit-design.md](design/completed/controller-advice-audit-design.md) | Point-in-time audit of @ControllerAdvice across modules | 2026-02-21 |
+| [0007-internal-pki-mtls-bootstrap-enrollment.md](design/completed/0007-internal-pki-mtls-bootstrap-enrollment.md) | ADR for mTLS and bootstrap token enrollment | Superseded by trust-broker JWKS |
 
 ---
 
 ## Prompts (`docs/prompts/`)
 
-Executable prompts for Claude Code CLI. Each prompt references its specification in `design/` and its workflow in `workflows/`.
+Executable prompts for Claude Code CLI.
+
+### Pending (`docs/prompts/pending/`)
 
 | Prompt | Executes | Spec | Workflow | Status |
 |--------|----------|------|----------|--------|
-| [auth-bootstrap.md](prompts/auth-bootstrap.md) | Auth bootstrap for e2e test suite | — | — | 🟡 Ready to execute |
-| [delete-usecase-rollout.md](prompts/delete-usecase-rollout.md) | Delete use case rollout across entities | [strategy](design/delete-usecase-strategy.md) | [workflow](workflows/delete-usecase-workflow.md) | 🔴 Blocked on strategy |
-| [exception-advice-consolidation.md](prompts/exception-advice-consolidation.md) | Exception handling consolidation | [spec](design/exception-advice-specification.md) | [workflow](workflows/exception-advice-workflow.md) | 🟡 Ready to execute |
+| [auth-bootstrap-prompt.md](prompts/pending/auth-bootstrap-prompt.md) | Auth bootstrap for e2e test suite | — | — | 🟡 Ready |
+| [delete-usecase-rollout-prompt.md](prompts/pending/delete-usecase-rollout-prompt.md) | Delete use case rollout | [strategy](design/delete-usecase-strategy.md) | [workflow](workflows/pending/delete-usecase-workflow.md) | 🔴 Blocked |
+| [exception-advice-consolidation-prompt.md](prompts/pending/exception-advice-consolidation-prompt.md) | Exception handling consolidation | [strategy](design/exception-advice-strategy.md) | [workflow](workflows/pending/exception-advice-workflow.md) | 🟡 Ready |
+
+### Completed (`docs/prompts/completed/`)
+
+| Prompt | Original purpose | Completed |
+|--------|-----------------|-----------|
+| [dependency-upgrade-prompt.md](prompts/completed/dependency-upgrade-prompt.md) | Boot 4.0.0-M3 → 4.0.3, Java 21 → 24 | Upgrade completed |
 
 ---
 
@@ -70,38 +101,29 @@ Executable prompts for Claude Code CLI. Each prompt references its specification
 
 Step-by-step implementation plans. Referenced by prompts.
 
+### Pending (`docs/workflows/pending/`)
+
 | Document | Purpose | Status |
 |----------|---------|--------|
-| [COMPONENT-TEST-WORKFLOW.md](workflows/COMPONENT-TEST-WORKFLOW.md) | Canonical component test pattern per entity | 🟢 Active reference |
-| [delete-usecase-workflow.md](workflows/delete-usecase-workflow.md) | Step-by-step delete use case implementation | 🔴 Blocked on strategy |
-| [exception-advice-workflow.md](workflows/exception-advice-workflow.md) | Step-by-step exception handling consolidation | 🟡 Ready to implement |
+| [component-test-workflow.md](workflows/pending/component-test-workflow.md) | Canonical component test pattern per entity | 🟢 Active reference |
+| [delete-usecase-workflow.md](workflows/pending/delete-usecase-workflow.md) | Step-by-step delete use case implementation | 🔴 Blocked on strategy |
+| [exception-advice-workflow.md](workflows/pending/exception-advice-workflow.md) | Step-by-step exception handling consolidation | 🟡 Ready to implement |
 
----
-
-## Completed / Historical (`docs/completed/`)
-
-Archived documents — work is done or architecture has been superseded.
+### Completed (`docs/workflows/completed/`)
 
 | Document | Original purpose | Completed |
 |----------|-----------------|-----------|
-| [ca-trust-propagation-workflow.md](completed/ca-trust-propagation-workflow.md) | mTLS certificate enrollment workflow (ports 8443/8081) | Superseded by plain HTTP + trust-broker JWKS |
-| [CONTROLLER-ADVICE-AUDIT.md](completed/CONTROLLER-ADVICE-AUDIT.md) | Point-in-time audit of @ControllerAdvice across modules | 2026-02-21 |
-| [creation-usecase-workflow.md](completed/creation-usecase-workflow.md) | Step-by-step creation use case implementation for all entities | All entities implemented |
-| [0007-internal-pki-mtls-bootstrap-enrollment.md](completed/0007-internal-pki-mtls-bootstrap-enrollment.md) | ADR for mTLS and bootstrap token enrollment | Superseded by trust-broker JWKS |
-| [dependency-upgrade.md](completed/dependency-upgrade.md) | Claude Code prompt for Boot 4.0.0-M3 → 4.0.3, Java 21 → 24 | Upgrade completed |
+| [creation-usecase-workflow.md](workflows/completed/creation-usecase-workflow.md) | Step-by-step creation use case for all entities | All entities implemented |
+| [ca-trust-propagation-workflow.md](workflows/completed/ca-trust-propagation-workflow.md) | mTLS certificate enrollment workflow (8443/8081) | Superseded by plain HTTP |
 
 ---
 
 ## Root-Level Documents
 
-These live at the repository root, not inside `docs/`.
-
-| Document | Purpose | Notes |
-|----------|---------|-------|
-| `CLAUDE.md` | Claude Code project context entry point | Keep in sync with `.claude/CLAUDE.md` |
-| `AI-CODE-REF.md` | AI coding standards and review reference (v4.1) | Authoritative — consult before coding |
-| `DESIGN.md` | Architecture, module catalog, multi-tenancy model | Update when modules change |
-| `CONTRIBUTING.md` | Developer onboarding and contribution guide | — |
-| `SECURITY.md` | Security policy and vulnerability reporting | — |
-| `CHANGELOG.md` | Release notes (Conventional Commits) | Append per release |
-| `README.md` | Project overview and quick start | — |
+| Document | Purpose |
+|----------|---------|
+| `CLAUDE.md` | Entry point — redirects to `docs/directives/CLAUDE.md` |
+| `DESIGN.md` | Architecture, module catalog, multi-tenancy model |
+| `CONTRIBUTING.md` | Developer onboarding and contribution guide |
+| `SECURITY.md` | Security policy and vulnerability reporting |
+| `README.md` | Project overview and quick start |

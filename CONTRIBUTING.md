@@ -2,9 +2,9 @@
 
 ## Before You Start
 
-1. Read [AI-CODE-REF.md](AI-CODE-REF.md) — coding standards, review rules, detection patterns
+1. Read [AI-CODE-REF.md](docs/directives/AI-CODE-REF.md) — coding standards, review rules, detection patterns
 2. Read [DESIGN.md](DESIGN.md) — architecture, module catalog, multi-tenancy model
-3. Understand the module you're changing (check `.claude/CLAUDE.md` for the dependency graph)
+3. Understand the module you're changing (check `docs/directives/CLAUDE.md` for the dependency graph)
 
 ## Development Setup
 
@@ -67,7 +67,7 @@ docs(adr): record decision on composite key strategy for multi-tenancy
 
 ## Coding Standards (Summary)
 
-The full standards are in [AI-CODE-REF.md](AI-CODE-REF.md). Here are the non-negotiable rules:
+The full standards are in [AI-CODE-REF.md](docs/directives/AI-CODE-REF.md). Here are the non-negotiable rules:
 
 ### Code
 
@@ -141,6 +141,6 @@ for examples.
 ## Questions?
 
 If something in the codebase is unclear, check these docs in order:
-1. [AI-CODE-REF.md](AI-CODE-REF.md) — coding rules and patterns
+1. [AI-CODE-REF.md](docs/directives/AI-CODE-REF.md) — coding rules and patterns
 2. [DESIGN.md](DESIGN.md) — architecture and system design
-3. [.claude/CLAUDE.md](.claude/CLAUDE.md) — extended project memory and key decisions
+3. [CLAUDE.md](docs/directives/CLAUDE.md) — extended project memory and key decisions

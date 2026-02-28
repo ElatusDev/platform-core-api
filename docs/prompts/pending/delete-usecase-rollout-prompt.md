@@ -2,7 +2,7 @@
 
 **Target**: Claude Code CLI  
 **Repo**: `/Volumes/ElatusDev/ElatusDev/AkademiaPlus/platform-core-api`  
-**Spec**: `docs/design/delete-usecase-strategy.md`, `docs/workflows/delete-usecase-workflow.md`  
+**Spec**: `docs/design/delete-usecase-strategy.md`, `docs/workflows/pending/delete-usecase-workflow.md`  
 **Prerequisite**: Read `CLAUDE.md`, `AI-CODE-REF.md`, `docs/design/delete-usecase-strategy.md` before starting.  
 **Dependency**: `exception-advice-consolidation.md` MUST be fully executed first.  
 `EntityNotFoundException`, `EntityDeletionNotAllowedException`, `EntityType`, and  

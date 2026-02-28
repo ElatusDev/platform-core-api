@@ -2,8 +2,8 @@
 
 **Target**: Claude Code CLI
 **Repo**: `/Volumes/ElatusDev/ElatusDev/AkademiaPlus/platform-core-api`
-**Prerequisite**: Read `CLAUDE.md`, `AI-CODE-REF.md`, `docs/design/delete-usecase-strategy.md`, and `docs/design/exception-advice-specification.md` before starting.
-**Dependency**: `docs/workflows/exception-advice-workflow.md` MUST be fully executed first — this workflow assumes `EntityNotFoundException`, `EntityDeletionNotAllowedException`, `EntityType`, `BaseControllerAdvice`, and generic `MessageService` methods already exist in `utilities`.
+**Prerequisite**: Read `CLAUDE.md`, `AI-CODE-REF.md`, `docs/design/delete-usecase-strategy.md`, and `docs/design/exception-advice-strategy.md` before starting.
+**Dependency**: `docs/workflows/pending/exception-advice-workflow.md` MUST be fully executed first — this workflow assumes `EntityNotFoundException`, `EntityDeletionNotAllowedException`, `EntityType`, `BaseControllerAdvice`, and generic `MessageService` methods already exist in `utilities`.
 
 ---
 
@@ -1284,4 +1284,4 @@ Run after ALL phases complete:
 7. **The Tutor business rule is the ONLY entity with a pre-delete check.** All other 18 entities use the simple `executeDelete()` path. If future entities need pre-delete validation, they use `findOrThrow()` + manual delete.
 8. **Integration tests require Docker Desktop** — Testcontainers spins up MariaDB 11. The Maven Failsafe plugin runs `*IT.java` files during `mvn verify`.
 9. **Read existing controller code** before wiring — the generated API interface method names come from OpenAPI `operationId`. Some use `delete`, others use `cancel` or other verbs.
-10. **Exception infrastructure dependency** — this workflow assumes `docs/workflows/exception-advice-workflow.md` was executed first. If the generic exceptions don't exist yet, Phase 1 of THIS workflow will fail to compile.
+10. **Exception infrastructure dependency** — this workflow assumes `docs/workflows/pending/exception-advice-workflow.md` was executed first. If the generic exceptions don't exist yet, Phase 1 of THIS workflow will fail to compile.
