@@ -1,3 +1,10 @@
+> [!NOTE]
+> **STATUS: COMPLETED / HISTORICAL** — This document is kept for historical reference.
+> The work it describes has been implemented or the architecture has been superseded.
+> Moved to docs/completed/ on 2026-02-28.
+
+---
+
 # Creation UseCase Implementation Workflow — AkademiaPlus
 
 **Target**: Claude Code CLI  
