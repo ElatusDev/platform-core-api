@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(*)",
+      "Read(/Volumes/ElatusDev/ElatusDev/AkademiaPlus/**)",
+      "Write(/Volumes/ElatusDev/ElatusDev/AkademiaPlus/platform-core-api/**)",
+      "Edit(/Volumes/ElatusDev/ElatusDev/AkademiaPlus/platform-core-api/**)"
+    ],
+    "deny": [
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf /Volumes:*)",
+      "Bash(sudo:*)"
+    ]
+  }
+}

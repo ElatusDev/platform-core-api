@@ -60,6 +60,8 @@ paths:
     $ref: './compensation.yaml#/paths/~1compensations~1{compensationId}'
   '/compensations/{compensationId}/instructors':
     $ref: './compensation.yaml#/paths/~1compensations~1{compensationId}~1instructors'
+  '/compensations/{compensationId}/instructors/{instructorId}':
+    $ref: './compensation.yaml#/paths/~1compensations~1{compensationId}~1instructors~1{instructorId}'
   '/memberships':
     $ref: './membership.yaml#/paths/~1memberships'
   '/memberships/{membershipId}':

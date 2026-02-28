@@ -11,7 +11,7 @@ AkademiaPlus is a multi-tenant SaaS platform for educational institutions. The `
 │                      Clients                             │
 │          (Web App, Mobile App, Admin Dashboard)          │
 └────────────────────────┬─────────────────────────────────┘
-                         │ HTTPS (TLS via CA Service)
+                         │ HTTPS (TLS terminated at edge)
                          ▼
 ┌──────────────────────────────────────────────────────────┐
 │               platform-core-api (Spring Boot)            │
@@ -68,10 +68,9 @@ AkademiaPlus is a multi-tenant SaaS platform for educational institutions. The `
 
 | Module | Purpose | Runs As |
 |--------|---------|---------|
-| `certificate-authority` | TLS certificate generation and PKI management | Separate Spring Boot app (port 8081) |
+| `certificate-authority` | Trust broker — JWKS registry for JWT public key distribution | Separate Spring Boot app (port 8082, internal only) |
 | `mock-data-system` | Generates realistic test data using DataFaker | Separate Spring Boot app |
-| `etl-system` | ETL pipelines | Placeholder |
-| `audit-system` | Audit event logging | Placeholder |
+| `audit-system` | Audit event logging | Stub (501 Not Implemented) |
 | `application` | Main entry point — assembles all platform modules | Spring Boot main class |
 
 ---
@@ -526,13 +525,16 @@ public abstract class AbstractIntegrationTest {
 
 ## 5. Cross-Cutting Concerns
 
-### 5.1 Observability (Not Yet Implemented)
+### 5.1 Observability
 
-Recommended additions:
-- **Structured logging**: MDC with `tenantId`, `requestId`, `userId` in every log line
-- **Metrics**: Micrometer + Prometheus for JVM, HTTP, and business metrics
+**Implemented:**
+- **Structured logging**: ECS JSON format (prod/QA), `CorrelationIdFilter` propagates `X-Correlation-Id` via MDC
+- **Metrics**: Micrometer Prometheus registry exposed at `/actuator/prometheus`, tenant-tagged via `ObservationFilter`
+- **Health checks**: Spring Boot Actuator with liveness/readiness probes (prod), extended endpoints (dev: metrics, mappings)
+
+**Not yet implemented:**
 - **Distributed tracing**: OpenTelemetry for request flow across services
-- **Health checks**: Spring Boot Actuator (already available via starter)
+- **Business metrics**: Custom counters for domain events (enrollments, payments)
 
 ### 5.2 Data Governance
 
@@ -596,20 +598,62 @@ The project's coding standards overlap with and extend SonarQube's default Java 
 
 ## 6. Deployment Topology
 
+### 6.1 Docker Compose Stack (`docker-compose.dev.yml`)
+
+All services communicate over plain HTTP on the isolated `akademia-internal`
+Docker network (`internal: true` — no external traffic). TLS is NOT configured
+at the application layer; it is an infrastructure concern handled by the
+orchestrator (reverse proxy for edge in Docker, cert-manager/Istio in K8s).
+
 ```
-┌─────────────────────────────────────────┐
-│             Docker Compose              │
-│                                         │
-│  platform-core-api ──→ :8443 (HTTPS)   │
-│  ca-service        ──→ :8081 (HTTPS)   │
-│  multi_tenant_db   ──→ :3306 (MariaDB) │
-│  platform-core-redis→ :6379 (Redis)    │
-│                                         │
-│  Volumes: db_data, redis_data, ca_certs │
-└─────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│              Docker Compose (dev profile)                        │
+│                                                                  │
+│  trust-broker       ──→ :8082 (JWKS registry, internal only)    │
+│  multi_tenant_db    ──→ :3306/:3307 (MariaDB, host-mapped)      │
+│  platform-core-redis──→ :6379 (Redis 7, host-mapped)            │
+│  platform-core-api  ──→ :8080 (Spring Boot, HTTP)               │
+│  mock-data-system   ──→ :8180 (data seeder, HTTP)               │
+│  e2e-runner         ──→ Newman (profile: e2e, runs then exits)  │
+│                                                                  │
+│  Networks: akademia-internal (bridge, internal)                  │
+│            akademia-external (bridge)                            │
+│  Volumes:  db_data, redis_data, trust_broker_data                │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-**CI/CD**: GitHub Actions → SonarQube analysis → Docker build → AWS deployment
+**Startup order** (enforced by `depends_on` + healthchecks):
+
+```
+trust-broker + multi_tenant_db + platform-core-redis
+  └─► platform-core-api    (waits for all three healthy)
+        └─► mock-data-system  (waits for API healthy, seeds DB)
+              └─► e2e-runner   (profile-gated, waits for seeder healthy)
+```
+
+### 6.2 E2E Test Runner
+
+The `e2e-runner` service is gated behind the `e2e` Docker Compose profile.
+It mounts the Postman collection from the sibling `platform-api-e2e/` repo
+and runs Newman against the Docker-internal network.
+
+```bash
+# Full stack + E2E:
+docker compose -f docker-compose.dev.yml --profile e2e up --build \
+  --abort-on-container-exit --exit-code-from e2e-runner
+
+# E2E only (stack already running):
+docker compose -f docker-compose.dev.yml --profile e2e run --rm e2e-runner
+
+# Convenience script (from AkademiaPlus/ root):
+./run-e2e.sh              # cold start
+./run-e2e.sh --keep-data  # warm start
+./run-e2e.sh --tests-only # stack already up
+```
+
+### 6.3 CI/CD
+
+GitHub Actions → SonarQube analysis → Docker build → AWS deployment
 
 ---
 
@@ -628,3 +672,7 @@ The project's coding standards overlap with and extend SonarQube's default Java 
 | 2026-02 | ModelMapper centralized | Moved from user-management to utilities module for cross-module access |
 | 2026-02 | Mock data DAG orchestration | Enum-based dependency graph with topological sort for FK-safe load/cleanup ordering |
 | 2026-02 | EntityIdAssigner skip logic | `@EmbeddedId` and `@GeneratedValue` entities silently skipped by ID assigner |
+| 2026-02 | Spring Boot 4.0.3 + Java 24 | Upgraded from 4.0.0-M3/Java 21; Jackson 3, Hibernate 7.2.5 |
+| 2026-02 | ECS structured logging | JSON format for prod/QA; human-readable for dev/local |
+| 2026-02 | Correlation ID propagation | `X-Correlation-Id` header echoed and stored in MDC for tracing |
+| 2026-02 | etl-system removed | Module removed from build — no current ETL requirements |

@@ -3,7 +3,7 @@
 ## Identity
 
 **Project**: AkademiaPlus Platform Core API
-**Stack**: Java 21, Spring Boot 4.0.0-M3, MariaDB, Maven multi-module (16 modules)
+**Stack**: Java 24, Spring Boot 4.0.3, MariaDB, Maven multi-module (15 modules)
 **Repo**: `/Volumes/ElatusDev/ElatusDev/AkademiaPlus/platform-core-api`
 
 ## Essential Docs (read before coding)

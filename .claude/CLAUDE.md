@@ -5,7 +5,7 @@
 **Project**: Akademia Plus — Multi-tenant SaaS educational platform  
 **Repository**: `platform-core-api`  
 **Owner**: ElatusDev  
-**Stack**: Java 21, Spring Boot 4.0.0-M3, MariaDB, Maven multi-module  
+**Stack**: Java 24, Spring Boot 4.0.3, MariaDB, Maven multi-module  
 **License**: Proprietary — all files carry ElatusDev copyright header
 
 ---
@@ -156,7 +156,7 @@ docker compose -f docker-compose.dev.yml up --build
 
 ## Key Technical Decisions
 
-1. **Spring Boot 4.0.0-M3**: Milestone release — expect API changes
+1. **Spring Boot 4.0.3**: GA release — stable Foundation layer stack
 2. **Entity inheritance**: `Auditable → SoftDeletable → TenantScoped → AbstractUser → ConcreteUser`
 3. **ID generation**: Custom `SequentialIDGenerator` per-tenant, assigned via Hibernate event listener
 4. **PII protection**: Encrypted at rest + hash columns for indexed search without decryption

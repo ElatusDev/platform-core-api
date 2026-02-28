@@ -374,19 +374,29 @@ For every file modified in steps 3.3 through 3.7, apply these substitutions:
 | `import com.fasterxml.jackson.databind.JsonNode;` | `import tools.jackson.databind.JsonNode;` |
 | `import com.fasterxml.jackson.databind.node.ObjectNode;` | `import tools.jackson.databind.node.ObjectNode;` |
 | `import com.fasterxml.jackson.databind.node.ArrayNode;` | `import tools.jackson.databind.node.ArrayNode;` |
-| `import com.fasterxml.jackson.annotation.JsonProperty;` | `import tools.jackson.annotation.JsonProperty;` |
-| `import com.fasterxml.jackson.annotation.JsonIgnore;` | `import tools.jackson.annotation.JsonIgnore;` |
-| `import com.fasterxml.jackson.annotation.JsonIgnoreProperties;` | `import tools.jackson.annotation.JsonIgnoreProperties;` |
-| `import com.fasterxml.jackson.annotation.JsonCreator;` | `import tools.jackson.annotation.JsonCreator;` |
+| `import com.fasterxml.jackson.annotation.JsonProperty;` | **NO CHANGE** — annotations stay in `com.fasterxml.jackson.annotation` via Jackson 2 bridge |
+| `import com.fasterxml.jackson.annotation.JsonIgnore;` | **NO CHANGE** — annotations stay in `com.fasterxml.jackson.annotation` via Jackson 2 bridge |
+| `import com.fasterxml.jackson.annotation.JsonIgnoreProperties;` | **NO CHANGE** — annotations stay in `com.fasterxml.jackson.annotation` via Jackson 2 bridge |
+| `import com.fasterxml.jackson.annotation.JsonCreator;` | **NO CHANGE** — annotations stay in `com.fasterxml.jackson.annotation` via Jackson 2 bridge |
 | `import com.fasterxml.jackson.core.JsonProcessingException;` | `import tools.jackson.core.JacksonException;` |
 | `import com.fasterxml.jackson.core.type.TypeReference;` | `import tools.jackson.core.type.TypeReference;` |
 | `import com.fasterxml.jackson.databind.DeserializationFeature;` | `import tools.jackson.databind.DeserializationFeature;` |
 | `import com.fasterxml.jackson.databind.SerializationFeature;` | `import tools.jackson.databind.SerializationFeature;` |
 
 **IMPORTANT NOTE on `JsonProcessingException`**: In Jackson 3, `JsonProcessingException` is
-replaced by `JacksonException` as the base checked exception. If any catch clause catches
-`JsonProcessingException`, change it to `JacksonException`. Verify the method signature
-compiles after the rename.
+replaced by `JacksonException` as the base **unchecked** exception (`extends RuntimeException`).
+If any catch clause catches `JsonProcessingException` or `IOException` from Jackson operations,
+change it to `JacksonException` (`tools.jackson.core.JacksonException`). Remove `throws IOException`
+from method signatures where the only thrower was Jackson's ObjectMapper.
+
+**IMPORTANT NOTE on `findAndRegisterModules()`**: This method was removed in Jackson 3.
+Modules are now auto-registered via SPI/ServiceLoader. Delete all calls to
+`objectMapper.findAndRegisterModules()`.
+
+**IMPORTANT NOTE on annotations**: Jackson annotations (`@JsonProperty`, `@JsonIgnore`,
+`@JsonIgnoreProperties`, `@JsonCreator`, etc.) remain in `com.fasterxml.jackson.annotation`
+package via the Jackson 2 compatibility bridge. There is NO `tools.jackson.annotation` package.
+Do NOT change annotation imports.
 
 ### 3.3 — certificate-authority module
 

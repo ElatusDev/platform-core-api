@@ -48,7 +48,7 @@ platform-core-api/
 ├── notification-system/    Domain — email, SMS, push (API specs defined)
 ├── pos-system/             Domain — point-of-sale (placeholder)
 │
-├── certificate-authority/  Standalone — TLS/PKI certificate service
+├── certificate-authority/  Standalone — Trust broker (JWKS registry for JWT public keys)
 ├── mock-data-system/       Standalone — test data generation with DataFaker
 ├── etl-system/             Standalone — ETL pipelines (placeholder)
 ├── audit-system/           Standalone — audit logging (placeholder)
@@ -85,15 +85,16 @@ mvn clean install -pl utilities
 ### Run with Docker
 
 ```bash
-# Start all services (API + MariaDB + Redis + CA)
+# Start all services (API + MariaDB + Redis + Trust Broker + Mock Data)
 docker compose -f docker-compose.dev.yml up --build
 ```
 
 This starts:
-- **Platform Core API** on `https://localhost:8443`
+- **Platform Core API** on `http://localhost:8080`
 - **MariaDB** on `localhost:3307`
 - **Redis** on `localhost:6379`
-- **Certificate Authority** on `https://localhost:8081`
+- **Trust Broker** (JWKS registry) on `http://localhost:8082`
+- **Mock Data System** on `http://localhost:8180`
 
 ### Run Tests
 

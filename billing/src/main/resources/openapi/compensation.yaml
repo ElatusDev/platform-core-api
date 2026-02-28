@@ -275,6 +275,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  '/compensations/{compensationId}/instructors/{instructorId}':
     delete:
       summary: Remove an instructor from a compensation
       operationId: removeInstructorFromCompensation

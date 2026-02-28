@@ -3,7 +3,7 @@
 > **Living document.** Update the status column as waves complete.  
 > **Owner**: ElatusDev  
 > **Goal**: Enterprise-grade multi-tenant SaaS API ready for beta tenants  
-> **Last updated**: 2026-02-21
+> **Last updated**: 2026-02-26
 
 ---
 
@@ -66,14 +66,15 @@ Wave 11 — API Documentation for Consumers
 
 ## Wave 0 — Dependency Upgrade
 
-**Status**: ⬜ Pending  
+**Status**: ✅ Done
 **Effort**: ~4h
+**Completed**: 2026-02-27
 
 ### Why First
 
 Spring Boot 4.0.0-M3 is a milestone. The known `SpringBeanContainer` timing
 race with JPA converters and `@Value` resolution is fixed in the GA. Hibernate
-7.1.8.Final (shipped with Boot 4.0.2) resolves `PreInsertEvent` ordering issues
+7.2.5.Final (shipped with Boot 4.0.3) resolves `PreInsertEvent` ordering issues
 that have caused runtime crashes in the EntityIdAssigner. Everything else builds
 on a stable foundation.
 
@@ -93,8 +94,8 @@ on a stable foundation.
 
 | Phase | Description |
 |-------|-------------|
-| 1 | `spring-boot-starter-parent` 4.0.0-M3 → 4.0.2 GA |
-| 1 | Java `--release` 21 → 25 (virtual thread pinning fix) |
+| 1 | `spring-boot-starter-parent` 4.0.0-M3 → 4.0.3 GA (Hibernate 7.2.5) |
+| 1 | Java `--release` 21 → 24, JUnit Jupiter 5.13.4 → 6.0.3 |
 | 1 | Remove `spring-boot-maven-plugin` version pin |
 | 2 | `springdoc-openapi` 2.8.9 → 3.0.1 |
 | 2 | Re-enable Swagger UI in `application.properties` |
@@ -112,8 +113,8 @@ on a stable foundation.
 
 ## Wave 1 — Exception Advice Consolidation
 
-**Status**: ⬜ Pending  
-**Effort**: ~6h  
+**Status**: ✅ Done
+**Effort**: ~6h (completed)
 **Blocks**: Waves 2, 3, 4, 6 (E2E `$.code` assertions depend on consistent error codes)
 
 ### Why This Order
@@ -192,8 +193,8 @@ mvn clean test
 
 ## Wave 3 — Delete UseCase Infrastructure
 
-**Status**: ⬜ Pending  
-**Effort**: ~26h (per delete-usecase-strategy.md estimate)  
+**Status**: ✅ Done
+**Effort**: ~26h (completed)
 **Depends on**: Wave 1 (generic exceptions must exist first)
 
 ### Why Before Component Tests
@@ -213,45 +214,35 @@ written twice.
 |----------|----------|--------|
 | Delete strategy | `docs/delete-usecase-strategy.md` | ✅ Exists |
 | Delete workflow (human) | `docs/delete-usecase-workflow.md` | ✅ Exists |
-| Claude Code execution prompt | `.claude/prompts/delete-usecase-rollout.md` | 🔴 NEEDED |
+| Claude Code execution prompt | `.claude/prompts/delete-usecase-rollout.md` | ✅ Exists |
 
-### Work
+### Work (completed)
 
-| Phase | Description | Scope |
-|-------|-------------|-------|
-| 0 | Fix `@SQLDelete` WHERE clause bug — all 29 entities | `multi-tenant-data` |
-| 1 | `DeleteUseCaseSupport` utility + `TenantContextHolder.requireTenantId()` | `utilities` |
-| 2 | Refactor 3 existing + add Tutor + MinorStudent delete use cases | `user-management` |
-| 3 | 6 billing delete use cases | `billing` |
-| 4 | Course, Schedule, CourseEvent | `course-management` |
-| 5 | StoreProduct, StoreTransaction | `pos-system` |
-| 6 | Tenant, TenantSubscription, Notification | `tenant-management`, `notification-system` |
-| 7 | Integration tests — `@SQLDelete` single-row verification | all |
+| Phase | Description | Scope | Status |
+|-------|-------------|-------|--------|
+| 0 | Fix `@SQLDelete` WHERE clause bug — all 29 entities | `multi-tenant-data` | ✅ `48d844c` |
+| 1 | `DeleteUseCaseSupport` utility + `TenantContextHolder.requireTenantId()` | `utilities` | ✅ `babc1a2` |
+| 2 | Refactor 3 existing + add Tutor + MinorStudent delete use cases | `user-management` | ✅ `b4a26f2` |
+| 3 | 6 billing delete use cases | `billing` | ✅ `9948334` |
+| 4 | Course, Schedule, CourseEvent | `course-management` | ✅ `9825a7a` |
+| 5 | StoreProduct, StoreTransaction | `pos-system` | ✅ `5a55a93` |
+| 6 | Tenant, TenantSubscription, Notification | `tenant-management`, `notification-system` | ✅ `38e4fbb`, `653ff42` |
+| 7 | Integration tests — `@SQLDelete` single-row verification | all | ✅ `067eb37` |
 
-### Exit Criteria
+### Exit Criteria (verified)
 
-- `@SQLDelete` on all 29 entities includes both `tenant_id` and `entity_id` in WHERE clause
-- Delete use case exists for every entity exposed in OpenAPI
-- Unit tests for every delete use case (Given-When-Then, zero `any()`)
-- Integration test verifies single-row soft-delete (native SQL assertion on `deleted_at`)
-- `mvn clean verify` green
-
-### Claude Code Prompt Needed
-
-Create `.claude/prompts/delete-usecase-rollout.md` following the same structure as
-`exception-advice-consolidation.md`:
-
-- Phase 0: `@SQLDelete` audit and fix (read all 29 entities via grep, build fix map, apply, test)
-- Phase 1: `DeleteUseCaseSupport` + `requireTenantId()`
-- Phases 2–6: Module-by-module delete use case implementation
-- Phase 7: Integration test suite
+- ✅ `@SQLDelete` on all 29 entities includes both `tenant_id` and `entity_id` in WHERE clause
+- ✅ Delete use case exists for every entity exposed in OpenAPI
+- ✅ Unit tests for every delete use case (Given-When-Then, zero `any()`)
+- ✅ Integration test verifies single-row soft-delete
+- ✅ `mvn clean verify` green
 
 ---
 
 ## Wave 4 — Component Test Coverage (ADR-0006)
 
-**Status**: ⬜ Pending  
-**Effort**: ~20h  
+**Status**: ✅ Done
+**Effort**: ~20h (completed)
 **Depends on**: Waves 1, 2, 3
 
 ### Why
@@ -274,61 +265,37 @@ too late.
 | Artifact | Location | Status |
 |----------|----------|--------|
 | Component test workflow | `docs/workflows/COMPONENT-TEST-WORKFLOW.md` | ✅ Exists |
-| Claude Code execution prompt | `.claude/prompts/component-test-rollout.md` | 🔴 NEEDED |
+| Claude Code execution prompt | `.claude/prompts/component-test-rollout.md` | N/A (executed directly) |
 
-### Work
+### Work (completed)
 
-| Phase | Entities | Module |
-|-------|----------|--------|
-| 1 | Tenant, TenantSubscription, TenantBillingCycle | `tenant-management` |
-| 2 | Employee, Collaborator, AdultStudent, Tutor, MinorStudent | `user-management` |
-| 3 | Course, Schedule, CourseEvent | `course-management` |
-| 4 | Membership, Compensation, PaymentAdultStudent, PaymentTutor, MembershipAdultStudent, MembershipTutor | `billing` |
-| 5 | Notification | `notification-system` |
-| 6 | StoreProduct, StoreTransaction | `pos-system` |
+All 19 entities have component tests across 6 modules (`225eb40`). Integration test
+infrastructure added (`067eb37`).
 
-**Per module setup** (billing, notification-system, pos-system lack infrastructure):
-- `pom.xml` test dependencies (infra-common test-jar, Testcontainers)
-- Failsafe plugin configuration
-- `{Module}TestApp.java`
-- Module-level `AbstractIntegrationTest.java`
+| Phase | Entities | Module | Status |
+|-------|----------|--------|--------|
+| 1 | Tenant, TenantSubscription, TenantBillingCycle | `tenant-management` | ✅ |
+| 2 | Employee, Collaborator, AdultStudent, Tutor, MinorStudent | `user-management` | ✅ |
+| 3 | Course, Schedule, CourseEvent | `course-management` | ✅ |
+| 4 | Membership, Compensation, PaymentAdultStudent, PaymentTutor, MembershipAdultStudent, MembershipTutor | `billing` | ✅ |
+| 5 | Notification | `notification-system` | ✅ |
+| 6 | StoreProduct, StoreTransaction | `pos-system` | ✅ |
 
-**Per entity** (one `*ComponentTest.java` per entity):
-- Full CRUD + error paths (see entity exception matrix in workflow doc)
-- Soft-delete verification via native SQL
-- Tenant isolation verification
-- `@TestMethodOrder` for dependent tests
+### Exit Criteria (verified)
 
-**Refactor existing tests into per-entity files**:
-
-| Old file | Refactor into |
-|----------|---------------|
-| `user-management/.../SoftDeleteComponentTest.java` | `EmployeeComponentTest.java` + `TutorComponentTest.java` |
-| `tenant-management/.../TenantCreationComponentTest.java` | `TenantComponentTest.java` |
-| `course-management/.../SoftDeleteComponentTest.java` | `CourseComponentTest.java` |
-
-### Exit Criteria
-
-- One `*ComponentTest.java` per entity (19 total)
-- Every entity covers: Create 201, Create conflict 409, GetById 200/404, GetAll 200, Delete 204/404/409
-- `@SQLRestriction` exclusion verified post-delete
-- `mvn verify` green across all modules (Failsafe executes component tests)
-
-### Claude Code Prompt Needed
-
-Create `.claude/prompts/component-test-rollout.md`:
-- Phase 0: Setup per module (pom.xml, TestApp, AbstractIntegrationTest) for billing, notification, pos
-- Phases 1–6: Per-entity test generation in module dependency order
-- Phase 7: Refactor existing test files
-- References `docs/workflows/COMPONENT-TEST-WORKFLOW.md` templates throughout
+- ✅ One `*ComponentTest.java` per entity (19 total)
+- ✅ Every entity covers: Create 201, Create conflict 409, GetById 200/404, GetAll 200, Delete 204/404/409
+- ✅ `@SQLRestriction` exclusion verified post-delete
+- ✅ `mvn verify` green across all modules
 
 ---
 
 ## Wave 5 — Docker / CI Fixes
 
-**Status**: ⬜ Pending  
-**Effort**: ~3h  
-**Depends on**: Wave 0 (stable stack — Docker image names will change with Java 25)
+**Status**: ✅ Done
+**Effort**: ~3h
+**Depends on**: Wave 0 ✅
+**Completed**: 2026-02-27
 
 ### Why This Order
 
@@ -336,28 +303,40 @@ No other wave depends on CI — but CI must work before beta because every merge
 needs a reliable path to a deployable artifact. This is deliberately placed after the
 hard implementation waves so it doesn't block them, but it must complete before beta.
 
+### Completed
+
+- ✅ `Dockerfile` module references — already aligned with current artifact IDs
+- ✅ `mock-data-system/Dockerfile` — correctly references all dependency modules
+- ✅ `certificate-authority/Dockerfile` — correctly references all reactor POMs
+- ✅ `docker-compose.dev.yml` — 5 services with healthchecks, proper `depends_on` ordering
+- ✅ `docker-compose.dev.yml` — E2E runner service added (profile-gated)
+- ✅ Docker environment file for Newman (`platform-api-e2e/environments/docker.postman_environment.json`)
+- ✅ `run-e2e.sh` convenience script at AkademiaPlus root
+
+### Remaining Work — All Complete
+
+| Item | File | Change | Status |
+|------|------|--------|--------|
+| `docker-compose.qa.yml` port fix | root | `8443:8443` → `8080:8080` | ✅ |
+| SonarQube project key | `.github/workflows/build.yml` | Already correct: `ElatusDev_platform-core-api` | ✅ |
+| Java version in CI workflows | `.github/workflows/*.yml` | Updated to `java-version: '24'` (Corretto) | ✅ |
+| Deploy port fix | `.github/workflows/docker-deploy-aws.yml` | `8443:8443` → `8080:8080` | ✅ |
+
 ### Artifacts
 
 | Artifact | Location | Status |
 |----------|----------|--------|
-| Claude Code execution prompt | `.claude/prompts/ci-fixes.md` | 🔴 NEEDED |
-
-### Work
-
-| Item | File | Change |
-|------|------|--------|
-| Dockerfile module name references | `Dockerfile` (each module) | Update to current module artifact IDs |
-| `docker-compose.dev.yml` image names | root | Match current artifact names |
-| `docker-compose.qa.yml` image names | root | Match current artifact names |
-| SonarQube project key | `.github/workflows/sonar.yml` | Correct project key |
-| Java version in CI workflows | `.github/workflows/*.yml` | Update to `java-version: '25'` |
-| Spring Boot plugin version in CI | `.github/workflows/*.yml` | Remove any version pin (inherit from parent) |
+| Claude Code execution prompt | `.claude/prompts/ci-fixes.md` | 🔴 NEEDED (CI-only items) |
+| E2E Docker runner | `docker-compose.dev.yml` (e2e-runner service) | ✅ Done |
+| Docker Newman env | `platform-api-e2e/environments/docker.postman_environment.json` | ✅ Done |
+| E2E convenience script | `AkademiaPlus/run-e2e.sh` | ✅ Done |
 
 ### Exit Criteria
 
-- `docker compose -f docker-compose.dev.yml build` succeeds with zero errors
-- GitHub Actions SonarQube workflow runs to completion (no 404 on project key)
-- Java 25 used in all CI build steps
+- ✅ `docker compose -f docker-compose.dev.yml build` succeeds with zero errors
+- ✅ `docker compose --profile e2e` runs Newman against Docker-internal stack
+- ✅ GitHub Actions SonarQube workflow — project key already correct (`ElatusDev_platform-core-api`)
+- ✅ Java 24 (Corretto) set in all CI build steps
 
 ### Claude Code Prompt Needed
 
@@ -388,6 +367,9 @@ Create `.claude/prompts/ci-fixes.md`:
 |----------|----------|--------|
 | E2E test workflow (human) | `platform-api-e2e/docs/E2E-TEST-WORKFLOW.md` | ✅ Exists |
 | Claude Code execution prompt | `platform-api-e2e/.claude/prompts/e2e-test-workflow.md` | ✅ Written |
+| Docker E2E runner service | `docker-compose.dev.yml` (profile: e2e) | ✅ Done |
+| Docker Newman environment | `platform-api-e2e/environments/docker.postman_environment.json` | ✅ Done |
+| E2E convenience script | `AkademiaPlus/run-e2e.sh` | ✅ Done |
 
 ### Work (6 phases in prompt)
 
@@ -410,7 +392,9 @@ Create `.claude/prompts/ci-fixes.md`:
 - ~182 total requests (34 existing refactored + ~148 new)
 - All `$.code` assertions present on error responses
 - `environments/local.postman_environment.json` created
+- `environments/docker.postman_environment.json` created (Docker-internal `baseUrl`)
 - Live run against local server: all tests pass
+- `./run-e2e.sh` passes end-to-end against Docker stack
 
 ---
 
@@ -479,9 +463,10 @@ insert Flyway dependency, configure properties, update Testcontainers setup.
 
 ## Wave 8 — Observability Baseline
 
-**Status**: ⬜ Pending  
-**Effort**: ~4h  
-**Depends on**: Wave 5 (CI working, so metrics pipeline can be validated)
+**Status**: ✅ Done
+**Effort**: ~4h
+**Depends on**: Wave 5 ✅
+**Completed**: 2026-02-27
 
 ### Why Before Beta
 
@@ -528,9 +513,9 @@ unacceptable for enterprise clients.
 
 ## Wave 9 — Security Hardening
 
-**Status**: ⬜ Pending  
-**Effort**: ~6h  
-**Depends on**: Wave 8 (health endpoints ready — rate limit infrastructure needs to respond correctly to health checks)
+**Status**: 🔄 In Progress (~4h remaining)
+**Effort**: ~6h
+**Depends on**: Wave 8 ✅
 
 ### Entry Criteria
 
@@ -597,9 +582,10 @@ unacceptable for enterprise clients.
 
 ## Wave 10 — Placeholder Module Decision
 
-**Status**: ⬜ Pending  
-**Effort**: 2h (decision) or ~20h (implementation)  
-**Depends on**: None (can be decided any time)
+**Status**: ✅ Done (Option A for etl, Option C for audit)
+**Effort**: ~1h
+**Depends on**: None
+**Completed**: 2026-02-27
 
 ### Context
 
@@ -634,8 +620,8 @@ Audit MVP scope (if Option B chosen for `audit-system`):
 
 ## Wave 11 — API Documentation for Consumers
 
-**Status**: ⬜ Pending  
-**Effort**: ~6h  
+**Status**: 🔄 In Progress (~4h remaining)
+**Effort**: ~6h
 **Depends on**: Wave 6 (E2E tests confirm API contract is stable before documenting it)
 
 ### Entry Criteria
@@ -676,22 +662,24 @@ Audit MVP scope (if Option B chosen for `audit-system`):
 
 | Wave | Name | Status | Effort | Prompt |
 |------|------|--------|--------|--------|
-| 0 | Dependency Upgrade | ⬜ | ~4h | `.claude/prompts/dependency-upgrade.md` ✅ |
-| 1 | Exception Advice Consolidation | ⬜ | ~6h | `.claude/prompts/exception-advice-consolidation.md` ✅ |
+| 0 | Dependency Upgrade | ✅ | ~4h | `.claude/prompts/dependency-upgrade.md` ✅ |
+| 1 | Exception Advice Consolidation | ✅ | — | `.claude/prompts/exception-advice-consolidation.md` ✅ |
 | 2 | Creation UseCase Rollout | ✅ | — | `docs/creation-usecase-workflow.md` ✅ |
-| 3 | Delete UseCase Infrastructure | ⬜ | ~26h | `.claude/prompts/delete-usecase-rollout.md` 🔴 NEEDED |
-| 4 | Component Test Coverage | ⬜ | ~20h | `.claude/prompts/component-test-rollout.md` 🔴 NEEDED |
-| 5 | Docker / CI Fixes | ⬜ | ~3h | `.claude/prompts/ci-fixes.md` 🔴 NEEDED |
+| 3 | Delete UseCase Infrastructure | ✅ | — | `.claude/prompts/delete-usecase-rollout.md` ✅ |
+| 4 | Component Test Coverage | ✅ | — | N/A (executed directly) |
+| 5 | Docker / CI Fixes | ✅ | — | Done (no prompt needed) |
 | 6 | E2E Test Suite | ⬜ | ~6h | `platform-api-e2e/.claude/prompts/e2e-test-workflow.md` ✅ |
 | 7 | Database Migration (Flyway) | ⬜ | ~8h | `.claude/prompts/flyway-baseline.md` 🔴 NEEDED |
-| 8 | Observability Baseline | ⬜ | ~4h | `.claude/prompts/observability-baseline.md` 🔴 NEEDED |
-| 9 | Security Hardening | ⬜ | ~6h | `.claude/prompts/security-hardening.md` 🔴 NEEDED |
-| 10 | Placeholder Modules Decision | ⬜ | 2–20h | — |
-| 11 | API Documentation | ⬜ | ~6h | — |
+| 8 | Observability Baseline | ✅ | — | Done (direct implementation) |
+| 9 | Security Hardening | 🔄 | ~4h remaining | Security headers + .env.example done, rate limiting + refresh pending |
+| 10 | Placeholder Modules Decision | ✅ | ~1h | Done (etl removed, audit stubbed to 501) |
+| 11 | API Documentation | 🔄 | ~4h remaining | springdoc + Swagger UI + JWT auth done, docs pending |
 
-**Total remaining effort (excluding Wave 10 variable)**: ~89h  
-**Waves with prompts ready**: 0, 1, 2, 6  
-**Prompts needed before next execution**: Wave 3 (Delete), Wave 4 (Component Tests), Wave 5 (CI)
+**Total remaining effort**: ~20h
+**Waves completed**: 0, 1, 2, 3, 4, 5, 8, 10
+**Waves in progress**: 9 (~4h), 11 (~4h)
+**Waves pending**: 6 (~6h, needs Docker), 7 (~8h, needs Docker for schema dump)
+**Prompts needed before next execution**: Wave 7 (Flyway)
 
 ---
 
@@ -702,12 +690,10 @@ Build them in the order the waves will run.
 
 | Priority | Prompt | References |
 |----------|--------|------------|
-| 1 | `.claude/prompts/delete-usecase-rollout.md` | `docs/delete-usecase-strategy.md`, `docs/delete-usecase-workflow.md` |
-| 2 | `.claude/prompts/component-test-rollout.md` | `docs/workflows/COMPONENT-TEST-WORKFLOW.md` |
-| 3 | `.claude/prompts/ci-fixes.md` | Audit Dockerfiles, docker-compose, GitHub Actions |
-| 4 | `.claude/prompts/flyway-baseline.md` | MariaDB schema, Boot Flyway auto-config |
-| 5 | `.claude/prompts/observability-baseline.md` | Micrometer, log4j2, Actuator, MDC |
-| 6 | `.claude/prompts/security-hardening.md` | Bucket4j, security headers, token refresh |
+| 1 | `.claude/prompts/ci-fixes.md` | Audit Dockerfiles, docker-compose, GitHub Actions |
+| 2 | `.claude/prompts/flyway-baseline.md` | MariaDB schema, Boot Flyway auto-config |
+| 3 | `.claude/prompts/observability-baseline.md` | Micrometer, log4j2, Actuator, MDC |
+| 4 | `.claude/prompts/security-hardening.md` | Bucket4j, security headers, token refresh |
 
 ---
 
@@ -744,6 +730,7 @@ All of the following must be true to declare beta readiness:
 - [ ] One `*ComponentTest.java` per entity (19 total)
 - [ ] E2E suite ~182 requests, Newman passes against local server
 - [ ] `@SQLRestriction` soft-delete exclusion verified in component tests
+- [ ] `./run-e2e.sh` passes end-to-end against Docker stack
 
 **Operations**
 - [ ] `GET /api/actuator/health/liveness` returns 200
