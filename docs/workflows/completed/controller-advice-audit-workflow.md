@@ -1,7 +1,6 @@
 > [!NOTE]
-> **STATUS: COMPLETED / HISTORICAL** — This document is kept for historical reference.
-> The work it describes has been implemented or the architecture has been superseded.
-> Moved to docs/completed/ on 2026-02-28.
+> **STATUS: COMPLETED** — Diagnostic audit that fed into the exception-advice-strategy.
+> Moved to `workflows/completed/` on 2026-02-28.
 
 ---
 

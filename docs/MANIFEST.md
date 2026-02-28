@@ -11,7 +11,6 @@
 docs/
 ├── MANIFEST.md                          ← this file
 ├── design/                              ← architecture, specs, strategies, ADRs
-│   ├── completed/                       ← implemented / superseded designs
 │   └── adr/                             ← architecture decision records
 ├── directives/                          ← coding standards & Claude execution rules
 ├── prompts/                             ← executable Claude Code prompts
@@ -68,14 +67,7 @@ Specifications, strategies, and architectural decisions.
 | [0004](design/adr/0004-given-when-then-testing-standard.md) | Given-When-Then testing standard | 🟢 Implemented |
 | [0005](design/adr/0005-conventional-commits.md) | Conventional Commits | 🟢 Implemented |
 | [0006](design/adr/0006-integration-test-strategy.md) | Integration test strategy (Testcontainers) | 🟢 Implemented |
-| ~~0007~~ | ~~Internal PKI with mTLS bootstrap enrollment~~ | ⚪ Superseded → [completed/](design/completed/0007-internal-pki-mtls-bootstrap-enrollment.md) |
-
-### Completed Designs (`docs/design/completed/`)
-
-| Document | Original purpose | Completed |
-|----------|-----------------|-----------|
-| [controller-advice-audit-design.md](design/completed/controller-advice-audit-design.md) | Point-in-time audit of @ControllerAdvice across modules | 2026-02-21 |
-| [0007-internal-pki-mtls-bootstrap-enrollment.md](design/completed/0007-internal-pki-mtls-bootstrap-enrollment.md) | ADR for mTLS and bootstrap token enrollment | Superseded by trust-broker JWKS |
+| ~~0007~~ | ~~Internal PKI with mTLS bootstrap enrollment~~ | ⚪ Superseded → [adr/0007](design/adr/0007-internal-pki-mtls-bootstrap-enrollment.md) |
 
 ---
 
@@ -117,6 +109,7 @@ Step-by-step implementation plans. Referenced by prompts.
 |----------|-----------------|-----------|
 | [creation-usecase-workflow.md](workflows/completed/creation-usecase-workflow.md) | Step-by-step creation use case for all entities | All entities implemented |
 | [ca-trust-propagation-workflow.md](workflows/completed/ca-trust-propagation-workflow.md) | mTLS certificate enrollment workflow (8443/8081) | Superseded by plain HTTP |
+| [controller-advice-audit-workflow.md](workflows/completed/controller-advice-audit-workflow.md) | Diagnostic audit of @ControllerAdvice across modules | Fed into exception-advice-strategy |
 
 ---
 

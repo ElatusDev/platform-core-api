@@ -1,13 +1,12 @@
 > [!NOTE]
-> **STATUS: COMPLETED / HISTORICAL** — This document is kept for historical reference.
-> The work it describes has been implemented or the architecture has been superseded.
-> Moved to docs/completed/ on 2026-02-28.
+> **STATUS: SUPERSEDED** — Replaced by trust-broker JWKS model (plain HTTP internally).
+> Kept as historical ADR per project convention.
 
 ---
 
 # ADR-0007: Internal PKI with mTLS and Bootstrap Token Enrollment
 
-**Status**: Accepted
+**Status**: Superseded
 **Date**: 2025-02-21
 **Deciders**: ElatusDev
 
