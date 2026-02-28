@@ -131,7 +131,7 @@ For the full architecture deep-dive, see [DESIGN.md](docs/design/DESIGN.md).
 |----------|---------|
 | [DESIGN.md](docs/design/DESIGN.md) | Architecture, module catalog, multi-tenancy model, security layers |
 | [AI-CODE-REF.md](AI-CODE-REF.md) | Coding standards, review rules, detection patterns, test conventions |
-| [SECURITY.md](SECURITY.md) | Vulnerability disclosure policy |
+| [SECURITY.md](docs/design/SECURITY.md) | Vulnerability disclosure policy |
 | [CHANGELOG.md](CHANGELOG.md) | Release history (Keep a Changelog + Conventional Commits) |
 | [docs/adr/](docs/adr/) | Architecture Decision Records for key technical choices |
 
