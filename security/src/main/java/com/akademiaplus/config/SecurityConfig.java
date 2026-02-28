@@ -35,10 +35,21 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSourceForLogin()))
+                .headers(headers -> headers
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .maxAgeInSeconds(31536000)
+                                .includeSubDomains(true))
+                        .contentTypeOptions(contentType -> {})
+                        .frameOptions(frame -> frame.deny())
+                        .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'none'"))
+                )
                 .authorizeHttpRequests(auth -> {
                     auth
                             .requestMatchers("/actuator/**").permitAll()
-                            .requestMatchers("/v1/security/login/internal").permitAll();
+                            .requestMatchers("/v1/security/login/internal").permitAll()
+                            .requestMatchers("/v3/api-docs/**").permitAll()
+                            .requestMatchers("/swagger-ui/**").permitAll()
+                            .requestMatchers("/swagger-ui.html").permitAll();
                     try {
                         for (ModuleSecurityConfigurator configurator : moduleSecurityConfigurators) {
                             configurator.configure(auth);
