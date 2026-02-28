@@ -10,7 +10,7 @@
 
 ### Prerequisites
 
-- Java 21 (JDK)
+- Java 24 (JDK)
 - Maven 3.9+
 - Docker & Docker Compose
 - MariaDB (or use Docker Compose)

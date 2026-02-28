@@ -29,7 +29,6 @@ COPY utilities/pom.xml             utilities/
 COPY application/pom.xml           application/
 COPY audit-system/pom.xml          audit-system/
 COPY certificate-authority/pom.xml certificate-authority/
-COPY etl-system/pom.xml            etl-system/
 
 RUN apk add --no-cache maven
 ENV JAVA_HOME=/opt/java/openjdk

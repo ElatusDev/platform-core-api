@@ -7,7 +7,6 @@ COPY audit-system/pom.xml          audit-system/
 COPY billing/pom.xml               billing/
 COPY certificate-authority/pom.xml certificate-authority/
 COPY course-management/pom.xml     course-management/
-COPY etl-system/pom.xml            etl-system/
 COPY infra-common/pom.xml          infra-common/
 COPY mock-data-system/pom.xml      mock-data-system/
 COPY multi-tenant-data/pom.xml     multi-tenant-data/

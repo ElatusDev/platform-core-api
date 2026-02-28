@@ -5,7 +5,6 @@ audit-system/target/
 billing/target/
 certificate-authority/target/
 course-management/target/
-etl-system/target/
 infra-common/target/
 mock-data-system/target/
 multi-tenant-data/target/
@@ -32,7 +31,6 @@ audit-system/*.iml
 billing/*.iml
 certificate-authority/*.iml
 course-management/*.iml
-etl-system/*.iml
 infra-common/*.iml
 mock-data-system/*.iml
 multi-tenant-data/*.iml

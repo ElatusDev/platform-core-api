@@ -29,7 +29,6 @@ COPY utilities/pom.xml             utilities/
 # Placeholder POMs for reactor completeness (no src needed)
 COPY audit-system/pom.xml          audit-system/
 COPY certificate-authority/pom.xml certificate-authority/
-COPY etl-system/pom.xml            etl-system/
 COPY mock-data-system/pom.xml      mock-data-system/
 COPY pos-system/pom.xml            pos-system/
 
