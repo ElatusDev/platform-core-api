@@ -8,11 +8,11 @@
 package com.akademiaplus.usecases.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -81,7 +81,7 @@ public class JwksRegistry {
         try {
             List<JwksEntry> snapshot = new ArrayList<>(entries.values());
             objectMapper.writeValue(persistPath.toFile(), snapshot);
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             log.warn("Failed to persist JWKS registry to {}: {}", persistPath, e.getMessage());
         }
     }
@@ -95,7 +95,7 @@ public class JwksRegistry {
                     registry.entries.put(entry.getKid(), entry);
                 }
                 log.info("JWKS registry loaded {} entries from {}", loaded.length, persistPath);
-            } catch (IOException e) {
+            } catch (JacksonException e) {
                 log.warn("Could not load JWKS registry from {} — starting empty: {}",
                         persistPath, e.getMessage());
             }

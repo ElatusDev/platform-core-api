@@ -10,7 +10,7 @@ package com.akademiaplus.usecases.domain;
 import com.akademiaplus.usecases.exceptions.InvalidBootstrapTokenException;
 import com.akademiaplus.usecases.exceptions.TokenAlreadyUsedException;
 import com.akademiaplus.usecases.exceptions.TokenCnMismatchException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 

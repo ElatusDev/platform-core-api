@@ -11,11 +11,11 @@ import com.akademiaplus.usecases.exceptions.InvalidBootstrapTokenException;
 import com.akademiaplus.usecases.exceptions.TokenAlreadyUsedException;
 import com.akademiaplus.usecases.exceptions.TokenCnMismatchException;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.security.SecureRandom;
 import java.time.Instant;
@@ -62,9 +62,9 @@ public class TokenManifest {
      * @param filePath     path to the JSON manifest file
      * @param objectMapper Jackson ObjectMapper for deserialization
      * @return loaded manifest with transient fields initialized
-     * @throws IOException if the file cannot be read or parsed
+     * @throws JacksonException if the file cannot be read or parsed
      */
-    public static TokenManifest loadFromFile(Path filePath, ObjectMapper objectMapper) throws IOException {
+    public static TokenManifest loadFromFile(Path filePath, ObjectMapper objectMapper) {
         TokenManifestWrapper wrapper = objectMapper.readValue(filePath.toFile(), TokenManifestWrapper.class);
         TokenManifest manifest = new TokenManifest(filePath, objectMapper);
         manifest.tokens = wrapper.tokens != null ? wrapper.tokens : new ArrayList<>();
@@ -157,7 +157,7 @@ public class TokenManifest {
             TokenManifestWrapper wrapper = new TokenManifestWrapper();
             wrapper.tokens = this.tokens;
             objectMapper.writerWithDefaultPrettyPrinter().writeValue(manifestPath.toFile(), wrapper);
-        } catch (IOException e) {
+        } catch (JacksonException e) {
             log.error("Failed to persist token manifest to {}: {}", manifestPath, e.getMessage());
         }
     }

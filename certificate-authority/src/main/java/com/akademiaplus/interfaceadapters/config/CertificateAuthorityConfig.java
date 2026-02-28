@@ -10,7 +10,7 @@ package com.akademiaplus.interfaceadapters.config;
 import com.akademiaplus.usecases.domain.CertificateAuthority;
 import com.akademiaplus.usecases.domain.JwksRegistry;
 import com.akademiaplus.usecases.domain.TokenManifest;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -130,7 +130,7 @@ public class CertificateAuthorityConfig {
      */
     @Bean
     public TokenManifest tokenManifest(
-            @Value("${ca.token-manifest}") String manifestPath) throws IOException {
+            @Value("${ca.token-manifest}") String manifestPath) {
 
         ObjectMapper objectMapper = new ObjectMapper();
         Path persistedPath = Path.of(manifestPath);
