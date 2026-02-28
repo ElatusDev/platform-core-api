@@ -15,10 +15,10 @@ docs/
 ├── directives/                          ← coding standards & Claude execution rules
 ├── prompts/                             ← executable Claude Code prompts
 │   ├── pending/                         ← ready to execute or blocked
-│   └── completed/                       ← executed prompts (historical)
+│   └── completed/                       ← executed prompts
 └── workflows/                           ← step-by-step implementation plans
     ├── pending/                          ← ready to execute or blocked
-    └── completed/                       ← executed workflows (historical)
+    └── completed/                        ← executed workflows
 ```
 
 ### Naming Conventions
@@ -53,8 +53,8 @@ Specifications, strategies, and architectural decisions.
 | [DESIGN.md](design/DESIGN.md) | Architecture, module catalog, multi-tenancy model, security layers | 🟢 Active reference |
 | [SECURITY.md](design/SECURITY.md) | Security policy and vulnerability reporting | 🟢 Active reference |
 | [beta-maturity-design.md](design/beta-maturity-design.md) | 11-wave rollout plan toward beta release | 🟡 In progress — Waves 1-5 done |
-| [delete-usecase-strategy.md](design/delete-usecase-strategy.md) | Strategy for soft-delete across all entities | 🔴 Blocked — @SQLDelete bug |
-| [exception-advice-strategy.md](design/exception-advice-strategy.md) | ControllerAdvice consolidation spec (21 exception classes) | 🟡 Ready to implement |
+| [delete-usecase-strategy.md](design/delete-usecase-strategy.md) | Strategy for soft-delete across all entities | 🟢 Implemented |
+| [exception-advice-strategy.md](design/exception-advice-strategy.md) | ControllerAdvice consolidation spec (21 exception classes) | 🟢 Implemented |
 
 ### Architecture Decision Records (`docs/design/adr/`)
 
@@ -77,16 +77,15 @@ Executable prompts for Claude Code CLI.
 
 ### Pending (`docs/prompts/pending/`)
 
-| Prompt | Executes | Spec | Workflow | Status |
-|--------|----------|------|----------|--------|
-| [auth-bootstrap-prompt.md](prompts/pending/auth-bootstrap-prompt.md) | Auth bootstrap for e2e test suite | — | — | 🟡 Ready |
-| [delete-usecase-rollout-prompt.md](prompts/pending/delete-usecase-rollout-prompt.md) | Delete use case rollout | [strategy](design/delete-usecase-strategy.md) | [workflow](workflows/pending/delete-usecase-workflow.md) | 🔴 Blocked |
-| [exception-advice-consolidation-prompt.md](prompts/pending/exception-advice-consolidation-prompt.md) | Exception handling consolidation | [strategy](design/exception-advice-strategy.md) | [workflow](workflows/pending/exception-advice-workflow.md) | 🟡 Ready |
+_None — all prompts have been executed._
 
 ### Completed (`docs/prompts/completed/`)
 
 | Prompt | Original purpose | Completed |
 |--------|-----------------|-----------|
+| [auth-bootstrap-prompt.md](prompts/completed/auth-bootstrap-prompt.md) | Auth bootstrap — internal login endpoint and e2e test suite | Implemented |
+| [delete-usecase-rollout-prompt.md](prompts/completed/delete-usecase-rollout-prompt.md) | Delete use case rollout across all entities | All entities implemented |
+| [exception-advice-consolidation-prompt.md](prompts/completed/exception-advice-consolidation-prompt.md) | Exception handling consolidation | BaseControllerAdvice + generics implemented |
 | [dependency-upgrade-prompt.md](prompts/completed/dependency-upgrade-prompt.md) | Boot 4.0.0-M3 → 4.0.3, Java 21 → 24 | Upgrade completed |
 
 ---
@@ -97,16 +96,15 @@ Step-by-step implementation plans. Referenced by prompts.
 
 ### Pending (`docs/workflows/pending/`)
 
-| Document | Purpose | Status |
-|----------|---------|--------|
-| [component-test-workflow.md](workflows/pending/component-test-workflow.md) | Canonical component test pattern per entity | 🟢 Active reference |
-| [delete-usecase-workflow.md](workflows/pending/delete-usecase-workflow.md) | Step-by-step delete use case implementation | 🔴 Blocked on strategy |
-| [exception-advice-workflow.md](workflows/pending/exception-advice-workflow.md) | Step-by-step exception handling consolidation | 🟡 Ready to implement |
+_None — all workflows have been executed._
 
 ### Completed (`docs/workflows/completed/`)
 
 | Document | Original purpose | Completed |
 |----------|-----------------|-----------|
+| [component-test-workflow.md](workflows/completed/component-test-workflow.md) | Canonical component test pattern per entity | 25 component tests across all modules |
+| [delete-usecase-workflow.md](workflows/completed/delete-usecase-workflow.md) | Step-by-step delete use case implementation | 20+ delete use cases implemented |
+| [exception-advice-workflow.md](workflows/completed/exception-advice-workflow.md) | Exception handling consolidation | BaseControllerAdvice + generics implemented |
 | [creation-usecase-workflow.md](workflows/completed/creation-usecase-workflow.md) | Step-by-step creation use case for all entities | All entities implemented |
 | [ca-trust-propagation-workflow.md](workflows/completed/ca-trust-propagation-workflow.md) | mTLS certificate enrollment workflow (8443/8081) | Superseded by plain HTTP |
 | [controller-advice-audit-workflow.md](workflows/completed/controller-advice-audit-workflow.md) | Diagnostic audit of @ControllerAdvice across modules | Fed into exception-advice-strategy |
