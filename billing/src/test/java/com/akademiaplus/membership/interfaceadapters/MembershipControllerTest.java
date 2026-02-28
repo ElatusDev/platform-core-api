@@ -24,7 +24,7 @@ import com.akademiaplus.membership.usecases.MembershipCreationUseCase;
 import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.MessageService;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.List;
 import openapi.akademiaplus.domain.billing.dto.GetMembershipResponseDTO;
@@ -65,7 +65,6 @@ class MembershipControllerTest {
                 .setControllerAdvice(controllerAdvice)
                 .build();
         objectMapper = new ObjectMapper();
-        objectMapper.findAndRegisterModules();
     }
 
     @Nested

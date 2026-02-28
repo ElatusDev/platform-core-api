@@ -24,7 +24,7 @@ import com.akademiaplus.payment.usecases.PaymentTutorCreationUseCase;
 import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.MessageService;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -67,7 +67,6 @@ class PaymentTutorControllerTest {
                 .setControllerAdvice(controllerAdvice)
                 .build();
         objectMapper = new ObjectMapper();
-        objectMapper.findAndRegisterModules();
     }
 
     @Nested
