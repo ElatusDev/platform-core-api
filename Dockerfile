@@ -9,7 +9,7 @@
 # =============================================================================
 
 # ── Build stage ──────────────────────────────────────────────────────────────
-FROM eclipse-temurin:21-jdk-alpine AS build
+FROM eclipse-temurin:24-jdk-alpine AS build
 WORKDIR /app
 
 # Layer 1: POMs only (rarely change → good cache hit rate)
@@ -34,6 +34,8 @@ COPY mock-data-system/pom.xml      mock-data-system/
 COPY pos-system/pom.xml            pos-system/
 
 RUN apk add --no-cache maven
+ENV JAVA_HOME=/opt/java/openjdk
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
 RUN mvn dependency:go-offline -pl application -am -DskipTests -q || true
 
 # Layer 2: Source trees — ONLY modules in the application dependency chain
@@ -52,7 +54,7 @@ RUN mvn clean install -pl application -am -DskipTests -DskipITs -q
 
 # ── Runtime stage ────────────────────────────────────────────────────────────
 # keytool ships with the JRE (needed for JWT keystore generation in entrypoint)
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:24-jre-alpine
 RUN apk update && apk add --no-cache bash
 
 WORKDIR /app

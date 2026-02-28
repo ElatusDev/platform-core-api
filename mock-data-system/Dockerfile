@@ -9,7 +9,7 @@
 # =============================================================================
 
 # ── Build stage ──────────────────────────────────────────────────────────────
-FROM eclipse-temurin:21-jdk-alpine AS build
+FROM eclipse-temurin:24-jdk-alpine AS build
 WORKDIR /app
 
 # Layer 1: POMs only (rarely change → good cache hit rate)
@@ -32,6 +32,8 @@ COPY certificate-authority/pom.xml certificate-authority/
 COPY etl-system/pom.xml            etl-system/
 
 RUN apk add --no-cache maven
+ENV JAVA_HOME=/opt/java/openjdk
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
 RUN mvn dependency:go-offline -pl mock-data-system -am -DskipTests -q || true
 
 # Layer 2: Source trees — ONLY modules in the mock-data-system dependency chain
@@ -50,7 +52,7 @@ COPY mock-data-system/src       mock-data-system/src
 RUN mvn clean install -pl mock-data-system -am -DskipTests -DskipITs -q
 
 # ── Runtime stage ────────────────────────────────────────────────────────────
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:24-jre-alpine
 RUN apk update && apk add --no-cache bash
 
 WORKDIR /app

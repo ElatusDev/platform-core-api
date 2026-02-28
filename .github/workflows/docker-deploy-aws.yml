@@ -17,11 +17,11 @@ jobs:
         with:
           ref: ${{ github.event.inputs.branch || github.ref_name }} # Use input or default
 
-      - name: Set up JDK 21
+      - name: Set up JDK 24
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version: '24'
+          distribution: 'corretto'
 
       - name: Build and push Docker image
         id: docker-build-push
@@ -62,6 +62,6 @@ jobs:
             docker rm platform-core-api || true
 
             # Run the new container
-            docker run -d --name platform-core-api -p 8443:8443 ${{ needs.build-and-push.outputs.image_tag }}
+            docker run -d --name platform-core-api -p 8080:8080 ${{ needs.build-and-push.outputs.image_tag }}
 
             echo "Deployment complete."
