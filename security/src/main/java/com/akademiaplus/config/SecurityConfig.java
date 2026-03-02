@@ -47,6 +47,7 @@ public class SecurityConfig {
                     auth
                             .requestMatchers("/actuator/**").permitAll()
                             .requestMatchers("/v1/security/login/internal").permitAll()
+                            .requestMatchers("/v1/security/register").permitAll()
                             .requestMatchers("/v3/api-docs/**").permitAll()
                             .requestMatchers("/swagger-ui/**").permitAll()
                             .requestMatchers("/swagger-ui.html").permitAll();

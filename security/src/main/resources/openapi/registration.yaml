@@ -1,0 +1,103 @@
+openapi: 3.0.0
+info:
+  title: Registration API
+  version: '1.0.0'
+components:
+  schemas:
+    RegistrationRequest:
+      type: object
+      properties:
+        organizationName:
+          type: string
+          description: Tenant organization name
+        email:
+          type: string
+          format: email
+          description: Admin email address
+        address:
+          type: string
+          description: Tenant address
+        firstName:
+          type: string
+          description: Admin first name
+        lastName:
+          type: string
+          description: Admin last name
+        phone:
+          type: string
+          description: Admin phone number
+        zipCode:
+          type: string
+          description: Tenant zip code
+        birthdate:
+          type: string
+          format: date
+          description: Admin birthdate
+        username:
+          type: string
+          description: Admin login username
+        password:
+          type: string
+          format: password
+          description: Admin login password
+      required:
+        - organizationName
+        - email
+        - address
+        - firstName
+        - lastName
+        - username
+        - password
+    RegistrationResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT authentication token
+        tenantId:
+          type: integer
+          format: int64
+          description: Created tenant ID
+      required:
+        - token
+        - tenantId
+    ErrorResponse:
+      type: object
+paths:
+  /register:
+    post:
+      summary: Register a new tenant with admin user
+      operationId: register
+      tags:
+        - Register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequest'
+      responses:
+        '201':
+          description: Tenant and admin user created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Duplicate organization or username
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'

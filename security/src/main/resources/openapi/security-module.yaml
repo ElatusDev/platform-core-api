@@ -12,7 +12,13 @@ components:
       $ref: './internal-authentication.yaml#/components/schemas/AuthTokenResponse'
     LoginRequest:
       $ref: './internal-authentication.yaml#/components/schemas/LoginRequest'
+    RegistrationRequest:
+      $ref: './registration.yaml#/components/schemas/RegistrationRequest'
+    RegistrationResponse:
+      $ref: './registration.yaml#/components/schemas/RegistrationResponse'
 
 paths:
   /login/internal:
     $ref: './internal-authentication.yaml#/paths/~1login~1internal'
+  /register:
+    $ref: './registration.yaml#/paths/~1register'

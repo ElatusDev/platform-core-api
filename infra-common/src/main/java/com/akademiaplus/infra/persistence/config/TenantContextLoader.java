@@ -64,7 +64,8 @@ public class TenantContextLoader extends OncePerRequestFilter {
             path = path.substring(contextPath.length());
         }
         return path.startsWith("/actuator")
-                || path.startsWith("/v1/security/login");
+                || path.startsWith("/v1/security/login")
+                || path.startsWith("/v1/security/register");
     }
 
     /**
