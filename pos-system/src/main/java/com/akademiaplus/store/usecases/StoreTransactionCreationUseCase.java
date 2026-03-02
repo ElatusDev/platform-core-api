@@ -37,7 +37,7 @@ public class StoreTransactionCreationUseCase {
 
     @Transactional
     public StoreTransactionCreationResponseDTO create(StoreTransactionCreationRequestDTO dto) {
-        StoreTransactionDataModel saved = storeTransactionRepository.save(transform(dto));
+        StoreTransactionDataModel saved = storeTransactionRepository.saveAndFlush(transform(dto));
         return modelMapper.map(saved, StoreTransactionCreationResponseDTO.class);
     }
 

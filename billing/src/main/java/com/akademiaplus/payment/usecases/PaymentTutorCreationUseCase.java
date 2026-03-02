@@ -42,7 +42,7 @@ public class PaymentTutorCreationUseCase {
 
     @Transactional
     public PaymentTutorCreationResponseDTO create(PaymentTutorCreationRequestDTO dto) {
-        PaymentTutorDataModel saved = paymentRepository.save(transform(dto));
+        PaymentTutorDataModel saved = paymentRepository.saveAndFlush(transform(dto));
         return modelMapper.map(saved, PaymentTutorCreationResponseDTO.class);
     }
 

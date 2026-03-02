@@ -157,14 +157,14 @@ class ScheduleCreationUseCaseTest {
             when(applicationContext.getBean(ScheduleDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, ScheduleCreationUseCase.MAP_NAME);
             when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(course));
-            when(scheduleRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(scheduleRepository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, ScheduleCreationResponseDTO.class)).thenReturn(expectedDto);
 
             // When
             ScheduleCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(scheduleRepository).save(prototypeModel);
+            verify(scheduleRepository).saveAndFlush(prototypeModel);
             verify(modelMapper).map(savedModel, ScheduleCreationResponseDTO.class);
             assertThat(result.getScheduleId()).isEqualTo(SAVED_ID);
         }
@@ -182,7 +182,7 @@ class ScheduleCreationUseCaseTest {
             when(applicationContext.getBean(ScheduleDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, ScheduleCreationUseCase.MAP_NAME);
             when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(course));
-            when(scheduleRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(scheduleRepository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, ScheduleCreationResponseDTO.class)).thenReturn(responseDto);
 
             // When
@@ -193,7 +193,7 @@ class ScheduleCreationUseCaseTest {
             inOrder.verify(applicationContext).getBean(ScheduleDataModel.class);
             inOrder.verify(modelMapper).map(dto, prototypeModel, ScheduleCreationUseCase.MAP_NAME);
             inOrder.verify(courseRepository).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
-            inOrder.verify(scheduleRepository).save(prototypeModel);
+            inOrder.verify(scheduleRepository).saveAndFlush(prototypeModel);
             inOrder.verify(modelMapper).map(savedModel, ScheduleCreationResponseDTO.class);
         }
     }

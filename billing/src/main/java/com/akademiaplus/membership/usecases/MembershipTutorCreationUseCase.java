@@ -48,7 +48,7 @@ public class MembershipTutorCreationUseCase {
 
     @Transactional
     public MembershipTutorCreationResponseDTO create(MembershipTutorCreationRequestDTO dto) {
-        MembershipTutorDataModel saved = repository.save(transform(dto));
+        MembershipTutorDataModel saved = repository.saveAndFlush(transform(dto));
         return modelMapper.map(saved, MembershipTutorCreationResponseDTO.class);
     }
 

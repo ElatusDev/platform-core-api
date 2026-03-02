@@ -42,7 +42,7 @@ public class TenantSubscriptionCreationUseCase {
      */
     @Transactional
     public TenantSubscriptionDTO create(SubscriptionCreateRequestDTO dto) {
-        TenantSubscriptionDataModel saved = repository.save(transform(dto));
+        TenantSubscriptionDataModel saved = repository.saveAndFlush(transform(dto));
         return modelMapper.map(saved, TenantSubscriptionDTO.class);
     }
 

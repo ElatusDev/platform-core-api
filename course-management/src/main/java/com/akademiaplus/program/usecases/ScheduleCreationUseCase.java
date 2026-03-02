@@ -47,7 +47,7 @@ public class ScheduleCreationUseCase {
      */
     @Transactional
     public ScheduleCreationResponseDTO create(ScheduleCreationRequestDTO dto) {
-        ScheduleDataModel saved = scheduleRepository.save(transform(dto));
+        ScheduleDataModel saved = scheduleRepository.saveAndFlush(transform(dto));
         return modelMapper.map(saved, ScheduleCreationResponseDTO.class);
     }
 

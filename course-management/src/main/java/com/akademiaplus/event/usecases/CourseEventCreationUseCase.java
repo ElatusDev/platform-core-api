@@ -54,7 +54,7 @@ public class CourseEventCreationUseCase {
      */
     @Transactional
     public CourseEventCreateResponseDTO create(CourseEventCreateRequestDTO dto) {
-        CourseEventDataModel saved = courseEventRepository.save(transform(dto));
+        CourseEventDataModel saved = courseEventRepository.saveAndFlush(transform(dto));
         return modelMapper.map(saved, CourseEventCreateResponseDTO.class);
     }
 

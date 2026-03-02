@@ -106,14 +106,14 @@ class MembershipCreationUseCaseTest {
 
             when(applicationContext.getBean(MembershipDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, MembershipCreationUseCase.MAP_NAME);
-            when(membershipRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(membershipRepository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, MembershipCreationResponseDTO.class)).thenReturn(expectedDto);
 
             // When
             MembershipCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(membershipRepository).save(prototypeModel);
+            verify(membershipRepository).saveAndFlush(prototypeModel);
             verify(modelMapper).map(savedModel, MembershipCreationResponseDTO.class);
             assertThat(result.getMembershipId()).isEqualTo(SAVED_ID);
         }
@@ -129,7 +129,7 @@ class MembershipCreationUseCaseTest {
 
             when(applicationContext.getBean(MembershipDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, MembershipCreationUseCase.MAP_NAME);
-            when(membershipRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(membershipRepository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, MembershipCreationResponseDTO.class)).thenReturn(responseDto);
 
             // When
@@ -139,7 +139,7 @@ class MembershipCreationUseCaseTest {
             InOrder inOrder = inOrder(applicationContext, modelMapper, membershipRepository);
             inOrder.verify(applicationContext).getBean(MembershipDataModel.class);
             inOrder.verify(modelMapper).map(dto, prototypeModel, MembershipCreationUseCase.MAP_NAME);
-            inOrder.verify(membershipRepository).save(prototypeModel);
+            inOrder.verify(membershipRepository).saveAndFlush(prototypeModel);
             inOrder.verify(modelMapper).map(savedModel, MembershipCreationResponseDTO.class);
         }
     }

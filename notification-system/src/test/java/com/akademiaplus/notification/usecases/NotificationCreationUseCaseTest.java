@@ -173,14 +173,14 @@ class NotificationCreationUseCaseTest {
 
             when(applicationContext.getBean(NotificationDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, NotificationCreationUseCase.MAP_NAME);
-            when(notificationRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(notificationRepository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, NotificationCreationResponseDTO.class)).thenReturn(expectedDto);
 
             // When
             NotificationCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(notificationRepository).save(prototypeModel);
+            verify(notificationRepository).saveAndFlush(prototypeModel);
             assertThat(result.getNotificationId()).isEqualTo(SAVED_ID);
         }
 
@@ -195,7 +195,7 @@ class NotificationCreationUseCaseTest {
 
             when(applicationContext.getBean(NotificationDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, NotificationCreationUseCase.MAP_NAME);
-            when(notificationRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(notificationRepository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, NotificationCreationResponseDTO.class)).thenReturn(responseDto);
 
             // When
@@ -205,7 +205,7 @@ class NotificationCreationUseCaseTest {
             InOrder inOrder = inOrder(applicationContext, modelMapper, notificationRepository);
             inOrder.verify(applicationContext).getBean(NotificationDataModel.class);
             inOrder.verify(modelMapper).map(dto, prototypeModel, NotificationCreationUseCase.MAP_NAME);
-            inOrder.verify(notificationRepository).save(prototypeModel);
+            inOrder.verify(notificationRepository).saveAndFlush(prototypeModel);
             inOrder.verify(modelMapper).map(savedModel, NotificationCreationResponseDTO.class);
         }
     }

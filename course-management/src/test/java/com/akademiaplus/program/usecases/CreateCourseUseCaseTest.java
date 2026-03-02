@@ -172,7 +172,7 @@ class CreateCourseUseCaseTest {
             when(courseValidator.validateCollaboratorsExist(dto.getAvailableCollaboratorIds()))
                     .thenReturn(List.of(collaborator));
             doNothing().when(modelMapper).map(dto, prototypeModel, CreateCourseUseCase.MAP_NAME);
-            when(courseRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(courseRepository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(courseValidator.validateSchedulesAvailable(dto.getTimeTableIds()))
                     .thenReturn(schedules);
             when(scheduleRepository.saveAll(schedules)).thenReturn(schedules);
@@ -182,7 +182,7 @@ class CreateCourseUseCaseTest {
             CourseCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(courseRepository).save(prototypeModel);
+            verify(courseRepository).saveAndFlush(prototypeModel);
             verify(modelMapper).map(savedModel, CourseCreationResponseDTO.class);
             assertThat(result.getCourseId()).isEqualTo(TEST_COURSE_ID);
         }
@@ -203,7 +203,7 @@ class CreateCourseUseCaseTest {
             when(courseValidator.validateCollaboratorsExist(dto.getAvailableCollaboratorIds()))
                     .thenReturn(List.of(collaborator));
             doNothing().when(modelMapper).map(dto, prototypeModel, CreateCourseUseCase.MAP_NAME);
-            when(courseRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(courseRepository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(courseValidator.validateSchedulesAvailable(dto.getTimeTableIds()))
                     .thenReturn(schedules);
             when(scheduleRepository.saveAll(schedules)).thenReturn(schedules);
@@ -232,7 +232,7 @@ class CreateCourseUseCaseTest {
             when(courseValidator.validateCollaboratorsExist(dto.getAvailableCollaboratorIds()))
                     .thenReturn(List.of(collaborator));
             doNothing().when(modelMapper).map(dto, prototypeModel, CreateCourseUseCase.MAP_NAME);
-            when(courseRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(courseRepository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(courseValidator.validateSchedulesAvailable(dto.getTimeTableIds()))
                     .thenReturn(schedules);
             when(scheduleRepository.saveAll(schedules)).thenReturn(schedules);
@@ -246,7 +246,7 @@ class CreateCourseUseCaseTest {
             inOrder.verify(courseValidator).validateCollaboratorsExist(dto.getAvailableCollaboratorIds());
             inOrder.verify(applicationContext).getBean(CourseDataModel.class);
             inOrder.verify(modelMapper).map(dto, prototypeModel, CreateCourseUseCase.MAP_NAME);
-            inOrder.verify(courseRepository).save(prototypeModel);
+            inOrder.verify(courseRepository).saveAndFlush(prototypeModel);
             inOrder.verify(courseValidator).validateSchedulesAvailable(dto.getTimeTableIds());
             inOrder.verify(scheduleRepository).saveAll(schedules);
             inOrder.verify(modelMapper).map(savedModel, CourseCreationResponseDTO.class);

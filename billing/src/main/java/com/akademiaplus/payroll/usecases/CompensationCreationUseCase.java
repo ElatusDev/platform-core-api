@@ -36,7 +36,7 @@ public class CompensationCreationUseCase {
 
     @Transactional
     public CompensationCreationResponseDTO create(CompensationCreationRequestDTO dto) {
-        CompensationDataModel saved = compensationRepository.save(transform(dto));
+        CompensationDataModel saved = compensationRepository.saveAndFlush(transform(dto));
         return modelMapper.map(saved, CompensationCreationResponseDTO.class);
     }
 

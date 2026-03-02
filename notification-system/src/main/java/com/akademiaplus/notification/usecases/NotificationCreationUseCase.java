@@ -38,7 +38,7 @@ public class NotificationCreationUseCase {
 
     @Transactional
     public NotificationCreationResponseDTO create(NotificationCreationRequestDTO dto) {
-        NotificationDataModel saved = notificationRepository.save(transform(dto));
+        NotificationDataModel saved = notificationRepository.saveAndFlush(transform(dto));
         return modelMapper.map(saved, NotificationCreationResponseDTO.class);
     }
 

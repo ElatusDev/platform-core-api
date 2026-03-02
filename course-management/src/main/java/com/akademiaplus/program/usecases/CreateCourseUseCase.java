@@ -59,7 +59,7 @@ public class CreateCourseUseCase {
      */
     @Transactional
     public CourseCreationResponseDTO create(CourseCreationRequestDTO dto) {
-        CourseDataModel savedCourse = courseRepository.save(transform(dto));
+        CourseDataModel savedCourse = courseRepository.saveAndFlush(transform(dto));
         scheduleRepository.saveAll(
                 courseValidator.validateSchedulesAvailable(dto.getTimeTableIds())
         );

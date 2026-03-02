@@ -160,14 +160,14 @@ class PaymentAdultStudentCreationUseCaseTest {
             doNothing().when(modelMapper).map(dto, prototypeModel, PaymentAdultStudentCreationUseCase.MAP_NAME);
             when(membershipAdultStudentRepository.findById(new MembershipAdultStudentDataModel.MembershipAdultStudentCompositeId(TENANT_ID, MEMBERSHIP_ADULT_STUDENT_ID)))
                     .thenReturn(Optional.of(new MembershipAdultStudentDataModel()));
-            when(paymentRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(paymentRepository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, PaymentAdultStudentCreationResponseDTO.class)).thenReturn(expectedDto);
 
             // When
             PaymentAdultStudentCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(paymentRepository).save(prototypeModel);
+            verify(paymentRepository).saveAndFlush(prototypeModel);
             assertThat(result.getPaymentAdultStudentId()).isEqualTo(SAVED_ID);
         }
 
@@ -184,7 +184,7 @@ class PaymentAdultStudentCreationUseCaseTest {
             doNothing().when(modelMapper).map(dto, prototypeModel, PaymentAdultStudentCreationUseCase.MAP_NAME);
             when(membershipAdultStudentRepository.findById(new MembershipAdultStudentDataModel.MembershipAdultStudentCompositeId(TENANT_ID, MEMBERSHIP_ADULT_STUDENT_ID)))
                     .thenReturn(Optional.of(new MembershipAdultStudentDataModel()));
-            when(paymentRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(paymentRepository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, PaymentAdultStudentCreationResponseDTO.class)).thenReturn(responseDto);
 
             // When
@@ -195,7 +195,7 @@ class PaymentAdultStudentCreationUseCaseTest {
             inOrder.verify(applicationContext).getBean(PaymentAdultStudentDataModel.class);
             inOrder.verify(modelMapper).map(dto, prototypeModel, PaymentAdultStudentCreationUseCase.MAP_NAME);
             inOrder.verify(membershipAdultStudentRepository).findById(new MembershipAdultStudentDataModel.MembershipAdultStudentCompositeId(TENANT_ID, MEMBERSHIP_ADULT_STUDENT_ID));
-            inOrder.verify(paymentRepository).save(prototypeModel);
+            inOrder.verify(paymentRepository).saveAndFlush(prototypeModel);
             inOrder.verify(modelMapper).map(savedModel, PaymentAdultStudentCreationResponseDTO.class);
         }
     }

@@ -176,14 +176,14 @@ class MembershipAdultStudentCreationUseCaseTest {
             when(membershipRepository.findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID))).thenReturn(Optional.of(new MembershipDataModel()));
             when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(new CourseDataModel()));
             when(adultStudentRepository.findById(new AdultStudentDataModel.AdultStudentCompositeId(TENANT_ID, ADULT_STUDENT_ID))).thenReturn(Optional.of(new AdultStudentDataModel()));
-            when(repository.save(prototypeModel)).thenReturn(savedModel);
+            when(repository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, MembershipAdultStudentCreationResponseDTO.class)).thenReturn(expectedDto);
 
             // When
             MembershipAdultStudentCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(repository).save(prototypeModel);
+            verify(repository).saveAndFlush(prototypeModel);
             assertThat(result.getMembershipAdultStudentId()).isEqualTo(SAVED_ID);
         }
 
@@ -201,7 +201,7 @@ class MembershipAdultStudentCreationUseCaseTest {
             when(membershipRepository.findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID))).thenReturn(Optional.of(new MembershipDataModel()));
             when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(new CourseDataModel()));
             when(adultStudentRepository.findById(new AdultStudentDataModel.AdultStudentCompositeId(TENANT_ID, ADULT_STUDENT_ID))).thenReturn(Optional.of(new AdultStudentDataModel()));
-            when(repository.save(prototypeModel)).thenReturn(savedModel);
+            when(repository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, MembershipAdultStudentCreationResponseDTO.class)).thenReturn(responseDto);
 
             // When
@@ -214,7 +214,7 @@ class MembershipAdultStudentCreationUseCaseTest {
             inOrder.verify(membershipRepository).findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID));
             inOrder.verify(courseRepository).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
             inOrder.verify(adultStudentRepository).findById(new AdultStudentDataModel.AdultStudentCompositeId(TENANT_ID, ADULT_STUDENT_ID));
-            inOrder.verify(repository).save(prototypeModel);
+            inOrder.verify(repository).saveAndFlush(prototypeModel);
             inOrder.verify(modelMapper).map(savedModel, MembershipAdultStudentCreationResponseDTO.class);
         }
     }

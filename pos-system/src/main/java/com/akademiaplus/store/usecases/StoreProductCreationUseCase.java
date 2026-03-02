@@ -36,7 +36,7 @@ public class StoreProductCreationUseCase {
 
     @Transactional
     public StoreProductCreationResponseDTO create(StoreProductCreationRequestDTO dto) {
-        StoreProductDataModel saved = storeProductRepository.save(transform(dto));
+        StoreProductDataModel saved = storeProductRepository.saveAndFlush(transform(dto));
         return modelMapper.map(saved, StoreProductCreationResponseDTO.class);
     }
 

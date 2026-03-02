@@ -159,14 +159,14 @@ class PaymentTutorCreationUseCaseTest {
             doNothing().when(modelMapper).map(dto, prototypeModel, PaymentTutorCreationUseCase.MAP_NAME);
             when(membershipTutorRepository.findById(new MembershipTutorDataModel.MembershipTutorCompositeId(TENANT_ID, MEMBERSHIP_TUTOR_ID)))
                     .thenReturn(Optional.of(new MembershipTutorDataModel()));
-            when(paymentRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(paymentRepository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, PaymentTutorCreationResponseDTO.class)).thenReturn(expectedDto);
 
             // When
             PaymentTutorCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(paymentRepository).save(prototypeModel);
+            verify(paymentRepository).saveAndFlush(prototypeModel);
             assertThat(result.getPaymentTutorId()).isEqualTo(SAVED_ID);
         }
 
@@ -183,7 +183,7 @@ class PaymentTutorCreationUseCaseTest {
             doNothing().when(modelMapper).map(dto, prototypeModel, PaymentTutorCreationUseCase.MAP_NAME);
             when(membershipTutorRepository.findById(new MembershipTutorDataModel.MembershipTutorCompositeId(TENANT_ID, MEMBERSHIP_TUTOR_ID)))
                     .thenReturn(Optional.of(new MembershipTutorDataModel()));
-            when(paymentRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(paymentRepository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, PaymentTutorCreationResponseDTO.class)).thenReturn(responseDto);
 
             // When
@@ -194,7 +194,7 @@ class PaymentTutorCreationUseCaseTest {
             inOrder.verify(applicationContext).getBean(PaymentTutorDataModel.class);
             inOrder.verify(modelMapper).map(dto, prototypeModel, PaymentTutorCreationUseCase.MAP_NAME);
             inOrder.verify(membershipTutorRepository).findById(new MembershipTutorDataModel.MembershipTutorCompositeId(TENANT_ID, MEMBERSHIP_TUTOR_ID));
-            inOrder.verify(paymentRepository).save(prototypeModel);
+            inOrder.verify(paymentRepository).saveAndFlush(prototypeModel);
             inOrder.verify(modelMapper).map(savedModel, PaymentTutorCreationResponseDTO.class);
         }
     }

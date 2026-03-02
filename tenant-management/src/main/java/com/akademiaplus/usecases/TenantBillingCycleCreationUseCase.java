@@ -53,7 +53,7 @@ public class TenantBillingCycleCreationUseCase {
      */
     @Transactional
     public BillingCycleDTO create(BillingCycleCreateRequestDTO dto) {
-        TenantBillingCycleDataModel saved = repository.save(transform(dto));
+        TenantBillingCycleDataModel saved = repository.saveAndFlush(transform(dto));
         return modelMapper.map(saved, BillingCycleDTO.class);
     }
 

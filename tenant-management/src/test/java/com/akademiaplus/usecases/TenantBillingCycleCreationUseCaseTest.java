@@ -140,14 +140,14 @@ class TenantBillingCycleCreationUseCaseTest {
 
             when(applicationContext.getBean(TenantBillingCycleDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, TenantBillingCycleCreationUseCase.MAP_NAME);
-            when(repository.save(prototypeModel)).thenReturn(savedModel);
+            when(repository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, BillingCycleDTO.class)).thenReturn(expectedDto);
 
             // When
             BillingCycleDTO result = useCase.create(dto);
 
             // Then
-            verify(repository).save(prototypeModel);
+            verify(repository).saveAndFlush(prototypeModel);
             verify(modelMapper).map(savedModel, BillingCycleDTO.class);
             assertThat(result.getTenantBillingCycleId()).isEqualTo(SAVED_ID);
         }
@@ -163,7 +163,7 @@ class TenantBillingCycleCreationUseCaseTest {
 
             when(applicationContext.getBean(TenantBillingCycleDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, TenantBillingCycleCreationUseCase.MAP_NAME);
-            when(repository.save(prototypeModel)).thenReturn(savedModel);
+            when(repository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, BillingCycleDTO.class)).thenReturn(responseDto);
 
             // When
@@ -173,7 +173,7 @@ class TenantBillingCycleCreationUseCaseTest {
             InOrder inOrder = inOrder(applicationContext, modelMapper, repository);
             inOrder.verify(applicationContext).getBean(TenantBillingCycleDataModel.class);
             inOrder.verify(modelMapper).map(dto, prototypeModel, TenantBillingCycleCreationUseCase.MAP_NAME);
-            inOrder.verify(repository).save(prototypeModel);
+            inOrder.verify(repository).saveAndFlush(prototypeModel);
             inOrder.verify(modelMapper).map(savedModel, BillingCycleDTO.class);
         }
     }

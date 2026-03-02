@@ -176,14 +176,14 @@ class MembershipTutorCreationUseCaseTest {
             when(membershipRepository.findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID))).thenReturn(Optional.of(new MembershipDataModel()));
             when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(new CourseDataModel()));
             when(tutorRepository.findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID))).thenReturn(Optional.of(new TutorDataModel()));
-            when(repository.save(prototypeModel)).thenReturn(savedModel);
+            when(repository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, MembershipTutorCreationResponseDTO.class)).thenReturn(expectedDto);
 
             // When
             MembershipTutorCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(repository).save(prototypeModel);
+            verify(repository).saveAndFlush(prototypeModel);
             assertThat(result.getMembershipTutorId()).isEqualTo(SAVED_ID);
         }
 
@@ -201,7 +201,7 @@ class MembershipTutorCreationUseCaseTest {
             when(membershipRepository.findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID))).thenReturn(Optional.of(new MembershipDataModel()));
             when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(new CourseDataModel()));
             when(tutorRepository.findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID))).thenReturn(Optional.of(new TutorDataModel()));
-            when(repository.save(prototypeModel)).thenReturn(savedModel);
+            when(repository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, MembershipTutorCreationResponseDTO.class)).thenReturn(responseDto);
 
             // When
@@ -214,7 +214,7 @@ class MembershipTutorCreationUseCaseTest {
             inOrder.verify(membershipRepository).findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID));
             inOrder.verify(courseRepository).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
             inOrder.verify(tutorRepository).findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID));
-            inOrder.verify(repository).save(prototypeModel);
+            inOrder.verify(repository).saveAndFlush(prototypeModel);
             inOrder.verify(modelMapper).map(savedModel, MembershipTutorCreationResponseDTO.class);
         }
     }

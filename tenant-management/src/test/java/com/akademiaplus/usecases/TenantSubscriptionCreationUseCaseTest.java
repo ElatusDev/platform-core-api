@@ -142,14 +142,14 @@ class TenantSubscriptionCreationUseCaseTest {
 
             when(applicationContext.getBean(TenantSubscriptionDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, TenantSubscriptionCreationUseCase.MAP_NAME);
-            when(repository.save(prototypeModel)).thenReturn(savedModel);
+            when(repository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, TenantSubscriptionDTO.class)).thenReturn(expectedDto);
 
             // When
             TenantSubscriptionDTO result = useCase.create(dto);
 
             // Then
-            verify(repository).save(prototypeModel);
+            verify(repository).saveAndFlush(prototypeModel);
             verify(modelMapper).map(savedModel, TenantSubscriptionDTO.class);
             assertThat(result.getTenantSubscriptionId()).isEqualTo(SAVED_ID);
         }
@@ -165,7 +165,7 @@ class TenantSubscriptionCreationUseCaseTest {
 
             when(applicationContext.getBean(TenantSubscriptionDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, TenantSubscriptionCreationUseCase.MAP_NAME);
-            when(repository.save(prototypeModel)).thenReturn(savedModel);
+            when(repository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, TenantSubscriptionDTO.class)).thenReturn(responseDto);
 
             // When
@@ -175,7 +175,7 @@ class TenantSubscriptionCreationUseCaseTest {
             InOrder inOrder = inOrder(applicationContext, modelMapper, repository);
             inOrder.verify(applicationContext).getBean(TenantSubscriptionDataModel.class);
             inOrder.verify(modelMapper).map(dto, prototypeModel, TenantSubscriptionCreationUseCase.MAP_NAME);
-            inOrder.verify(repository).save(prototypeModel);
+            inOrder.verify(repository).saveAndFlush(prototypeModel);
             inOrder.verify(modelMapper).map(savedModel, TenantSubscriptionDTO.class);
         }
     }

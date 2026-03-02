@@ -104,14 +104,14 @@ class CompensationCreationUseCaseTest {
 
             when(applicationContext.getBean(CompensationDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, CompensationCreationUseCase.MAP_NAME);
-            when(compensationRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(compensationRepository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, CompensationCreationResponseDTO.class)).thenReturn(expectedDto);
 
             // When
             CompensationCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(compensationRepository).save(prototypeModel);
+            verify(compensationRepository).saveAndFlush(prototypeModel);
             verify(modelMapper).map(savedModel, CompensationCreationResponseDTO.class);
             assertThat(result.getCompensationId()).isEqualTo(SAVED_ID);
         }
@@ -127,7 +127,7 @@ class CompensationCreationUseCaseTest {
 
             when(applicationContext.getBean(CompensationDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, CompensationCreationUseCase.MAP_NAME);
-            when(compensationRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(compensationRepository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, CompensationCreationResponseDTO.class)).thenReturn(responseDto);
 
             // When
@@ -137,7 +137,7 @@ class CompensationCreationUseCaseTest {
             InOrder inOrder = inOrder(applicationContext, modelMapper, compensationRepository);
             inOrder.verify(applicationContext).getBean(CompensationDataModel.class);
             inOrder.verify(modelMapper).map(dto, prototypeModel, CompensationCreationUseCase.MAP_NAME);
-            inOrder.verify(compensationRepository).save(prototypeModel);
+            inOrder.verify(compensationRepository).saveAndFlush(prototypeModel);
             inOrder.verify(modelMapper).map(savedModel, CompensationCreationResponseDTO.class);
         }
     }

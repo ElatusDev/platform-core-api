@@ -107,14 +107,14 @@ class StoreTransactionCreationUseCaseTest {
 
             when(applicationContext.getBean(StoreTransactionDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, StoreTransactionCreationUseCase.MAP_NAME);
-            when(storeTransactionRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(storeTransactionRepository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, StoreTransactionCreationResponseDTO.class)).thenReturn(expectedDto);
 
             // When
             StoreTransactionCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(storeTransactionRepository).save(prototypeModel);
+            verify(storeTransactionRepository).saveAndFlush(prototypeModel);
             assertThat(result.getStoreTransactionId()).isEqualTo(SAVED_ID);
         }
 
@@ -129,7 +129,7 @@ class StoreTransactionCreationUseCaseTest {
 
             when(applicationContext.getBean(StoreTransactionDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, StoreTransactionCreationUseCase.MAP_NAME);
-            when(storeTransactionRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(storeTransactionRepository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, StoreTransactionCreationResponseDTO.class)).thenReturn(responseDto);
 
             // When
@@ -139,7 +139,7 @@ class StoreTransactionCreationUseCaseTest {
             InOrder inOrder = inOrder(applicationContext, modelMapper, storeTransactionRepository);
             inOrder.verify(applicationContext).getBean(StoreTransactionDataModel.class);
             inOrder.verify(modelMapper).map(dto, prototypeModel, StoreTransactionCreationUseCase.MAP_NAME);
-            inOrder.verify(storeTransactionRepository).save(prototypeModel);
+            inOrder.verify(storeTransactionRepository).saveAndFlush(prototypeModel);
             inOrder.verify(modelMapper).map(savedModel, StoreTransactionCreationResponseDTO.class);
         }
     }

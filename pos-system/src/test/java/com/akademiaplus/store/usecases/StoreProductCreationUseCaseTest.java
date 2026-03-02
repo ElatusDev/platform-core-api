@@ -109,14 +109,14 @@ class StoreProductCreationUseCaseTest {
 
             when(applicationContext.getBean(StoreProductDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, StoreProductCreationUseCase.MAP_NAME);
-            when(storeProductRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(storeProductRepository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, StoreProductCreationResponseDTO.class)).thenReturn(expectedDto);
 
             // When
             StoreProductCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(storeProductRepository).save(prototypeModel);
+            verify(storeProductRepository).saveAndFlush(prototypeModel);
             assertThat(result.getStoreProductId()).isEqualTo(SAVED_ID);
         }
 
@@ -131,7 +131,7 @@ class StoreProductCreationUseCaseTest {
 
             when(applicationContext.getBean(StoreProductDataModel.class)).thenReturn(prototypeModel);
             doNothing().when(modelMapper).map(dto, prototypeModel, StoreProductCreationUseCase.MAP_NAME);
-            when(storeProductRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(storeProductRepository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
             when(modelMapper.map(savedModel, StoreProductCreationResponseDTO.class)).thenReturn(responseDto);
 
             // When
@@ -141,7 +141,7 @@ class StoreProductCreationUseCaseTest {
             InOrder inOrder = inOrder(applicationContext, modelMapper, storeProductRepository);
             inOrder.verify(applicationContext).getBean(StoreProductDataModel.class);
             inOrder.verify(modelMapper).map(dto, prototypeModel, StoreProductCreationUseCase.MAP_NAME);
-            inOrder.verify(storeProductRepository).save(prototypeModel);
+            inOrder.verify(storeProductRepository).saveAndFlush(prototypeModel);
             inOrder.verify(modelMapper).map(savedModel, StoreProductCreationResponseDTO.class);
         }
     }
