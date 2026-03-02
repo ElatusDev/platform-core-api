@@ -3,6 +3,7 @@ package com.akademiaplus.config;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.interfaceadapters.TenantRepository;
 import com.akademiaplus.tenancy.TenantDataModel;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -15,9 +16,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.IntConsumer;
 
 import static com.akademiaplus.config.MockEntityType.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @DisplayName("MockDataOrchestrator")
@@ -213,6 +216,96 @@ class MockDataOrchestratorTest {
             verify(adultStudentLoader).accept(DEFAULT_ENTITIES_PER_TENANT);
             verify(tutorLoader).accept(DEFAULT_ENTITIES_PER_TENANT);
             verify(minorStudentLoader).accept(DEFAULT_ENTITIES_PER_TENANT);
+        }
+    }
+
+    @Nested
+    @DisplayName("generateForTenant(tenantId, entitiesPerTenant)")
+    class GenerateForTenant {
+
+        public static final Long EXISTING_TENANT_ID = 1L;
+        public static final Long NON_EXISTENT_TENANT_ID = 999L;
+        public static final int TEST_COUNT = 10;
+
+        @Test
+        @DisplayName("Should load tenant-scoped entities when tenant exists")
+        void shouldLoadTenantScopedEntities_whenTenantExists() {
+            // Given
+            TenantDataModel tenant = new TenantDataModel();
+            tenant.setTenantId(EXISTING_TENANT_ID);
+            when(tenantRepository.findById(EXISTING_TENANT_ID)).thenReturn(Optional.of(tenant));
+
+            // When
+            orchestrator.generateForTenant(EXISTING_TENANT_ID, TEST_COUNT);
+
+            // Then
+            verify(tenantContextHolder).setTenantId(EXISTING_TENANT_ID);
+            verify(employeeLoader).accept(TEST_COUNT);
+            verify(collaboratorLoader).accept(TEST_COUNT);
+            verify(adultStudentLoader).accept(TEST_COUNT);
+            verify(tutorLoader).accept(TEST_COUNT);
+            verify(minorStudentLoader).accept(TEST_COUNT);
+        }
+
+        @Test
+        @DisplayName("Should throw EntityNotFoundException when tenant does not exist")
+        void shouldThrowEntityNotFoundException_whenTenantDoesNotExist() {
+            // Given
+            when(tenantRepository.findById(NON_EXISTENT_TENANT_ID)).thenReturn(Optional.empty());
+
+            // When / Then
+            assertThatThrownBy(() -> orchestrator.generateForTenant(NON_EXISTENT_TENANT_ID, TEST_COUNT))
+                    .isInstanceOf(EntityNotFoundException.class);
+        }
+
+        @Test
+        @DisplayName("Should set tenant context before loading entities")
+        void shouldSetTenantContext_whenGeneratingForTenant() {
+            // Given
+            TenantDataModel tenant = new TenantDataModel();
+            tenant.setTenantId(EXISTING_TENANT_ID);
+            when(tenantRepository.findById(EXISTING_TENANT_ID)).thenReturn(Optional.of(tenant));
+
+            // When
+            orchestrator.generateForTenant(EXISTING_TENANT_ID, TEST_COUNT);
+
+            // Then
+            InOrder inOrder = inOrder(tenantContextHolder, employeeLoader);
+            inOrder.verify(tenantContextHolder).setTenantId(EXISTING_TENANT_ID);
+            inOrder.verify(employeeLoader).accept(TEST_COUNT);
+        }
+
+        @Test
+        @DisplayName("Should skip TENANT entity type in load order")
+        void shouldSkipTenantEntityType_whenLoadingEntities() {
+            // Given
+            TenantDataModel tenant = new TenantDataModel();
+            tenant.setTenantId(EXISTING_TENANT_ID);
+            when(tenantRepository.findById(EXISTING_TENANT_ID)).thenReturn(Optional.of(tenant));
+
+            // When
+            orchestrator.generateForTenant(EXISTING_TENANT_ID, TEST_COUNT);
+
+            // Then
+            verify(tenantLoader, never()).accept(TEST_COUNT);
+        }
+
+        @Test
+        @DisplayName("Should execute post-load hooks for tenant-scoped entities")
+        void shouldExecutePostLoadHooks_whenGeneratingForTenant() {
+            // Given
+            TenantDataModel tenant = new TenantDataModel();
+            tenant.setTenantId(EXISTING_TENANT_ID);
+            when(tenantRepository.findById(EXISTING_TENANT_ID)).thenReturn(Optional.of(tenant));
+
+            // When
+            orchestrator.generateForTenant(EXISTING_TENANT_ID, TEST_COUNT);
+
+            // Then
+            InOrder inOrder = inOrder(tutorLoader, tutorPostLoadHook, minorStudentLoader);
+            inOrder.verify(tutorLoader).accept(TEST_COUNT);
+            inOrder.verify(tutorPostLoadHook).execute();
+            inOrder.verify(minorStudentLoader).accept(TEST_COUNT);
         }
     }
 }

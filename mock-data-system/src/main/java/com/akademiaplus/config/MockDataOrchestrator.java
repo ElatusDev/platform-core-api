@@ -10,6 +10,8 @@ package com.akademiaplus.config;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.interfaceadapters.TenantRepository;
 import com.akademiaplus.tenancy.TenantDataModel;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -71,6 +73,46 @@ public class MockDataOrchestrator {
      */
     public void generateAll() {
         generateAll(DEFAULT_TENANT_COUNT, DEFAULT_ENTITIES_PER_TENANT);
+    }
+
+    /**
+     * Generates mock data for an existing tenant.
+     * <p>
+     * Skips tenant creation and clean-up — loads tenant-scoped entities only.
+     * The tenant must already exist in the database.
+     *
+     * @param tenantId          the existing tenant's ID
+     * @param entitiesPerTenant number of entities to generate per type
+     * @throws EntityNotFoundException if the tenant does not exist
+     */
+    public void generateForTenant(long tenantId, int entitiesPerTenant) {
+        tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        EntityType.TENANT, String.valueOf(tenantId)));
+
+        MockDataExecutionPlan plan = MockDataExecutionPlan.forAll();
+
+        tenantContextHolder.setTenantId(tenantId);
+        log.info("Loading {} records per entity type for existing tenant {}",
+                entitiesPerTenant, tenantId);
+
+        for (MockEntityType entity : plan.getLoadOrder()) {
+            if (entity == MockEntityType.TENANT) {
+                continue;
+            }
+
+            IntConsumer loader = mockDataLoaders.get(entity);
+            if (loader != null) {
+                loader.accept(entitiesPerTenant);
+            }
+
+            MockDataPostLoadHook hook = mockDataPostLoadHooks.get(entity);
+            if (hook != null) {
+                hook.execute();
+            }
+        }
+
+        log.info("Mock data generation complete for tenant {}", tenantId);
     }
 
     private void cleanAll(MockDataExecutionPlan plan) {

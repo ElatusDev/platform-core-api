@@ -31,4 +31,11 @@ public class MockDataController implements MockDataApi {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body("Mock data generated: " + count + " records per entity type for 1 tenant.");
     }
+
+    @Override
+    public ResponseEntity<String> generateMockDataForTenant(Long tenantId, Integer count) {
+        orchestrator.generateForTenant(tenantId, count);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body("Mock data generated: " + count + " records per entity type for tenant " + tenantId + ".");
+    }
 }
