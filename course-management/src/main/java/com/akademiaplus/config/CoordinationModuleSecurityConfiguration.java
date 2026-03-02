@@ -15,16 +15,28 @@ public class CoordinationModuleSecurityConfiguration implements ModuleSecurityCo
 
     private final String coursePath;
     private final String coursePathAnyPathVars;
+    private final String schedulePath;
+    private final String schedulePathAnyPathVars;
+    private final String courseEventPath;
+    private final String courseEventPathAnyPathVars;
 
-    public CoordinationModuleSecurityConfiguration(@Value("${api.coordination.course.base-url}") String coursePath) {
+    public CoordinationModuleSecurityConfiguration(@Value("${api.coordination.course.base-url}") String coursePath,
+                                                   @Value("${api.coordination.schedule.base-url}") String schedulePath,
+                                                   @Value("${api.coordination.course-event.base-url}") String courseEventPath) {
         String anyPathVar = "/**";
         this.coursePath = coursePath;
         this.coursePathAnyPathVars = coursePath + anyPathVar;
+        this.schedulePath = schedulePath;
+        this.schedulePathAnyPathVars = schedulePath + anyPathVar;
+        this.courseEventPath = courseEventPath;
+        this.courseEventPathAnyPathVars = courseEventPath + anyPathVar;
     }
 
     @Override
     public void configure(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) throws Exception {
         coursePaths(auth);
+        schedulePaths(auth);
+        courseEventPaths(auth);
     }
 
     private void coursePaths(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
@@ -40,6 +52,38 @@ public class CoordinationModuleSecurityConfiguration implements ModuleSecurityCo
                 .requestMatchers(HttpMethod.PATCH, coursePathAnyPathVars)
                 .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name())
                 .requestMatchers(HttpMethod.GET, coursePath)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name());
+    }
+
+    private void schedulePaths(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
+        auth
+                .requestMatchers(HttpMethod.DELETE, schedulePathAnyPathVars)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name())
+                .requestMatchers(HttpMethod.GET, schedulePathAnyPathVars)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name())
+                .requestMatchers(HttpMethod.POST, schedulePath)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name())
+                .requestMatchers(HttpMethod.PUT, schedulePathAnyPathVars)
+                .denyAll()
+                .requestMatchers(HttpMethod.PATCH, schedulePathAnyPathVars)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name())
+                .requestMatchers(HttpMethod.GET, schedulePath)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name());
+    }
+
+    private void courseEventPaths(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
+        auth
+                .requestMatchers(HttpMethod.DELETE, courseEventPathAnyPathVars)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name())
+                .requestMatchers(HttpMethod.GET, courseEventPathAnyPathVars)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name())
+                .requestMatchers(HttpMethod.POST, courseEventPath)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name())
+                .requestMatchers(HttpMethod.PUT, courseEventPathAnyPathVars)
+                .denyAll()
+                .requestMatchers(HttpMethod.PATCH, courseEventPathAnyPathVars)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name())
+                .requestMatchers(HttpMethod.GET, courseEventPath)
                 .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name());
     }
 }

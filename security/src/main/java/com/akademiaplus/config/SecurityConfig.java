@@ -58,6 +58,7 @@ public class SecurityConfig {
                     } catch (Exception e) {
                         throw new IllegalStateException("Failed to apply module security configurations", e);
                     }
+                    auth.anyRequest().authenticated();
                 })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .formLogin(AbstractHttpConfigurer::disable)

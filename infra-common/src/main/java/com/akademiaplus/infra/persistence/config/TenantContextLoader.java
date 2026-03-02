@@ -6,7 +6,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -16,8 +15,14 @@ import java.io.IOException;
 /**
  * Servlet filter that extracts and establishes tenant context from HTTP request headers.
  * <p>
- * This filter is executed first in the filter chain (HIGHEST_PRECEDENCE) to ensure
- * tenant context is established before any other filters or application logic runs.
+ * This filter runs after Spring's {@code RequestContextFilter} (order -105) and
+ * Spring Security's {@code FilterChainProxy} (order -100) to ensure:
+ * <ul>
+ *   <li>The request scope is active (needed for the {@code @RequestScope}
+ *       {@code TenantContextHolder} bean)</li>
+ *   <li>Authentication has already been resolved, so unauthenticated requests
+ *       are rejected before tenant validation</li>
+ * </ul>
  * It extracts the tenant ID from the X-Tenant-Id header and stores it in the
  * TenantContextHolder for use throughout the request lifecycle.
  * <p>
@@ -25,7 +30,7 @@ import java.io.IOException;
  */
 @Slf4j
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE)
+@Order(-50)
 public class TenantContextLoader extends OncePerRequestFilter {
 
     // HTTP headers

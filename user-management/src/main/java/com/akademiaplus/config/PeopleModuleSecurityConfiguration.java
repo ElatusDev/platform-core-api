@@ -25,10 +25,16 @@ public class PeopleModuleSecurityConfiguration implements ModuleSecurityConfigur
     private final String collaboratorPathAnyPathVars;
     private final String adultStudentPath;
     private final String adultStudentPathAnyPathVar;
+    private final String tutorPath;
+    private final String tutorPathAnyPathVars;
+    private final String minorStudentPath;
+    private final String minorStudentPathAnyPathVars;
 
     public PeopleModuleSecurityConfiguration(@Value("${api.user-management.employee.base-url}") String employeeBaseUri,
                                              @Value("${api.user-management.collaborator.base-url}") String collaboratorBaseUri,
-                                             @Value("${api.user-management.adult-student.base-url}") String adultStudentBaseUri) {
+                                             @Value("${api.user-management.adult-student.base-url}") String adultStudentBaseUri,
+                                             @Value("${api.user-management.tutor.base-url}") String tutorBaseUri,
+                                             @Value("${api.user-management.minor-student.base-url}") String minorStudentBaseUri) {
         String anyPathVar = "/**";
         employeePath = employeeBaseUri;
         employeePathAnyPathVars = employeePath + anyPathVar;
@@ -36,6 +42,10 @@ public class PeopleModuleSecurityConfiguration implements ModuleSecurityConfigur
         collaboratorPathAnyPathVars = collaboratorPath + anyPathVar;
         adultStudentPath = adultStudentBaseUri;
         adultStudentPathAnyPathVar = adultStudentPath + anyPathVar;
+        tutorPath = tutorBaseUri;
+        tutorPathAnyPathVars = tutorPath + anyPathVar;
+        minorStudentPath = minorStudentBaseUri;
+        minorStudentPathAnyPathVars = minorStudentPath + anyPathVar;
     }
 
     @Override
@@ -43,6 +53,8 @@ public class PeopleModuleSecurityConfiguration implements ModuleSecurityConfigur
             employeePaths(auth);
             collaboratorPaths(auth);
             adultStudentPaths(auth);
+            tutorPaths(auth);
+            minorStudentPaths(auth);
     }
 
     public void employeePaths(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
@@ -90,6 +102,38 @@ public class PeopleModuleSecurityConfiguration implements ModuleSecurityConfigur
                 .requestMatchers(HttpMethod.PATCH, adultStudentPathAnyPathVar)
                 .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name())
                 .requestMatchers(HttpMethod.GET, adultStudentPath)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name());
+    }
+
+    public void tutorPaths(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
+        auth
+                .requestMatchers(HttpMethod.DELETE, tutorPathAnyPathVars)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name())
+                .requestMatchers(HttpMethod.GET, tutorPathAnyPathVars)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name())
+                .requestMatchers(HttpMethod.POST, tutorPathAnyPathVars)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name())
+                .requestMatchers(HttpMethod.PUT, tutorPathAnyPathVars)
+                .denyAll()
+                .requestMatchers(HttpMethod.PATCH, tutorPathAnyPathVars)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name())
+                .requestMatchers(HttpMethod.GET, tutorPath)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name());
+    }
+
+    public void minorStudentPaths(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
+        auth
+                .requestMatchers(HttpMethod.DELETE, minorStudentPathAnyPathVars)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name())
+                .requestMatchers(HttpMethod.GET, minorStudentPathAnyPathVars)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name())
+                .requestMatchers(HttpMethod.POST, minorStudentPathAnyPathVars)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name())
+                .requestMatchers(HttpMethod.PUT, minorStudentPathAnyPathVars)
+                .denyAll()
+                .requestMatchers(HttpMethod.PATCH, minorStudentPathAnyPathVars)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name())
+                .requestMatchers(HttpMethod.GET, minorStudentPath)
                 .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name());
     }
 
