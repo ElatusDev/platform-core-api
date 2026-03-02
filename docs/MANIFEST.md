@@ -1,6 +1,6 @@
 # Documentation Manifest — AkademiaPlus Platform Core API
 
-> **Last updated**: 2026-02-28
+> **Last updated**: 2026-03-02
 > **Purpose**: Single source of truth for all project documentation status.
 
 ---
@@ -77,7 +77,9 @@ Executable prompts for Claude Code CLI.
 
 ### Pending (`docs/prompts/pending/`)
 
-_None — all prompts have been executed._
+| Prompt | Purpose | Status |
+|--------|---------|--------|
+| [e2e-bootstrap-prompt.md](prompts/pending/e2e-bootstrap-prompt.md) | Registration-driven E2E bootstrap — register endpoint, tenant-scoped mock data, collection rewrite | 🟡 Ready to execute |
 
 ### Completed (`docs/prompts/completed/`)
 
@@ -96,7 +98,9 @@ Step-by-step implementation plans. Referenced by prompts.
 
 ### Pending (`docs/workflows/pending/`)
 
-_None — all workflows have been executed._
+| Document | Purpose | Status |
+|----------|---------|--------|
+| [e2e-bootstrap-workflow.md](workflows/pending/e2e-bootstrap-workflow.md) | Registration-driven auth + tenant-scoped mock data — architecture analysis, 4 phases, file inventory | 🟡 Ready to execute |
 
 ### Completed (`docs/workflows/completed/`)
 
