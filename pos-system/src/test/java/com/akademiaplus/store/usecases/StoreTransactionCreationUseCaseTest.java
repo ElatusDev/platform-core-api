@@ -27,9 +27,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.ApplicationContext;
 
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -56,6 +62,8 @@ class StoreTransactionCreationUseCaseTest {
     private static final Integer QUANTITY_2 = 5;
     private static final String PAYMENT_METHOD = "CASH";
     private static final Long SAVED_TRANSACTION_ID = 99L;
+    private static final Long EMPLOYEE_ID = 55L;
+    private static final String USERNAME = "testuser";
 
     @Mock private ApplicationContext applicationContext;
     @Mock private StoreTransactionRepository storeTransactionRepository;
@@ -515,6 +523,75 @@ class StoreTransactionCreationUseCaseTest {
 
             // Then
             assertThat(result.getStoreTransactionId()).isEqualTo(SAVED_TRANSACTION_ID);
+        }
+    }
+
+    @Nested
+    @DisplayName("Employee Context")
+    class EmployeeContext {
+
+        @Test
+        @DisplayName("Should set employee ID when JWT contains employeeId claim")
+        void shouldSetEmployeeId_whenAuthenticated() {
+            // Given
+            SecurityContext securityContext = mock(SecurityContext.class);
+            SecurityContextHolder.setContext(securityContext);
+
+            Map<String, Object> claimsMap = Map.of(
+                    StoreTransactionCreationUseCase.CLAIM_EMPLOYEE_ID, EMPLOYEE_ID);
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(
+                            new User(USERNAME, "", Collections.emptyList()),
+                            USERNAME, Collections.emptyList());
+            authToken.setDetails(claimsMap);
+            when(securityContext.getAuthentication()).thenReturn(authToken);
+
+            // When
+            Long result = useCase.extractEmployeeId();
+
+            // Then
+            assertThat(result).isEqualTo(EMPLOYEE_ID);
+
+            SecurityContextHolder.clearContext();
+        }
+
+        @Test
+        @DisplayName("Should leave employee ID null when not authenticated")
+        void shouldLeaveEmployeeIdNull_whenNotAuthenticated() {
+            // Given
+            SecurityContext securityContext = mock(SecurityContext.class);
+            SecurityContextHolder.setContext(securityContext);
+            when(securityContext.getAuthentication()).thenReturn(null);
+
+            // When
+            Long result = useCase.extractEmployeeId();
+
+            // Then
+            assertThat(result).isNull();
+
+            SecurityContextHolder.clearContext();
+        }
+
+        @Test
+        @DisplayName("Should leave employee ID null when JWT lacks employeeId claim")
+        void shouldLeaveEmployeeIdNull_whenClaimAbsent() {
+            // Given
+            SecurityContext securityContext = mock(SecurityContext.class);
+            SecurityContextHolder.setContext(securityContext);
+
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(
+                            new User(USERNAME, "", Collections.emptyList()),
+                            USERNAME, Collections.emptyList());
+            when(securityContext.getAuthentication()).thenReturn(authToken);
+
+            // When
+            Long result = useCase.extractEmployeeId();
+
+            // Then
+            assertThat(result).isNull();
+
+            SecurityContextHolder.clearContext();
         }
     }
 }

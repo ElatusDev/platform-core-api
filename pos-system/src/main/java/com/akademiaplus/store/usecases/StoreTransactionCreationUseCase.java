@@ -23,6 +23,12 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.util.Map;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +64,9 @@ public class StoreTransactionCreationUseCase {
     /** Transaction type constant for refunds. */
     public static final String TRANSACTION_TYPE_REFUND = "REFUND";
 
+    /** JWT claim key for the employee ID. */
+    public static final String CLAIM_EMPLOYEE_ID = "employeeId";
+
     private final ApplicationContext applicationContext;
     private final StoreTransactionRepository storeTransactionRepository;
     private final StoreProductRepository storeProductRepository;
@@ -77,6 +86,7 @@ public class StoreTransactionCreationUseCase {
         validateSaleItems(dto);
 
         StoreTransactionDataModel transaction = transform(dto);
+        transaction.setEmployeeId(extractEmployeeId());
         List<StoreSaleItemDataModel> saleItems = buildSaleItems(dto, transaction);
         transaction.setSaleItems(saleItems);
         transaction.setTotalAmount(computeTotalAmount(saleItems));
@@ -209,5 +219,34 @@ public class StoreTransactionCreationUseCase {
             }
             storeProductRepository.saveAndFlush(product);
         }
+    }
+
+    /**
+     * Extracts the employee ID from the current security context, if available.
+     * <p>
+     * Returns {@code null} for unauthenticated requests or when the JWT
+     * does not contain an {@value CLAIM_EMPLOYEE_ID} claim. This supports
+     * self-service kiosk scenarios where no employee is involved.
+     * <p>
+     * The current JWT structure stores employee ID as an additional claim.
+     * If the claim is absent, the method returns {@code null} gracefully.
+     *
+     * @return the employee ID from the JWT, or {@code null}
+     */
+    Long extractEmployeeId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return null;
+        }
+        if (auth instanceof UsernamePasswordAuthenticationToken token) {
+            Object details = token.getDetails();
+            if (details instanceof Map<?, ?> claims) {
+                Object employeeIdClaim = claims.get(CLAIM_EMPLOYEE_ID);
+                if (employeeIdClaim != null) {
+                    return Long.valueOf(employeeIdClaim.toString());
+                }
+            }
+        }
+        return null;
     }
 }
