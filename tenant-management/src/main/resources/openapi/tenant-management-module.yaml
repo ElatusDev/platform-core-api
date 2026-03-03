@@ -590,7 +590,6 @@ components:
           maxLength: 200
         website_url:
           type: string
-          format: uri
           maxLength: 255
         email:
           type: string
@@ -660,7 +659,6 @@ components:
           maxLength: 200
         website_url:
           type: string
-          format: uri
           maxLength: 255
         email:
           type: string
@@ -692,7 +690,6 @@ components:
           maxLength: 200
         website_url:
           type: string
-          format: uri
           maxLength: 255
         email:
           type: string

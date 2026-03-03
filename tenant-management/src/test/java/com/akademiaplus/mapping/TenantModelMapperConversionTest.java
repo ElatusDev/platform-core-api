@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
 
 import java.math.BigDecimal;
-import java.net.URI;
+
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * correctly converts tenant-management DTOs into their corresponding data models.
  * <p>
  * Uses a <strong>real</strong> {@code ModelMapper} to surface field-name mismatches,
- * type mismatches (e.g. {@code URI → String}), and unwanted deep-matching side effects
+ * type mismatches, and unwanted deep-matching side effects
  * that unit tests with mocked mappers cannot detect.
  */
 @DisplayName("Tenant ModelMapper DTO → DataModel Conversion")
@@ -42,7 +42,7 @@ class TenantModelMapperConversionTest {
     // ── Tenant test constants ────────────────────────────────────────────
     public static final String ORG_NAME = "AkademiaPlus Inc.";
     public static final String LEGAL_NAME = "AkademiaPlus S.A. de C.V.";
-    public static final URI WEBSITE_URL = URI.create("https://akademiaplus.com");
+    public static final String WEBSITE_URL = "https://akademiaplus.com";
     public static final String EMAIL = "admin@akademiaplus.com";
     public static final String ADDRESS = "Av. Insurgentes Sur 1234";
     public static final String PHONE = "+525512345678";
@@ -98,16 +98,16 @@ class TenantModelMapperConversionTest {
         }
 
         @Test
-        @DisplayName("Should convert URI websiteUrl to String when types differ")
-        void shouldConvertUriWebsiteUrl_whenTypesDiffer() {
-            // Given — DTO has URI, model has String
+        @DisplayName("Should map websiteUrl String field correctly")
+        void shouldMapWebsiteUrl_whenFieldIsString() {
+            // Given
             TenantCreateRequestDTO dto = buildTenantDto();
 
             // When
             TenantDataModel result = modelMapper.map(dto, TenantDataModel.class, TenantCreationUseCase.MAP_NAME);
 
-            // Then — URI→String converter from ModelMapperConfig
-            assertThat(result.getWebsiteUrl()).isEqualTo(WEBSITE_URL.toString());
+            // Then — String→String mapping
+            assertThat(result.getWebsiteUrl()).isEqualTo(WEBSITE_URL);
         }
 
         @Test

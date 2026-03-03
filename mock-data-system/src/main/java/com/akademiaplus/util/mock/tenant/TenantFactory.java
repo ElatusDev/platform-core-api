@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import openapi.akademiaplus.domain.tenant.management.dto.TenantCreateRequestDTO;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,7 +33,7 @@ public class TenantFactory implements DataFactory<TenantCreateRequestDTO> {
         TenantCreateRequestDTO dto = new TenantCreateRequestDTO();
         dto.setOrganizationName(generator.organizationName());
         dto.setLegalName(generator.legalName());
-        dto.setWebsiteUrl(URI.create(generator.websiteUrl()));
+        dto.setWebsiteUrl(generator.websiteUrl());
         dto.setEmail(generator.email());
         dto.setAddress(generator.address());
         dto.setPhone(generator.phone());

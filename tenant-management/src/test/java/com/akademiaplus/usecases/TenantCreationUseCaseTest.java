@@ -22,7 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.ApplicationContext;
 
-import java.net.URI;
+
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -39,7 +39,7 @@ class TenantCreationUseCaseTest {
 
     private static final String ORG_NAME = "Akademia Plus";
     private static final String LEGAL_NAME = "Akademia Plus S.A. de C.V.";
-    private static final URI WEBSITE_URL = URI.create("https://akademiaplus.com");
+    private static final String WEBSITE_URL = "https://akademiaplus.com";
     private static final String EMAIL = "admin@akademiaplus.com";
     private static final String ADDRESS = "Av. Vallarta 1234, Zapopan";
     private static final String PHONE = "+523312345678";

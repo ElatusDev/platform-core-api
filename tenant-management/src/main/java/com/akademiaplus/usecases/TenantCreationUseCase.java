@@ -58,9 +58,8 @@ public class TenantCreationUseCase {
      * <p>
      * Retrieves a prototype-scoped bean to ensure a fresh entity instance,
      * following the same pattern as people-entity use cases.
-     * The {@link ModelMapper} handles type conversions (e.g. {@code URI → String}
-     * for {@code websiteUrl}) via converters registered in
-     * {@link com.akademiaplus.utilities.config.ModelMapperConfig}.
+     * The {@link ModelMapper} handles type conversions via converters
+     * registered in {@link com.akademiaplus.utilities.config.ModelMapperConfig}.
      *
      * @param dto the tenant creation request
      * @return a detached data model ready for persistence
