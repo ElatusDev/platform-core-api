@@ -1,3 +1,9 @@
+> [!NOTE]
+> **STATUS: IMPLEMENTED** — `BaseControllerAdvice`, `EntityType`, `EntityNotFoundException`,
+> `EntityDeletionNotAllowedException`, and `DuplicateEntityException` are all in `utilities`.
+> Per-module ControllerAdvice classes extend `BaseControllerAdvice`. All tests passing.
+> This document is kept as architectural rationale.
+
 # Exception Handling & ControllerAdvice Specification — AkademiaPlus
 
 ## 1. Current State Inventory

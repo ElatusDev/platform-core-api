@@ -23,7 +23,7 @@
 3. **IDs**: Always `Long`, never `Integer`
 4. **Exceptions**: Catch specific types only — never `Exception` or `Throwable`
 5. **Architecture**: `interfaceadapters/` (controllers + repos) and `usecases/` (services)
-6. **Commits**: Conventional Commits — `type(scope): subject` in imperative mood, ≤72 chars
+6. **Commits**: Conventional Commits — `type(scope): subject` in imperative mood, ≤72 chars. **NEVER** include `Co-Authored-By`, `Generated with`, or any AI-tool attribution in commit messages
 7. **Methods**: < 20 lines, cyclomatic complexity < 10
 8. **Javadoc**: Required on all public classes, methods, and constants
 9. **Mock stubbing**: Stub with EXACT parameters the implementation passes (read the impl first)
@@ -57,9 +57,9 @@ assertThatThrownBy(() -> service.process(null))
 ### Module Dependency Graph (build order, bottom-up)
 
 ```
-infra-common          ← Base persistence: TenantScoped, Auditable, SoftDeletable, ID assignment
+utilities             ← ZERO internal deps. Security services: AES-GCM, hashing, PII, ID generation
      ↑
-utilities             ← Security services: AES-GCM encryption, hashing, PII normalization, ID generation
+infra-common          ← Base persistence: TenantScoped, Auditable, SoftDeletable, EntityIdAssigner
      ↑
 multi-tenant-data     ← JPA entity models: all @Entity classes, composite keys, data relationships
      ↑
@@ -70,12 +70,14 @@ security              ← Auth: JWT provider, filters, internal auth, module sec
 user-mgmt  billing  course-mgmt  notification  tenant-mgmt  pos-system
 │    │        │             │              │               │              │
 └────┼────────┴─────────────┴──────────────┴───────────────┴──────────────┘
-     ↑
+     ↑          Cross-domain: billing → user-mgmt + course-mgmt
+     ↑                        course-mgmt → user-mgmt
+     ↑                        pos-system → user-mgmt
 application           ← Spring Boot main class, assembles all modules
 
 (Standalone services)
 certificate-authority ← Separate Spring Boot app — JWKS trust broker
-mock-data-system      ← Separate Spring Boot app — test data seeding
+mock-data-system      ← Separate Spring Boot app — test data seeding (deps on ALL domain modules)
 audit-system          ← Placeholder for audit logging
 ```
 

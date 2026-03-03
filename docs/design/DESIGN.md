@@ -1,6 +1,6 @@
 # Architecture — AkademiaPlus Platform Core API
 
-> **See also**: [AI-CODE-REF.md](AI-CODE-REF.md) for coding standards, review rules, and AI-assisted development guidelines.
+> **See also**: [AI-CODE-REF.md](../directives/AI-CODE-REF.md) for coding standards, review rules, and AI-assisted development guidelines.
 
 ## 1. System Overview
 
@@ -58,20 +58,20 @@ AkademiaPlus is a multi-tenant SaaS platform for educational institutions. The `
 | Module | Domain | Aggregates |
 |--------|--------|------------|
 | `user-management` | People management | Employee, AdultStudent, MinorStudent, Tutor, Collaborator |
-| `billing` | Financial operations | Payment, Membership, Payroll, Store/POS transactions |
-| `course-management` | Academic programs | Course, Schedule, CourseEvent |
+| `billing` | Financial operations | Membership, MembershipAdultStudent, MembershipTutor, PaymentAdultStudent, PaymentTutor, Compensation |
+| `course-management` | Academic programs | Course, Schedule (program aggregate); CourseEvent (event aggregate) |
 | `tenant-management` | Platform tenancy | Tenant, TenantSubscription, TenantBillingCycle |
-| `notification-system` | Communications | Notification, Email, SMS, Push |
+| `notification-system` | Communications | Notification |
 | `pos-system` | Point-of-sale | StoreProduct, StoreTransaction |
 
 ### 2.3 Standalone Services
 
 | Module | Purpose | Runs As |
 |--------|---------|---------|
-| `certificate-authority` | Trust broker — JWKS registry for JWT public key distribution | Separate Spring Boot app (port 8082, internal only) |
-| `mock-data-system` | Generates realistic test data using DataFaker | Separate Spring Boot app |
-| `audit-system` | Audit event logging | Stub (501 Not Implemented) |
-| `application` | Main entry point — assembles all platform modules | Spring Boot main class |
+| `certificate-authority` | Trust broker with dual role: (1) JWKS registry for JWT public key distribution, (2) internal PKI for certificate signing/enrollment. Docker service name: `trust-broker`. | Separate Spring Boot app (port 8082, internal only) |
+| `mock-data-system` | Generates realistic test data using DataFaker | Separate Spring Boot app (port 8180) |
+| `audit-system` | Audit event logging | Stub (501 Not Implemented — placeholder controller) |
+| `application` | Main entry point — assembles all platform modules | Spring Boot main class (port 8080) |
 
 ---
 
@@ -98,11 +98,9 @@ Every entity in the system inherits audit timestamps, soft-delete capability, an
 ```
 {module}/
 ├── config/
-│   ├── {Module}ModuleSecurityConfiguration.java    ← URL-level access rules
-│   ├── {Module}ControllerAdvice.java               ← Exception → HTTP response mapping
+│   ├── {Module}ModuleSecurityConfiguration.java    ← URL-level access rules (opt-in per module)
+│   ├── {Module}ControllerAdvice.java               ← Extends BaseControllerAdvice (module-scoped)
 │   └── MapperModelConfig.java                      ← ModelMapper bean definitions
-├── exception/
-│   └── {Entity}NotFoundException.java              ← Domain-specific exceptions
 ├── {aggregate}/
 │   ├── interfaceadapters/
 │   │   ├── {Entity}Controller.java                 ← @RestController, delegates to use cases
@@ -111,7 +109,7 @@ Every entity in the system inherits audit timestamps, soft-delete capability, an
 │       ├── {Entity}CreationUseCase.java             ← @Service @Transactional
 │       ├── Get{Entity}ByIdUseCase.java
 │       ├── GetAll{Entities}UseCase.java
-│       └── Delete{Entity}UseCase.java
+│       └── Delete{Entity}UseCase.java               ← Uses DeleteUseCaseSupport (composition)
 ```
 
 **Key characteristics:**
@@ -119,6 +117,7 @@ Every entity in the system inherits audit timestamps, soft-delete capability, an
 - Controllers are thin — they delegate immediately to use cases
 - Repositories are pure Spring Data interfaces — no custom implementations yet
 - ModelMapper handles DTO ↔ Entity conversion
+- Exception handling consolidated in `utilities` — `BaseControllerAdvice` provides generic handlers for `EntityNotFoundException`, `EntityDeletionNotAllowedException`, `DuplicateEntityException`, `InvalidTenantException`, `DataIntegrityViolationException`, `MethodArgumentNotValidException`, `EncryptionFailureException`/`DecryptionFailureException`, and a generic `Exception` fallback. Per-module ControllerAdvice classes extend it and add module-specific exception handlers only when needed (e.g., `ScheduleNotAvailableException` in course-management).
 
 ### 3.3 PII Protection Pipeline
 
@@ -155,7 +154,15 @@ Controllers implement the generated interfaces. DTOs are generated — never han
 
 ### 3.6 Security Configuration Pattern
 
-Each module registers its own security rules via a `{Module}ModuleSecurityConfiguration` class. The central `SecurityConfig` in the `security` module composes all module-level configurations using a `ModuleSecurityConfigurator` interface.
+Modules that need custom URL-level access rules register a `{Module}ModuleSecurityConfiguration` class implementing the `ModuleSecurityConfigurator` interface. The central `SecurityConfig` in the `security` module composes all registered configurators.
+
+**Modules with security configurations:**
+- `user-management` → `PeopleModuleSecurityConfiguration`
+- `billing` → `TreasuryModuleSecurityConfiguration`
+- `course-management` → `CoordinationModuleSecurityConfiguration`
+- `mock-data-system` → `MockDataServiceModuleSecurityConfiguration`
+
+Modules without explicit security configurations (`notification-system`, `pos-system`, `tenant-management`) inherit the default deny-all policy from `SecurityConfig` and rely on the global authenticated-user requirement.
 
 ### 3.7 Test Patterns
 
@@ -376,32 +383,42 @@ TenantContextHolder holder = tenantContextHolderProvider.getObject();
 ### 3.14 Module Dependency Graph
 
 ```
-                    ┌─────────────────┐
-                    │   application   │ (assembles all modules)
-                    └────────┬────────┘
-                             │
-        ┌────────────────────┼────────────────────┐
-        │                    │                    │
-   ┌────┴─────┐    ┌────────┴───────┐   ┌───────┴────────┐
-   │  user-   │    │    tenant-     │   │  mock-data-    │
-   │management│    │   management   │   │    system      │
-   └────┬─────┘    └────────┬───────┘   └───────┬────────┘
-        │                   │                   │
-        │      depends on user-mgmt + tenant-mgmt
-        │                   │                   │
-   ┌────┴───────────────────┴───────────────────┘
-   │
-   ├── security          (JWT, filters)
-   ├── utilities          (crypto, hashing, PII, ModelMapper, ID generation)
-   ├── infra-common       (persistence infra, entity base classes, tenant context)
-   └── multi-tenant-data  (all JPA @Entity data models)
+                         ┌─────────────────┐
+                         │   application   │ (assembles all modules)
+                         └────────┬────────┘
+                                  │
+     ┌─────────────┬──────────────┼──────────────┬──────────────────┐
+     │             │              │              │                  │
+┌────┴─────┐ ┌────┴────┐ ┌──────┴──────┐ ┌────┴──────┐ ┌─────────┴────────┐
+│ billing  │ │ course- │ │notification │ │  tenant-  │ │   mock-data-     │
+│          │ │ mgmt    │ │  -system    │ │management │ │     system       │
+└──┬───┬───┘ └──┬──────┘ └────────────┘ └───────────┘ └──────────────────┘
+   │   │        │
+   │   └────────┤ (cross-domain: billing → user-mgmt, course-mgmt)
+   │            │ (cross-domain: course-mgmt → user-mgmt)
+   │            │ (cross-domain: pos-system → user-mgmt)
+   └────────────┤
+                │
+        ┌───────┴──────┐
+        │user-management│
+        └───────┬──────┘
+                │
+   ┌────────────┼────────────────────────────────┐
+   │            │                                │
+   ├── security            (JWT, filters)        │  depends on: multi-tenant-data, utilities
+   ├── multi-tenant-data   (JPA @Entity models)  │  depends on: utilities, infra-common
+   ├── infra-common        (persistence infra)   │  depends on: utilities
+   └── utilities           (crypto, hashing, PII, ModelMapper, ID generation) │  ZERO internal deps
 ```
 
 **Dependency rules:**
-- Domain modules depend on foundation modules only (never on each other)
-- `mock-data-system` is the exception — depends on domain modules for `CreationUseCase::transform` references
-- `multi-tenant-data` has ZERO dependencies on other project modules
-- `utilities` depends on `infra-common` (for `TenantSequenceRepository`)
+- All domain modules depend on `security`, `multi-tenant-data`, `infra-common`, and `utilities`
+- **Cross-domain exceptions**: `billing` depends on `user-management` and `course-management`; `course-management` depends on `user-management`; `pos-system` depends on `user-management` — these are for FK-related operations
+- `mock-data-system` depends on all domain modules for `CreationUseCase::transform` references
+- `notification-system` is the leanest domain module — depends only on `multi-tenant-data` and `infra-common`
+- `utilities` has ZERO internal project dependencies — it is the leaf of the dependency tree
+- `infra-common` depends on `utilities` (for `SequentialIDGenerator` used by `EntityIdAssigner`)
+- `multi-tenant-data` depends on `utilities` and `infra-common` (for entity base classes and encryption converters)
 
 ### 3.15 File Header Convention
 
@@ -528,11 +545,13 @@ public abstract class AbstractIntegrationTest {
 ### 5.1 Observability
 
 **Implemented:**
-- **Structured logging**: ECS JSON format (prod/QA), `CorrelationIdFilter` propagates `X-Correlation-Id` via MDC
-- **Metrics**: Micrometer Prometheus registry exposed at `/actuator/prometheus`, tenant-tagged via `ObservationFilter`
+- **Structured logging**: Log4j2 with plain `PatternLayout` for all profiles; `CorrelationIdFilter` propagates `X-Correlation-Id` via MDC
+- **Metrics**: Micrometer Prometheus registry exposed at `/actuator/prometheus`
 - **Health checks**: Spring Boot Actuator with liveness/readiness probes (prod), extended endpoints (dev: metrics, mappings)
 
 **Not yet implemented:**
+- **ECS JSON log format**: Planned for prod/QA profiles (currently plain text across all profiles)
+- **Tenant-tagged metrics**: `ObservationFilter` to tag metrics with `tenantId`
 - **Distributed tracing**: OpenTelemetry for request flow across services
 - **Business metrics**: Custom counters for domain events (enrollments, payments)
 
@@ -661,7 +680,7 @@ GitHub Actions → SonarQube analysis → Docker build → AWS deployment
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
-| 2025 | Spring Boot 4.0.0-M3 | Early adoption for Jakarta EE 11, virtual threads readiness |
+| 2025 | Spring Boot 4.0.0-M3 (initial) | Early adoption for Jakarta EE 11, virtual threads readiness; upgraded to 4.0.3 GA in 2026-02 |
 | 2025 | All IDs `Long` | Scalability — `Integer` overflow at ~2.1B records |
 | 2025 | Custom ID generation | Multi-tenant isolation requires tenant-scoped sequences |
 | 2025 | AES-GCM for field encryption | Authenticated encryption prevents both reading and tampering |
@@ -676,3 +695,6 @@ GitHub Actions → SonarQube analysis → Docker build → AWS deployment
 | 2026-02 | ECS structured logging | JSON format for prod/QA; human-readable for dev/local |
 | 2026-02 | Correlation ID propagation | `X-Correlation-Id` header echoed and stored in MDC for tracing |
 | 2026-02 | etl-system removed | Module removed from build — no current ETL requirements |
+| 2026-02 | BaseControllerAdvice consolidation | Generic exception handlers extracted to `utilities`; per-module ControllerAdvice extends base |
+| 2026-02 | DeleteUseCaseSupport composition | Shared find-or-throw → try-delete → catch-constraint pattern composed into all 20+ delete use cases |
+| 2026-02 | Documentation reorganization | Canonical `docs/` structure: directives/, design/, prompts/, workflows/ with naming conventions |

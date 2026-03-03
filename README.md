@@ -1,6 +1,6 @@
 # AkademiaPlus — Platform Core API
 
-> Multi-tenant SaaS backend for educational institutions. Built with Java 21, Spring Boot 4, and defense-in-depth security.
+> Multi-tenant SaaS backend for educational institutions. Built with Java 24, Spring Boot 4, and defense-in-depth security.
 
 [![SonarQube](https://github.com/ElatusDev/platform-core-api/actions/workflows/build.yml/badge.svg)](https://github.com/ElatusDev/platform-core-api/actions)
 
@@ -18,8 +18,8 @@ This repository contains the **Platform Core API**: the main backend service tha
 
 | Layer | Technology |
 |-------|-----------|
-| Language | Java 21 |
-| Framework | Spring Boot 4.0.0-M3 |
+| Language | Java 24 |
+| Framework | Spring Boot 4.0.3 |
 | Database | MariaDB (multi-tenant, row-level isolation) |
 | Cache | Redis |
 | Security | JWT, AES-256-GCM field encryption, SHA-256 hashing |
@@ -64,7 +64,7 @@ platform-core-api/
 
 ### Prerequisites
 
-- Java 21 (JDK)
+- Java 24 (JDK)
 - Maven 3.9+
 - Docker & Docker Compose
 - MariaDB (or use the Docker Compose setup)
@@ -130,10 +130,9 @@ For the full architecture deep-dive, see [DESIGN.md](docs/design/DESIGN.md).
 | Document | Purpose |
 |----------|---------|
 | [DESIGN.md](docs/design/DESIGN.md) | Architecture, module catalog, multi-tenancy model, security layers |
-| [AI-CODE-REF.md](AI-CODE-REF.md) | Coding standards, review rules, detection patterns, test conventions |
+| [AI-CODE-REF.md](docs/directives/AI-CODE-REF.md) | Coding standards, review rules, detection patterns, test conventions |
 | [SECURITY.md](docs/design/SECURITY.md) | Vulnerability disclosure policy |
-| [CHANGELOG.md](CHANGELOG.md) | Release history (Keep a Changelog + Conventional Commits) |
-| [docs/adr/](docs/adr/) | Architecture Decision Records for key technical choices |
+| [docs/design/adr/](docs/design/adr/) | Architecture Decision Records for key technical choices |
 
 ---
 

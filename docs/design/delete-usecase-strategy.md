@@ -1,3 +1,9 @@
+> [!NOTE]
+> **STATUS: IMPLEMENTED** — All 20+ delete use cases are live across all 6 domain modules.
+> `DeleteUseCaseSupport` composition pattern, `@SQLDelete` on all 29 entities, and
+> `EntityDeletionNotAllowedException` in `BaseControllerAdvice` are all in production code.
+> This document is kept as architectural rationale.
+
 # Delete UseCase Strategy — AkademiaPlus Platform
 
 ## 1. Current State Analysis

@@ -87,8 +87,8 @@ on a stable foundation.
 
 | Artifact | Location | Status |
 |----------|----------|--------|
-| Human-readable upgrade plan | `docs/upgrade-plan.md` _(generate from prompt)_ | ⬜ |
-| Claude Code execution prompt | `.claude/prompts/dependency-upgrade.md` | ✅ Written |
+| Human-readable upgrade plan | N/A (upgrade documented in commit history) _(generate from prompt)_ | ⬜ |
+| Claude Code execution prompt | `docs/prompts/completed/dependency-upgrade-prompt.md` | ✅ Written |
 
 ### Work
 
@@ -133,10 +133,10 @@ is written.
 
 | Artifact | Location | Status |
 |----------|----------|--------|
-| Exception advice specification | `docs/exception-advice-specification.md` | ✅ Exists |
-| Exception advice workflow (human) | `docs/exception-advice-workflow.md` | ✅ Exists |
-| Claude Code execution prompt | `.claude/prompts/exception-advice-consolidation.md` | ✅ Exists |
-| Controller advice audit | `docs/CONTROLLER-ADVICE-AUDIT.md` | ✅ Exists |
+| Exception advice specification | `docs/design/exception-advice-strategy.md` | ✅ Exists |
+| Exception advice workflow (human) | `docs/workflows/completed/exception-advice-workflow.md` | ✅ Exists |
+| Claude Code execution prompt | `docs/prompts/completed/exception-advice-consolidation-prompt.md` | ✅ Exists |
+| Controller advice audit | `docs/workflows/completed/controller-advice-audit-workflow.md` | ✅ Exists |
 
 ### Work (10 phases in prompt)
 
@@ -212,9 +212,9 @@ written twice.
 
 | Artifact | Location | Status |
 |----------|----------|--------|
-| Delete strategy | `docs/delete-usecase-strategy.md` | ✅ Exists |
-| Delete workflow (human) | `docs/delete-usecase-workflow.md` | ✅ Exists |
-| Claude Code execution prompt | `.claude/prompts/delete-usecase-rollout.md` | ✅ Exists |
+| Delete strategy | `docs/design/delete-usecase-strategy.md` | ✅ Exists |
+| Delete workflow (human) | `docs/workflows/completed/delete-usecase-workflow.md` | ✅ Exists |
+| Claude Code execution prompt | `docs/prompts/completed/delete-usecase-rollout-prompt.md` | ✅ Exists |
 
 ### Work (completed)
 
@@ -264,8 +264,8 @@ too late.
 
 | Artifact | Location | Status |
 |----------|----------|--------|
-| Component test workflow | `docs/workflows/COMPONENT-TEST-WORKFLOW.md` | ✅ Exists |
-| Claude Code execution prompt | `.claude/prompts/component-test-rollout.md` | N/A (executed directly) |
+| Component test workflow | `docs/workflows/completed/component-test-workflow.md` | ✅ Exists |
+| Claude Code execution prompt | N/A (executed inline) | N/A (executed directly) |
 
 ### Work (completed)
 
@@ -326,7 +326,7 @@ hard implementation waves so it doesn't block them, but it must complete before 
 
 | Artifact | Location | Status |
 |----------|----------|--------|
-| Claude Code execution prompt | `.claude/prompts/ci-fixes.md` | 🔴 NEEDED (CI-only items) |
+| Claude Code execution prompt | `docs/prompts/pending/ci-fixes-prompt.md` (not yet created) | 🔴 NEEDED (CI-only items) |
 | E2E Docker runner | `docker-compose.dev.yml` (e2e-runner service) | ✅ Done |
 | Docker Newman env | `platform-api-e2e/environments/docker.postman_environment.json` | ✅ Done |
 | E2E convenience script | `AkademiaPlus/run-e2e.sh` | ✅ Done |
@@ -338,13 +338,10 @@ hard implementation waves so it doesn't block them, but it must complete before 
 - ✅ GitHub Actions SonarQube workflow — project key already correct (`ElatusDev_platform-core-api`)
 - ✅ Java 24 (Corretto) set in all CI build steps
 
-### Claude Code Prompt Needed
+### Claude Code Prompt
 
-Create `.claude/prompts/ci-fixes.md`:
-- Audit all `Dockerfile` files — list artifact names found vs expected
-- Audit all `docker-compose*.yml` image references
-- Audit all `.github/workflows/*.yml` for Java version and plugin version
-- Apply fixes, commit
+> **N/A** — Wave 5 was executed directly without a formal prompt. Docker and CI fixes
+> were applied across the session that produced the Spring Boot 4.0.3 + Java 24 upgrade.
 
 ---
 
@@ -420,9 +417,9 @@ without existing production data to worry about.
 
 | Artifact | Location | Status |
 |----------|----------|--------|
-| ADR-0008 (Flyway adoption) | `docs/adr/0008-flyway-migration-strategy.md` | 🔴 NEEDED |
+| ADR-0008 (Flyway adoption) | `docs/design/adr/0008-flyway-migration-strategy.md` | 🔴 NEEDED |
 | Flyway baseline workflow | `docs/workflows/FLYWAY-BASELINE-WORKFLOW.md` | 🔴 NEEDED |
-| Claude Code execution prompt | `.claude/prompts/flyway-baseline.md` | 🔴 NEEDED |
+| Claude Code execution prompt | `docs/prompts/pending/flyway-baseline-prompt.md` (not yet created) | 🔴 NEEDED |
 
 ### Work
 
@@ -484,8 +481,8 @@ unacceptable for enterprise clients.
 
 | Artifact | Location | Status |
 |----------|----------|--------|
-| ADR-0009 (Observability stack) | `docs/adr/0009-observability-strategy.md` | 🔴 NEEDED |
-| Claude Code execution prompt | `.claude/prompts/observability-baseline.md` | 🔴 NEEDED |
+| ADR-0009 (Observability stack) | `docs/design/adr/0009-observability-strategy.md` | ⬜ Not created (implemented without ADR) |
+| Claude Code execution prompt | N/A | ✅ Executed directly |
 
 ### Work
 
@@ -526,9 +523,9 @@ unacceptable for enterprise clients.
 
 | Artifact | Location | Status |
 |----------|----------|--------|
-| ADR-0010 (Rate limiting strategy) | `docs/adr/0010-rate-limiting-strategy.md` | 🔴 NEEDED |
-| ADR-0011 (Secrets management) | `docs/adr/0011-secrets-management.md` | 🔴 NEEDED |
-| Claude Code execution prompt | `.claude/prompts/security-hardening.md` | 🔴 NEEDED |
+| ADR-0010 (Rate limiting strategy) | `docs/design/adr/0010-rate-limiting-strategy.md` | 🔴 NEEDED |
+| ADR-0011 (Secrets management) | `docs/design/adr/0011-secrets-management.md` | 🔴 NEEDED |
+| Claude Code execution prompt | `docs/prompts/pending/security-hardening-prompt.md` (not yet created) | 🔴 NEEDED |
 
 ### Work
 
@@ -662,14 +659,14 @@ Audit MVP scope (if Option B chosen for `audit-system`):
 
 | Wave | Name | Status | Effort | Prompt |
 |------|------|--------|--------|--------|
-| 0 | Dependency Upgrade | ✅ | ~4h | `.claude/prompts/dependency-upgrade.md` ✅ |
-| 1 | Exception Advice Consolidation | ✅ | — | `.claude/prompts/exception-advice-consolidation.md` ✅ |
-| 2 | Creation UseCase Rollout | ✅ | — | `docs/creation-usecase-workflow.md` ✅ |
-| 3 | Delete UseCase Infrastructure | ✅ | — | `.claude/prompts/delete-usecase-rollout.md` ✅ |
+| 0 | Dependency Upgrade | ✅ | ~4h | `docs/prompts/completed/dependency-upgrade-prompt.md` ✅ |
+| 1 | Exception Advice Consolidation | ✅ | — | `docs/prompts/completed/exception-advice-consolidation-prompt.md` ✅ |
+| 2 | Creation UseCase Rollout | ✅ | — | `docs/workflows/completed/creation-usecase-workflow.md` ✅ |
+| 3 | Delete UseCase Infrastructure | ✅ | — | `docs/prompts/completed/delete-usecase-rollout-prompt.md` ✅ |
 | 4 | Component Test Coverage | ✅ | — | N/A (executed directly) |
 | 5 | Docker / CI Fixes | ✅ | — | Done (no prompt needed) |
 | 6 | E2E Test Suite | ⬜ | ~6h | `platform-api-e2e/.claude/prompts/e2e-test-workflow.md` ✅ |
-| 7 | Database Migration (Flyway) | ⬜ | ~8h | `.claude/prompts/flyway-baseline.md` 🔴 NEEDED |
+| 7 | Database Migration (Flyway) | ⬜ | ~8h | `docs/prompts/pending/flyway-baseline-prompt.md` (not yet created) 🔴 NEEDED |
 | 8 | Observability Baseline | ✅ | — | Done (direct implementation) |
 | 9 | Security Hardening | 🔄 | ~4h remaining | Security headers + .env.example done, rate limiting + refresh pending |
 | 10 | Placeholder Modules Decision | ✅ | ~1h | Done (etl removed, audit stubbed to 501) |
@@ -686,14 +683,12 @@ Audit MVP scope (if Option B chosen for `audit-system`):
 ## Prompt Creation Backlog
 
 These Claude Code prompts need to be written before their wave can be executed.
-Build them in the order the waves will run.
 
-| Priority | Prompt | References |
-|----------|--------|------------|
-| 1 | `.claude/prompts/ci-fixes.md` | Audit Dockerfiles, docker-compose, GitHub Actions |
-| 2 | `.claude/prompts/flyway-baseline.md` | MariaDB schema, Boot Flyway auto-config |
-| 3 | `.claude/prompts/observability-baseline.md` | Micrometer, log4j2, Actuator, MDC |
-| 4 | `.claude/prompts/security-hardening.md` | Bucket4j, security headers, token refresh |
+| Priority | Prompt | References | Notes |
+|----------|--------|------------|-------|
+| 1 | `docs/prompts/pending/flyway-baseline-prompt.md` | MariaDB schema, Boot Flyway auto-config | Wave 7 blocker |
+
+> **Resolved (executed without prompt):** Wave 5 CI fixes, Wave 8 Observability, Wave 9 Security hardening (partial)
 
 ---
 

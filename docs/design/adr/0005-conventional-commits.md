@@ -45,7 +45,7 @@ Body explains WHY and WHAT changed. Wrap at 72 chars.
 
 ### Positive
 - `git log --oneline` is immediately scannable by type and scope
-- CHANGELOG.md can be generated or verified against commit history
+- A CHANGELOG can be generated or verified against commit history
 - Semantic versioning can be automated (`feat` → minor, `fix` → patch, `!` → major)
 - Scopes make it easy to filter history per module (`git log --grep="billing"`)
 

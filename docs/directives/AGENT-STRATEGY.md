@@ -312,9 +312,9 @@ Level 3 (task):   Execution prompt → referenced spec docs → existing tests
 
 | Module | Entry Points |
 |--------|-------------|
-| `utilities` | `MessageService.java`, `EntityType.java`, `DeleteUseCaseSupport.java`, `BaseControllerAdvice.java` |
+| `utilities` | `MessageService.java`, `EntityType.java`, `DeleteUseCaseSupport.java`, `BaseControllerAdvice.java`, `SequentialIDGenerator.java` |
 | `multi-tenant-data` | Entity chain: `Auditable → SoftDeletable → TenantScoped → AbstractUser → Concrete` |
-| `infra-common` | `TenantContextHolder.java`, `EntityIdAssigner.java`, `SequentialIDGenerator.java` |
+| `infra-common` | `TenantContextHolder.java`, `EntityIdAssigner.java`, `IdAssignationPreInsertEventListener.java` |
 | `security` | `SecurityConfig.java`, `JwtTokenProvider.java`, `JwtRequestFilter.java` |
 | `user-management` | 5 aggregates: employee, collaborator, adult-student, tutor, minor-student |
 | `billing` | 6 aggregates: membership, compensation, payment×2, membership-assoc×2 |
