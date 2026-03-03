@@ -136,8 +136,26 @@ components:
         - totalAmount
         - paymentMethod
     StoreTransactionCreationRequest:
-      allOf:
-        - $ref: '#/components/schemas/BaseStoreTransaction'
+      type: object
+      properties:
+        transactionType:
+          type: string
+          maxLength: 30
+          description: Type of transaction (SALE, REFUND)
+        paymentMethod:
+          type: string
+          maxLength: 50
+          description: Payment method (CASH, CREDIT_CARD, DEBIT_CARD, DIGITAL_WALLET)
+        saleItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/SaleItemRequest'
+          minItems: 1
+          description: Line items for the transaction
+      required:
+        - transactionType
+        - paymentMethod
+        - saleItems
     StoreTransactionCreationResponse:
       type: object
       properties:
@@ -168,10 +186,59 @@ components:
               format: int64
               readOnly: true
               description: ID of the employee who processed the transaction
+            saleItems:
+              type: array
+              items:
+                $ref: '#/components/schemas/SaleItemResponse'
+              readOnly: true
+              description: Line items that comprise this transaction
           required:
             - storeTransactionId
             - transactionType
             - totalAmount
             - paymentMethod
+    SaleItemRequest:
+      type: object
+      properties:
+        storeProductId:
+          type: integer
+          format: int64
+          description: ID of the product being purchased
+        quantity:
+          type: integer
+          minimum: 1
+          description: Number of units to purchase
+      required:
+        - storeProductId
+        - quantity
+    SaleItemResponse:
+      type: object
+      properties:
+        storeSaleItemId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Sale item ID
+        storeProductId:
+          type: integer
+          format: int64
+          description: ID of the product sold
+        quantity:
+          type: integer
+          description: Number of units sold
+        unitPriceAtSale:
+          type: number
+          format: double
+          description: Unit price at time of sale
+        itemTotal:
+          type: number
+          format: double
+          description: Total for this line item (quantity × unitPriceAtSale)
+      required:
+        - storeSaleItemId
+        - storeProductId
+        - quantity
+        - unitPriceAtSale
+        - itemTotal
     ErrorResponse:
       type: object
