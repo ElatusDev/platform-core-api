@@ -44,6 +44,7 @@ public final class EntityType {
     // pos-system
     public static final String STORE_PRODUCT = "entity.store.product";
     public static final String STORE_TRANSACTION = "entity.store.transaction";
+    public static final String STORE_SALE_ITEM = "entity.store.sale.item";
 
     // notification
     public static final String NOTIFICATION = "entity.notification";

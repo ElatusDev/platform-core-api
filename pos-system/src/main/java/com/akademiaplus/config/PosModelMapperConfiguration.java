@@ -11,6 +11,7 @@ import com.akademiaplus.billing.store.StoreProductDataModel;
 import com.akademiaplus.billing.store.StoreTransactionDataModel;
 import com.akademiaplus.store.usecases.StoreProductCreationUseCase;
 import com.akademiaplus.store.usecases.StoreTransactionCreationUseCase;
+import com.akademiaplus.store.usecases.UpdateStoreProductUseCase;
 import openapi.akademiaplus.domain.pos.system.dto.StoreProductCreationRequestDTO;
 import openapi.akademiaplus.domain.pos.system.dto.StoreTransactionCreationRequestDTO;
 import org.modelmapper.ModelMapper;
@@ -39,6 +40,7 @@ public class PosModelMapperConfiguration {
         modelMapper.getConfiguration().setImplicitMappingEnabled(false);
 
         registerStoreProductMap();
+        registerStoreProductUpdateMap();
         registerStoreTransactionMap();
 
         modelMapper.getConfiguration().setImplicitMappingEnabled(true);
@@ -49,6 +51,16 @@ public class PosModelMapperConfiguration {
                 StoreProductCreationRequestDTO.class,
                 StoreProductDataModel.class,
                 StoreProductCreationUseCase.MAP_NAME
+        ).addMappings(mapper -> {
+            mapper.skip(StoreProductDataModel::setStoreProductId);
+        }).implicitMappings();
+    }
+
+    private void registerStoreProductUpdateMap() {
+        modelMapper.createTypeMap(
+                StoreProductCreationRequestDTO.class,
+                StoreProductDataModel.class,
+                UpdateStoreProductUseCase.MAP_NAME
         ).addMappings(mapper -> {
             mapper.skip(StoreProductDataModel::setStoreProductId);
         }).implicitMappings();

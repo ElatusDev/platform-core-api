@@ -36,7 +36,6 @@ class StoreTransactionCreationUseCaseTest {
     private StoreTransactionCreationUseCase useCase;
 
     private static final String TRANSACTION_TYPE = "SALE";
-    private static final Double TOTAL_AMOUNT = 150.50;
     private static final String PAYMENT_METHOD = "CASH";
     private static final Long SAVED_ID = 1L;
 
@@ -49,7 +48,6 @@ class StoreTransactionCreationUseCaseTest {
     private StoreTransactionCreationRequestDTO buildDto() {
         StoreTransactionCreationRequestDTO dto = new StoreTransactionCreationRequestDTO();
         dto.setTransactionType(TRANSACTION_TYPE);
-        dto.setTotalAmount(TOTAL_AMOUNT);
         dto.setPaymentMethod(PAYMENT_METHOD);
         return dto;
     }

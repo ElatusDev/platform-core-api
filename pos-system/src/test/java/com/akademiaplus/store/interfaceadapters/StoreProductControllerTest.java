@@ -12,6 +12,7 @@ import com.akademiaplus.store.usecases.DeleteStoreProductUseCase;
 import com.akademiaplus.store.usecases.GetAllStoreProductsUseCase;
 import com.akademiaplus.store.usecases.GetStoreProductByIdUseCase;
 import com.akademiaplus.store.usecases.StoreProductCreationUseCase;
+import com.akademiaplus.store.usecases.UpdateStoreProductUseCase;
 import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.MessageService;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
@@ -46,6 +47,7 @@ class StoreProductControllerTest {
     @Mock private DeleteStoreProductUseCase deleteStoreProductUseCase;
     @Mock private GetAllStoreProductsUseCase getAllStoreProductsUseCase;
     @Mock private GetStoreProductByIdUseCase getStoreProductByIdUseCase;
+    @Mock private UpdateStoreProductUseCase updateStoreProductUseCase;
     @Mock private MessageService messageService;
 
     private MockMvc mockMvc;
@@ -54,7 +56,7 @@ class StoreProductControllerTest {
     void setUp() {
         StoreProductController controller = new StoreProductController(
                 storeProductCreationUseCase, getAllStoreProductsUseCase, getStoreProductByIdUseCase,
-                deleteStoreProductUseCase);
+                deleteStoreProductUseCase, updateStoreProductUseCase);
         PosControllerAdvice controllerAdvice = new PosControllerAdvice(messageService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(controllerAdvice)

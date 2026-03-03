@@ -11,6 +11,7 @@ import com.akademiaplus.store.usecases.DeleteStoreProductUseCase;
 import com.akademiaplus.store.usecases.GetAllStoreProductsUseCase;
 import com.akademiaplus.store.usecases.GetStoreProductByIdUseCase;
 import com.akademiaplus.store.usecases.StoreProductCreationUseCase;
+import com.akademiaplus.store.usecases.UpdateStoreProductUseCase;
 import openapi.akademiaplus.domain.pos.system.api.StoreProductsApi;
 import openapi.akademiaplus.domain.pos.system.dto.GetStoreProductResponseDTO;
 import openapi.akademiaplus.domain.pos.system.dto.StoreProductCreationRequestDTO;
@@ -36,15 +37,18 @@ public class StoreProductController implements StoreProductsApi {
     private final GetAllStoreProductsUseCase getAllStoreProductsUseCase;
     private final GetStoreProductByIdUseCase getStoreProductByIdUseCase;
     private final DeleteStoreProductUseCase deleteStoreProductUseCase;
+    private final UpdateStoreProductUseCase updateStoreProductUseCase;
 
     public StoreProductController(StoreProductCreationUseCase storeProductCreationUseCase,
                                   GetAllStoreProductsUseCase getAllStoreProductsUseCase,
                                   GetStoreProductByIdUseCase getStoreProductByIdUseCase,
-                                  DeleteStoreProductUseCase deleteStoreProductUseCase) {
+                                  DeleteStoreProductUseCase deleteStoreProductUseCase,
+                                  UpdateStoreProductUseCase updateStoreProductUseCase) {
         this.storeProductCreationUseCase = storeProductCreationUseCase;
         this.getAllStoreProductsUseCase = getAllStoreProductsUseCase;
         this.getStoreProductByIdUseCase = getStoreProductByIdUseCase;
         this.deleteStoreProductUseCase = deleteStoreProductUseCase;
+        this.updateStoreProductUseCase = updateStoreProductUseCase;
     }
 
     @Override
@@ -68,5 +72,12 @@ public class StoreProductController implements StoreProductsApi {
     public ResponseEntity<Void> deleteStoreProduct(Long storeProductId) {
         deleteStoreProductUseCase.delete(storeProductId);
         return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    public ResponseEntity<StoreProductCreationResponseDTO> updateStoreProduct(
+            Long storeProductId, StoreProductCreationRequestDTO storeProductCreationRequestDTO) {
+        return ResponseEntity.ok(
+                updateStoreProductUseCase.update(storeProductId, storeProductCreationRequestDTO));
     }
 }
