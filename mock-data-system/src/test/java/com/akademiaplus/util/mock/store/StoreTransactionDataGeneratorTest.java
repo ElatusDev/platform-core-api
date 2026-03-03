@@ -56,20 +56,62 @@ class StoreTransactionDataGeneratorTest {
     }
 
     @Nested
-    @DisplayName("Total amount generation")
-    class TotalAmountGeneration {
+    @DisplayName("Sale item count generation")
+    class SaleItemCountGeneration {
 
         @Test
-        @DisplayName("Should return a total amount between 50 and 9999")
-        void shouldReturnTotalAmountInRange() {
+        @DisplayName("Should return a sale item count within configured range")
+        void shouldReturnSaleItemCountInRange() {
             // Given
             // generator initialized in setUp
 
             // When
-            double amount = generator.totalAmount();
+            int count = generator.saleItemCount();
 
             // Then
-            assertThat(amount).isBetween(50.0, 9999.0);
+            assertThat(count).isBetween(
+                    StoreTransactionDataGenerator.MIN_SALE_ITEM_COUNT,
+                    StoreTransactionDataGenerator.MAX_SALE_ITEM_COUNT);
+        }
+    }
+
+    @Nested
+    @DisplayName("Sale item store product ID generation")
+    class SaleItemStoreProductIdGeneration {
+
+        @Test
+        @DisplayName("Should return a store product ID within configured range")
+        void shouldReturnStoreProductIdInRange() {
+            // Given
+            // generator initialized in setUp
+
+            // When
+            Long productId = generator.saleItemStoreProductId();
+
+            // Then
+            assertThat(productId).isBetween(
+                    StoreTransactionDataGenerator.MIN_STORE_PRODUCT_ID,
+                    StoreTransactionDataGenerator.MAX_STORE_PRODUCT_ID);
+        }
+    }
+
+    @Nested
+    @DisplayName("Sale item quantity generation")
+    class SaleItemQuantityGeneration {
+
+        @Test
+        @DisplayName("Should return a sale item quantity within configured range")
+        void shouldReturnSaleItemQuantityInRange() {
+            // Given
+            // generator initialized in setUp
+
+            // When
+            int quantity = generator.saleItemQuantity();
+
+            // Then
+            assertThat(quantity).isBetween(
+                    StoreTransactionDataGenerator.MIN_SALE_ITEM_QUANTITY,
+                    StoreTransactionDataGenerator.MAX_SALE_ITEM_QUANTITY);
         }
     }
 

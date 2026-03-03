@@ -9,6 +9,7 @@ package com.akademiaplus.util.mock.store;
 
 import com.akademiaplus.util.base.DataFactory;
 import lombok.RequiredArgsConstructor;
+import openapi.akademiaplus.domain.pos.system.dto.SaleItemRequestDTO;
 import openapi.akademiaplus.domain.pos.system.dto.StoreTransactionCreationRequestDTO;
 import org.springframework.stereotype.Component;
 
@@ -36,8 +37,20 @@ public class StoreTransactionFactory implements DataFactory<StoreTransactionCrea
     private StoreTransactionCreationRequestDTO createTransaction() {
         StoreTransactionCreationRequestDTO dto = new StoreTransactionCreationRequestDTO();
         dto.setTransactionType(generator.transactionType());
-        dto.setTotalAmount(generator.totalAmount());
         dto.setPaymentMethod(generator.paymentMethod());
+        dto.setSaleItems(generateSaleItems());
         return dto;
+    }
+
+    private List<SaleItemRequestDTO> generateSaleItems() {
+        int count = generator.saleItemCount();
+        List<SaleItemRequestDTO> items = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            SaleItemRequestDTO item = new SaleItemRequestDTO();
+            item.setStoreProductId(generator.saleItemStoreProductId());
+            item.setQuantity(generator.saleItemQuantity());
+            items.add(item);
+        }
+        return items;
     }
 }

@@ -78,8 +78,8 @@ class StoreTransactionFactoryTest {
 
             // Then
             assertThat(dto.getTransactionType()).isNotBlank();
-            assertThat(dto.getTotalAmount()).isPositive();
             assertThat(dto.getPaymentMethod()).isNotBlank();
+            assertThat(dto.getSaleItems()).isNotEmpty();
         }
     }
 }
