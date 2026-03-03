@@ -17,14 +17,22 @@ import openapi.akademiaplus.domain.tenant.management.dto.TenantCreateRequestDTO;
 import openapi.akademiaplus.domain.tenant.management.dto.TenantDTO;
 import openapi.akademiaplus.domain.user.management.dto.EmployeeCreationRequestDTO;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDate;
 import java.util.Map;
 
 /**
- * Handles tenant registration by atomically creating a tenant, an admin
- * employee, and issuing a JWT — all in a single transaction.
+ * Handles tenant registration by creating a tenant, an admin employee,
+ * and issuing a JWT.
+ * <p>
+ * <b>Transaction strategy:</b> This method is intentionally NOT
+ * {@code @Transactional}. Each sub-call ({@code TenantCreationUseCase},
+ * {@code EmployeeCreationUseCase}) manages its own transaction. The tenant
+ * must be committed before the employee is created because
+ * {@code SequentialIDGenerator.generateId()} uses
+ * {@code Propagation.REQUIRES_NEW} to insert into {@code tenant_sequences},
+ * which has a FK to {@code tenants}. If both run inside a single outer
+ * transaction, the REQUIRES_NEW child transaction deadlocks waiting for the
+ * parent's uncommitted tenant row.
  * <p>
  * This use case lives in the {@code application} module (not {@code security})
  * to avoid adding cross-module dependencies from security to
@@ -50,16 +58,15 @@ public class RegistrationUseCase {
      * <p>
      * Flow:
      * <ol>
-     *   <li>Create the tenant via {@link com.akademiaplus.usecases.TenantCreationUseCase}</li>
+     *   <li>Create the tenant (commits independently)</li>
      *   <li>Set tenant context so the employee is scoped correctly</li>
-     *   <li>Create the admin employee via {@link EmployeeCreationUseCase}</li>
+     *   <li>Create the admin employee (commits independently)</li>
      *   <li>Issue a JWT for the new admin</li>
      * </ol>
      *
      * @param request the registration request containing tenant and admin details
      * @return a response containing the JWT and the new tenant ID
      */
-    @Transactional
     public RegistrationResponseDTO register(RegistrationRequestDTO request) {
         // 1. Build and create tenant
         TenantCreateRequestDTO tenantDto = buildTenantRequest(request);
