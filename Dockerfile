@@ -5,7 +5,7 @@
 # Dependency chain (mvn -pl application -am):
 #   utilities → infra-common → multi-tenant-data → notification-system
 #   → security → user-management → course-management → billing
-#   → tenant-management → application
+#   → tenant-management → pos-system → application
 # =============================================================================
 
 # ── Build stage ──────────────────────────────────────────────────────────────
@@ -47,6 +47,7 @@ COPY user-management/src        user-management/src
 COPY course-management/src      course-management/src
 COPY billing/src                billing/src
 COPY tenant-management/src      tenant-management/src
+COPY pos-system/src             pos-system/src
 COPY application/src            application/src
 
 RUN mvn clean install -pl application -am -DskipTests -DskipITs -q
