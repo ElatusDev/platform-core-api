@@ -8,12 +8,15 @@
 package com.akademiaplus.event.interfaceadapters;
 
 import com.akademiaplus.event.usecases.CourseEventCreationUseCase;
+import com.akademiaplus.event.usecases.CourseEventUpdateUseCase;
 import com.akademiaplus.event.usecases.DeleteCourseEventUseCase;
 import com.akademiaplus.event.usecases.GetAllCourseEventsUseCase;
 import com.akademiaplus.event.usecases.GetCourseEventByIdUseCase;
 import openapi.akademiaplus.domain.course.management.api.CourseEventsApi;
 import openapi.akademiaplus.domain.course.management.dto.CourseEventCreateRequestDTO;
 import openapi.akademiaplus.domain.course.management.dto.CourseEventCreateResponseDTO;
+import openapi.akademiaplus.domain.course.management.dto.CourseEventUpdateRequestDTO;
+import openapi.akademiaplus.domain.course.management.dto.CourseEventUpdateResponseDTO;
 import openapi.akademiaplus.domain.course.management.dto.GetCourseEventResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,15 +36,18 @@ import java.util.List;
 public class CourseEventController implements CourseEventsApi {
 
     private final CourseEventCreationUseCase courseEventCreationUseCase;
+    private final CourseEventUpdateUseCase courseEventUpdateUseCase;
     private final DeleteCourseEventUseCase deleteCourseEventUseCase;
     private final GetAllCourseEventsUseCase getAllCourseEventsUseCase;
     private final GetCourseEventByIdUseCase getCourseEventByIdUseCase;
 
     public CourseEventController(CourseEventCreationUseCase courseEventCreationUseCase,
+                                 CourseEventUpdateUseCase courseEventUpdateUseCase,
                                  DeleteCourseEventUseCase deleteCourseEventUseCase,
                                  GetAllCourseEventsUseCase getAllCourseEventsUseCase,
                                  GetCourseEventByIdUseCase getCourseEventByIdUseCase) {
         this.courseEventCreationUseCase = courseEventCreationUseCase;
+        this.courseEventUpdateUseCase = courseEventUpdateUseCase;
         this.deleteCourseEventUseCase = deleteCourseEventUseCase;
         this.getAllCourseEventsUseCase = getAllCourseEventsUseCase;
         this.getCourseEventByIdUseCase = getCourseEventByIdUseCase;
@@ -62,6 +68,12 @@ public class CourseEventController implements CourseEventsApi {
     @Override
     public ResponseEntity<GetCourseEventResponseDTO> getCourseEventById(Long courseEventId) {
         return ResponseEntity.ok(getCourseEventByIdUseCase.get(courseEventId));
+    }
+
+    @Override
+    public ResponseEntity<CourseEventUpdateResponseDTO> updateCourseEvent(
+            Long courseEventId, CourseEventUpdateRequestDTO courseEventUpdateRequestDTO) {
+        return ResponseEntity.ok(courseEventUpdateUseCase.update(courseEventId, courseEventUpdateRequestDTO));
     }
 
     @Override

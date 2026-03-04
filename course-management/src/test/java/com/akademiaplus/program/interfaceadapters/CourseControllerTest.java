@@ -8,6 +8,7 @@
 package com.akademiaplus.program.interfaceadapters;
 
 import com.akademiaplus.config.CoordinationControllerAdvice;
+import com.akademiaplus.program.usecases.CourseUpdateUseCase;
 import com.akademiaplus.program.usecases.CreateCourseUseCase;
 import com.akademiaplus.program.usecases.DeleteCourseUseCase;
 import com.akademiaplus.program.usecases.GetAllCoursesUseCase;
@@ -52,6 +53,7 @@ class CourseControllerTest {
     @Mock private DeleteCourseUseCase deleteCourseUseCase;
     @Mock private GetAllCoursesUseCase getAllCoursesUseCase;
     @Mock private GetCourseByIdUseCase getCourseByIdUseCase;
+    @Mock private CourseUpdateUseCase courseUpdateUseCase;
     @Mock private MessageService messageService;
 
     private MockMvc mockMvc;
@@ -60,7 +62,7 @@ class CourseControllerTest {
     void setUp() {
         CourseController controller = new CourseController(
                 createCourseUseCase, getAllCoursesUseCase, getCourseByIdUseCase,
-                deleteCourseUseCase);
+                deleteCourseUseCase, courseUpdateUseCase);
         CoordinationControllerAdvice controllerAdvice = new CoordinationControllerAdvice(messageService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(controllerAdvice)

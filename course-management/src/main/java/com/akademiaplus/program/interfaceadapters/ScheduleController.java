@@ -11,10 +11,13 @@ import com.akademiaplus.program.usecases.DeleteScheduleUseCase;
 import com.akademiaplus.program.usecases.GetAllSchedulesUseCase;
 import com.akademiaplus.program.usecases.GetScheduleByIdUseCase;
 import com.akademiaplus.program.usecases.ScheduleCreationUseCase;
+import com.akademiaplus.program.usecases.ScheduleUpdateUseCase;
 import openapi.akademiaplus.domain.course.management.api.SchedulesApi;
 import openapi.akademiaplus.domain.course.management.dto.GetScheduleResponseDTO;
 import openapi.akademiaplus.domain.course.management.dto.ScheduleCreationRequestDTO;
 import openapi.akademiaplus.domain.course.management.dto.ScheduleCreationResponseDTO;
+import openapi.akademiaplus.domain.course.management.dto.ScheduleUpdateRequestDTO;
+import openapi.akademiaplus.domain.course.management.dto.ScheduleUpdateResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,15 +39,18 @@ public class ScheduleController implements SchedulesApi {
     private final GetAllSchedulesUseCase getAllSchedulesUseCase;
     private final GetScheduleByIdUseCase getScheduleByIdUseCase;
     private final DeleteScheduleUseCase deleteScheduleUseCase;
+    private final ScheduleUpdateUseCase scheduleUpdateUseCase;
 
     public ScheduleController(ScheduleCreationUseCase scheduleCreationUseCase,
                               GetAllSchedulesUseCase getAllSchedulesUseCase,
                               GetScheduleByIdUseCase getScheduleByIdUseCase,
-                              DeleteScheduleUseCase deleteScheduleUseCase) {
+                              DeleteScheduleUseCase deleteScheduleUseCase,
+                              ScheduleUpdateUseCase scheduleUpdateUseCase) {
         this.scheduleCreationUseCase = scheduleCreationUseCase;
         this.getAllSchedulesUseCase = getAllSchedulesUseCase;
         this.getScheduleByIdUseCase = getScheduleByIdUseCase;
         this.deleteScheduleUseCase = deleteScheduleUseCase;
+        this.scheduleUpdateUseCase = scheduleUpdateUseCase;
     }
 
     @Override
@@ -62,6 +68,12 @@ public class ScheduleController implements SchedulesApi {
     @Override
     public ResponseEntity<GetScheduleResponseDTO> getScheduleById(Long scheduleId) {
         return ResponseEntity.ok(getScheduleByIdUseCase.get(scheduleId));
+    }
+
+    @Override
+    public ResponseEntity<ScheduleUpdateResponseDTO> updateSchedule(
+            Long scheduleId, ScheduleUpdateRequestDTO scheduleUpdateRequestDTO) {
+        return ResponseEntity.ok(scheduleUpdateUseCase.update(scheduleId, scheduleUpdateRequestDTO));
     }
 
     @Override

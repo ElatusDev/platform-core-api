@@ -66,6 +66,10 @@ class ScheduleComponentTest extends AbstractIntegrationTest {
     private static final String SCHEDULE1_START_TIME = "09:00:00";
     private static final String SCHEDULE1_END_TIME = "10:30:00";
 
+    private static final String SCHEDULE1_UPDATED_DAY = "THURSDAY";
+    private static final String SCHEDULE1_UPDATED_START_TIME = "11:00:00";
+    private static final String SCHEDULE1_UPDATED_END_TIME = "12:30:00";
+
     private static final String SCHEDULE2_DAY = "WEDNESDAY";
     private static final String SCHEDULE2_START_TIME = "14:00:00";
     private static final String SCHEDULE2_END_TIME = "15:30:00";
@@ -259,10 +263,70 @@ class ScheduleComponentTest extends AbstractIntegrationTest {
                         org.hamcrest.Matchers.greaterThanOrEqualTo(2)));
     }
 
-    // ── Delete Tests ──────────────────────────────────────────────────
+    // ── Update Tests ─────────────────────────────────────────────────
 
     @Test
     @Order(7)
+    @DisplayName("Should return 200 when updating existing schedule")
+    void shouldReturn200_whenUpdatingExistingSchedule() throws Exception {
+        // Given — schedule1Id exists
+        assertThat(schedule1Id).isNotNull();
+        tenantContextHolder.setTenantId(tenantId);
+        String body = """
+                {
+                    "scheduleDay": "%s",
+                    "startTime": "%s",
+                    "endTime": "%s",
+                    "courseId": %d
+                }
+                """.formatted(SCHEDULE1_UPDATED_DAY, SCHEDULE1_UPDATED_START_TIME,
+                SCHEDULE1_UPDATED_END_TIME, courseId);
+
+        // When
+        mockMvc.perform(put(SCHEDULES_PATH + "/{id}", schedule1Id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.scheduleId").value(schedule1Id))
+                .andExpect(jsonPath("$.message").isString());
+
+        // Then — GET to verify update persisted
+        mockMvc.perform(get(SCHEDULES_PATH + "/{id}", schedule1Id)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.scheduleDay").value(SCHEDULE1_UPDATED_DAY));
+    }
+
+    @Test
+    @Order(8)
+    @DisplayName("Should return 404 when updating non-existent schedule")
+    void shouldReturn404_whenUpdatingNonExistentSchedule() throws Exception {
+        // Given
+        tenantContextHolder.setTenantId(tenantId);
+        Long nonExistentId = 999999L;
+        String body = """
+                {
+                    "scheduleDay": "%s",
+                    "startTime": "%s",
+                    "endTime": "%s",
+                    "courseId": %d
+                }
+                """.formatted(SCHEDULE1_UPDATED_DAY, SCHEDULE1_UPDATED_START_TIME,
+                SCHEDULE1_UPDATED_END_TIME, courseId);
+
+        // When / Then
+        mockMvc.perform(put(SCHEDULES_PATH + "/{id}", nonExistentId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code")
+                        .value(BaseControllerAdvice.CODE_ENTITY_NOT_FOUND));
+    }
+
+    // ── Delete Tests ──────────────────────────────────────────────────
+
+    @Test
+    @Order(9)
     @DisplayName("Should return 404 when deleting non-existent schedule")
     void shouldReturn404_whenDeletingNonExistentSchedule() throws Exception {
         // Given
@@ -277,7 +341,7 @@ class ScheduleComponentTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @Order(8)
+    @Order(10)
     @DisplayName("Should return 204 when deleting existing schedule")
     void shouldReturn204_whenDeletingExistingSchedule() throws Exception {
         // Given
@@ -303,7 +367,7 @@ class ScheduleComponentTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @Order(9)
+    @Order(11)
     @DisplayName("Should return 404 when requesting soft-deleted schedule by ID")
     void shouldReturn404_whenRequestingSoftDeletedScheduleById() throws Exception {
         // Given — schedule2Id was soft-deleted

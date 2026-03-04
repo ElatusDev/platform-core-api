@@ -61,6 +61,10 @@ class CourseComponentTest extends AbstractIntegrationTest {
     private static final String COURSE1_DESCRIPTION = "Introductory mathematics course";
     private static final int COURSE1_MAX_CAPACITY = 30;
 
+    private static final String COURSE1_UPDATED_NAME = "Mathematics 101 — Updated";
+    private static final String COURSE1_UPDATED_DESCRIPTION = "Updated introductory mathematics course";
+    private static final int COURSE1_UPDATED_MAX_CAPACITY = 35;
+
     private static final String COURSE2_NAME = "Physics 201";
     private static final String COURSE2_DESCRIPTION = "Advanced physics course";
     private static final int COURSE2_MAX_CAPACITY = 25;
@@ -220,10 +224,73 @@ class CourseComponentTest extends AbstractIntegrationTest {
                         org.hamcrest.Matchers.greaterThanOrEqualTo(2)));
     }
 
-    // ── Delete Tests ──────────────────────────────────────────────────
+    // ── Update Tests ─────────────────────────────────────────────────
 
     @Test
     @Order(6)
+    @DisplayName("Should return 200 when updating existing course")
+    void shouldReturn200_whenUpdatingExistingCourse() throws Exception {
+        // Given — course1Id exists
+        assertThat(course1Id).isNotNull();
+        tenantContextHolder.setTenantId(tenantId);
+        String body = """
+                {
+                    "name": "%s",
+                    "description": "%s",
+                    "maxCapacity": %d,
+                    "timeTableIds": [],
+                    "availableCollaboratorIds": [%d]
+                }
+                """.formatted(COURSE1_UPDATED_NAME, COURSE1_UPDATED_DESCRIPTION,
+                COURSE1_UPDATED_MAX_CAPACITY, collaboratorId);
+
+        // When
+        mockMvc.perform(put(BASE_PATH + "/{id}", course1Id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.courseId").value(course1Id))
+                .andExpect(jsonPath("$.message").isString());
+
+        // Then — GET to verify update persisted
+        mockMvc.perform(get(BASE_PATH + "/{id}", course1Id)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value(COURSE1_UPDATED_NAME))
+                .andExpect(jsonPath("$.description").value(COURSE1_UPDATED_DESCRIPTION));
+    }
+
+    @Test
+    @Order(7)
+    @DisplayName("Should return 404 when updating non-existent course")
+    void shouldReturn404_whenUpdatingNonExistentCourse() throws Exception {
+        // Given
+        tenantContextHolder.setTenantId(tenantId);
+        Long nonExistentId = 999999L;
+        String body = """
+                {
+                    "name": "%s",
+                    "description": "%s",
+                    "maxCapacity": %d,
+                    "timeTableIds": [],
+                    "availableCollaboratorIds": [%d]
+                }
+                """.formatted(COURSE1_UPDATED_NAME, COURSE1_UPDATED_DESCRIPTION,
+                COURSE1_UPDATED_MAX_CAPACITY, collaboratorId);
+
+        // When / Then
+        mockMvc.perform(put(BASE_PATH + "/{id}", nonExistentId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code")
+                        .value(BaseControllerAdvice.CODE_ENTITY_NOT_FOUND));
+    }
+
+    // ── Delete Tests ──────────────────────────────────────────────────
+
+    @Test
+    @Order(8)
     @DisplayName("Should return 404 when deleting non-existent course")
     void shouldReturn404_whenDeletingNonExistentCourse() throws Exception {
         // Given
@@ -238,7 +305,7 @@ class CourseComponentTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @Order(7)
+    @Order(9)
     @DisplayName("Should return 204 when deleting existing course")
     void shouldReturn204_whenDeletingExistingCourse() throws Exception {
         // Given
@@ -264,7 +331,7 @@ class CourseComponentTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @Order(8)
+    @Order(10)
     @DisplayName("Should return 404 when requesting soft-deleted course by ID")
     void shouldReturn404_whenRequestingSoftDeletedCourseById() throws Exception {
         // Given — course2Id was soft-deleted

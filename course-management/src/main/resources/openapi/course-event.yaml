@@ -95,14 +95,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CourseEventCreateRequest'
+              $ref: '#/components/schemas/CourseEventUpdateRequest'
       responses:
         '200':
           description: Course event updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CourseEventCreateResponse'
+                $ref: '#/components/schemas/CourseEventUpdateResponse'
         '400':
           description: Invalid request data
           content:
@@ -215,5 +215,48 @@ components:
               readOnly: true
           required:
             - courseEventId
+    CourseEventUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+          maxLength: 200
+        scheduleId:
+          type: integer
+          format: int64
+        courseId:
+          type: integer
+          format: int64
+        instructorId:
+          type: integer
+          format: int64
+        adultAttendeeIds:
+          type: array
+          items:
+            type: integer
+        minorAttendeeIds:
+          type: array
+          items:
+            type: integer
+      required:
+        - title
+        - description
+        - scheduleId
+        - courseId
+        - instructorId
+        - adultAttendeeIds
+        - minorAttendeeIds
+    CourseEventUpdateResponse:
+      type: object
+      properties:
+        courseEventId:
+          type: integer
+          format: int64
+        message:
+          type: string
+          example: "Course event updated successfully"
     ErrorResponse:
       type: object

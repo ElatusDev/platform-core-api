@@ -7,6 +7,7 @@
  */
 package com.akademiaplus.program.interfaceadapters;
 
+import com.akademiaplus.program.usecases.CourseUpdateUseCase;
 import com.akademiaplus.program.usecases.CreateCourseUseCase;
 import com.akademiaplus.program.usecases.DeleteCourseUseCase;
 import com.akademiaplus.program.usecases.GetAllCoursesUseCase;
@@ -14,6 +15,8 @@ import com.akademiaplus.program.usecases.GetCourseByIdUseCase;
 import openapi.akademiaplus.domain.course.management.api.CoursesApi;
 import openapi.akademiaplus.domain.course.management.dto.CourseCreationRequestDTO;
 import openapi.akademiaplus.domain.course.management.dto.CourseCreationResponseDTO;
+import openapi.akademiaplus.domain.course.management.dto.CourseUpdateRequestDTO;
+import openapi.akademiaplus.domain.course.management.dto.CourseUpdateResponseDTO;
 import openapi.akademiaplus.domain.course.management.dto.GetCourseResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,15 +39,18 @@ public class CourseController implements CoursesApi {
     private final GetAllCoursesUseCase getAllCoursesUseCase;
     private final GetCourseByIdUseCase getCourseByIdUseCase;
     private final DeleteCourseUseCase deleteCourseUseCase;
+    private final CourseUpdateUseCase courseUpdateUseCase;
 
     public CourseController(CreateCourseUseCase createCourseUseCase,
                             GetAllCoursesUseCase getAllCoursesUseCase,
                             GetCourseByIdUseCase getCourseByIdUseCase,
-                            DeleteCourseUseCase deleteCourseUseCase) {
+                            DeleteCourseUseCase deleteCourseUseCase,
+                            CourseUpdateUseCase courseUpdateUseCase) {
         this.createCourseUseCase = createCourseUseCase;
         this.getAllCoursesUseCase = getAllCoursesUseCase;
         this.getCourseByIdUseCase = getCourseByIdUseCase;
         this.deleteCourseUseCase = deleteCourseUseCase;
+        this.courseUpdateUseCase = courseUpdateUseCase;
     }
 
     @Override
@@ -62,6 +68,12 @@ public class CourseController implements CoursesApi {
     @Override
     public ResponseEntity<GetCourseResponseDTO> getCourseById(Long courseId) {
         return ResponseEntity.ok(getCourseByIdUseCase.get(courseId));
+    }
+
+    @Override
+    public ResponseEntity<CourseUpdateResponseDTO> updateCourse(
+            Long courseId, CourseUpdateRequestDTO courseUpdateRequestDTO) {
+        return ResponseEntity.ok(courseUpdateUseCase.update(courseId, courseUpdateRequestDTO));
     }
 
     @Override

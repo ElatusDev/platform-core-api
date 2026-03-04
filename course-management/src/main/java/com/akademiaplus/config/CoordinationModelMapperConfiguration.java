@@ -11,11 +11,17 @@ import com.akademiaplus.courses.event.CourseEventDataModel;
 import com.akademiaplus.courses.program.CourseDataModel;
 import com.akademiaplus.courses.program.ScheduleDataModel;
 import com.akademiaplus.event.usecases.CourseEventCreationUseCase;
+import com.akademiaplus.event.usecases.CourseEventUpdateUseCase;
+import com.akademiaplus.program.usecases.CourseUpdateUseCase;
 import com.akademiaplus.program.usecases.CreateCourseUseCase;
 import com.akademiaplus.program.usecases.ScheduleCreationUseCase;
+import com.akademiaplus.program.usecases.ScheduleUpdateUseCase;
 import openapi.akademiaplus.domain.course.management.dto.CourseCreationRequestDTO;
+import openapi.akademiaplus.domain.course.management.dto.CourseUpdateRequestDTO;
 import openapi.akademiaplus.domain.course.management.dto.CourseEventCreateRequestDTO;
+import openapi.akademiaplus.domain.course.management.dto.CourseEventUpdateRequestDTO;
 import openapi.akademiaplus.domain.course.management.dto.ScheduleCreationRequestDTO;
+import openapi.akademiaplus.domain.course.management.dto.ScheduleUpdateRequestDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Configuration;
 
@@ -46,8 +52,11 @@ public class CoordinationModelMapperConfiguration {
         modelMapper.getConfiguration().setImplicitMappingEnabled(false);
 
         registerCourseMap();
+        registerCourseUpdateMap();
         registerScheduleMap();
+        registerScheduleUpdateMap();
         registerCourseEventMap();
+        registerCourseEventUpdateMap();
 
         modelMapper.getConfiguration().setImplicitMappingEnabled(true);
     }
@@ -64,11 +73,34 @@ public class CoordinationModelMapperConfiguration {
         }).implicitMappings();
     }
 
+    private void registerCourseUpdateMap() {
+        modelMapper.createTypeMap(
+                CourseUpdateRequestDTO.class,
+                CourseDataModel.class,
+                CourseUpdateUseCase.MAP_NAME
+        ).addMappings(mapper -> {
+            mapper.skip(CourseDataModel::setCourseId);
+            mapper.skip(CourseDataModel::setSchedules);
+            mapper.skip(CourseDataModel::setAvailableCollaborators);
+        }).implicitMappings();
+    }
+
     private void registerScheduleMap() {
         modelMapper.createTypeMap(
                 ScheduleCreationRequestDTO.class,
                 ScheduleDataModel.class,
                 ScheduleCreationUseCase.MAP_NAME
+        ).addMappings(mapper -> {
+            mapper.skip(ScheduleDataModel::setScheduleId);
+            mapper.skip(ScheduleDataModel::setCourse);
+        }).implicitMappings();
+    }
+
+    private void registerScheduleUpdateMap() {
+        modelMapper.createTypeMap(
+                ScheduleUpdateRequestDTO.class,
+                ScheduleDataModel.class,
+                ScheduleUpdateUseCase.MAP_NAME
         ).addMappings(mapper -> {
             mapper.skip(ScheduleDataModel::setScheduleId);
             mapper.skip(ScheduleDataModel::setCourse);
@@ -90,6 +122,23 @@ public class CoordinationModelMapperConfiguration {
             mapper.map(CourseEventCreateRequestDTO::getDate, CourseEventDataModel::setEventDate);
             mapper.map(CourseEventCreateRequestDTO::getTitle, CourseEventDataModel::setEventTitle);
             mapper.map(CourseEventCreateRequestDTO::getDescription, CourseEventDataModel::setEventDescription);
+        }).implicitMappings();
+    }
+
+    private void registerCourseEventUpdateMap() {
+        modelMapper.createTypeMap(
+                CourseEventUpdateRequestDTO.class,
+                CourseEventDataModel.class,
+                CourseEventUpdateUseCase.MAP_NAME
+        ).addMappings(mapper -> {
+            mapper.skip(CourseEventDataModel::setCourseEventId);
+            mapper.skip(CourseEventDataModel::setCourse);
+            mapper.skip(CourseEventDataModel::setCollaborator);
+            mapper.skip(CourseEventDataModel::setSchedule);
+            mapper.skip(CourseEventDataModel::setAdultAttendees);
+            mapper.skip(CourseEventDataModel::setMinorAttendees);
+            mapper.map(CourseEventUpdateRequestDTO::getTitle, CourseEventDataModel::setEventTitle);
+            mapper.map(CourseEventUpdateRequestDTO::getDescription, CourseEventDataModel::setEventDescription);
         }).implicitMappings();
     }
 }

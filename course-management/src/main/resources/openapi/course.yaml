@@ -81,6 +81,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+    put:
+      operationId: updateCourse
+      summary: Update a course
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseUpdateRequest'
+      responses:
+        '200':
+          description: Course updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseUpdateResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Course not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       operationId: deleteCourseById
       summary: Delete a course
@@ -164,5 +205,17 @@ components:
               readOnly: true
           required:
             - courseId
+    CourseUpdateRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseCourse'
+    CourseUpdateResponse:
+      type: object
+      properties:
+        courseId:
+          type: integer
+          format: int64
+        message:
+          type: string
+          example: "Course updated successfully"
     ErrorResponse:
       type: object

@@ -9,6 +9,7 @@ package com.akademiaplus.event.interfaceadapters;
 
 import com.akademiaplus.config.CoordinationControllerAdvice;
 import com.akademiaplus.event.usecases.CourseEventCreationUseCase;
+import com.akademiaplus.event.usecases.CourseEventUpdateUseCase;
 import com.akademiaplus.event.usecases.DeleteCourseEventUseCase;
 import com.akademiaplus.event.usecases.GetAllCourseEventsUseCase;
 import com.akademiaplus.event.usecases.GetCourseEventByIdUseCase;
@@ -49,6 +50,7 @@ class CourseEventControllerTest {
     private static final String BASE_PATH = "/v1/course-management/course-events";
 
     @Mock private CourseEventCreationUseCase courseEventCreationUseCase;
+    @Mock private CourseEventUpdateUseCase courseEventUpdateUseCase;
     @Mock private DeleteCourseEventUseCase deleteCourseEventUseCase;
     @Mock private GetAllCourseEventsUseCase getAllCourseEventsUseCase;
     @Mock private GetCourseEventByIdUseCase getCourseEventByIdUseCase;
@@ -59,8 +61,9 @@ class CourseEventControllerTest {
     @BeforeEach
     void setUp() {
         CourseEventController controller = new CourseEventController(
-                courseEventCreationUseCase, deleteCourseEventUseCase,
-                getAllCourseEventsUseCase, getCourseEventByIdUseCase);
+                courseEventCreationUseCase, courseEventUpdateUseCase,
+                deleteCourseEventUseCase, getAllCourseEventsUseCase,
+                getCourseEventByIdUseCase);
         CoordinationControllerAdvice controllerAdvice = new CoordinationControllerAdvice(messageService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(controllerAdvice)

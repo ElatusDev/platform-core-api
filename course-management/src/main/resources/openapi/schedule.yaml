@@ -80,6 +80,47 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+    put:
+      operationId: updateSchedule
+      summary: Update a schedule
+      parameters:
+        - name: scheduleId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleUpdateRequest'
+      responses:
+        '200':
+          description: Schedule updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleUpdateResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Schedule not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
     delete:
       operationId: deleteScheduleById
       summary: Delete a schedule
@@ -156,5 +197,17 @@ components:
               readOnly: true
           required:
             - scheduleId
+    ScheduleUpdateRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseSchedule'
+    ScheduleUpdateResponse:
+      type: object
+      properties:
+        scheduleId:
+          type: integer
+          format: int64
+        message:
+          type: string
+          example: "Schedule updated successfully"
     ErrorResponse:
       type: object

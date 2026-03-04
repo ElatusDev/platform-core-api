@@ -12,6 +12,7 @@ import com.akademiaplus.program.usecases.DeleteScheduleUseCase;
 import com.akademiaplus.program.usecases.GetAllSchedulesUseCase;
 import com.akademiaplus.program.usecases.GetScheduleByIdUseCase;
 import com.akademiaplus.program.usecases.ScheduleCreationUseCase;
+import com.akademiaplus.program.usecases.ScheduleUpdateUseCase;
 import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.MessageService;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
@@ -52,6 +53,7 @@ class ScheduleControllerTest {
     @Mock private DeleteScheduleUseCase deleteScheduleUseCase;
     @Mock private GetAllSchedulesUseCase getAllSchedulesUseCase;
     @Mock private GetScheduleByIdUseCase getScheduleByIdUseCase;
+    @Mock private ScheduleUpdateUseCase scheduleUpdateUseCase;
     @Mock private MessageService messageService;
 
     private MockMvc mockMvc;
@@ -60,7 +62,7 @@ class ScheduleControllerTest {
     void setUp() {
         ScheduleController controller = new ScheduleController(
                 scheduleCreationUseCase, getAllSchedulesUseCase, getScheduleByIdUseCase,
-                deleteScheduleUseCase);
+                deleteScheduleUseCase, scheduleUpdateUseCase);
         CoordinationControllerAdvice controllerAdvice = new CoordinationControllerAdvice(messageService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(controllerAdvice)
