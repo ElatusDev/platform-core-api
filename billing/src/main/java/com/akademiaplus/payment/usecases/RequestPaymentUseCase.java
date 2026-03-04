@@ -6,12 +6,14 @@ import com.mercadopago.core.MPRequestOptions;
 import com.mercadopago.exceptions.MPApiException;
 import com.mercadopago.resources.order.Order;
 import com.mercadopago.exceptions.MPException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 
+@Slf4j
 @Service
 public class RequestPaymentUseCase {
 
@@ -53,9 +55,9 @@ public class RequestPaymentUseCase {
                 .build();
         try {
             Order order = client.create(request, requestOptions);
-            System.out.println("Order created: " + order.getResponse().getContent());
+            log.info("Order created: {}", order.getResponse().getContent());
         } catch (MPApiException | MPException e) {
-            System.out.println("Error creating order: " + e.getMessage());
+            log.error("Error creating order: {}", e.getMessage());
 
         }
     }

@@ -8,6 +8,7 @@
 package com.akademiaplus.utilities.healthcheck;
 
 import com.akademiaplus.utilities.exceptions.DatabaseConnectionFailedException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -19,6 +20,7 @@ import java.sql.SQLException;
 
 import org.springframework.retry.annotation.EnableRetry;
 
+@Slf4j
 @Service
 @EnableRetry
 @ConditionalOnBean(DataSource.class)
@@ -32,7 +34,7 @@ public class DatabaseConnectionService {
 
     @Retryable(maxAttempts = 5, backoff = @Backoff(delay = 20000))
     public Connection getConnection() throws SQLException {
-        System.out.println("Attempting to get database connection..."); // Log this properly!
+        log.debug("Attempting to get database connection...");
         return dataSource.getConnection();
     }
 

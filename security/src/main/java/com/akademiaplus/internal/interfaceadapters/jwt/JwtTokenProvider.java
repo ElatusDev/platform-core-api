@@ -97,7 +97,7 @@ public class JwtTokenProvider  {
             jwtParser.parseSignedClaims(token);
             return true;
         } catch (JwtException e) {
-            LOGGER.error("JWT validation failed: {0}", e);
+            LOGGER.error("JWT validation failed: {}", e.getMessage());
             return false;
         }
     }

@@ -71,9 +71,7 @@ public class MockDataExecutionPlan {
                 .filter(MockEntityType::isLoadable)
                 .toList();
 
-        List<MockEntityType> reversedClosure = new ArrayList<>(sorted);
-        Collections.reverse(reversedClosure);
-        List<MockEntityType> cleanupOrder = reversedClosure.stream()
+        List<MockEntityType> cleanupOrder = sorted.reversed().stream()
                 .filter(MockEntityType::isCleanable)
                 .toList();
 
