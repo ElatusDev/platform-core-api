@@ -96,7 +96,7 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      - db_data:/var/lib/mysql
+      - /var/lib/mysql
       - ./db_init:/docker-entrypoint-initdb.d
     command: >
       --general-log=1
@@ -194,6 +194,5 @@ secrets:
     file: ./secrets/ca-bootstrap-tokens.json
 
 volumes:
-  db_data: {}
   redis_data: {}
   trust_broker_data: {}

@@ -9,6 +9,8 @@ package com.akademiaplus.infra.testing;
 
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.infra.persistence.config.TenantContextLoader;
+import jakarta.servlet.Filter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -58,6 +60,25 @@ public class IntegrationTestTenantConfiguration {
     public FilterRegistrationBean<TenantContextLoader> disableTenantContextLoaderForTests(
             TenantContextLoader filter) {
         FilterRegistrationBean<TenantContextLoader> registration =
+                new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    /**
+     * Disables the {@code JwtRequestFilter} servlet filter so that
+     * integration tests do not require JWT authentication headers.
+     *
+     * <p>Uses {@link Qualifier} by bean name because the {@code security}
+     * module is not a compile dependency of {@code infra-common}.
+     *
+     * @param filter the auto-detected {@code JwtRequestFilter} component
+     * @return a registration that prevents the filter from being applied
+     */
+    @Bean
+    public FilterRegistrationBean<Filter> disableJwtRequestFilterForTests(
+            @Qualifier("jwtRequestFilter") Filter filter) {
+        FilterRegistrationBean<Filter> registration =
                 new FilterRegistrationBean<>(filter);
         registration.setEnabled(false);
         return registration;

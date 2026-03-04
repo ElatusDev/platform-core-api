@@ -61,9 +61,24 @@
         <maven.surefire.version>3.5.5</maven.surefire.version>
         <byte-buddy.version>1.18.3</byte-buddy.version>
         <byte.buddy.agent.version>1.18.3</byte.buddy.agent.version>
-        <!--  third party configurations  -->
+        <jacoco.maven.plugin.version>0.8.13</jacoco.maven.plugin.version>
+        <!--  SonarCloud configuration  -->
         <sonar.organization>elatusdev</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.projectKey>ElatusDev-platform-core-api</sonar.projectKey>
+        <sonar.exclusions>
+            **/generated-sources/**,
+            **/openapi/akademiaplus/domain/**/dto/**
+        </sonar.exclusions>
+        <sonar.coverage.exclusions>
+            **/generated-sources/**,
+            **/openapi/akademiaplus/domain/**/dto/**,
+            **/config/**,
+            **/Main.java
+        </sonar.coverage.exclusions>
+        <sonar.coverage.jacoco.xmlReportPaths>
+            ${project.build.directory}/site/jacoco/jacoco.xml
+        </sonar.coverage.jacoco.xmlReportPaths>
         <!--suppress UnresolvedMavenProperty -->
         <github.token>${env.GITHUB_TOKEN}</github.token>
     </properties>
@@ -554,6 +569,7 @@
                     <version>${maven.surefire.version}</version>
                     <configuration>
                         <argLine>
+                            @{argLine}
                             -XX:+EnableDynamicAgentLoading
                             -javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/${byte.buddy.agent.version}/byte-buddy-agent-${byte.buddy.agent.version}.jar
                         </argLine>
@@ -575,6 +591,7 @@
                     <version>${maven.surefire.version}</version>
                     <configuration>
                         <argLine>
+                            @{argLine}
                             -XX:+EnableDynamicAgentLoading
                             -javaagent:${settings.localRepository}/net/bytebuddy/byte-buddy-agent/${byte.buddy.agent.version}/byte-buddy-agent-${byte.buddy.agent.version}.jar
                         </argLine>
@@ -612,8 +629,36 @@
                         </execution>
                     </executions>
                 </plugin>
+
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${jacoco.maven.plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <id>jacoco-prepare-agent</id>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>jacoco-report</id>
+                            <phase>test</phase>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
         </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
     </build>
 
     <distributionManagement>
