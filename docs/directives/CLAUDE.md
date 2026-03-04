@@ -199,3 +199,4 @@ docker compose -f docker-compose.dev.yml up trust-broker multi_tenant_db platfor
 - Run `mvn test -pl {module}` after changes to verify test suite passes
 - Use `public static final` constants for all error messages — never inline strings
 - Use static imports for test assertions (`assertThat`, `assertThatThrownBy`)
+- **Always commit changes** at the end of any workflow, prompt execution, or task — never leave work uncommitted. Split commits by feature when changes span multiple modules or concerns
