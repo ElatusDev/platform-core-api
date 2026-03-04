@@ -34,6 +34,8 @@ paths:
     $ref: './notification.yaml#/paths/~1notifications'
   '/notifications/{notificationId}':
     $ref: './notification.yaml#/paths/~1notifications~1{notificationId}'
+  '/notifications/{notificationId}/dispatch':
+    $ref: './notification.yaml#/paths/~1notifications~1{notificationId}~1dispatch'
 
   # ===== PUSH NOTIFICATION ENDPOINTS =====
   /push:
@@ -80,6 +82,8 @@ components:
       $ref: './notification.yaml#/components/schemas/NotificationCreationResponse'
     GetNotificationResponse:
       $ref: './notification.yaml#/components/schemas/GetNotificationResponse'
+    NotificationDispatchResponse:
+      $ref: './notification.yaml#/components/schemas/NotificationDispatchResponse'
 
     # Reference shared schemas from individual APIs
     DeliveryChannel:

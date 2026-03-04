@@ -11,10 +11,15 @@ import com.akademiaplus.notification.usecases.DeleteNotificationUseCase;
 import com.akademiaplus.notification.usecases.GetAllNotificationsUseCase;
 import com.akademiaplus.notification.usecases.GetNotificationByIdUseCase;
 import com.akademiaplus.notification.usecases.NotificationCreationUseCase;
+import com.akademiaplus.notification.usecases.NotificationDispatchService;
+import com.akademiaplus.notifications.NotificationDataModel;
+import com.akademiaplus.notifications.NotificationDeliveryDataModel;
 import openapi.akademiaplus.domain.notification.system.api.NotificationsApi;
 import openapi.akademiaplus.domain.notification.system.dto.GetNotificationResponseDTO;
 import openapi.akademiaplus.domain.notification.system.dto.NotificationCreationRequestDTO;
 import openapi.akademiaplus.domain.notification.system.dto.NotificationCreationResponseDTO;
+import openapi.akademiaplus.domain.notification.system.dto.NotificationDispatchResponseDTO;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,15 +41,21 @@ public class NotificationController implements NotificationsApi {
     private final GetAllNotificationsUseCase getAllNotificationsUseCase;
     private final GetNotificationByIdUseCase getNotificationByIdUseCase;
     private final DeleteNotificationUseCase deleteNotificationUseCase;
+    private final NotificationDispatchService notificationDispatchService;
+    private final ModelMapper modelMapper;
 
     public NotificationController(NotificationCreationUseCase notificationCreationUseCase,
                                   GetAllNotificationsUseCase getAllNotificationsUseCase,
                                   GetNotificationByIdUseCase getNotificationByIdUseCase,
-                                  DeleteNotificationUseCase deleteNotificationUseCase) {
+                                  DeleteNotificationUseCase deleteNotificationUseCase,
+                                  NotificationDispatchService notificationDispatchService,
+                                  ModelMapper modelMapper) {
         this.notificationCreationUseCase = notificationCreationUseCase;
         this.getAllNotificationsUseCase = getAllNotificationsUseCase;
         this.getNotificationByIdUseCase = getNotificationByIdUseCase;
         this.deleteNotificationUseCase = deleteNotificationUseCase;
+        this.notificationDispatchService = notificationDispatchService;
+        this.modelMapper = modelMapper;
     }
 
     @Override
@@ -68,5 +79,13 @@ public class NotificationController implements NotificationsApi {
     public ResponseEntity<Void> deleteNotification(Long notificationId) {
         deleteNotificationUseCase.delete(notificationId);
         return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    public ResponseEntity<NotificationDispatchResponseDTO> dispatchNotification(Long notificationId) {
+        NotificationDataModel notification = getNotificationByIdUseCase.getEntity(notificationId);
+        NotificationDeliveryDataModel delivery = notificationDispatchService.dispatch(notification);
+        NotificationDispatchResponseDTO response = modelMapper.map(delivery, NotificationDispatchResponseDTO.class);
+        return ResponseEntity.ok(response);
     }
 }

@@ -9,6 +9,7 @@ package com.akademiaplus.usecases;
 
 import com.akademiaplus.config.AbstractIntegrationTest;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
+import com.akademiaplus.notification.usecases.SseEmitterRegistry;
 import com.akademiaplus.tenancy.TenantDataModel;
 import com.akademiaplus.utilities.web.BaseControllerAdvice;
 import jakarta.persistence.EntityManager;
@@ -57,24 +58,32 @@ class NotificationComponentTest extends AbstractIntegrationTest {
     // ── Notification test data ────────────────────────────────────────
     private static final String NOTIFICATION1_TITLE = "System Maintenance";
     private static final String NOTIFICATION1_CONTENT = "Scheduled downtime tonight at 11 PM";
-    private static final String NOTIFICATION1_TYPE = "ALERT";
+    private static final String NOTIFICATION1_TYPE = "SYSTEM_MAINTENANCE";
     private static final String NOTIFICATION1_PRIORITY = "HIGH";
 
     private static final String NOTIFICATION2_TITLE = "New Feature Available";
     private static final String NOTIFICATION2_CONTENT = "Check out the new dashboard widgets";
-    private static final String NOTIFICATION2_TYPE = "INFO";
+    private static final String NOTIFICATION2_TYPE = "ANNOUNCEMENT";
     private static final String NOTIFICATION2_PRIORITY = "LOW";
+
+    // ── Dispatch test data ──────────────────────────────────────────
+    private static final Long DISPATCH_TARGET_USER_ID = 42L;
+    private static final String DISPATCH_TITLE = "Dispatch Test Notification";
+    private static final String DISPATCH_CONTENT = "This notification will be dispatched";
+    private static final String DISPATCH_TYPE = "SYSTEM_MAINTENANCE";
+    private static final String DISPATCH_PRIORITY = "HIGH";
 
     /**
      * Table names for {@code tenant_sequences} — Notification creation
-     * requires a sequence for notifications.
+     * requires sequences for notifications and notification_deliveries.
      */
-    private static final String[] ENTITY_TABLE_NAMES = {"notifications"};
+    private static final String[] ENTITY_TABLE_NAMES = {"notifications", "notification_deliveries"};
 
     @Autowired private MockMvc mockMvc;
     @Autowired private EntityManager entityManager;
     @Autowired private TenantContextHolder tenantContextHolder;
     @Autowired private PlatformTransactionManager transactionManager;
+    @Autowired private SseEmitterRegistry sseEmitterRegistry;
 
     private static boolean dataCreated;
     private static Long tenantId;
@@ -277,6 +286,115 @@ class NotificationComponentTest extends AbstractIntegrationTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code")
                         .value(BaseControllerAdvice.CODE_ENTITY_NOT_FOUND));
+    }
+
+    // ── Dispatch Tests ──────────────────────────────────────────────
+
+    @Test
+    @Order(9)
+    @DisplayName("Should return 404 when dispatching non-existent notification")
+    void shouldReturn404_whenDispatchingNonExistentNotification() throws Exception {
+        // Given
+        tenantContextHolder.setTenantId(tenantId);
+        Long nonExistentId = 999999L;
+
+        // When / Then
+        mockMvc.perform(post(BASE_PATH + "/{id}/dispatch", nonExistentId)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code")
+                        .value(BaseControllerAdvice.CODE_ENTITY_NOT_FOUND));
+    }
+
+    @Test
+    @Order(10)
+    @DisplayName("Should return 200 with FAILED status when dispatching without SSE connection")
+    void shouldReturn200WithFailedStatus_whenDispatchingWithoutSseConnection() throws Exception {
+        // Given — create a notification with targetUserId
+        tenantContextHolder.setTenantId(tenantId);
+        String body = """
+                {
+                    "title": "%s",
+                    "content": "%s",
+                    "type": "%s",
+                    "priority": "%s",
+                    "targetUserId": %d
+                }
+                """.formatted(
+                DISPATCH_TITLE,
+                DISPATCH_CONTENT,
+                DISPATCH_TYPE,
+                DISPATCH_PRIORITY,
+                DISPATCH_TARGET_USER_ID);
+
+        MvcResult createResult = mockMvc.perform(post(BASE_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Long dispatchNotificationId = ((Number) com.jayway.jsonpath.JsonPath
+                .read(createResult.getResponse().getContentAsString(), "$.notificationId"))
+                .longValue();
+
+        // When — dispatch without SSE emitter registered for user
+        MvcResult dispatchResult = mockMvc.perform(
+                        post(BASE_PATH + "/{id}/dispatch", dispatchNotificationId)
+                                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.notificationDeliveryId").isNumber())
+                .andExpect(jsonPath("$.channel").value("WEBAPP"))
+                .andExpect(jsonPath("$.status").value("FAILED"))
+                .andReturn();
+
+        // Then — verify delivery record persisted in database
+        Long deliveryId = ((Number) com.jayway.jsonpath.JsonPath
+                .read(dispatchResult.getResponse().getContentAsString(), "$.notificationDeliveryId"))
+                .longValue();
+        assertThat(deliveryId).isPositive();
+    }
+
+    @Test
+    @Order(11)
+    @DisplayName("Should return 200 with SENT status when dispatching with SSE connection")
+    void shouldReturn200WithSentStatus_whenDispatchingWithSseConnection() throws Exception {
+        // Given — create a notification with targetUserId
+        tenantContextHolder.setTenantId(tenantId);
+        String body = """
+                {
+                    "title": "%s",
+                    "content": "%s",
+                    "type": "%s",
+                    "priority": "%s",
+                    "targetUserId": %d
+                }
+                """.formatted(
+                "SSE Connected Notification",
+                "This should be delivered via SSE",
+                DISPATCH_TYPE,
+                DISPATCH_PRIORITY,
+                DISPATCH_TARGET_USER_ID);
+
+        MvcResult createResult = mockMvc.perform(post(BASE_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        Long dispatchNotificationId = ((Number) com.jayway.jsonpath.JsonPath
+                .read(createResult.getResponse().getContentAsString(), "$.notificationId"))
+                .longValue();
+
+        // Register SSE emitter for the target user
+        sseEmitterRegistry.register(tenantId, DISPATCH_TARGET_USER_ID);
+
+        // When — dispatch with SSE emitter registered
+        mockMvc.perform(post(BASE_PATH + "/{id}/dispatch", dispatchNotificationId)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.notificationDeliveryId").isNumber())
+                .andExpect(jsonPath("$.channel").value("WEBAPP"))
+                .andExpect(jsonPath("$.status").value("SENT"));
     }
 
     // ── Data Creation Helpers ────────────────────────────────────────

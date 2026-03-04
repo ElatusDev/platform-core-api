@@ -114,6 +114,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  '/notifications/{notificationId}/dispatch':
+    post:
+      operationId: dispatchNotification
+      summary: Dispatch a notification immediately via WEBAPP channel
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID of the notification to dispatch
+      responses:
+        '200':
+          description: Notification dispatched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationDispatchResponse'
+        '404':
+          description: Notification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     BaseNotification:
@@ -179,5 +210,25 @@ components:
               description: Notification ID
           required:
             - notificationId
+    NotificationDispatchResponse:
+      type: object
+      properties:
+        notificationDeliveryId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: ID of the created delivery record
+        channel:
+          type: string
+          maxLength: 30
+          description: Delivery channel used
+        status:
+          type: string
+          maxLength: 20
+          description: Delivery outcome status
+      required:
+        - notificationDeliveryId
+        - channel
+        - status
     ErrorResponse:
       type: object

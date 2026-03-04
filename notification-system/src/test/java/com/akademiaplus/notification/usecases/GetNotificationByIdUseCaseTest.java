@@ -119,4 +119,65 @@ class GetNotificationByIdUseCaseTest {
             verifyNoMoreInteractions(tenantContextHolder, notificationRepository, modelMapper);
         }
     }
+
+    @Nested
+    @DisplayName("Get Entity")
+    class GetEntity {
+
+        @Test
+        @DisplayName("Should return notification entity when found")
+        void shouldReturnNotificationEntity_whenFound() {
+            // Given
+            NotificationDataModel notification = new NotificationDataModel();
+
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
+            when(notificationRepository.findById(
+                    new NotificationDataModel.NotificationCompositeId(TENANT_ID, NOTIFICATION_ID)))
+                    .thenReturn(Optional.of(notification));
+
+            // When
+            NotificationDataModel result = useCase.getEntity(NOTIFICATION_ID);
+
+            // Then
+            assertThat(result).isSameAs(notification);
+            verify(tenantContextHolder).getTenantId();
+            verify(notificationRepository).findById(
+                    new NotificationDataModel.NotificationCompositeId(TENANT_ID, NOTIFICATION_ID));
+            verifyNoMoreInteractions(tenantContextHolder, notificationRepository);
+        }
+
+        @Test
+        @DisplayName("Should throw EntityNotFoundException when notification entity not found")
+        void shouldThrowEntityNotFoundException_whenNotificationEntityNotFound() {
+            // Given
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
+            when(notificationRepository.findById(
+                    new NotificationDataModel.NotificationCompositeId(TENANT_ID, NOTIFICATION_ID)))
+                    .thenReturn(Optional.empty());
+
+            // When & Then
+            assertThatThrownBy(() -> useCase.getEntity(NOTIFICATION_ID))
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasFieldOrPropertyWithValue("entityType", EntityType.NOTIFICATION)
+                    .hasFieldOrPropertyWithValue("entityId", String.valueOf(NOTIFICATION_ID));
+            verify(tenantContextHolder).getTenantId();
+            verify(notificationRepository).findById(
+                    new NotificationDataModel.NotificationCompositeId(TENANT_ID, NOTIFICATION_ID));
+            verifyNoMoreInteractions(tenantContextHolder, notificationRepository);
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when tenant context missing for getEntity")
+        void shouldThrowIllegalArgumentException_whenTenantContextMissingForGetEntity() {
+            // Given
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.empty());
+
+            // When & Then
+            assertThatThrownBy(() -> useCase.getEntity(NOTIFICATION_ID))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage(GetNotificationByIdUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
+            verify(tenantContextHolder).getTenantId();
+            verifyNoMoreInteractions(tenantContextHolder, notificationRepository);
+        }
+    }
 }

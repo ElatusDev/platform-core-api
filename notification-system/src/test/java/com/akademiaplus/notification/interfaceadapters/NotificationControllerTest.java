@@ -12,10 +12,15 @@ import com.akademiaplus.notification.usecases.DeleteNotificationUseCase;
 import com.akademiaplus.notification.usecases.GetAllNotificationsUseCase;
 import com.akademiaplus.notification.usecases.GetNotificationByIdUseCase;
 import com.akademiaplus.notification.usecases.NotificationCreationUseCase;
+import com.akademiaplus.notification.usecases.NotificationDispatchService;
+import com.akademiaplus.notifications.NotificationDataModel;
+import com.akademiaplus.notifications.NotificationDeliveryDataModel;
 import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.MessageService;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.notification.system.dto.GetNotificationResponseDTO;
+import openapi.akademiaplus.domain.notification.system.dto.NotificationDispatchResponseDTO;
+import org.modelmapper.ModelMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -33,6 +38,7 @@ import java.util.List;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @DisplayName("NotificationController")
@@ -46,6 +52,8 @@ class NotificationControllerTest {
     @Mock private DeleteNotificationUseCase deleteNotificationUseCase;
     @Mock private GetAllNotificationsUseCase getAllNotificationsUseCase;
     @Mock private GetNotificationByIdUseCase getNotificationByIdUseCase;
+    @Mock private NotificationDispatchService notificationDispatchService;
+    @Mock private ModelMapper modelMapper;
     @Mock private MessageService messageService;
 
     private MockMvc mockMvc;
@@ -54,7 +62,7 @@ class NotificationControllerTest {
     void setUp() {
         NotificationController controller = new NotificationController(
                 notificationCreationUseCase, getAllNotificationsUseCase, getNotificationByIdUseCase,
-                deleteNotificationUseCase);
+                deleteNotificationUseCase, notificationDispatchService, modelMapper);
         NotificationControllerAdvice controllerAdvice = new NotificationControllerAdvice(messageService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(controllerAdvice)
@@ -138,6 +146,59 @@ class NotificationControllerTest {
             verify(getNotificationByIdUseCase).get(NOTIFICATION_ID);
             verify(messageService).getEntityNotFound(EntityType.NOTIFICATION, String.valueOf(NOTIFICATION_ID));
             verifyNoMoreInteractions(getNotificationByIdUseCase, messageService);
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /notifications/{notificationId}/dispatch")
+    class DispatchNotification {
+
+        private static final Long DELIVERY_ID = 500L;
+        private static final String DISPATCH_PATH = BASE_PATH + "/{notificationId}/dispatch";
+
+        @Test
+        @DisplayName("Should return 200 with dispatch response when notification dispatched")
+        void shouldReturn200WithDispatchResponse_whenNotificationDispatched() throws Exception {
+            // Given
+            NotificationDataModel notification = new NotificationDataModel();
+            NotificationDeliveryDataModel delivery = new NotificationDeliveryDataModel();
+            NotificationDispatchResponseDTO responseDto = new NotificationDispatchResponseDTO();
+            responseDto.setNotificationDeliveryId(DELIVERY_ID);
+
+            when(getNotificationByIdUseCase.getEntity(NOTIFICATION_ID)).thenReturn(notification);
+            when(notificationDispatchService.dispatch(notification)).thenReturn(delivery);
+            when(modelMapper.map(delivery, NotificationDispatchResponseDTO.class)).thenReturn(responseDto);
+
+            // When & Then
+            mockMvc.perform(post(DISPATCH_PATH, NOTIFICATION_ID)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.notificationDeliveryId").value(DELIVERY_ID));
+
+            verify(getNotificationByIdUseCase).getEntity(NOTIFICATION_ID);
+            verify(notificationDispatchService).dispatch(notification);
+            verify(modelMapper).map(delivery, NotificationDispatchResponseDTO.class);
+            verifyNoMoreInteractions(getNotificationByIdUseCase, notificationDispatchService, modelMapper);
+        }
+
+        @Test
+        @DisplayName("Should return 404 when notification not found for dispatch")
+        void shouldReturn404_whenNotificationNotFoundForDispatch() throws Exception {
+            // Given
+            when(getNotificationByIdUseCase.getEntity(NOTIFICATION_ID))
+                    .thenThrow(new EntityNotFoundException(EntityType.NOTIFICATION, String.valueOf(NOTIFICATION_ID)));
+            when(messageService.getEntityNotFound(EntityType.NOTIFICATION, String.valueOf(NOTIFICATION_ID)))
+                    .thenReturn("Notification not found: " + NOTIFICATION_ID);
+
+            // When & Then
+            mockMvc.perform(post(DISPATCH_PATH, NOTIFICATION_ID)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound());
+
+            verify(getNotificationByIdUseCase).getEntity(NOTIFICATION_ID);
+            verify(messageService).getEntityNotFound(EntityType.NOTIFICATION, String.valueOf(NOTIFICATION_ID));
+            verifyNoMoreInteractions(getNotificationByIdUseCase, notificationDispatchService, messageService);
         }
     }
 }

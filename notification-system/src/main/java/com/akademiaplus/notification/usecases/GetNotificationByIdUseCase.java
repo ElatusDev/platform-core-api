@@ -47,6 +47,23 @@ public class GetNotificationByIdUseCase {
     }
 
     /**
+     * Retrieves the notification entity by its identifier within the current tenant context.
+     *
+     * @param notificationId the unique identifier of the notification
+     * @return the notification data model
+     * @throws IllegalArgumentException if tenant context is not available
+     * @throws EntityNotFoundException  if no notification is found with the given identifier
+     */
+    public NotificationDataModel getEntity(Long notificationId) {
+        Long tenantId = tenantContextHolder.getTenantId()
+                .orElseThrow(() -> new IllegalArgumentException(ERROR_TENANT_CONTEXT_REQUIRED));
+        return notificationRepository.findById(
+                new NotificationDataModel.NotificationCompositeId(tenantId, notificationId))
+                .orElseThrow(() -> new EntityNotFoundException(
+                        EntityType.NOTIFICATION, String.valueOf(notificationId)));
+    }
+
+    /**
      * Retrieves a notification by its identifier within the current tenant context.
      *
      * @param notificationId the unique identifier of the notification
@@ -55,15 +72,7 @@ public class GetNotificationByIdUseCase {
      * @throws EntityNotFoundException     if no notification is found with the given identifier
      */
     public GetNotificationResponseDTO get(Long notificationId) {
-        Long tenantId = tenantContextHolder.getTenantId()
-                .orElseThrow(() -> new IllegalArgumentException(ERROR_TENANT_CONTEXT_REQUIRED));
-        Optional<NotificationDataModel> queryResult = notificationRepository.findById(
-                new NotificationDataModel.NotificationCompositeId(tenantId, notificationId));
-        if (queryResult.isPresent()) {
-            NotificationDataModel found = queryResult.get();
-            return modelMapper.map(found, GetNotificationResponseDTO.class);
-        } else {
-            throw new EntityNotFoundException(EntityType.NOTIFICATION, String.valueOf(notificationId));
-        }
+        NotificationDataModel found = getEntity(notificationId);
+        return modelMapper.map(found, GetNotificationResponseDTO.class);
     }
 }
