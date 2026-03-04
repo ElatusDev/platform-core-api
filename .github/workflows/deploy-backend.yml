@@ -1,0 +1,233 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'nonprod'
+        type: choice
+        options: [nonprod, prod]
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  set-env:
+    name: Determine environment
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.env.outputs.environment }}
+    steps:
+      - id: env
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "environment=${{ inputs.environment }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.ref_name }}" = "main" ]; then
+            echo "environment=prod" >> "$GITHUB_OUTPUT"
+          else
+            echo "environment=nonprod" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-and-push:
+    name: Build & Push Images
+    needs: set-env
+    runs-on: ubuntu-latest
+    environment: ${{ needs.set-env.outputs.environment }}
+    permissions:
+      id-token: write
+      contents: read
+    outputs:
+      image_tag: ${{ github.sha }}
+      environment: ${{ needs.set-env.outputs.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076 # v2
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          java-version: '25'
+          distribution: 'corretto'
+          cache: maven
+
+      - name: Build Maven project
+        run: mvn -B clean install -DskipTests -DskipITs -q
+
+      - name: Build and push platform-core-api image
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          ENV: ${{ needs.set-env.outputs.environment }}
+        run: |
+          IMAGE="$REGISTRY/akademiaplus/platform-core-api"
+          docker build -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:${ENV}-latest" .
+          docker push "$IMAGE:${{ github.sha }}"
+          docker push "$IMAGE:${ENV}-latest"
+
+      - name: Build and push trust-broker image
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          ENV: ${{ needs.set-env.outputs.environment }}
+        run: |
+          IMAGE="$REGISTRY/akademiaplus/trust-broker"
+          docker build -f certificate-authority/Dockerfile \
+            -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:${ENV}-latest" .
+          docker push "$IMAGE:${{ github.sha }}"
+          docker push "$IMAGE:${ENV}-latest"
+
+      - name: Build and push mock-data-system image
+        if: needs.set-env.outputs.environment == 'nonprod'
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          ENV: ${{ needs.set-env.outputs.environment }}
+        run: |
+          IMAGE="$REGISTRY/akademiaplus/mock-data-system"
+          docker build -f mock-data-system/Dockerfile \
+            -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:${ENV}-latest" .
+          docker push "$IMAGE:${{ github.sha }}"
+          docker push "$IMAGE:${ENV}-latest"
+
+  deploy:
+    name: Deploy to ECS
+    needs: [set-env, build-and-push]
+    runs-on: ubuntu-latest
+    environment: ${{ needs.set-env.outputs.environment }}
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@ff717079ee2060e4bcee96c4779b553acc87447c # v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get current task definitions
+        id: current-tasks
+        env:
+          ENV: ${{ needs.set-env.outputs.environment }}
+        run: |
+          # Fetch current task definitions for each service
+          for SERVICE in platform-core-api trust-broker; do
+            TASK_DEF=$(aws ecs describe-services \
+              --cluster "akademiaplus-${ENV}" \
+              --services "akademiaplus-${ENV}-${SERVICE}" \
+              --query 'services[0].taskDefinition' \
+              --output text 2>/dev/null || echo "")
+            if [ -n "$TASK_DEF" ] && [ "$TASK_DEF" != "None" ]; then
+              aws ecs describe-task-definition \
+                --task-definition "$TASK_DEF" \
+                --query 'taskDefinition' \
+                > "${SERVICE}-task-def.json"
+            fi
+          done
+
+          if [ "$ENV" = "nonprod" ]; then
+            TASK_DEF=$(aws ecs describe-services \
+              --cluster "akademiaplus-${ENV}" \
+              --services "akademiaplus-${ENV}-mock-data-system" \
+              --query 'services[0].taskDefinition' \
+              --output text 2>/dev/null || echo "")
+            if [ -n "$TASK_DEF" ] && [ "$TASK_DEF" != "None" ]; then
+              aws ecs describe-task-definition \
+                --task-definition "$TASK_DEF" \
+                --query 'taskDefinition' \
+                > "mock-data-system-task-def.json"
+            fi
+          fi
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076 # v2
+
+      - name: Render platform-core-api task definition
+        id: render-api
+        uses: aws-actions/amazon-ecs-render-task-definition@6b89923a897d41e9ad789181d8865b532ecf973c # v1
+        with:
+          task-definition: platform-core-api-task-def.json
+          container-name: platform-core-api
+          image: ${{ steps.ecr-login.outputs.registry }}/akademiaplus/platform-core-api:${{ github.sha }}
+
+      - name: Deploy platform-core-api
+        uses: aws-actions/amazon-ecs-deploy-task-definition@cbf54ec46642b86ff78c2f5793da6746954cf8ff # v2
+        with:
+          task-definition: ${{ steps.render-api.outputs.task-definition }}
+          service: akademiaplus-${{ needs.set-env.outputs.environment }}-platform-core-api
+          cluster: akademiaplus-${{ needs.set-env.outputs.environment }}
+          wait-for-service-stability: true
+          wait-for-minutes: 10
+
+      - name: Render trust-broker task definition
+        id: render-tb
+        uses: aws-actions/amazon-ecs-render-task-definition@6b89923a897d41e9ad789181d8865b532ecf973c # v1
+        with:
+          task-definition: trust-broker-task-def.json
+          container-name: trust-broker
+          image: ${{ steps.ecr-login.outputs.registry }}/akademiaplus/trust-broker:${{ github.sha }}
+
+      - name: Deploy trust-broker
+        uses: aws-actions/amazon-ecs-deploy-task-definition@cbf54ec46642b86ff78c2f5793da6746954cf8ff # v2
+        with:
+          task-definition: ${{ steps.render-tb.outputs.task-definition }}
+          service: akademiaplus-${{ needs.set-env.outputs.environment }}-trust-broker
+          cluster: akademiaplus-${{ needs.set-env.outputs.environment }}
+          wait-for-service-stability: true
+          wait-for-minutes: 10
+
+      - name: Render mock-data-system task definition
+        if: needs.set-env.outputs.environment == 'nonprod'
+        id: render-mock
+        uses: aws-actions/amazon-ecs-render-task-definition@6b89923a897d41e9ad789181d8865b532ecf973c # v1
+        with:
+          task-definition: mock-data-system-task-def.json
+          container-name: mock-data-system
+          image: ${{ steps.ecr-login.outputs.registry }}/akademiaplus/mock-data-system:${{ github.sha }}
+
+      - name: Deploy mock-data-system
+        if: needs.set-env.outputs.environment == 'nonprod'
+        uses: aws-actions/amazon-ecs-deploy-task-definition@cbf54ec46642b86ff78c2f5793da6746954cf8ff # v2
+        with:
+          task-definition: ${{ steps.render-mock.outputs.task-definition }}
+          service: akademiaplus-${{ needs.set-env.outputs.environment }}-mock-data-system
+          cluster: akademiaplus-${{ needs.set-env.outputs.environment }}
+          wait-for-service-stability: true
+          wait-for-minutes: 10
+
+      # Health check uses HTTP intentionally — ALB is internal (VPC-only), TLS terminates at ALB
+      - name: Health check
+        env:
+          ENV: ${{ needs.set-env.outputs.environment }}
+        run: |
+          ALB_DNS=$(aws ssm get-parameter \
+            --name "/akademiaplus/${ENV}/alb-dns" \
+            --query 'Parameter.Value' \
+            --output text)
+          echo "Checking health at http://${ALB_DNS}/api/actuator/health"
+          for i in $(seq 1 5); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://${ALB_DNS}/api/actuator/health" || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "Health check passed!"
+              exit 0
+            fi
+            echo "Attempt $i: got $STATUS, retrying in 10s..."
+            sleep 10
+          done
+          echo "Health check failed after 5 attempts"
+          exit 1
