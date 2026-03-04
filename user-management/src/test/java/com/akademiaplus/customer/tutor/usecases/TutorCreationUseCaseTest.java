@@ -3,10 +3,14 @@ package com.akademiaplus.customer.tutor.usecases;
 import com.akademiaplus.customer.interfaceadapters.TutorRepository;
 import com.akademiaplus.customer.minorstudent.interfaceadapters.MinorStudentRepository;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
+import com.akademiaplus.interfaceadapters.PersonPIIRepository;
 import com.akademiaplus.security.CustomerAuthDataModel;
 import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.customer.MinorStudentDataModel;
 import com.akademiaplus.users.customer.TutorDataModel;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.PiiField;
+import com.akademiaplus.utilities.exceptions.DuplicateEntityException;
 import com.akademiaplus.utilities.security.HashingService;
 import com.akademiaplus.utilities.security.PiiNormalizer;
 import openapi.akademiaplus.domain.user.management.dto.MinorStudentCreationRequestDTO;
@@ -38,6 +42,7 @@ class TutorCreationUseCaseTest {
     @Mock private ApplicationContext applicationContext;
     @Mock private TutorRepository tutorRepository;
     @Mock private MinorStudentRepository minorStudentRepository;
+    @Mock private PersonPIIRepository personPIIRepository;
     @Mock private TenantContextHolder tenantContextHolder;
     @Mock private ModelMapper modelMapper;
     @Mock private HashingService hashingService;
@@ -59,6 +64,7 @@ class TutorCreationUseCaseTest {
                 applicationContext,
                 tutorRepository,
                 minorStudentRepository,
+                personPIIRepository,
                 tenantContextHolder,
                 modelMapper,
                 hashingService,
@@ -347,6 +353,8 @@ class TutorCreationUseCaseTest {
             when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
             when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
             when(hashingService.generateHash(NORMALIZED_PHONE)).thenReturn(PHONE_HASH);
+            when(personPIIRepository.existsByEmailHash(EMAIL_HASH)).thenReturn(false);
+            when(personPIIRepository.existsByPhoneHash(PHONE_HASH)).thenReturn(false);
             when(tutorRepository.saveAndFlush(tutorModel)).thenReturn(savedTutor);
             when(modelMapper.map(savedTutor, TutorCreationResponseDTO.class)).thenReturn(expectedResponse);
 
@@ -391,6 +399,8 @@ class TutorCreationUseCaseTest {
             when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
             when(hashingService.generateHash(NORMALIZED_PHONE)).thenReturn(PHONE_HASH);
             when(tutorRepository.findById(new TutorDataModel.TutorCompositeId(TENANT_ID, tutorId))).thenReturn(Optional.of(existingTutor));
+            when(personPIIRepository.existsByEmailHash(EMAIL_HASH)).thenReturn(false);
+            when(personPIIRepository.existsByPhoneHash(PHONE_HASH)).thenReturn(false);
             when(minorStudentRepository.saveAndFlush(minorModel)).thenReturn(savedMinor);
             when(modelMapper.map(savedMinor, MinorStudentCreationResponseDTO.class)).thenReturn(expectedResponse);
 
@@ -400,6 +410,167 @@ class TutorCreationUseCaseTest {
             // Then
             verify(minorStudentRepository).saveAndFlush(minorModel);
             assertThat(result).isEqualTo(expectedResponse);
+        }
+    }
+
+    @Nested
+    @DisplayName("Duplicate validation")
+    class DuplicateValidation {
+
+        @Test
+        @DisplayName("Should throw DuplicateEntityException when tutor email already exists")
+        void shouldThrowDuplicateEntityException_whenTutorEmailAlreadyExists() {
+            // Given
+            TutorCreationRequestDTO tutorDto = new TutorCreationRequestDTO(
+                    LocalDate.of(1990, 1, 15),
+                    "John", "Doe",
+                    TEST_EMAIL, TEST_PHONE,
+                    "123 Main St", "12345"
+            );
+            TutorDataModel tutorModel = new TutorDataModel();
+            PersonPIIDataModel personPII = new PersonPIIDataModel();
+            personPII.setEmail(TEST_EMAIL);
+            personPII.setPhoneNumber(TEST_PHONE);
+
+            when(applicationContext.getBean(PersonPIIDataModel.class)).thenReturn(personPII);
+            doNothing().when(modelMapper).map(tutorDto, personPII);
+            when(applicationContext.getBean(TutorDataModel.class)).thenReturn(tutorModel);
+            doNothing().when(modelMapper).map(tutorDto, tutorModel, TutorCreationUseCase.TUTOR_MAP_NAME);
+            when(piiNormalizer.normalizeEmail(TEST_EMAIL)).thenReturn(NORMALIZED_EMAIL);
+            when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
+            when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
+            when(hashingService.generateHash(NORMALIZED_PHONE)).thenReturn(PHONE_HASH);
+            when(personPIIRepository.existsByEmailHash(EMAIL_HASH)).thenReturn(true);
+
+            // When & Then
+            assertThatThrownBy(() -> useCase.create(tutorDto))
+                    .isInstanceOf(DuplicateEntityException.class)
+                    .satisfies(ex -> {
+                        DuplicateEntityException dee = (DuplicateEntityException) ex;
+                        assertThat(dee.getEntityType()).isEqualTo(EntityType.TUTOR);
+                        assertThat(dee.getField()).isEqualTo(PiiField.EMAIL);
+                    });
+        }
+
+        @Test
+        @DisplayName("Should throw DuplicateEntityException when tutor phone already exists")
+        void shouldThrowDuplicateEntityException_whenTutorPhoneAlreadyExists() {
+            // Given
+            TutorCreationRequestDTO tutorDto = new TutorCreationRequestDTO(
+                    LocalDate.of(1990, 1, 15),
+                    "John", "Doe",
+                    TEST_EMAIL, TEST_PHONE,
+                    "123 Main St", "12345"
+            );
+            TutorDataModel tutorModel = new TutorDataModel();
+            PersonPIIDataModel personPII = new PersonPIIDataModel();
+            personPII.setEmail(TEST_EMAIL);
+            personPII.setPhoneNumber(TEST_PHONE);
+
+            when(applicationContext.getBean(PersonPIIDataModel.class)).thenReturn(personPII);
+            doNothing().when(modelMapper).map(tutorDto, personPII);
+            when(applicationContext.getBean(TutorDataModel.class)).thenReturn(tutorModel);
+            doNothing().when(modelMapper).map(tutorDto, tutorModel, TutorCreationUseCase.TUTOR_MAP_NAME);
+            when(piiNormalizer.normalizeEmail(TEST_EMAIL)).thenReturn(NORMALIZED_EMAIL);
+            when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
+            when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
+            when(hashingService.generateHash(NORMALIZED_PHONE)).thenReturn(PHONE_HASH);
+            when(personPIIRepository.existsByEmailHash(EMAIL_HASH)).thenReturn(false);
+            when(personPIIRepository.existsByPhoneHash(PHONE_HASH)).thenReturn(true);
+
+            // When & Then
+            assertThatThrownBy(() -> useCase.create(tutorDto))
+                    .isInstanceOf(DuplicateEntityException.class)
+                    .satisfies(ex -> {
+                        DuplicateEntityException dee = (DuplicateEntityException) ex;
+                        assertThat(dee.getEntityType()).isEqualTo(EntityType.TUTOR);
+                        assertThat(dee.getField()).isEqualTo(PiiField.PHONE_NUMBER);
+                    });
+        }
+
+        @Test
+        @DisplayName("Should throw DuplicateEntityException when minor student email already exists")
+        void shouldThrowDuplicateEntityException_whenMinorStudentEmailAlreadyExists() {
+            // Given
+            Long tutorId = 42L;
+            MinorStudentCreationRequestDTO minorDto = new MinorStudentCreationRequestDTO(
+                    LocalDate.of(2012, 6, 1),
+                    tutorId,
+                    "Jane", "Doe",
+                    TEST_EMAIL, TEST_PHONE,
+                    "456 Oak Ave", "67890",
+                    "GOOGLE", "oauth_token123"
+            );
+            MinorStudentDataModel minorModel = new MinorStudentDataModel();
+            PersonPIIDataModel personPII = new PersonPIIDataModel();
+            personPII.setEmail(TEST_EMAIL);
+            personPII.setPhoneNumber(TEST_PHONE);
+            TutorDataModel existingTutor = new TutorDataModel();
+
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
+            when(applicationContext.getBean(PersonPIIDataModel.class)).thenReturn(personPII);
+            doNothing().when(modelMapper).map(minorDto, personPII);
+            when(applicationContext.getBean(MinorStudentDataModel.class)).thenReturn(minorModel);
+            doNothing().when(modelMapper).map(minorDto, minorModel, TutorCreationUseCase.MINOR_STUDENT_MAP_NAME);
+            when(applicationContext.getBean(CustomerAuthDataModel.class)).thenReturn(new CustomerAuthDataModel());
+            when(piiNormalizer.normalizeEmail(TEST_EMAIL)).thenReturn(NORMALIZED_EMAIL);
+            when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
+            when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
+            when(hashingService.generateHash(NORMALIZED_PHONE)).thenReturn(PHONE_HASH);
+            when(tutorRepository.findById(new TutorDataModel.TutorCompositeId(TENANT_ID, tutorId))).thenReturn(Optional.of(existingTutor));
+            when(personPIIRepository.existsByEmailHash(EMAIL_HASH)).thenReturn(true);
+
+            // When & Then
+            assertThatThrownBy(() -> useCase.createMinorStudent(minorDto))
+                    .isInstanceOf(DuplicateEntityException.class)
+                    .satisfies(ex -> {
+                        DuplicateEntityException dee = (DuplicateEntityException) ex;
+                        assertThat(dee.getEntityType()).isEqualTo(EntityType.MINOR_STUDENT);
+                        assertThat(dee.getField()).isEqualTo(PiiField.EMAIL);
+                    });
+        }
+
+        @Test
+        @DisplayName("Should throw DuplicateEntityException when minor student phone already exists")
+        void shouldThrowDuplicateEntityException_whenMinorStudentPhoneAlreadyExists() {
+            // Given
+            Long tutorId = 42L;
+            MinorStudentCreationRequestDTO minorDto = new MinorStudentCreationRequestDTO(
+                    LocalDate.of(2012, 6, 1),
+                    tutorId,
+                    "Jane", "Doe",
+                    TEST_EMAIL, TEST_PHONE,
+                    "456 Oak Ave", "67890",
+                    "GOOGLE", "oauth_token123"
+            );
+            MinorStudentDataModel minorModel = new MinorStudentDataModel();
+            PersonPIIDataModel personPII = new PersonPIIDataModel();
+            personPII.setEmail(TEST_EMAIL);
+            personPII.setPhoneNumber(TEST_PHONE);
+            TutorDataModel existingTutor = new TutorDataModel();
+
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
+            when(applicationContext.getBean(PersonPIIDataModel.class)).thenReturn(personPII);
+            doNothing().when(modelMapper).map(minorDto, personPII);
+            when(applicationContext.getBean(MinorStudentDataModel.class)).thenReturn(minorModel);
+            doNothing().when(modelMapper).map(minorDto, minorModel, TutorCreationUseCase.MINOR_STUDENT_MAP_NAME);
+            when(applicationContext.getBean(CustomerAuthDataModel.class)).thenReturn(new CustomerAuthDataModel());
+            when(piiNormalizer.normalizeEmail(TEST_EMAIL)).thenReturn(NORMALIZED_EMAIL);
+            when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
+            when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
+            when(hashingService.generateHash(NORMALIZED_PHONE)).thenReturn(PHONE_HASH);
+            when(tutorRepository.findById(new TutorDataModel.TutorCompositeId(TENANT_ID, tutorId))).thenReturn(Optional.of(existingTutor));
+            when(personPIIRepository.existsByEmailHash(EMAIL_HASH)).thenReturn(false);
+            when(personPIIRepository.existsByPhoneHash(PHONE_HASH)).thenReturn(true);
+
+            // When & Then
+            assertThatThrownBy(() -> useCase.createMinorStudent(minorDto))
+                    .isInstanceOf(DuplicateEntityException.class)
+                    .satisfies(ex -> {
+                        DuplicateEntityException dee = (DuplicateEntityException) ex;
+                        assertThat(dee.getEntityType()).isEqualTo(EntityType.MINOR_STUDENT);
+                        assertThat(dee.getField()).isEqualTo(PiiField.PHONE_NUMBER);
+                    });
         }
     }
 }

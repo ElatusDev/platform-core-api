@@ -8,9 +8,14 @@
 package com.akademiaplus.config;
 
 import com.akademiaplus.collaborator.usecases.CollaboratorCreationUseCase;
+import com.akademiaplus.collaborator.usecases.CollaboratorUpdateUseCase;
 import com.akademiaplus.customer.adultstudent.usecases.AdultStudentCreationUseCase;
+import com.akademiaplus.customer.adultstudent.usecases.AdultStudentUpdateUseCase;
+import com.akademiaplus.customer.minorstudent.usecases.MinorStudentUpdateUseCase;
 import com.akademiaplus.customer.tutor.usecases.TutorCreationUseCase;
+import com.akademiaplus.customer.tutor.usecases.TutorUpdateUseCase;
 import com.akademiaplus.employee.usecases.EmployeeCreationUseCase;
+import com.akademiaplus.employee.usecases.EmployeeUpdateUseCase;
 import com.akademiaplus.security.InternalAuthDataModel;
 import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
@@ -61,10 +66,15 @@ public class PeopleModelMapperConfiguration {
         modelMapper.getConfiguration().setImplicitMappingEnabled(false);
 
         registerTutorMap();
+        registerTutorUpdateMap();
         registerMinorStudentMap();
+        registerMinorStudentUpdateMap();
         registerAdultStudentMap();
+        registerAdultStudentUpdateMap();
         registerEmployeeMap();
+        registerEmployeeUpdateMap();
         registerCollaboratorMap();
+        registerCollaboratorUpdateMap();
 
         modelMapper.getConfiguration().setImplicitMappingEnabled(true);
     }
@@ -74,6 +84,18 @@ public class PeopleModelMapperConfiguration {
                 TutorCreationRequestDTO.class,
                 TutorDataModel.class,
                 TutorCreationUseCase.TUTOR_MAP_NAME
+        ).addMappings(mapper -> {
+            mapper.skip(TutorDataModel::setTutorId);
+            mapper.skip(TutorDataModel::setPersonPII);
+            mapper.skip(TutorDataModel::setCustomerAuth);
+        }).implicitMappings();
+    }
+
+    private void registerTutorUpdateMap() {
+        modelMapper.createTypeMap(
+                TutorUpdateRequestDTO.class,
+                TutorDataModel.class,
+                TutorUpdateUseCase.MAP_NAME
         ).addMappings(mapper -> {
             mapper.skip(TutorDataModel::setTutorId);
             mapper.skip(TutorDataModel::setPersonPII);
@@ -94,11 +116,36 @@ public class PeopleModelMapperConfiguration {
         }).implicitMappings();
     }
 
+    private void registerMinorStudentUpdateMap() {
+        modelMapper.createTypeMap(
+                MinorStudentUpdateRequestDTO.class,
+                MinorStudentDataModel.class,
+                MinorStudentUpdateUseCase.MAP_NAME
+        ).addMappings(mapper -> {
+            mapper.skip(MinorStudentDataModel::setMinorStudentId);
+            mapper.skip(MinorStudentDataModel::setTutor);
+            mapper.skip(MinorStudentDataModel::setCustomerAuth);
+            mapper.skip(MinorStudentDataModel::setPersonPII);
+        }).implicitMappings();
+    }
+
     private void registerAdultStudentMap() {
         modelMapper.createTypeMap(
                 AdultStudentCreationRequestDTO.class,
                 AdultStudentDataModel.class,
                 AdultStudentCreationUseCase.MAP_NAME
+        ).addMappings(mapper -> {
+            mapper.skip(AdultStudentDataModel::setAdultStudentId);
+            mapper.skip(AdultStudentDataModel::setPersonPII);
+            mapper.skip(AdultStudentDataModel::setCustomerAuth);
+        }).implicitMappings();
+    }
+
+    private void registerAdultStudentUpdateMap() {
+        modelMapper.createTypeMap(
+                AdultStudentUpdateRequestDTO.class,
+                AdultStudentDataModel.class,
+                AdultStudentUpdateUseCase.MAP_NAME
         ).addMappings(mapper -> {
             mapper.skip(AdultStudentDataModel::setAdultStudentId);
             mapper.skip(AdultStudentDataModel::setPersonPII);
@@ -118,11 +165,35 @@ public class PeopleModelMapperConfiguration {
         }).implicitMappings();
     }
 
+    private void registerEmployeeUpdateMap() {
+        modelMapper.createTypeMap(
+                EmployeeUpdateRequestDTO.class,
+                EmployeeDataModel.class,
+                EmployeeUpdateUseCase.MAP_NAME
+        ).addMappings(mapper -> {
+            mapper.skip(EmployeeDataModel::setEmployeeId);
+            mapper.skip(EmployeeDataModel::setPersonPII);
+            mapper.skip(EmployeeDataModel::setInternalAuth);
+        }).implicitMappings();
+    }
+
     private void registerCollaboratorMap() {
         modelMapper.createTypeMap(
                 CollaboratorCreationRequestDTO.class,
                 CollaboratorDataModel.class,
                 CollaboratorCreationUseCase.TYPE_MAP
+        ).addMappings(mapper -> {
+            mapper.skip(CollaboratorDataModel::setCollaboratorId);
+            mapper.skip(CollaboratorDataModel::setPersonPII);
+            mapper.skip(CollaboratorDataModel::setInternalAuth);
+        }).implicitMappings();
+    }
+
+    private void registerCollaboratorUpdateMap() {
+        modelMapper.createTypeMap(
+                CollaboratorUpdateRequestDTO.class,
+                CollaboratorDataModel.class,
+                CollaboratorUpdateUseCase.MAP_NAME
         ).addMappings(mapper -> {
             mapper.skip(CollaboratorDataModel::setCollaboratorId);
             mapper.skip(CollaboratorDataModel::setPersonPII);

@@ -12,6 +12,7 @@ import com.akademiaplus.customer.tutor.usecases.DeleteTutorUseCase;
 import com.akademiaplus.customer.tutor.usecases.GetAllTutorsUseCase;
 import com.akademiaplus.customer.tutor.usecases.GetTutorByIdUseCase;
 import com.akademiaplus.customer.tutor.usecases.TutorCreationUseCase;
+import com.akademiaplus.customer.tutor.usecases.TutorUpdateUseCase;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.MessageService;
@@ -57,6 +58,9 @@ class TutorControllerTest {
     private TutorCreationUseCase tutorCreationUseCase;
 
     @Mock
+    private TutorUpdateUseCase tutorUpdateUseCase;
+
+    @Mock
     private GetAllTutorsUseCase getAllTutorsUseCase;
 
     @Mock
@@ -73,8 +77,8 @@ class TutorControllerTest {
     @BeforeEach
     void setUp() {
         TutorController controller = new TutorController(
-                tutorCreationUseCase, getAllTutorsUseCase, getTutorByIdUseCase,
-                deleteTutorUseCase);
+                tutorCreationUseCase, tutorUpdateUseCase, getAllTutorsUseCase,
+                getTutorByIdUseCase, deleteTutorUseCase);
         PeopleControllerAdvice controllerAdvice = new PeopleControllerAdvice(messageService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(controllerAdvice)

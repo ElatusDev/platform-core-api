@@ -7,10 +7,14 @@
  */
 package com.akademiaplus.customer.adultstudent.usecases;
 
+import com.akademiaplus.interfaceadapters.PersonPIIRepository;
 import com.akademiaplus.security.CustomerAuthDataModel;
 import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.customer.AdultStudentDataModel;
 import com.akademiaplus.customer.adultstudent.interfaceadapters.AdultStudentRepository;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.PiiField;
+import com.akademiaplus.utilities.exceptions.DuplicateEntityException;
 import com.akademiaplus.utilities.security.HashingService;
 import com.akademiaplus.utilities.security.PiiNormalizer;
 import lombok.RequiredArgsConstructor;
@@ -37,13 +41,22 @@ public class AdultStudentCreationUseCase {
 
     private final ApplicationContext applicationContext;
     private final AdultStudentRepository adultStudentRepository;
+    private final PersonPIIRepository personPIIRepository;
     private final ModelMapper modelMapper;
     private final HashingService hashingService;
     private final PiiNormalizer piiNormalizer;
 
     @Transactional
     public AdultStudentCreationResponseDTO create(AdultStudentCreationRequestDTO dto) {
-        return modelMapper.map(adultStudentRepository.saveAndFlush(transform(dto)), AdultStudentCreationResponseDTO.class);
+        AdultStudentDataModel model = transform(dto);
+        PersonPIIDataModel pii = model.getPersonPII();
+        if (personPIIRepository.existsByEmailHash(pii.getEmailHash())) {
+            throw new DuplicateEntityException(EntityType.ADULT_STUDENT, PiiField.EMAIL);
+        }
+        if (personPIIRepository.existsByPhoneHash(pii.getPhoneHash())) {
+            throw new DuplicateEntityException(EntityType.ADULT_STUDENT, PiiField.PHONE_NUMBER);
+        }
+        return modelMapper.map(adultStudentRepository.saveAndFlush(model), AdultStudentCreationResponseDTO.class);
     }
 
     /**

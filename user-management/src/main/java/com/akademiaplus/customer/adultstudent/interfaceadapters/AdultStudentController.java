@@ -8,12 +8,15 @@
 package com.akademiaplus.customer.adultstudent.interfaceadapters;
 
 import com.akademiaplus.customer.adultstudent.usecases.AdultStudentCreationUseCase;
+import com.akademiaplus.customer.adultstudent.usecases.AdultStudentUpdateUseCase;
 import com.akademiaplus.customer.adultstudent.usecases.DeleteAdultStudentUseCase;
 import com.akademiaplus.customer.adultstudent.usecases.GetAdultStudentByIdUseCase;
 import com.akademiaplus.customer.adultstudent.usecases.GetAllAdultStudentsUseCase;
 import openapi.akademiaplus.domain.user.management.api.AdultStudentsApi;
 import openapi.akademiaplus.domain.user.management.dto.AdultStudentCreationRequestDTO;
 import openapi.akademiaplus.domain.user.management.dto.AdultStudentCreationResponseDTO;
+import openapi.akademiaplus.domain.user.management.dto.AdultStudentUpdateRequestDTO;
+import openapi.akademiaplus.domain.user.management.dto.AdultStudentUpdateResponseDTO;
 import openapi.akademiaplus.domain.user.management.dto.GetAdultStudentResponseDTO;
 import openapi.akademiaplus.domain.user.management.dto.GetAllAdultStudents200ResponseDTO;
 import org.springframework.http.HttpStatus;
@@ -27,15 +30,18 @@ import java.util.List;
 @RequestMapping("/v1/user-management")
 public class AdultStudentController implements AdultStudentsApi {
     private final AdultStudentCreationUseCase adultStudentCreationUseCase;
+    private final AdultStudentUpdateUseCase adultStudentUpdateUseCase;
     private final DeleteAdultStudentUseCase deleteAdultStudentUseCase;
     private final GetAdultStudentByIdUseCase getAdultStudentByIdUseCase;
     private final GetAllAdultStudentsUseCase getAllAdultStudentsUseCase;
 
     public AdultStudentController(AdultStudentCreationUseCase adultStudentCreationUseCase,
+                                  AdultStudentUpdateUseCase adultStudentUpdateUseCase,
                                   DeleteAdultStudentUseCase deleteAdultStudentUseCase,
                                   GetAdultStudentByIdUseCase getAdultStudentByIdUseCase,
                                   GetAllAdultStudentsUseCase getAllAdultStudentsUseCase) {
         this.adultStudentCreationUseCase = adultStudentCreationUseCase;
+        this.adultStudentUpdateUseCase = adultStudentUpdateUseCase;
         this.deleteAdultStudentUseCase = deleteAdultStudentUseCase;
         this.getAdultStudentByIdUseCase = getAdultStudentByIdUseCase;
         this.getAllAdultStudentsUseCase = getAllAdultStudentsUseCase;
@@ -45,6 +51,12 @@ public class AdultStudentController implements AdultStudentsApi {
     public ResponseEntity<AdultStudentCreationResponseDTO> createAdultStudent(
             AdultStudentCreationRequestDTO adultStudentCreationRequestDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(adultStudentCreationUseCase.create(adultStudentCreationRequestDTO));
+    }
+
+    @Override
+    public ResponseEntity<AdultStudentUpdateResponseDTO> updateAdultStudent(
+            Long adultStudentId, AdultStudentUpdateRequestDTO adultStudentUpdateRequestDTO) {
+        return ResponseEntity.ok(adultStudentUpdateUseCase.update(adultStudentId, adultStudentUpdateRequestDTO));
     }
 
     @Override

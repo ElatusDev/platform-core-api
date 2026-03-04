@@ -10,10 +10,14 @@ package com.akademiaplus.customer.tutor.usecases;
 import com.akademiaplus.customer.interfaceadapters.TutorRepository;
 import com.akademiaplus.customer.minorstudent.interfaceadapters.MinorStudentRepository;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
+import com.akademiaplus.interfaceadapters.PersonPIIRepository;
 import com.akademiaplus.security.CustomerAuthDataModel;
 import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.customer.MinorStudentDataModel;
 import com.akademiaplus.users.customer.TutorDataModel;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.PiiField;
+import com.akademiaplus.utilities.exceptions.DuplicateEntityException;
 import com.akademiaplus.utilities.security.HashingService;
 import com.akademiaplus.utilities.security.PiiNormalizer;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +54,7 @@ public class TutorCreationUseCase {
     private final ApplicationContext applicationContext;
     private final TutorRepository tutorRepository;
     private final MinorStudentRepository minorStudentRepository;
+    private final PersonPIIRepository personPIIRepository;
     private final TenantContextHolder tenantContextHolder;
     private final ModelMapper modelMapper;
     private final HashingService hashingService;
@@ -57,12 +62,28 @@ public class TutorCreationUseCase {
 
     @Transactional
     public TutorCreationResponseDTO create(TutorCreationRequestDTO dto) {
-        return modelMapper.map(tutorRepository.saveAndFlush(transformTutor(dto)), TutorCreationResponseDTO.class);
+        TutorDataModel model = transformTutor(dto);
+        PersonPIIDataModel pii = model.getPersonPII();
+        if (personPIIRepository.existsByEmailHash(pii.getEmailHash())) {
+            throw new DuplicateEntityException(EntityType.TUTOR, PiiField.EMAIL);
+        }
+        if (personPIIRepository.existsByPhoneHash(pii.getPhoneHash())) {
+            throw new DuplicateEntityException(EntityType.TUTOR, PiiField.PHONE_NUMBER);
+        }
+        return modelMapper.map(tutorRepository.saveAndFlush(model), TutorCreationResponseDTO.class);
     }
 
     @Transactional
     public MinorStudentCreationResponseDTO createMinorStudent(MinorStudentCreationRequestDTO dto) {
-        return modelMapper.map(minorStudentRepository.saveAndFlush(transformMinorStudent(dto)), MinorStudentCreationResponseDTO.class);
+        MinorStudentDataModel model = transformMinorStudent(dto);
+        PersonPIIDataModel pii = model.getPersonPII();
+        if (personPIIRepository.existsByEmailHash(pii.getEmailHash())) {
+            throw new DuplicateEntityException(EntityType.MINOR_STUDENT, PiiField.EMAIL);
+        }
+        if (personPIIRepository.existsByPhoneHash(pii.getPhoneHash())) {
+            throw new DuplicateEntityException(EntityType.MINOR_STUDENT, PiiField.PHONE_NUMBER);
+        }
+        return modelMapper.map(minorStudentRepository.saveAndFlush(model), MinorStudentCreationResponseDTO.class);
     }
 
     /**

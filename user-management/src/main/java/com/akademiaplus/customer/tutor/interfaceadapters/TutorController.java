@@ -11,11 +11,14 @@ import com.akademiaplus.customer.tutor.usecases.DeleteTutorUseCase;
 import com.akademiaplus.customer.tutor.usecases.GetAllTutorsUseCase;
 import com.akademiaplus.customer.tutor.usecases.GetTutorByIdUseCase;
 import com.akademiaplus.customer.tutor.usecases.TutorCreationUseCase;
+import com.akademiaplus.customer.tutor.usecases.TutorUpdateUseCase;
 import openapi.akademiaplus.domain.user.management.api.TutorsApi;
 import openapi.akademiaplus.domain.user.management.dto.GetAllTutors200ResponseDTO;
 import openapi.akademiaplus.domain.user.management.dto.GetTutorResponseDTO;
 import openapi.akademiaplus.domain.user.management.dto.TutorCreationRequestDTO;
 import openapi.akademiaplus.domain.user.management.dto.TutorCreationResponseDTO;
+import openapi.akademiaplus.domain.user.management.dto.TutorUpdateRequestDTO;
+import openapi.akademiaplus.domain.user.management.dto.TutorUpdateResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,15 +37,18 @@ import java.util.List;
 public class TutorController implements TutorsApi {
 
     private final TutorCreationUseCase tutorCreationUseCase;
+    private final TutorUpdateUseCase tutorUpdateUseCase;
     private final GetAllTutorsUseCase getAllTutorsUseCase;
     private final GetTutorByIdUseCase getTutorByIdUseCase;
     private final DeleteTutorUseCase deleteTutorUseCase;
 
     public TutorController(TutorCreationUseCase tutorCreationUseCase,
+                           TutorUpdateUseCase tutorUpdateUseCase,
                            GetAllTutorsUseCase getAllTutorsUseCase,
                            GetTutorByIdUseCase getTutorByIdUseCase,
                            DeleteTutorUseCase deleteTutorUseCase) {
         this.tutorCreationUseCase = tutorCreationUseCase;
+        this.tutorUpdateUseCase = tutorUpdateUseCase;
         this.getAllTutorsUseCase = getAllTutorsUseCase;
         this.getTutorByIdUseCase = getTutorByIdUseCase;
         this.deleteTutorUseCase = deleteTutorUseCase;
@@ -66,6 +72,12 @@ public class TutorController implements TutorsApi {
     @Override
     public ResponseEntity<GetTutorResponseDTO> getTutor(Long tutorId) {
         return ResponseEntity.ok(getTutorByIdUseCase.get(tutorId));
+    }
+
+    @Override
+    public ResponseEntity<TutorUpdateResponseDTO> updateTutor(
+            Long tutorId, TutorUpdateRequestDTO tutorUpdateRequestDTO) {
+        return ResponseEntity.ok(tutorUpdateUseCase.update(tutorId, tutorUpdateRequestDTO));
     }
 
     @Override

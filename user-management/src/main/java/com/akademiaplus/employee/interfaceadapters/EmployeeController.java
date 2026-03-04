@@ -9,11 +9,14 @@ package com.akademiaplus.employee.interfaceadapters;
 
 import com.akademiaplus.employee.usecases.DeleteEmployeeUseCase;
 import com.akademiaplus.employee.usecases.EmployeeCreationUseCase;
+import com.akademiaplus.employee.usecases.EmployeeUpdateUseCase;
 import com.akademiaplus.employee.usecases.GetAllEmployeesUseCase;
 import com.akademiaplus.employee.usecases.GetEmployeeByIdUseCase;
 import openapi.akademiaplus.domain.user.management.api.EmployeesApi;
 import openapi.akademiaplus.domain.user.management.dto.EmployeeCreationRequestDTO;
 import openapi.akademiaplus.domain.user.management.dto.EmployeeCreationResponseDTO;
+import openapi.akademiaplus.domain.user.management.dto.EmployeeUpdateRequestDTO;
+import openapi.akademiaplus.domain.user.management.dto.EmployeeUpdateResponseDTO;
 import openapi.akademiaplus.domain.user.management.dto.GetAllEmployees200ResponseDTO;
 import openapi.akademiaplus.domain.user.management.dto.GetEmployeeResponseDTO;
 import org.springframework.http.HttpStatus;
@@ -30,15 +33,18 @@ public class EmployeeController implements EmployeesApi {
     private final GetEmployeeByIdUseCase getEmployeeByIdUseCase;
     private final GetAllEmployeesUseCase getAllEmployeesUseCase;
     private final EmployeeCreationUseCase employeeCreationUseCase;
+    private final EmployeeUpdateUseCase employeeUpdateUseCase;
     private final DeleteEmployeeUseCase deleteEmployeeUseCase;
 
     public EmployeeController(GetEmployeeByIdUseCase getEmployeeByIdUseCase,
                               GetAllEmployeesUseCase getAllEmployeesUseCase,
                               EmployeeCreationUseCase employeeCreationUseCase,
+                              EmployeeUpdateUseCase employeeUpdateUseCase,
                               DeleteEmployeeUseCase deleteEmployeeUseCase) {
         this.getEmployeeByIdUseCase = getEmployeeByIdUseCase;
         this.getAllEmployeesUseCase = getAllEmployeesUseCase;
         this.employeeCreationUseCase = employeeCreationUseCase;
+        this.employeeUpdateUseCase = employeeUpdateUseCase;
         this.deleteEmployeeUseCase = deleteEmployeeUseCase;
     }
 
@@ -52,6 +58,12 @@ public class EmployeeController implements EmployeesApi {
             EmployeeCreationRequestDTO employeeCreationRequestDTO) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(employeeCreationUseCase.create(employeeCreationRequestDTO));
+    }
+
+    @Override
+    public ResponseEntity<EmployeeUpdateResponseDTO> updateEmployee(
+            Long employeeId, EmployeeUpdateRequestDTO employeeUpdateRequestDTO) {
+        return ResponseEntity.ok(employeeUpdateUseCase.update(employeeId, employeeUpdateRequestDTO));
     }
 
     @Override

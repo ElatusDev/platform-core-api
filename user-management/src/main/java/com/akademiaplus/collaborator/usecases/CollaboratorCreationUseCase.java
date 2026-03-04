@@ -7,10 +7,14 @@
  */
 package com.akademiaplus.collaborator.usecases;
 
+import com.akademiaplus.interfaceadapters.PersonPIIRepository;
 import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
 import com.akademiaplus.collaborator.interfaceadapters.CollaboratorRepository;
 import com.akademiaplus.security.InternalAuthDataModel;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.PiiField;
+import com.akademiaplus.utilities.exceptions.DuplicateEntityException;
 import com.akademiaplus.utilities.security.HashingService;
 import com.akademiaplus.utilities.security.PiiNormalizer;
 import openapi.akademiaplus.domain.user.management.dto.CollaboratorCreationRequestDTO;
@@ -33,17 +37,20 @@ public class CollaboratorCreationUseCase {
 
     private final ApplicationContext applicationContext;
     private final CollaboratorRepository repository;
+    private final PersonPIIRepository personPIIRepository;
     private final ModelMapper modelMapper;
     private final HashingService hashingService;
     private final PiiNormalizer piiNormalizer;
 
     public CollaboratorCreationUseCase(ApplicationContext applicationContext,
                                        CollaboratorRepository repository,
+                                       PersonPIIRepository personPIIRepository,
                                        ModelMapper modelMapper,
                                        HashingService hashingService,
                                        PiiNormalizer piiNormalizer) {
         this.applicationContext = applicationContext;
         this.repository = repository;
+        this.personPIIRepository = personPIIRepository;
         this.modelMapper = modelMapper;
         this.hashingService = hashingService;
         this.piiNormalizer = piiNormalizer;
@@ -51,7 +58,15 @@ public class CollaboratorCreationUseCase {
 
     @Transactional
     public CollaboratorCreationResponseDTO create(CollaboratorCreationRequestDTO dto) {
-        return modelMapper.map(repository.saveAndFlush(transform(dto)), CollaboratorCreationResponseDTO.class);
+        CollaboratorDataModel model = transform(dto);
+        PersonPIIDataModel pii = model.getPersonPII();
+        if (personPIIRepository.existsByEmailHash(pii.getEmailHash())) {
+            throw new DuplicateEntityException(EntityType.COLLABORATOR, PiiField.EMAIL);
+        }
+        if (personPIIRepository.existsByPhoneHash(pii.getPhoneHash())) {
+            throw new DuplicateEntityException(EntityType.COLLABORATOR, PiiField.PHONE_NUMBER);
+        }
+        return modelMapper.map(repository.saveAndFlush(model), CollaboratorCreationResponseDTO.class);
     }
 
     public CollaboratorDataModel transform(CollaboratorCreationRequestDTO dto) {

@@ -10,9 +10,12 @@ package com.akademiaplus.customer.minorstudent.interfaceadapters;
 import com.akademiaplus.customer.minorstudent.usecases.DeleteMinorStudentUseCase;
 import com.akademiaplus.customer.minorstudent.usecases.GetAllMinorStudentsUseCase;
 import com.akademiaplus.customer.minorstudent.usecases.GetMinorStudentByIdUseCase;
+import com.akademiaplus.customer.minorstudent.usecases.MinorStudentUpdateUseCase;
 import openapi.akademiaplus.domain.user.management.api.MinorStudentsApi;
 import openapi.akademiaplus.domain.user.management.dto.GetAllMinorStudents200ResponseDTO;
 import openapi.akademiaplus.domain.user.management.dto.GetMinorStudentResponseDTO;
+import openapi.akademiaplus.domain.user.management.dto.MinorStudentUpdateRequestDTO;
+import openapi.akademiaplus.domain.user.management.dto.MinorStudentUpdateResponseDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,13 +34,16 @@ public class MinorStudentController implements MinorStudentsApi {
 
     private final GetAllMinorStudentsUseCase getAllMinorStudentsUseCase;
     private final GetMinorStudentByIdUseCase getMinorStudentByIdUseCase;
+    private final MinorStudentUpdateUseCase minorStudentUpdateUseCase;
     private final DeleteMinorStudentUseCase deleteMinorStudentUseCase;
 
     public MinorStudentController(GetAllMinorStudentsUseCase getAllMinorStudentsUseCase,
                                   GetMinorStudentByIdUseCase getMinorStudentByIdUseCase,
+                                  MinorStudentUpdateUseCase minorStudentUpdateUseCase,
                                   DeleteMinorStudentUseCase deleteMinorStudentUseCase) {
         this.getAllMinorStudentsUseCase = getAllMinorStudentsUseCase;
         this.getMinorStudentByIdUseCase = getMinorStudentByIdUseCase;
+        this.minorStudentUpdateUseCase = minorStudentUpdateUseCase;
         this.deleteMinorStudentUseCase = deleteMinorStudentUseCase;
     }
 
@@ -53,6 +59,12 @@ public class MinorStudentController implements MinorStudentsApi {
     @Override
     public ResponseEntity<GetMinorStudentResponseDTO> getMinorStudent(Long minorStudentId) {
         return ResponseEntity.ok(getMinorStudentByIdUseCase.get(minorStudentId));
+    }
+
+    @Override
+    public ResponseEntity<MinorStudentUpdateResponseDTO> updateMinorStudent(
+            Long minorStudentId, MinorStudentUpdateRequestDTO minorStudentUpdateRequestDTO) {
+        return ResponseEntity.ok(minorStudentUpdateUseCase.update(minorStudentId, minorStudentUpdateRequestDTO));
     }
 
     @Override

@@ -7,10 +7,14 @@
  */
 package com.akademiaplus.employee.usecases;
 
+import com.akademiaplus.interfaceadapters.PersonPIIRepository;
 import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.employee.EmployeeDataModel;
 import com.akademiaplus.employee.interfaceadapters.EmployeeRepository;
 import com.akademiaplus.security.InternalAuthDataModel;
+import com.akademiaplus.utilities.EntityType;
+import com.akademiaplus.utilities.PiiField;
+import com.akademiaplus.utilities.exceptions.DuplicateEntityException;
 import com.akademiaplus.utilities.security.HashingService;
 import com.akademiaplus.utilities.security.PiiNormalizer;
 import lombok.RequiredArgsConstructor;
@@ -31,10 +35,19 @@ public class EmployeeCreationUseCase {
     private final HashingService hashingService;
     private final PiiNormalizer piiNormalizer;
     private final EmployeeRepository employeeRepository;
+    private final PersonPIIRepository personPIIRepository;
 
     @Transactional
-    public EmployeeCreationResponseDTO create(EmployeeCreationRequestDTO dto)  {
-        return modelMapper.map(employeeRepository.saveAndFlush(transform(dto)), EmployeeCreationResponseDTO.class);
+    public EmployeeCreationResponseDTO create(EmployeeCreationRequestDTO dto) {
+        EmployeeDataModel model = transform(dto);
+        PersonPIIDataModel pii = model.getPersonPII();
+        if (personPIIRepository.existsByEmailHash(pii.getEmailHash())) {
+            throw new DuplicateEntityException(EntityType.EMPLOYEE, PiiField.EMAIL);
+        }
+        if (personPIIRepository.existsByPhoneHash(pii.getPhoneHash())) {
+            throw new DuplicateEntityException(EntityType.EMPLOYEE, PiiField.PHONE_NUMBER);
+        }
+        return modelMapper.map(employeeRepository.saveAndFlush(model), EmployeeCreationResponseDTO.class);
     }
 
     public EmployeeDataModel transform(EmployeeCreationRequestDTO dto) {
