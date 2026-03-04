@@ -24,7 +24,7 @@ public class CourseDataGenerator {
     private final Random random;
 
     public CourseDataGenerator() {
-        this.faker = new Faker(new Locale("es", "MX"));
+        this.faker = new Faker(Locale.of("es", "MX"));
         this.random = new Random();
     }
 

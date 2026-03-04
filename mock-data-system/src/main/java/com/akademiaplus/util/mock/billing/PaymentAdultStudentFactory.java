@@ -41,7 +41,7 @@ public class PaymentAdultStudentFactory implements DataFactory<PaymentAdultStude
     private List<Long> availableMembershipAdultStudentIds = List.of();
 
     public PaymentAdultStudentFactory() {
-        this.faker = new Faker(new Locale("es", "MX"));
+        this.faker = new Faker(Locale.of("es", "MX"));
         this.random = new Random();
     }
 

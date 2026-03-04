@@ -22,7 +22,7 @@ public class CourseEventDataGenerator {
     private final Faker faker;
 
     public CourseEventDataGenerator() {
-        this.faker = new Faker(new Locale("es", "MX"));
+        this.faker = new Faker(Locale.of("es", "MX"));
     }
 
     public LocalDate eventDate() {

@@ -28,7 +28,7 @@ public class NotificationDeliveryDataGenerator {
     private final Random random;
 
     public NotificationDeliveryDataGenerator() {
-        this.faker = new Faker(new Locale("es", "MX"));
+        this.faker = new Faker(Locale.of("es", "MX"));
         this.random = new Random();
     }
 

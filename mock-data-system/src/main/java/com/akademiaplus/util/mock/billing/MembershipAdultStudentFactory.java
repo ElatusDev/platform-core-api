@@ -39,7 +39,7 @@ public class MembershipAdultStudentFactory implements DataFactory<MembershipAdul
     private List<Long> availableAdultStudentIds = List.of();
 
     public MembershipAdultStudentFactory() {
-        this.faker = new Faker(new Locale("es", "MX"));
+        this.faker = new Faker(Locale.of("es", "MX"));
     }
 
     @Override

@@ -41,7 +41,7 @@ public class PaymentTutorFactory implements DataFactory<PaymentTutorCreationRequ
     private List<Long> availableMembershipTutorIds = List.of();
 
     public PaymentTutorFactory() {
-        this.faker = new Faker(new Locale("es", "MX"));
+        this.faker = new Faker(Locale.of("es", "MX"));
         this.random = new Random();
     }
 

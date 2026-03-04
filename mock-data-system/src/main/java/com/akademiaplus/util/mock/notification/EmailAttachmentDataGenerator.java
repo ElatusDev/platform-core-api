@@ -25,7 +25,7 @@ public class EmailAttachmentDataGenerator {
     private final Faker faker;
 
     public EmailAttachmentDataGenerator() {
-        this.faker = new Faker(new Locale("es", "MX"));
+        this.faker = new Faker(Locale.of("es", "MX"));
     }
 
     /**

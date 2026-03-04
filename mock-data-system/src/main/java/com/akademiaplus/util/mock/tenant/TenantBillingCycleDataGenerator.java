@@ -25,7 +25,7 @@ public class TenantBillingCycleDataGenerator {
     private final Faker faker;
 
     public TenantBillingCycleDataGenerator() {
-        this.faker = new Faker(new Locale("es", "MX"));
+        this.faker = new Faker(Locale.of("es", "MX"));
     }
 
     public String billingMonth() {

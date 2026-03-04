@@ -35,7 +35,7 @@ public class StoreSaleItemDataGenerator {
     private final Faker faker;
 
     public StoreSaleItemDataGenerator() {
-        this.faker = new Faker(new Locale("es", "MX"));
+        this.faker = new Faker(Locale.of("es", "MX"));
     }
 
     /**
