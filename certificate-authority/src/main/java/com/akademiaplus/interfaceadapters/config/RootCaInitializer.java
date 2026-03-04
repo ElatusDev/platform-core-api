@@ -35,13 +35,14 @@ public class RootCaInitializer implements ApplicationRunner {
     @Value("#{'${ca.allowed-common-names}'.split(',')}")
     private List<String> allowedCommonNames;
 
+    @SuppressWarnings("java:S112") // ApplicationRunner.run() declares throws Exception
     @Override
     public void run(ApplicationArguments args) throws Exception {
         logCaFingerprint();
         generateMissingTokens();
     }
 
-    private void logCaFingerprint() throws Exception {
+    private void logCaFingerprint() throws java.security.GeneralSecurityException {
         byte[] encoded = certificateAuthority.getCertificate().getEncoded();
         java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
         byte[] digest = md.digest(encoded);

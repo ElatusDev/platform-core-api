@@ -41,7 +41,7 @@ public class GetJwksUseCase {
         for (JwksEntry entry : jwksRegistry.getEntries()) {
             try {
                 keys.add(toJwk(entry));
-            } catch (Exception e) {
+            } catch (java.security.GeneralSecurityException e) {
                 log.warn("Skipping JWKS entry kid={} — could not parse public key: {}", entry.getKid(), e.getMessage());
             }
         }
@@ -53,7 +53,7 @@ public class GetJwksUseCase {
 
     // ─── Private helpers ─────────────────────────────────────────────────────
 
-    private JwkKeyDTO toJwk(JwksEntry entry) throws Exception {
+    private JwkKeyDTO toJwk(JwksEntry entry) throws java.security.GeneralSecurityException {
         byte[] derBytes = jwksRegistry.decodePublicKey(entry);
         X509EncodedKeySpec spec = new X509EncodedKeySpec(derBytes);
 
@@ -61,8 +61,8 @@ public class GetJwksUseCase {
         try {
             ECPublicKey ecKey = (ECPublicKey) KeyFactory.getInstance("EC").generatePublic(spec);
             return buildEcJwk(entry.getKid(), entry.getAlg(), ecKey);
-        } catch (Exception ignored) {
-            // not EC
+        } catch (java.security.GeneralSecurityException _) {
+            // not EC — try RSA below
         }
         RSAPublicKey rsaKey = (RSAPublicKey) KeyFactory.getInstance("RSA").generatePublic(spec);
         return buildRsaJwk(entry.getKid(), entry.getAlg(), rsaKey);

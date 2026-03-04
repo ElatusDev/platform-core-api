@@ -205,7 +205,7 @@ public class SignCertificateUseCase {
         }
     }
 
-    private String toPemBase64(X509Certificate cert) throws Exception {
+    private String toPemBase64(X509Certificate cert) throws IOException {
         StringWriter sw = new StringWriter();
         try (JcaPEMWriter writer = new JcaPEMWriter(sw)) {
             writer.writeObject(cert);
