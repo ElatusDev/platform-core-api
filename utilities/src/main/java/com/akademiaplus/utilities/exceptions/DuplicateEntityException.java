@@ -22,6 +22,19 @@ public class DuplicateEntityException extends RuntimeException {
     private final String field;
 
     /**
+     * Creates a new duplicate entity exception for application-level checks
+     * where no underlying database exception exists.
+     *
+     * @param entityType message property key from {@link com.akademiaplus.utilities.EntityType}
+     * @param field      the field that has a duplicate value (e.g., "email", "phoneNumber")
+     */
+    public DuplicateEntityException(String entityType, String field) {
+        super("Duplicate " + field + " for " + entityType);
+        this.entityType = entityType;
+        this.field = field;
+    }
+
+    /**
      * Creates a new duplicate entity exception.
      *
      * @param entityType message property key from {@link com.akademiaplus.utilities.EntityType}
