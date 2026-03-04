@@ -19,6 +19,7 @@ import java.util.Random;
  * Generates fake data for compensation entities.
  */
 @Component
+@SuppressWarnings("java:S2245") // Random used for non-security test data generation
 public class CompensationDataGenerator {
 
     private static final List<String> COMPENSATION_TYPES = Arrays.asList(

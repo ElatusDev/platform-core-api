@@ -17,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 
+import java.util.regex.Pattern;
+
 /**
  * Generic utility for cleaning up (deleting) all rows from a JPA entity table
  * and resetting the auto-increment counter.
@@ -27,6 +29,7 @@ import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 @RequiredArgsConstructor
 public class DataCleanUp<M, I> {
     private static final String ANNOTATION_MISSING = "missing table annotation";
+    private static final Pattern VALID_TABLE_NAME = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
 
     @PersistenceContext
     @NonNull private EntityManager entityManager;
@@ -37,6 +40,7 @@ public class DataCleanUp<M, I> {
     @Setter
     private TenantScopedRepository<@NonNull M, @NonNull I> repository;
 
+    @SuppressWarnings("java:S2077") // Table name sourced from @Table annotation, validated by regex
     @Transactional
     public void clean() {
         repository.deleteAllInBatch();
@@ -47,7 +51,11 @@ public class DataCleanUp<M, I> {
     private String getTableName(Class<?> entityClass) {
         Table tableAnnotation = entityClass.getAnnotation(Table.class);
         if (tableAnnotation != null && !tableAnnotation.name().isEmpty()) {
-            return tableAnnotation.name();
+            String name = tableAnnotation.name();
+            if (!VALID_TABLE_NAME.matcher(name).matches()) {
+                throw new UnprocessableDataModelException("Invalid table name: " + name);
+            }
+            return name;
         }
 
         throw new UnprocessableDataModelException(ANNOTATION_MISSING);

@@ -17,6 +17,7 @@ import java.util.Random;
  * Generates fake data for course entities.
  */
 @Component
+@SuppressWarnings("java:S2245") // Random used for non-security test data generation
 public class CourseDataGenerator {
 
     private final Faker faker;

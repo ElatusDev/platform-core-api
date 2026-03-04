@@ -22,6 +22,7 @@ import java.util.Random;
  * Generates fake data for tenant subscriptions.
  */
 @Component
+@SuppressWarnings("java:S2245") // Random used for non-security test data generation
 public class TenantSubscriptionDataGenerator {
 
     private static final List<SubscriptionCreateRequestDTO.TypeEnum> SUBSCRIPTION_TYPES = Arrays.asList(

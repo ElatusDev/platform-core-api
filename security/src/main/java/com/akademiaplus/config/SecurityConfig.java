@@ -29,6 +29,7 @@ import java.util.Set;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    @SuppressWarnings("java:S4502") // CSRF disabled: stateless JWT Bearer auth, no cookies/sessions
     @Bean
     @Profile({"dev", "local"})
     public SecurityFilterChain securityFilterChain(Set<ModuleSecurityConfigurator> moduleSecurityConfigurators, HttpSecurity http, JwtRequestFilter jwtRequestFilter) throws Exception {
@@ -100,6 +101,7 @@ public class SecurityConfig {
      * filter is disabled separately via
      * {@code MockDataTenantConfiguration}.</p>
      */
+    @SuppressWarnings("java:S4502") // CSRF disabled: internal mock-data-service, stateless API
     @Bean
     @Profile({"mock-data-service"})
     public SecurityFilterChain securityFilterChainForMockDataService(HttpSecurity http) throws Exception {

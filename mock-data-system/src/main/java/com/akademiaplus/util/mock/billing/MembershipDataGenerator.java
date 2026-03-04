@@ -19,6 +19,7 @@ import java.util.Random;
  * Generates fake data for membership entities.
  */
 @Component
+@SuppressWarnings("java:S2245") // Random used for non-security test data generation
 public class MembershipDataGenerator {
 
     private static final List<String> MEMBERSHIP_TYPES = Arrays.asList(

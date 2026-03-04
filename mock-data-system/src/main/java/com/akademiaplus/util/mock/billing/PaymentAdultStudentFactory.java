@@ -27,6 +27,7 @@ import java.util.Random;
  * before {@link #generate(int)} is called.</p>
  */
 @Component
+@SuppressWarnings("java:S2245") // Random used for non-security test data generation
 public class PaymentAdultStudentFactory implements DataFactory<PaymentAdultStudentCreationRequestDTO> {
 
     private static final List<String> PAYMENT_METHODS = Arrays.asList(

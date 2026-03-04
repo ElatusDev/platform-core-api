@@ -27,6 +27,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class CaSecurityConfiguration {
 
+    @SuppressWarnings("java:S4502") // CSRF disabled: mTLS M2M API, no browser/cookie interaction
     @Bean
     public SecurityFilterChain caSecurityFilterChain(HttpSecurity http) throws Exception {
         http

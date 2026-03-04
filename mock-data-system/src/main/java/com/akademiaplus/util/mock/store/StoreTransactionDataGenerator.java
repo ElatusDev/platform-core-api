@@ -22,6 +22,7 @@ import java.util.concurrent.ThreadLocalRandom;
  * Generates fake data for store transaction entities.
  */
 @Component
+@SuppressWarnings("java:S2245") // Random used for non-security test data generation
 public class StoreTransactionDataGenerator {
 
     private static final List<String> TRANSACTION_TYPES = Arrays.asList(

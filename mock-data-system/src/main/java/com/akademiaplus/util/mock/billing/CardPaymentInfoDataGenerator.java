@@ -20,6 +20,7 @@ import java.util.UUID;
  * Generates fake data for card payment info entities.
  */
 @Component
+@SuppressWarnings("java:S2245") // Random used for non-security test data generation
 public class CardPaymentInfoDataGenerator {
 
     /** Supported card type values. */

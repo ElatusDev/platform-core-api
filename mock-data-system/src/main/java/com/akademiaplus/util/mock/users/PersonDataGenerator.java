@@ -20,6 +20,7 @@ import java.util.Random;
  * All entity-specific generators delegate here for common fields.
  */
 @Component
+@SuppressWarnings("java:S2245") // Random used for non-security test data generation
 public class PersonDataGenerator {
 
     private final Faker faker;

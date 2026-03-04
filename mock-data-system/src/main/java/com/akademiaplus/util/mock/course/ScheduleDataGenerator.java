@@ -20,6 +20,7 @@ import java.util.Random;
  * Generates fake data for schedule entities.
  */
 @Component
+@SuppressWarnings("java:S2245") // Random used for non-security test data generation
 public class ScheduleDataGenerator {
 
     private static final List<String> SCHEDULE_DAYS = Arrays.asList(

@@ -21,6 +21,7 @@ import java.util.Random;
  * Generates fake data for notification entities.
  */
 @Component
+@SuppressWarnings("java:S2245") // Random used for non-security test data generation
 public class NotificationDataGenerator {
 
     private static final List<String> NOTIFICATION_TYPES = Arrays.asList(

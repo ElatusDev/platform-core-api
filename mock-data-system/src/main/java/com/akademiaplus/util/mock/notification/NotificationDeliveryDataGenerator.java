@@ -21,6 +21,7 @@ import java.util.UUID;
  * Generates fake data for notification delivery entities.
  */
 @Component
+@SuppressWarnings("java:S2245") // Random used for non-security test data generation
 public class NotificationDeliveryDataGenerator {
 
     private final Faker faker;
