@@ -84,10 +84,7 @@ public class CertificateAuthorityController implements CaApi {
      */
     @Override
     public ResponseEntity<Void> registerJwks(JwksRegistrationRequestDTO jwksRegistrationRequestDTO) {
-        String callerIdentity = jwksRegistrationRequestDTO.getKid() != null
-                ? jwksRegistrationRequestDTO.getKid()
-                : "unknown";
-        registerJwksUseCase.register(jwksRegistrationRequestDTO, callerIdentity);
+        registerJwksUseCase.register(jwksRegistrationRequestDTO, jwksRegistrationRequestDTO.getKid());
         return ResponseEntity.noContent().build();
     }
 

@@ -38,6 +38,7 @@ public class TokenManifest {
     public static final String TOKEN_CN_MISMATCH_MSG = "Token bound CN does not match the requested common name";
 
     private static final int TOKEN_BYTE_LENGTH = 32;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     @Getter
     @JsonProperty("tokens")
@@ -139,7 +140,7 @@ public class TokenManifest {
      */
     public synchronized void generateToken(String cn) {
         byte[] tokenBytes = new byte[TOKEN_BYTE_LENGTH];
-        new SecureRandom().nextBytes(tokenBytes);
+        SECURE_RANDOM.nextBytes(tokenBytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
         tokens.add(new BootstrapToken(token, cn, Instant.now().toString(), false));
         log.info("Generated bootstrap token for CN: {}", cn);

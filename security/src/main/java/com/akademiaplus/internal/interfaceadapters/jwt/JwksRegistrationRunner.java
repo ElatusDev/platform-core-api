@@ -95,6 +95,9 @@ public class JwksRegistrationRunner implements ApplicationRunner {
                 log.warn("JWKS registration returned unexpected status {}: {}", response.statusCode(), response.body());
             }
 
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("JWKS registration interrupted: {}", e.getMessage());
         } catch (Exception e) {
             // Non-fatal — trust broker may not be available in all environments
             log.warn("JWKS registration failed (non-fatal): {}", e.getMessage());
