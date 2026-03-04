@@ -1,5 +1,5 @@
 # =============================================================================
-# docker-compose.dev.yml — AkademiaPlus local E2E stack
+# docker-compose.dev.yml — AkademiaPlus local dev stack
 #
 # ARCHITECTURE
 # ────────────
@@ -188,40 +188,6 @@ services:
       retries: 5
       start_period: 90s
 
-  # ─────────────────────────────────────────────────────────────────────────
-  # e2e-runner — Newman E2E test runner (profile-gated)
-  #
-  # Only starts when the "e2e" profile is active:
-  #   docker compose -f docker-compose.dev.yml --profile e2e up --build
-  #
-  # Runs the Postman collection from the sibling platform-api-e2e repo
-  # against the Docker-internal network (no localhost, no host ports).
-  # Exits 0 on all tests passing, non-zero on failure.
-  # ─────────────────────────────────────────────────────────────────────────
-  e2e-runner:
-    image: postman/newman:6-alpine
-    container_name: e2e-runner
-    profiles:
-      - e2e
-    depends_on:
-      mock-data-system:
-        condition: service_healthy
-    networks:
-      - akademia-internal
-    volumes:
-      - ../platform-api-e2e/Postman Collections:/etc/newman/collections:ro
-      - ../platform-api-e2e/environments:/etc/newman/environments:ro
-    entrypoint:
-      - newman
-      - run
-      - /etc/newman/collections/platform-api-e2e.json
-      - -e
-      - /etc/newman/environments/docker.postman_environment.json
-      - --reporters
-      - cli
-      - --color
-      - "on"
-      - --bail
 
 secrets:
   ca_bootstrap_tokens:
