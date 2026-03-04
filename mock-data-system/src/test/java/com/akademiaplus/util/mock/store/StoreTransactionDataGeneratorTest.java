@@ -132,4 +132,24 @@ class StoreTransactionDataGeneratorTest {
             assertThat(method).isIn(VALID_PAYMENT_METHODS);
         }
     }
+
+    @Nested
+    @DisplayName("Total amount generation")
+    class TotalAmountGeneration {
+
+        @Test
+        @DisplayName("Should return a total amount within configured range")
+        void shouldReturnTotalAmountInRange() {
+            // Given
+            // generator initialized in setUp
+
+            // When
+            Double amount = generator.totalAmount();
+
+            // Then
+            assertThat(amount).isBetween(
+                    StoreTransactionDataGenerator.MIN_TOTAL_AMOUNT,
+                    StoreTransactionDataGenerator.MAX_TOTAL_AMOUNT);
+        }
+    }
 }

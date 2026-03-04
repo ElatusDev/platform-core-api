@@ -19,12 +19,15 @@ import com.akademiaplus.util.base.DataCleanUp;
 import com.akademiaplus.util.base.DataFactory;
 import com.akademiaplus.util.base.DataLoader;
 import com.akademiaplus.util.mock.store.StoreSaleItemFactory.StoreSaleItemRequest;
+import com.akademiaplus.util.mock.store.StoreTransactionDataGenerator;
 import jakarta.persistence.EntityManager;
 import openapi.akademiaplus.domain.pos.system.dto.StoreProductCreationRequestDTO;
 import openapi.akademiaplus.domain.pos.system.dto.StoreTransactionCreationRequestDTO;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.math.BigDecimal;
 
 /**
  * Spring configuration for POS-related mock data loader and cleanup beans.
@@ -60,9 +63,14 @@ public class StoreDataLoaderConfiguration {
     public DataLoader<StoreTransactionCreationRequestDTO, StoreTransactionDataModel, StoreTransactionDataModel.StoreTransactionCompositeId> storeTransactionDataLoader(
             StoreTransactionRepository repository,
             DataFactory<StoreTransactionCreationRequestDTO> storeTransactionFactory,
-            StoreTransactionCreationUseCase storeTransactionCreationUseCase) {
+            StoreTransactionCreationUseCase storeTransactionCreationUseCase,
+            StoreTransactionDataGenerator storeTransactionDataGenerator) {
 
-        return new DataLoader<>(repository, storeTransactionCreationUseCase::transform, storeTransactionFactory);
+        return new DataLoader<>(repository, dto -> {
+            StoreTransactionDataModel model = storeTransactionCreationUseCase.transform(dto);
+            model.setTotalAmount(BigDecimal.valueOf(storeTransactionDataGenerator.totalAmount()));
+            return model;
+        }, storeTransactionFactory);
     }
 
     @Bean

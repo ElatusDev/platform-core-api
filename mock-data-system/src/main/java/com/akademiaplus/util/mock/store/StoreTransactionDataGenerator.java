@@ -10,6 +10,8 @@ package com.akademiaplus.util.mock.store;
 import net.datafaker.Faker;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -29,6 +31,12 @@ public class StoreTransactionDataGenerator {
     private static final List<String> PAYMENT_METHODS = Arrays.asList(
             "CASH", "CREDIT_CARD", "DEBIT_CARD", "TRANSFER"
     );
+
+    /** Minimum total amount for a mock transaction (inclusive). */
+    public static final double MIN_TOTAL_AMOUNT = 10.0;
+
+    /** Maximum total amount for a mock transaction (inclusive). */
+    public static final double MAX_TOTAL_AMOUNT = 5000.0;
 
     /** Minimum number of sale items per transaction (inclusive). */
     public static final int MIN_SALE_ITEM_COUNT = 1;
@@ -90,5 +98,15 @@ public class StoreTransactionDataGenerator {
 
     public String paymentMethod() {
         return PAYMENT_METHODS.get(random.nextInt(PAYMENT_METHODS.size()));
+    }
+
+    /**
+     * Generates a random total amount for a transaction.
+     *
+     * @return a value between {@value MIN_TOTAL_AMOUNT} and {@value MAX_TOTAL_AMOUNT}, rounded to 2 decimals
+     */
+    public Double totalAmount() {
+        double amount = MIN_TOTAL_AMOUNT + (MAX_TOTAL_AMOUNT - MIN_TOTAL_AMOUNT) * random.nextDouble();
+        return BigDecimal.valueOf(amount).setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
 }
