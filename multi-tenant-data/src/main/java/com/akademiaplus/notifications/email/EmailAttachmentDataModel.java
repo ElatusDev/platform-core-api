@@ -48,7 +48,7 @@ public class EmailAttachmentDataModel extends TenantScoped {
      * Part of the composite primary key and contains the location of the attached file.
      */
     @Id
-    @Column(name = "attachment_url", columnDefinition = "TEXT")
+    @Column(name = "attachment_url", length = 2048)
     private String attachmentUrl;
 
     /**

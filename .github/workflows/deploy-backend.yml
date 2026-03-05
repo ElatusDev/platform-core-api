@@ -123,34 +123,43 @@ jobs:
         id: current-tasks
         env:
           ENV: ${{ needs.set-env.outputs.environment }}
+          CLUSTER: akademiaplus-${{ needs.set-env.outputs.environment }}-cluster
         run: |
-          # Fetch current task definitions for each service
-          for SERVICE in platform-core-api trust-broker; do
+          fetch_task_def() {
+            local SERVICE="$1"
+            local FAMILY="akademiaplus-${ENV}-${SERVICE}"
+            local OUTPUT="${SERVICE}-task-def.json"
+
+            # Try 1: fetch from running service
             TASK_DEF=$(aws ecs describe-services \
-              --cluster "akademiaplus-${ENV}" \
-              --services "akademiaplus-${ENV}-${SERVICE}" \
+              --cluster "$CLUSTER" \
+              --services "$FAMILY" \
               --query 'services[0].taskDefinition' \
               --output text 2>/dev/null || echo "")
+
             if [ -n "$TASK_DEF" ] && [ "$TASK_DEF" != "None" ]; then
               aws ecs describe-task-definition \
                 --task-definition "$TASK_DEF" \
                 --query 'taskDefinition' \
-                > "${SERVICE}-task-def.json"
+                > "$OUTPUT" 2>/dev/null && return 0
             fi
-          done
+
+            # Try 2: fetch latest revision from task definition family (Terraform-registered)
+            echo "Service not found, falling back to task definition family: $FAMILY"
+            aws ecs describe-task-definition \
+              --task-definition "$FAMILY" \
+              --query 'taskDefinition' \
+              > "$OUTPUT" 2>/dev/null && return 0
+
+            echo "::error::No task definition found for $SERVICE. Run terraform apply first."
+            return 1
+          }
+
+          fetch_task_def platform-core-api
+          fetch_task_def trust-broker
 
           if [ "$ENV" = "nonprod" ]; then
-            TASK_DEF=$(aws ecs describe-services \
-              --cluster "akademiaplus-${ENV}" \
-              --services "akademiaplus-${ENV}-mock-data-system" \
-              --query 'services[0].taskDefinition' \
-              --output text 2>/dev/null || echo "")
-            if [ -n "$TASK_DEF" ] && [ "$TASK_DEF" != "None" ]; then
-              aws ecs describe-task-definition \
-                --task-definition "$TASK_DEF" \
-                --query 'taskDefinition' \
-                > "mock-data-system-task-def.json"
-            fi
+            fetch_task_def mock-data-system
           fi
 
       - name: Login to Amazon ECR
@@ -170,7 +179,7 @@ jobs:
         with:
           task-definition: ${{ steps.render-api.outputs.task-definition }}
           service: akademiaplus-${{ needs.set-env.outputs.environment }}-platform-core-api
-          cluster: akademiaplus-${{ needs.set-env.outputs.environment }}
+          cluster: akademiaplus-${{ needs.set-env.outputs.environment }}-cluster
           wait-for-service-stability: true
           wait-for-minutes: 10
 
@@ -187,7 +196,7 @@ jobs:
         with:
           task-definition: ${{ steps.render-tb.outputs.task-definition }}
           service: akademiaplus-${{ needs.set-env.outputs.environment }}-trust-broker
-          cluster: akademiaplus-${{ needs.set-env.outputs.environment }}
+          cluster: akademiaplus-${{ needs.set-env.outputs.environment }}-cluster
           wait-for-service-stability: true
           wait-for-minutes: 10
 
@@ -206,7 +215,7 @@ jobs:
         with:
           task-definition: ${{ steps.render-mock.outputs.task-definition }}
           service: akademiaplus-${{ needs.set-env.outputs.environment }}-mock-data-system
-          cluster: akademiaplus-${{ needs.set-env.outputs.environment }}
+          cluster: akademiaplus-${{ needs.set-env.outputs.environment }}-cluster
           wait-for-service-stability: true
           wait-for-minutes: 10
 
