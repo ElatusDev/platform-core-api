@@ -66,10 +66,8 @@ public class NotificationDispatchService {
     /**
      * Dispatches a notification via the WEBAPP channel.
      * <p>
-     * Resolves the {@link WebappDeliveryChannelStrategy}, executes delivery,
-     * and persists a {@link NotificationDeliveryDataModel} with the outcome.
-     * The delivery entity is created via {@link ApplicationContext#getBean}
-     * (prototype scope) and its ID is assigned by {@code EntityIdAssigner}.
+     * Convenience method that delegates to {@link #dispatch(NotificationDataModel, DeliveryChannel)}
+     * with {@link DeliveryChannel#WEBAPP} as the default channel.
      *
      * @param notification the notification to dispatch
      * @return the saved delivery record
@@ -78,11 +76,29 @@ public class NotificationDispatchService {
      */
     @Transactional
     public NotificationDeliveryDataModel dispatch(NotificationDataModel notification) {
+        return dispatch(notification, DeliveryChannel.WEBAPP);
+    }
+
+    /**
+     * Dispatches a notification via the specified delivery channel.
+     * <p>
+     * Resolves the appropriate {@link DeliveryChannelStrategy}, executes delivery,
+     * and persists a {@link NotificationDeliveryDataModel} with the outcome.
+     * The delivery entity is created via {@link ApplicationContext#getBean}
+     * (prototype scope) and its ID is assigned by {@code EntityIdAssigner}.
+     *
+     * @param notification the notification to dispatch
+     * @param channel      the delivery channel to use
+     * @return the saved delivery record
+     * @throws IllegalArgumentException if the notification has no targetUserId
+     * @throws IllegalStateException    if no strategy is registered for the channel
+     */
+    @Transactional
+    public NotificationDeliveryDataModel dispatch(NotificationDataModel notification, DeliveryChannel channel) {
         if (notification.getTargetUserId() == null) {
             throw new IllegalArgumentException(ERROR_TARGET_USER_REQUIRED);
         }
 
-        final DeliveryChannel channel = DeliveryChannel.WEBAPP;
         final DeliveryChannelStrategy strategy = resolveStrategy(channel);
         final String recipientIdentifier = String.valueOf(notification.getTargetUserId());
 
