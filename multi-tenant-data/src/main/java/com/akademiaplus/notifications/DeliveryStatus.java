@@ -47,5 +47,23 @@ public enum DeliveryStatus {
      * Notification expired before delivery could be completed.
      * Occurs when delivery attempts exceed the expiration time.
      */
-    EXPIRED
+    EXPIRED,
+
+    /**
+     * Recipient opened the email notification.
+     * Detected via tracking pixel in HTML emails.
+     */
+    OPENED,
+
+    /**
+     * Recipient clicked a link within the email notification.
+     * Detected via click tracking redirect URLs.
+     */
+    CLICKED,
+
+    /**
+     * Email delivery bounced (hard or soft bounce).
+     * Indicates the recipient address was unreachable or rejected.
+     */
+    BOUNCED
 }
