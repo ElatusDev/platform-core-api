@@ -206,4 +206,48 @@ class NotificationDispatchServiceTest {
             assertThat(deliveryModel.getRetryCount()).isEqualTo(NotificationDispatchService.INITIAL_RETRY_COUNT);
         }
     }
+
+    @Nested
+    @DisplayName("Parameterized Dispatch")
+    class ParameterizedDispatch {
+
+        @Test
+        @DisplayName("Should dispatch via specified channel when channel provided")
+        void shouldDispatchViaSpecifiedChannel_whenChannelProvided() {
+            // Given
+            NotificationDataModel notification = buildNotification();
+            NotificationDeliveryDataModel deliveryModel = new NotificationDeliveryDataModel();
+            when(applicationContext.getBean(NotificationDeliveryDataModel.class)).thenReturn(deliveryModel);
+            when(webappStrategy.deliver(notification, RECIPIENT_IDENTIFIER)).thenReturn(DeliveryResult.sent());
+            when(notificationDeliveryRepository.save(deliveryModel)).thenReturn(deliveryModel);
+
+            // When
+            NotificationDeliveryDataModel result =
+                    dispatchService.dispatch(notification, DeliveryChannel.WEBAPP);
+
+            // Then
+            assertThat(result).isSameAs(deliveryModel);
+            assertThat(deliveryModel.getChannel()).isEqualTo(DeliveryChannel.WEBAPP);
+            verify(webappStrategy).deliver(notification, RECIPIENT_IDENTIFIER);
+        }
+
+        @Test
+        @DisplayName("Should default to WEBAPP when no channel specified")
+        void shouldDefaultToWebapp_whenNoChannelSpecified() {
+            // Given
+            NotificationDataModel notification = buildNotification();
+            NotificationDeliveryDataModel deliveryModel = new NotificationDeliveryDataModel();
+            when(applicationContext.getBean(NotificationDeliveryDataModel.class)).thenReturn(deliveryModel);
+            when(webappStrategy.deliver(notification, RECIPIENT_IDENTIFIER)).thenReturn(DeliveryResult.sent());
+            when(notificationDeliveryRepository.save(deliveryModel)).thenReturn(deliveryModel);
+
+            // When
+            NotificationDeliveryDataModel result = dispatchService.dispatch(notification);
+
+            // Then
+            assertThat(result).isSameAs(deliveryModel);
+            assertThat(deliveryModel.getChannel()).isEqualTo(DeliveryChannel.WEBAPP);
+            verify(webappStrategy).deliver(notification, RECIPIENT_IDENTIFIER);
+        }
+    }
 }
