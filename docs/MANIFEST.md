@@ -80,7 +80,6 @@ Executable prompts for Claude Code CLI.
 | Prompt | Purpose | Status |
 |--------|---------|--------|
 | [e2e-bootstrap-prompt.md](prompts/pending/e2e-bootstrap-prompt.md) | Registration-driven E2E bootstrap — register endpoint, tenant-scoped mock data, collection rewrite | 🟡 Ready to execute |
-| [email-notification-delivery-prompt.md](prompts/pending/email-notification-delivery-prompt.md) | Email notification delivery via Jakarta Mail/SMTP — 10 phases, strategy + templates + controllers + tests | 🟡 Ready to execute |
 
 ### Completed (`docs/prompts/completed/`)
 
@@ -92,6 +91,11 @@ Executable prompts for Claude Code CLI.
 | [dependency-upgrade-prompt.md](prompts/completed/dependency-upgrade-prompt.md) | Boot 4.0.0-M3 → 4.0.3, Java 21 → 24 | Upgrade completed |
 | [oauth-social-login-prompt.md](prompts/completed/oauth-social-login-prompt.md) | OAuth2 social login (Google + Facebook) — 14 phases | Implemented |
 | [sonarcloud-remediation-prompt.md](prompts/completed/sonarcloud-remediation-prompt.md) | SonarCloud code quality remediation | Implemented |
+| [sonarqube-verification-prompt.md](prompts/completed/sonarqube-verification-prompt.md) | SonarQube verification | Implemented |
+| [update-usecase-prompt.md](prompts/completed/update-usecase-prompt.md) | Update use case rollout | Implemented |
+| [course-management-update-usecase-prompt.md](prompts/completed/course-management-update-usecase-prompt.md) | Course management update use cases | Implemented |
+| [pos-business-logic-prompt.md](prompts/completed/pos-business-logic-prompt.md) | POS business logic implementation | Implemented |
+| [email-notification-delivery-prompt.md](prompts/completed/email-notification-delivery-prompt.md) | Email notification delivery via Jakarta Mail/SMTP — 10 phases | Implemented |
 
 ---
 
@@ -104,7 +108,6 @@ Step-by-step implementation plans. Referenced by prompts.
 | Document | Purpose | Status |
 |----------|---------|--------|
 | [e2e-bootstrap-workflow.md](workflows/pending/e2e-bootstrap-workflow.md) | Registration-driven auth + tenant-scoped mock data — architecture analysis, 4 phases, file inventory | 🟡 Ready to execute |
-| [email-notification-delivery-workflow.md](workflows/pending/email-notification-delivery-workflow.md) | Email notification delivery via Jakarta Mail/SMTP — 10 phases, ~35 new files, template engine | 🟡 Ready to execute |
 
 ### Completed (`docs/workflows/completed/`)
 
@@ -118,6 +121,11 @@ Step-by-step implementation plans. Referenced by prompts.
 | [controller-advice-audit-workflow.md](workflows/completed/controller-advice-audit-workflow.md) | Diagnostic audit of @ControllerAdvice across modules | Fed into exception-advice-strategy |
 | [oauth-social-login-workflow.md](workflows/completed/oauth-social-login-workflow.md) | OAuth2 social login (Google + Facebook) — provider strategy, 3-branch auth | Implemented |
 | [sonarcloud-remediation-workflow.md](workflows/completed/sonarcloud-remediation-workflow.md) | SonarCloud code quality remediation | Implemented |
+| [sonarqube-verification-workflow.md](workflows/completed/sonarqube-verification-workflow.md) | SonarQube verification | Implemented |
+| [sse-notification-delivery-workflow.md](workflows/completed/sse-notification-delivery-workflow.md) | SSE notification delivery (WebappDeliveryChannelStrategy) | Implemented |
+| [course-management-update-usecase-workflow.md](workflows/completed/course-management-update-usecase-workflow.md) | Course management update use cases | Implemented |
+| [pos-business-logic-workflow.md](workflows/completed/pos-business-logic-workflow.md) | POS business logic implementation | Implemented |
+| [email-notification-delivery-workflow.md](workflows/completed/email-notification-delivery-workflow.md) | Email notification delivery via Jakarta Mail/SMTP — 10 phases, ~35 new files | Implemented |
 
 ---
 
