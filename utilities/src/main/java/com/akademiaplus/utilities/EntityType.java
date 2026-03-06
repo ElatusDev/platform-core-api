@@ -48,6 +48,9 @@ public final class EntityType {
 
     // notification
     public static final String NOTIFICATION = "entity.notification";
+    public static final String NOTIFICATION_DELIVERY = "entity.notification.delivery";
+    public static final String EMAIL = "entity.email";
+    public static final String EMAIL_TEMPLATE = "entity.email.template";
 
     // tenant
     public static final String TENANT = "entity.tenant";
