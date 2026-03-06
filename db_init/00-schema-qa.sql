@@ -160,6 +160,44 @@ CREATE TABLE email_attachments (
     INDEX idx_tenant_active_email_attachments (tenant_id, deleted_at)
 );
 
+CREATE TABLE email_templates (
+    tenant_id BIGINT NOT NULL,
+    template_id BIGINT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(500),
+    category VARCHAR(50),
+    subject_template VARCHAR(255) NOT NULL,
+    body_html TEXT NOT NULL,
+    body_text TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, template_id),
+    INDEX idx_template_tenant_category (tenant_id, category),
+    INDEX idx_template_tenant_active (tenant_id, is_active),
+    INDEX idx_template_name (tenant_id, name)
+);
+
+CREATE TABLE email_template_variables (
+    tenant_id BIGINT NOT NULL,
+    template_variable_id BIGINT NOT NULL,
+    template_id BIGINT NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    variable_type VARCHAR(20) NOT NULL,
+    description VARCHAR(200),
+    is_required BOOLEAN NOT NULL DEFAULT FALSE,
+    default_value VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, template_variable_id),
+    INDEX idx_template_var_template (tenant_id, template_id),
+    CONSTRAINT fk_template_var_template
+        FOREIGN KEY (tenant_id, template_id)
+        REFERENCES email_templates (tenant_id, template_id)
+);
+
 --           POS SYSTEM MODULE         --
 
 CREATE TABLE store_products (
