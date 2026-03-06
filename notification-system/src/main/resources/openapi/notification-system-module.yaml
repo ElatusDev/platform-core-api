@@ -45,11 +45,20 @@ paths:
       Handles device tokens, platform-specific configurations, badges, and custom payloads.
 
   # ===== EMAIL NOTIFICATION ENDPOINTS =====
-  /email:
-    $ref: './email-notification.yaml#/paths'
-    description: |
-      Email notification delivery endpoints with template management.
-      Supports HTML emails, attachments, CC/BCC, tracking, and personalization.
+  '/email/notifications/{notificationId}/deliveries':
+    $ref: './email-notification.yaml#/paths/~1notifications~1{notificationId}~1deliveries'
+  '/email/deliveries/{deliveryId}':
+    $ref: './email-notification.yaml#/paths/~1deliveries~1{deliveryId}'
+  '/email/deliveries/{deliveryId}/retry':
+    $ref: './email-notification.yaml#/paths/~1deliveries~1{deliveryId}~1retry'
+  '/email/send':
+    $ref: './email-notification.yaml#/paths/~1send'
+  '/email/templates':
+    $ref: './email-notification.yaml#/paths/~1templates'
+  '/email/templates/{templateId}':
+    $ref: './email-notification.yaml#/paths/~1templates~1{templateId}'
+  '/email/templates/{templateId}/preview':
+    $ref: './email-notification.yaml#/paths/~1templates~1{templateId}~1preview'
 
   # ===== SMS NOTIFICATION ENDPOINTS =====
   /sms:
@@ -94,6 +103,50 @@ components:
 
     ErrorResponse:
       $ref: './sms-notification.yaml#/components/schemas/ErrorResponse'
+
+    # Email delivery schemas
+    CreateEmailDeliveryRequest:
+      $ref: './email-notification.yaml#/components/schemas/CreateEmailDeliveryRequest'
+    EmailRecipients:
+      $ref: './email-notification.yaml#/components/schemas/EmailRecipients'
+    EmailDeliveryConfig:
+      $ref: './email-notification.yaml#/components/schemas/EmailDeliveryConfig'
+    EmailAttachment:
+      $ref: './email-notification.yaml#/components/schemas/EmailAttachment'
+    EmailDeliveryResponse:
+      $ref: './email-notification.yaml#/components/schemas/EmailDeliveryResponse'
+    EmailDeliveryDetailResponse:
+      $ref: './email-notification.yaml#/components/schemas/EmailDeliveryDetailResponse'
+    EmailDeliveryListResponse:
+      $ref: './email-notification.yaml#/components/schemas/EmailDeliveryListResponse'
+    UpdateEmailDeliveryStatusRequest:
+      $ref: './email-notification.yaml#/components/schemas/UpdateEmailDeliveryStatusRequest'
+    ImmediateEmailNotificationRequest:
+      $ref: './email-notification.yaml#/components/schemas/ImmediateEmailNotificationRequest'
+    ImmediateEmailDeliveryResponse:
+      $ref: './email-notification.yaml#/components/schemas/ImmediateEmailDeliveryResponse'
+    CreateEmailTemplateRequest:
+      $ref: './email-notification.yaml#/components/schemas/CreateEmailTemplateRequest'
+    UpdateEmailTemplateRequest:
+      $ref: './email-notification.yaml#/components/schemas/UpdateEmailTemplateRequest'
+    EmailTemplateResponse:
+      $ref: './email-notification.yaml#/components/schemas/EmailTemplateResponse'
+    EmailTemplateListResponse:
+      $ref: './email-notification.yaml#/components/schemas/EmailTemplateListResponse'
+    EmailTemplatePreviewRequest:
+      $ref: './email-notification.yaml#/components/schemas/EmailTemplatePreviewRequest'
+    EmailTemplatePreviewResponse:
+      $ref: './email-notification.yaml#/components/schemas/EmailTemplatePreviewResponse'
+    EmailTrackingInfo:
+      $ref: './email-notification.yaml#/components/schemas/EmailTrackingInfo'
+    NotificationSummary:
+      $ref: './email-notification.yaml#/components/schemas/NotificationSummary'
+    PaginationInfo:
+      $ref: './email-notification.yaml#/components/schemas/PaginationInfo'
+    EmailPriority:
+      $ref: './email-notification.yaml#/components/schemas/EmailPriority'
+    TemplateVariable:
+      $ref: './email-notification.yaml#/components/schemas/TemplateVariable'
 
     # Aggregated notification overview schemas
     NotificationOverview:
