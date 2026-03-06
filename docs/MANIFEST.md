@@ -1,6 +1,6 @@
 # Documentation Manifest — AkademiaPlus Platform Core API
 
-> **Last updated**: 2026-03-02
+> **Last updated**: 2026-03-06
 > **Purpose**: Single source of truth for all project documentation status.
 
 ---
@@ -80,6 +80,7 @@ Executable prompts for Claude Code CLI.
 | Prompt | Purpose | Status |
 |--------|---------|--------|
 | [e2e-bootstrap-prompt.md](prompts/pending/e2e-bootstrap-prompt.md) | Registration-driven E2E bootstrap — register endpoint, tenant-scoped mock data, collection rewrite | 🟡 Ready to execute |
+| [email-notification-delivery-prompt.md](prompts/pending/email-notification-delivery-prompt.md) | Email notification delivery via Jakarta Mail/SMTP — 10 phases, strategy + templates + controllers + tests | 🟡 Ready to execute |
 
 ### Completed (`docs/prompts/completed/`)
 
@@ -89,6 +90,8 @@ Executable prompts for Claude Code CLI.
 | [delete-usecase-rollout-prompt.md](prompts/completed/delete-usecase-rollout-prompt.md) | Delete use case rollout across all entities | All entities implemented |
 | [exception-advice-consolidation-prompt.md](prompts/completed/exception-advice-consolidation-prompt.md) | Exception handling consolidation | BaseControllerAdvice + generics implemented |
 | [dependency-upgrade-prompt.md](prompts/completed/dependency-upgrade-prompt.md) | Boot 4.0.0-M3 → 4.0.3, Java 21 → 24 | Upgrade completed |
+| [oauth-social-login-prompt.md](prompts/completed/oauth-social-login-prompt.md) | OAuth2 social login (Google + Facebook) — 14 phases | Implemented |
+| [sonarcloud-remediation-prompt.md](prompts/completed/sonarcloud-remediation-prompt.md) | SonarCloud code quality remediation | Implemented |
 
 ---
 
@@ -101,6 +104,7 @@ Step-by-step implementation plans. Referenced by prompts.
 | Document | Purpose | Status |
 |----------|---------|--------|
 | [e2e-bootstrap-workflow.md](workflows/pending/e2e-bootstrap-workflow.md) | Registration-driven auth + tenant-scoped mock data — architecture analysis, 4 phases, file inventory | 🟡 Ready to execute |
+| [email-notification-delivery-workflow.md](workflows/pending/email-notification-delivery-workflow.md) | Email notification delivery via Jakarta Mail/SMTP — 10 phases, ~35 new files, template engine | 🟡 Ready to execute |
 
 ### Completed (`docs/workflows/completed/`)
 
@@ -112,6 +116,8 @@ Step-by-step implementation plans. Referenced by prompts.
 | [creation-usecase-workflow.md](workflows/completed/creation-usecase-workflow.md) | Step-by-step creation use case for all entities | All entities implemented |
 | [ca-trust-propagation-workflow.md](workflows/completed/ca-trust-propagation-workflow.md) | mTLS certificate enrollment workflow (8443/8081) | Superseded by plain HTTP |
 | [controller-advice-audit-workflow.md](workflows/completed/controller-advice-audit-workflow.md) | Diagnostic audit of @ControllerAdvice across modules | Fed into exception-advice-strategy |
+| [oauth-social-login-workflow.md](workflows/completed/oauth-social-login-workflow.md) | OAuth2 social login (Google + Facebook) — provider strategy, 3-branch auth | Implemented |
+| [sonarcloud-remediation-workflow.md](workflows/completed/sonarcloud-remediation-workflow.md) | SonarCloud code quality remediation | Implemented |
 
 ---
 

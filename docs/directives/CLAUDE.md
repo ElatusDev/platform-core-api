@@ -22,12 +22,17 @@
 2. **Constants**: ALL string literals → `public static final`, shared between impl and tests as single source of truth
 3. **IDs**: Always `Long`, never `Integer`
 4. **Exceptions**: Catch specific types only — never `Exception` or `Throwable`
-5. **Architecture**: `interfaceadapters/` (controllers + repos) and `usecases/` (services)
+5. **Architecture**: Use-Case-Centric Modular Architecture — see `DESIGN.md` Section 3.2 for layer rules and placement guidelines
 6. **Commits**: Conventional Commits — `type(scope): subject` in imperative mood, ≤72 chars. **NEVER** include `Co-Authored-By`, `Generated with`, or any AI-tool attribution in commit messages
 7. **Methods**: < 20 lines, cyclomatic complexity < 10
 8. **Javadoc**: Required on all public classes, methods, and constants
 9. **Mock stubbing**: Stub with EXACT parameters the implementation passes (read the impl first)
 10. **Test organization**: `@Nested` classes with `@DisplayName` for logical grouping
+11. **Test coverage**: Every new feature MUST include all three test tiers — see [Test Coverage Requirements](#test-coverage-requirements)
+12. **External service abstraction**: External integrations (OAuth providers, payment gateways, email services) MUST define a strategy interface in `usecases/` — implementations live alongside the interface, enabling testability without mocking HTTP clients
+13. **Non-entity domain objects**: Records and value objects that are NOT JPA entities go in `usecases/domain/` within the feature package — never in `interfaceadapters/` or `config/`
+14. **Cross-module boundaries**: Domain modules may import repositories from other domain modules but NEVER import use cases — use-case-to-use-case calls are restricted to the `application` module only
+15. **Workflow + Prompt documentation**: Every multi-file feature (3+ new production files) MUST have a paired workflow (`docs/workflows/`) and prompt (`docs/prompts/`) authored BEFORE implementation begins. The workflow defines architecture, phases, file inventory, and test plan. The prompt provides step-by-step executable instructions with compile/test gates and commit messages. See `AI-CODE-REF.md` Section 13 for format guide.
 
 ### Constant Extraction Pattern
 ```java
@@ -167,10 +172,57 @@ docker compose -f docker-compose.dev.yml up trust-broker multi_tenant_db platfor
 
 ---
 
+## Test Coverage Requirements
+
+Every new feature, endpoint, or behavioral change MUST include all three test tiers before it is considered complete. No tier is optional.
+
+### Three-Tier Test Pyramid
+
+| Tier | Type | Location | Runner | What It Verifies |
+|------|------|----------|--------|-----------------|
+| 1 | **Unit Tests** | `platform-core-api/{module}/src/test/` | `mvn test -pl {module}` | Individual classes in isolation — use cases, strategies, registries, controllers (standalone MockMvc) |
+| 2 | **Component Tests** | `platform-core-api/{module}/src/test/` | `mvn verify -pl {module}` | Full Spring context + Testcontainers MariaDB — HTTP → Controller → UseCase → Repository → DB |
+| 3 | **E2E Tests** | `platform-api-e2e/` | `newman run` | Real running server over the network — deployed API contract, auth flow, cross-module integration |
+
+### Per-Tier Scope
+
+**Tier 1 — Unit Tests** (`*Test.java`):
+- One test class per production class: `*UseCaseTest`, `*StrategyTest`, `*RegistryTest`, `*ControllerTest`
+- Cover: happy path, error/exception paths, edge cases, input validation
+- Follow: `AI-CODE-REF.md` Section 4 (Given-When-Then, zero `any()`, `@DisplayName`, `@Nested`)
+
+**Tier 2 — Component Tests** (`*ComponentTest.java`):
+- One test class per entity or feature endpoint
+- Cover: all CRUD operations + every exception path from the Entity Exception Matrix
+- Follow: `docs/workflows/completed/component-test-workflow.md`
+
+**Tier 3 — E2E Tests** (Postman/Newman):
+- Requests added to `platform-api-e2e/Postman Collections/platform-api-e2e.json`
+- Cover: Create, GetById, GetAll, Delete + error codes (404, 409, 400)
+- Follow: `platform-api-e2e/docs/workflows/completed/E2E-TEST-WORKFLOW.md`
+
+### When Planning a Feature
+
+Workflow and prompt documents MUST include test phases for all three tiers. A feature plan is incomplete if it only specifies unit tests.
+
+### Applicability
+
+| Feature Type | Tier 1 (Unit) | Tier 2 (Component) | Tier 3 (E2E) |
+|-------------|:---:|:---:|:---:|
+| New CRUD entity | Required | Required | Required |
+| New non-CRUD endpoint (e.g., OAuth login) | Required | Required | Required |
+| New strategy / service / domain logic | Required | Required (if exposed via endpoint) | Required (if exposed via endpoint) |
+| Internal refactor (no API change) | Required | Verify existing pass | Verify existing pass |
+| Bug fix | Required (regression test) | Verify existing pass | Verify existing pass |
+
+---
+
 ## Pull Request Checklist
 
 - [ ] Code compiles: `mvn clean install -DskipTests`
-- [ ] Tests pass: `mvn test -pl {module}`
+- [ ] Unit tests pass: `mvn test -pl {module}`
+- [ ] Component tests pass: `mvn verify -pl {module}`
+- [ ] E2E tests updated in `platform-api-e2e` (if new/changed endpoints)
 - [ ] New public APIs have Javadoc with `@param`, `@return`, `@throws`
 - [ ] All string literals extracted to constants
 - [ ] Tests follow Given-When-Then with proper naming

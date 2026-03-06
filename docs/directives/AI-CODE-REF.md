@@ -951,6 +951,77 @@ Throwable
 
 ---
 
-**End of AI-CODE-REF.md v4.0**
+## 13. WORKFLOW & PROMPT DOCUMENTATION
+
+### 13.1 When Required
+
+Workflow + prompt documentation is required for:
+- **Multi-file features** — 3+ new production files
+- **Cross-module changes** — modifications spanning 2+ modules
+- **New entity introduction** — any new JPA entity or entity cluster
+- **New delivery channel / integration** — new strategy implementation or external service integration
+
+### 13.2 Workflow Document Format
+
+**Reference**: `docs/workflows/completed/sse-notification-delivery-workflow.md`
+
+Required sections:
+
+1. **Architecture Overview** — data flow diagrams, strategy patterns, module placement, transport decisions
+2. **File Inventory** — new files table (file, package, responsibility), modified files table (file, change), OpenAPI changes, test files table — all with phase column
+3. **Implementation Sequence** — phase dependency graph (ASCII), strict execution order
+4. **Phase Details** — per phase: file paths, public API signatures (method tables), code snippets, constants, design decisions, test plan (@Nested + test method table), verification gate (`mvn` command)
+5. **Key Design Decisions** — trade-off tables (Factor / Option A / Option B) with rationale
+6. **Multi-Tenancy Considerations** — composite keys, tenant context, Hibernate filters, cross-tenant queries
+7. **Future Extensibility** — deferred features, upgrade paths, scaling considerations
+8. **Verification Checklist** — final `mvn` commands (compile, test, full build), convention compliance checks (`grep` for `any()`, AAA, generic catches), copyright header verification
+9. **Critical Reminders** — project convention guardrails (prototype beans, ID assignment, named TypeMaps, constants, testing rules, copyright, commits, Long IDs, `@Transactional` placement)
+
+### 13.3 Prompt Document Format
+
+**Reference**: `docs/prompts/pending/oauth-social-login-prompt.md`
+
+Required sections:
+
+1. **Header block** — Target (`Claude Code CLI`), Repo (absolute path), Spec (link to workflow), Prerequisites (directives to read)
+2. **EXECUTION RULES** — numbered, immutable constraints:
+   - Sequential phase execution (no skipping)
+   - "Read first" before writing code
+   - Compile gate after each code phase
+   - Test gate after each test phase
+   - Copyright header on all new files
+   - Javadoc on all public classes/methods
+   - Test conventions (`shouldDoX_whenY`, `@DisplayName`, Given-When-Then, zero `any()`)
+   - Constants for all string literals
+   - `applicationContext.getBean()` for entity instantiation
+   - Read existing files before modifying
+   - Commit after each phase with provided message
+3. **Phase N** — per phase:
+   - "Read first" commands (bash `cat` / `grep` / `find`)
+   - Step N.M with exact file paths, code snippets, and instructions
+   - Verify Phase N (`mvn` command)
+   - Commit Phase N (Conventional Commits message with scope)
+4. **VERIFICATION CHECKLIST** — final end-to-end checks:
+   - Full compilation (`mvn clean install -DskipTests`)
+   - Module-specific test runs
+   - Component test verification (`mvn verify`)
+   - Convention compliance (copyright, Javadoc, constants, test patterns)
+   - Architecture rules (Hard Rules #12, #13, #14 compliance)
+
+### 13.4 Lifecycle
+
+- New docs start in `pending/` subdirectory
+- Move to `completed/` after all phases are implemented and verified
+- Register both docs in `docs/MANIFEST.md` upon creation
+
+### 13.5 Naming
+
+- Workflow: `{feature-slug}-workflow.md`
+- Prompt: `{feature-slug}-prompt.md`
+- The `{feature-slug}` must match between paired workflow and prompt documents
+
+---
+
+**End of AI-CODE-REF.md v4.1**
 
 *This document is structured for programmatic analysis and quick pattern matching during code reviews, refactoring sessions, and test creation. Formerly AI-code-ref.md v3.0. Renamed to AI-CODE-REF.md to avoid collision with the Claude Code CLAUDE.md convention.*
