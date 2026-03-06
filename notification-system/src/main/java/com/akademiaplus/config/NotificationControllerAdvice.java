@@ -7,6 +7,7 @@
  */
 package com.akademiaplus.config;
 
+import com.akademiaplus.notification.interfaceadapters.EmailController;
 import com.akademiaplus.notification.interfaceadapters.NotificationController;
 import com.akademiaplus.utilities.MessageService;
 import com.akademiaplus.utilities.web.BaseControllerAdvice;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
  * @author ElatusDev
  * @since 1.0
  */
-@ControllerAdvice(basePackageClasses = {NotificationController.class})
+@ControllerAdvice(basePackageClasses = {NotificationController.class, EmailController.class})
 public class NotificationControllerAdvice extends BaseControllerAdvice {
 
     /**
