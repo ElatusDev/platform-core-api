@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 ElatusDev
+ * Copyright (c) 2026 ElatusDev
  * All rights reserved.
  *
  * This code is proprietary and confidential.
@@ -18,9 +18,20 @@ import java.security.KeyPair;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
+/**
+ * Provides JWT token creation, validation, and claim extraction.
+ *
+ * <p>Supports both access tokens (short-lived, with JTI for Redis session
+ * tracking) and refresh tokens (long-lived, with family ID for rotation
+ * chain tracking).</p>
+ *
+ * @author ElatusDev
+ * @since 1.0
+ */
 @Component
-public class JwtTokenProvider  {
+public class JwtTokenProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JwtTokenProvider.class);
 
@@ -36,10 +47,29 @@ public class JwtTokenProvider  {
     @Value("${jwt.token.validity-ms}")
     private long validityInMs;
 
+    @Value("${jwt.refresh-token.validity-ms}")
+    private long refreshTokenValidityInMs;
+
     @Value("${spring.application.name:platform-core-api}")
     private String applicationName;
 
+    /** Claim key for the tenant identifier. */
     public static final String TENANT_ID_CLAIM = "tenant_id";
+
+    /** Claim key for the token type (access or refresh). */
+    public static final String TOKEN_TYPE_CLAIM = "token_type";
+
+    /** Token type value for access tokens. */
+    public static final String TOKEN_TYPE_ACCESS = "access";
+
+    /** Token type value for refresh tokens. */
+    public static final String TOKEN_TYPE_REFRESH = "refresh";
+
+    /** Claim key for the refresh token family identifier. */
+    public static final String FAMILY_ID_CLAIM = "family_id";
+
+    /** Claim key for the user ID. */
+    public static final String USER_ID_CLAIM = "user_id";
 
     private KeyPair keyPair;
     private JwtParser jwtParser;
@@ -67,12 +97,13 @@ public class JwtTokenProvider  {
      * @param tenantId The tenant ID for the user.
      * @param additionalClaims Additional claims to include in the payload. Can be null.
      * @return The signed JWT string.
+     * @deprecated Use {@link #createAccessToken(String, Long, Map)} instead.
      */
+    @Deprecated(since = "1.1", forRemoval = true)
     public String createToken(String username, Long tenantId, Map<String, Object> additionalClaims) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + validityInMs);
 
-        // Prepare the claims, including the tenant ID
         Map<String, Object> claims = (additionalClaims != null) ? new HashMap<>(additionalClaims) : new HashMap<>();
         claims.put(TENANT_ID_CLAIM, tenantId);
 
@@ -83,6 +114,90 @@ public class JwtTokenProvider  {
                 .expiration(expiry)
                 .signWith(keyPair.getPrivate())
                 .compact();
+    }
+
+    /**
+     * Creates a signed access token with a unique JTI claim for Redis session tracking.
+     *
+     * @param username         the subject of the token
+     * @param tenantId         the tenant ID
+     * @param additionalClaims additional claims to include (may be null)
+     * @return the signed JWT access token string
+     */
+    public String createAccessToken(String username, Long tenantId, Map<String, Object> additionalClaims) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + validityInMs);
+
+        Map<String, Object> claims = (additionalClaims != null) ? new HashMap<>(additionalClaims) : new HashMap<>();
+        claims.put(TENANT_ID_CLAIM, tenantId);
+        claims.put(TOKEN_TYPE_CLAIM, TOKEN_TYPE_ACCESS);
+
+        String jti = UUID.randomUUID().toString();
+
+        return Jwts.builder()
+                .id(jti)
+                .subject(username)
+                .claims(claims)
+                .issuedAt(now)
+                .expiration(expiry)
+                .signWith(keyPair.getPrivate())
+                .compact();
+    }
+
+    /**
+     * Creates a signed refresh token with a family ID for rotation tracking.
+     *
+     * @param username the subject of the token
+     * @param tenantId the tenant ID
+     * @param familyId the token family UUID for rotation chain tracking
+     * @return the signed JWT refresh token string
+     */
+    public String createRefreshToken(String username, Long tenantId, String familyId) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + refreshTokenValidityInMs);
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(TENANT_ID_CLAIM, tenantId);
+        claims.put(TOKEN_TYPE_CLAIM, TOKEN_TYPE_REFRESH);
+        claims.put(FAMILY_ID_CLAIM, familyId);
+
+        return Jwts.builder()
+                .id(UUID.randomUUID().toString())
+                .subject(username)
+                .claims(claims)
+                .issuedAt(now)
+                .expiration(expiry)
+                .signWith(keyPair.getPrivate())
+                .compact();
+    }
+
+    /**
+     * Extracts the JTI (JWT ID) claim from a token.
+     *
+     * @param token the JWT string
+     * @return the JTI value
+     */
+    public String getJti(String token) {
+        return getClaims(token).getId();
+    }
+
+    /**
+     * Extracts the token type claim from a token.
+     *
+     * @param token the JWT string
+     * @return the token type ({@code access} or {@code refresh})
+     */
+    public String getTokenType(String token) {
+        return getClaims(token).get(TOKEN_TYPE_CLAIM, String.class);
+    }
+
+    /**
+     * Returns the access token validity in milliseconds.
+     *
+     * @return access token TTL in milliseconds
+     */
+    public long getAccessTokenValidityInMs() {
+        return validityInMs;
     }
 
     /**
