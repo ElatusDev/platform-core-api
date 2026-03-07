@@ -14,6 +14,7 @@ security/target/
 tenant-management/target/
 user-management/target/
 utilities/target/
+lead-management/target/
 
 ### docker related ###
 .env
@@ -40,3 +41,4 @@ security/*.iml
 tenant-management/*.iml
 user-management/*.iml
 utilities/*.iml
+lead-management/*.iml
