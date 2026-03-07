@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  SES domain identity with Easy DKIM and Custom MAIL FROM for akademiaplus.com.
+  Outputs DNS records that must be added manually at the domain registrar.
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+  DomainName:
+    Type: String
+    Default: akademiaplus.com
+  MailFromSubdomain:
+    Type: String
+    Default: mail
+
+Resources:
+  SesDomainIdentity:
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: !Ref DomainName
+      DkimSigningAttributes:
+        NextSigningKeyLength: RSA_2048_BIT
+      MailFromAttributes:
+        MailFromDomain: !Sub '${MailFromSubdomain}.${DomainName}'
+        BehaviorOnMxFailure: USE_DEFAULT_VALUE
+
+Outputs:
+  DomainIdentityArn:
+    Description: ARN of the SES domain identity
+    Value: !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/${DomainName}'
+    Export:
+      Name: !Sub '${Environment}-ses-domain-identity-arn'
+  DomainName:
+    Description: The verified domain name
+    Value: !Ref DomainName
+    Export:
+      Name: !Sub '${Environment}-ses-domain-name'
+  MailFromDomain:
+    Description: Custom MAIL FROM domain
+    Value: !Sub '${MailFromSubdomain}.${DomainName}'
+    Export:
+      Name: !Sub '${Environment}-ses-mail-from-domain'

@@ -54,6 +54,9 @@ public class ImmediateSendUseCase {
     @Value("${akademia.email.from-name}")
     private String defaultFromName;
 
+    @Value("${akademia.email.ses-configuration-set:}")
+    private String sesConfigurationSet;
+
     /**
      * Sends an email immediately to all specified recipients.
      * <p>
@@ -118,6 +121,10 @@ public class ImmediateSendUseCase {
             helper.setTo(recipientEmail);
             helper.setSubject(subject);
             helper.setText(body, true);
+
+            if (sesConfigurationSet != null && !sesConfigurationSet.isBlank()) {
+                mimeMessage.setHeader(EmailDeliveryChannelStrategy.HEADER_SES_CONFIGURATION_SET, sesConfigurationSet);
+            }
 
             javaMailSender.send(mimeMessage);
 
