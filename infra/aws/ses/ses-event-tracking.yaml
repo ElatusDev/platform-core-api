@@ -1,0 +1,172 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  SES Configuration Set with SNS + SQS event tracking pipeline.
+  Captures bounce, complaint, delivery, open, click, reject, and send events.
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Environment name for resource naming
+  DomainName:
+    Type: String
+    Default: akademiaplus.com
+    Description: Domain for identity ARN reference
+  MessageRetentionPeriod:
+    Type: Number
+    Default: 1209600
+    Description: SQS message retention in seconds (default 14 days)
+  MaxReceiveCount:
+    Type: Number
+    Default: 3
+    Description: Max receive count before message goes to DLQ
+
+Resources:
+
+  # --- Configuration Set ---
+
+  SesConfigurationSet:
+    Type: AWS::SES::ConfigurationSet
+    Properties:
+      Name: !Sub 'akademiaplus-email-tracking-${Environment}'
+      ReputationOptions:
+        ReputationMetricsEnabled: true
+      SendingOptions:
+        SendingEnabled: true
+      SuppressionOptions:
+        SuppressedReasons:
+          - BOUNCE
+          - COMPLAINT
+
+  # --- SNS Topic ---
+
+  SesEventTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub 'akademiaplus-ses-events-${Environment}'
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  SesEventTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref SesEventTopic
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowSESPublish
+            Effect: Allow
+            Principal:
+              Service: ses.amazonaws.com
+            Action: sns:Publish
+            Resource: !Ref SesEventTopic
+            Condition:
+              StringEquals:
+                AWS:SourceAccount: !Ref AWS::AccountId
+              ArnLike:
+                AWS:SourceArn: !Sub 'arn:aws:ses:${AWS::Region}:${AWS::AccountId}:configuration-set/akademiaplus-email-tracking-${Environment}'
+
+  # --- SES Event Destination ---
+
+  SesEventDestination:
+    Type: AWS::SES::ConfigurationSetEventDestination
+    Properties:
+      ConfigurationSetName: !Ref SesConfigurationSet
+      EventDestination:
+        Name: !Sub 'sns-all-events-${Environment}'
+        Enabled: true
+        MatchingEventTypes:
+          - send
+          - reject
+          - bounce
+          - complaint
+          - delivery
+          - open
+          - click
+        SnsDestination:
+          TopicARN: !Ref SesEventTopic
+
+  # --- SQS Dead Letter Queue ---
+
+  SesEventDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub 'akademiaplus-ses-events-dlq-${Environment}'
+      MessageRetentionPeriod: 1209600
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  # --- SQS Main Queue ---
+
+  SesEventQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub 'akademiaplus-ses-events-${Environment}'
+      MessageRetentionPeriod: !Ref MessageRetentionPeriod
+      VisibilityTimeout: 300
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt SesEventDeadLetterQueue.Arn
+        maxReceiveCount: !Ref MaxReceiveCount
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+
+  SesEventQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref SesEventQueue
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowSNSPublish
+            Effect: Allow
+            Principal:
+              Service: sns.amazonaws.com
+            Action: sqs:SendMessage
+            Resource: !GetAtt SesEventQueue.Arn
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref SesEventTopic
+
+  # --- SNS -> SQS Subscription ---
+
+  SesEventSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: sqs
+      TopicArn: !Ref SesEventTopic
+      Endpoint: !GetAtt SesEventQueue.Arn
+      RawMessageDelivery: true
+
+Outputs:
+  ConfigurationSetName:
+    Description: SES Configuration Set name (set as X-SES-CONFIGURATION-SET header)
+    Value: !Ref SesConfigurationSet
+    Export:
+      Name: !Sub '${Environment}-ses-configuration-set-name'
+  EventQueueUrl:
+    Description: SQS queue URL for consuming SES events
+    Value: !Ref SesEventQueue
+    Export:
+      Name: !Sub '${Environment}-ses-event-queue-url'
+  EventQueueArn:
+    Description: SQS queue ARN
+    Value: !GetAtt SesEventQueue.Arn
+    Export:
+      Name: !Sub '${Environment}-ses-event-queue-arn'
+  DeadLetterQueueUrl:
+    Description: DLQ URL for failed event processing
+    Value: !Ref SesEventDeadLetterQueue
+  EventTopicArn:
+    Description: SNS topic ARN for SES events
+    Value: !Ref SesEventTopic
+    Export:
+      Name: !Sub '${Environment}-ses-event-topic-arn'
