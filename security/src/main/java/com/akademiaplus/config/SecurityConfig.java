@@ -11,6 +11,8 @@ import com.akademiaplus.internal.interfaceadapters.filters.AppOriginContext;
 import com.akademiaplus.internal.interfaceadapters.filters.AppOriginFilter;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtRequestFilter;
 import com.akademiaplus.ratelimit.interfaceadapters.RateLimitingFilter;
+import com.akademiaplus.hmac.interfaceadapters.HmacResponseFilter;
+import com.akademiaplus.hmac.interfaceadapters.HmacSigningFilter;
 import com.akademiaplus.tokenbinding.interfaceadapters.TokenBindingFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -132,7 +134,9 @@ public class SecurityConfig {
             JwtRequestFilter jwtRequestFilter,
             AppOriginFilter appOriginFilter,
             RateLimitingFilter rateLimitingFilter,
-            TokenBindingFilter tokenBindingFilter) throws Exception {
+            TokenBindingFilter tokenBindingFilter,
+            HmacSigningFilter hmacSigningFilter,
+            HmacResponseFilter hmacResponseFilter) throws Exception {
 
         http
                 .securityMatcher("/**")
@@ -163,7 +167,9 @@ public class SecurityConfig {
                 .addFilterBefore(appOriginFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(rateLimitingFilter, JwtRequestFilter.class)
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(tokenBindingFilter, JwtRequestFilter.class);
+                .addFilterAfter(tokenBindingFilter, JwtRequestFilter.class)
+                .addFilterAfter(hmacSigningFilter, TokenBindingFilter.class)
+                .addFilterAfter(hmacResponseFilter, HmacSigningFilter.class);
 
         return http.build();
     }
