@@ -29,12 +29,14 @@ public class PeopleModuleSecurityConfiguration implements ModuleSecurityConfigur
     private final String tutorPathAnyPathVars;
     private final String minorStudentPath;
     private final String minorStudentPathAnyPathVars;
+    private final String mePath;
 
     public PeopleModuleSecurityConfiguration(@Value("${api.user-management.employee.base-url}") String employeeBaseUri,
                                              @Value("${api.user-management.collaborator.base-url}") String collaboratorBaseUri,
                                              @Value("${api.user-management.adult-student.base-url}") String adultStudentBaseUri,
                                              @Value("${api.user-management.tutor.base-url}") String tutorBaseUri,
-                                             @Value("${api.user-management.minor-student.base-url}") String minorStudentBaseUri) {
+                                             @Value("${api.user-management.minor-student.base-url}") String minorStudentBaseUri,
+                                             @Value("${api.user-management.me.base-url}") String meBaseUri) {
         String anyPathVar = "/**";
         employeePath = employeeBaseUri;
         employeePathAnyPathVars = employeePath + anyPathVar;
@@ -46,15 +48,26 @@ public class PeopleModuleSecurityConfiguration implements ModuleSecurityConfigur
         tutorPathAnyPathVars = tutorPath + anyPathVar;
         minorStudentPath = minorStudentBaseUri;
         minorStudentPathAnyPathVars = minorStudentPath + anyPathVar;
+        mePath = meBaseUri;
     }
 
     @Override
     public void configure(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) throws Exception {
+            mePaths(auth);
             employeePaths(auth);
             collaboratorPaths(auth);
             adultStudentPaths(auth);
             tutorPaths(auth);
             minorStudentPaths(auth);
+    }
+
+    /**
+     * Configures security for the {@code /me} endpoint. Requires authentication.
+     *
+     * @param auth the authorization configurer
+     */
+    public void mePaths(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
+        auth.requestMatchers(HttpMethod.GET, mePath).authenticated();
     }
 
     public void employeePaths(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {

@@ -29,6 +29,8 @@ tags:
     description: Minor student management operations
   - name: Tutors
     description: Tutor management operations
+  - name: CurrentUser
+    description: Current authenticated user profile resolution
 
 paths:
   # Employee endpoints
@@ -74,6 +76,10 @@ paths:
 
   /tutors/{tutorId}/students:
     $ref: './tutor-api.yaml#/paths/~1tutors~1{tutorId}~1students'
+
+  # Current User endpoint
+  /me:
+    $ref: './me-api.yaml#/paths/~1me'
 
 components:
   # Reference all common components from commons.yaml

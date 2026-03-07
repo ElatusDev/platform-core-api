@@ -22,6 +22,8 @@ public final class EntityType {
     private EntityType() {}
 
     // user-management
+    public static final String USER = "entity.user";
+    public static final String INTERNAL_AUTH = "entity.internal.auth";
     public static final String EMPLOYEE = "entity.employee";
     public static final String COLLABORATOR = "entity.collaborator";
     public static final String ADULT_STUDENT = "entity.adult.student";
