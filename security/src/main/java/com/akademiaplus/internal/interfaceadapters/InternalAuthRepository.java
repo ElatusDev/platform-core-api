@@ -17,4 +17,11 @@ import java.util.Optional;
 public interface InternalAuthRepository extends TenantScopedRepository<InternalAuthDataModel, InternalAuthDataModel.InternalAuthCompositeId> {
     Optional<InternalAuthDataModel> findByUsernameHash(String usernameHash);
 
+    /**
+     * Finds an internal auth record by its internal auth ID within the tenant.
+     *
+     * @param internalAuthId the internal auth ID
+     * @return the auth record, if found
+     */
+    Optional<InternalAuthDataModel> findByInternalAuthId(Long internalAuthId);
 }
