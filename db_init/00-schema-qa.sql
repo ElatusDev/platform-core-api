@@ -694,6 +694,27 @@ CREATE TABLE compensations (
     INDEX idx_tenant_active_compensation (tenant_id, deleted_at)
 );
 
+CREATE TABLE notification_read_statuses (
+    notification_read_status_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    notification_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    read_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_notification_user (notification_id, user_id),
+    INDEX idx_read_status_user (user_id)
+);
+
+CREATE TABLE push_devices (
+    push_device_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    device_token VARCHAR(255) NOT NULL UNIQUE,
+    platform VARCHAR(10) NOT NULL,
+    app_version VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_push_device_user (user_id),
+    INDEX idx_push_device_token (device_token)
+);
+
 CREATE TABLE compensation_collaborators (
     tenant_id BIGINT NOT NULL,
     compensation_id BIGINT NOT NULL,

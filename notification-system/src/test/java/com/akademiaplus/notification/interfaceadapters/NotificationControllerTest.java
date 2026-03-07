@@ -11,6 +11,7 @@ import com.akademiaplus.config.NotificationControllerAdvice;
 import com.akademiaplus.notification.usecases.DeleteNotificationUseCase;
 import com.akademiaplus.notification.usecases.GetAllNotificationsUseCase;
 import com.akademiaplus.notification.usecases.GetNotificationByIdUseCase;
+import com.akademiaplus.notification.usecases.MarkNotificationAsReadUseCase;
 import com.akademiaplus.notification.usecases.NotificationCreationUseCase;
 import com.akademiaplus.notification.usecases.NotificationDispatchService;
 import com.akademiaplus.notifications.NotificationDataModel;
@@ -38,6 +39,7 @@ import java.util.List;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -52,6 +54,7 @@ class NotificationControllerTest {
     @Mock private DeleteNotificationUseCase deleteNotificationUseCase;
     @Mock private GetAllNotificationsUseCase getAllNotificationsUseCase;
     @Mock private GetNotificationByIdUseCase getNotificationByIdUseCase;
+    @Mock private MarkNotificationAsReadUseCase markNotificationAsReadUseCase;
     @Mock private NotificationDispatchService notificationDispatchService;
     @Mock private ModelMapper modelMapper;
     @Mock private MessageService messageService;
@@ -62,7 +65,7 @@ class NotificationControllerTest {
     void setUp() {
         NotificationController controller = new NotificationController(
                 notificationCreationUseCase, getAllNotificationsUseCase, getNotificationByIdUseCase,
-                deleteNotificationUseCase, notificationDispatchService, modelMapper);
+                deleteNotificationUseCase, markNotificationAsReadUseCase, notificationDispatchService, modelMapper);
         NotificationControllerAdvice controllerAdvice = new NotificationControllerAdvice(messageService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(controllerAdvice)
@@ -146,6 +149,26 @@ class NotificationControllerTest {
             verify(getNotificationByIdUseCase).get(NOTIFICATION_ID);
             verify(messageService).getEntityNotFound(EntityType.NOTIFICATION, String.valueOf(NOTIFICATION_ID));
             verifyNoMoreInteractions(getNotificationByIdUseCase, messageService);
+        }
+    }
+
+    @Nested
+    @DisplayName("PATCH /notifications/{notificationId}/read")
+    class MarkNotificationAsRead {
+
+        private static final Long USER_ID = 42L;
+        private static final String READ_PATH = BASE_PATH + "/{notificationId}/read";
+
+        @Test
+        @DisplayName("Should return 200 when notification marked as read")
+        void shouldReturn200_whenNotificationMarkedAsRead() throws Exception {
+            // When & Then
+            mockMvc.perform(patch(READ_PATH, NOTIFICATION_ID)
+                            .param("userId", String.valueOf(USER_ID)))
+                    .andExpect(status().isOk());
+
+            verify(markNotificationAsReadUseCase).markAsRead(NOTIFICATION_ID, USER_ID);
+            verifyNoMoreInteractions(markNotificationAsReadUseCase);
         }
     }
 

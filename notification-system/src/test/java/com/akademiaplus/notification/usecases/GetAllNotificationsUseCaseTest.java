@@ -7,6 +7,7 @@
  */
 package com.akademiaplus.notification.usecases;
 
+import com.akademiaplus.notification.interfaceadapters.NotificationReadStatusRepository;
 import com.akademiaplus.notification.interfaceadapters.NotificationRepository;
 import com.akademiaplus.notifications.NotificationDataModel;
 import openapi.akademiaplus.domain.notification.system.dto.GetNotificationResponseDTO;
@@ -21,6 +22,7 @@ import org.modelmapper.ModelMapper;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -30,13 +32,14 @@ import static org.mockito.Mockito.*;
 class GetAllNotificationsUseCaseTest {
 
     @Mock private NotificationRepository notificationRepository;
+    @Mock private NotificationReadStatusRepository notificationReadStatusRepository;
     @Mock private ModelMapper modelMapper;
 
     private GetAllNotificationsUseCase useCase;
 
     @BeforeEach
     void setUp() {
-        useCase = new GetAllNotificationsUseCase(notificationRepository, modelMapper);
+        useCase = new GetAllNotificationsUseCase(notificationRepository, notificationReadStatusRepository, modelMapper);
     }
 
     @Nested
@@ -88,23 +91,31 @@ class GetAllNotificationsUseCaseTest {
     class FilteredRetrieval {
 
         @Test
-        @DisplayName("Should return filtered results when targetUserId is provided")
+        @DisplayName("Should return filtered results with isRead populated when targetUserId is provided")
         void shouldReturnFilteredResults_whenTargetUserIdProvided() {
             // Given
             Long targetUserId = 42L;
-            NotificationDataModel notification = new NotificationDataModel();
-            GetNotificationResponseDTO dto = new GetNotificationResponseDTO();
+            NotificationDataModel notification1 = new NotificationDataModel();
+            NotificationDataModel notification2 = new NotificationDataModel();
+            GetNotificationResponseDTO dto1 = new GetNotificationResponseDTO();
+            dto1.setNotificationId(10L);
+            GetNotificationResponseDTO dto2 = new GetNotificationResponseDTO();
+            dto2.setNotificationId(20L);
 
-            when(notificationRepository.findByTargetUserId(targetUserId)).thenReturn(List.of(notification));
-            when(modelMapper.map(notification, GetNotificationResponseDTO.class)).thenReturn(dto);
+            when(notificationRepository.findByTargetUserId(targetUserId)).thenReturn(List.of(notification1, notification2));
+            when(notificationReadStatusRepository.findReadNotificationIdsByUserId(targetUserId)).thenReturn(Set.of(10L));
+            when(modelMapper.map(notification1, GetNotificationResponseDTO.class)).thenReturn(dto1);
+            when(modelMapper.map(notification2, GetNotificationResponseDTO.class)).thenReturn(dto2);
 
             // When
             List<GetNotificationResponseDTO> result = useCase.getAll(targetUserId);
 
             // Then
-            assertThat(result).containsExactly(dto);
+            assertThat(result).hasSize(2);
+            assertThat(result.get(0).getIsRead()).isTrue();
+            assertThat(result.get(1).getIsRead()).isFalse();
             verify(notificationRepository).findByTargetUserId(targetUserId);
-            verifyNoMoreInteractions(notificationRepository);
+            verify(notificationReadStatusRepository).findReadNotificationIdsByUserId(targetUserId);
         }
     }
 }

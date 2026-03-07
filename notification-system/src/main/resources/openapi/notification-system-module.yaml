@@ -34,10 +34,16 @@ paths:
     $ref: './notification.yaml#/paths/~1notifications'
   '/notifications/{notificationId}':
     $ref: './notification.yaml#/paths/~1notifications~1{notificationId}'
+  '/notifications/{notificationId}/read':
+    $ref: './notification.yaml#/paths/~1notifications~1{notificationId}~1read'
   '/notifications/{notificationId}/dispatch':
     $ref: './notification.yaml#/paths/~1notifications~1{notificationId}~1dispatch'
 
   # ===== PUSH NOTIFICATION ENDPOINTS =====
+  '/push/devices':
+    $ref: './push-notification.yaml#/paths/~1devices'
+  '/push/devices/{deviceToken}':
+    $ref: './push-notification.yaml#/paths/~1devices~1{deviceToken}'
   /push:
     $ref: './push-notification.yaml#/paths'
     description: |
@@ -93,6 +99,12 @@ components:
       $ref: './notification.yaml#/components/schemas/GetNotificationResponse'
     NotificationDispatchResponse:
       $ref: './notification.yaml#/components/schemas/NotificationDispatchResponse'
+
+    # Push device schemas
+    RegisterPushDeviceRequest:
+      $ref: './push-notification.yaml#/components/schemas/RegisterPushDeviceRequest'
+    RegisterPushDeviceResponse:
+      $ref: './push-notification.yaml#/components/schemas/RegisterPushDeviceResponse'
 
     # Reference shared schemas from individual APIs
     DeliveryChannel:

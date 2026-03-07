@@ -10,6 +10,7 @@ package com.akademiaplus.notification.interfaceadapters;
 import com.akademiaplus.notification.usecases.DeleteNotificationUseCase;
 import com.akademiaplus.notification.usecases.GetAllNotificationsUseCase;
 import com.akademiaplus.notification.usecases.GetNotificationByIdUseCase;
+import com.akademiaplus.notification.usecases.MarkNotificationAsReadUseCase;
 import com.akademiaplus.notification.usecases.NotificationCreationUseCase;
 import com.akademiaplus.notification.usecases.NotificationDispatchService;
 import com.akademiaplus.notifications.NotificationDataModel;
@@ -41,6 +42,7 @@ public class NotificationController implements NotificationsApi {
     private final GetAllNotificationsUseCase getAllNotificationsUseCase;
     private final GetNotificationByIdUseCase getNotificationByIdUseCase;
     private final DeleteNotificationUseCase deleteNotificationUseCase;
+    private final MarkNotificationAsReadUseCase markNotificationAsReadUseCase;
     private final NotificationDispatchService notificationDispatchService;
     private final ModelMapper modelMapper;
 
@@ -48,12 +50,14 @@ public class NotificationController implements NotificationsApi {
                                   GetAllNotificationsUseCase getAllNotificationsUseCase,
                                   GetNotificationByIdUseCase getNotificationByIdUseCase,
                                   DeleteNotificationUseCase deleteNotificationUseCase,
+                                  MarkNotificationAsReadUseCase markNotificationAsReadUseCase,
                                   NotificationDispatchService notificationDispatchService,
                                   ModelMapper modelMapper) {
         this.notificationCreationUseCase = notificationCreationUseCase;
         this.getAllNotificationsUseCase = getAllNotificationsUseCase;
         this.getNotificationByIdUseCase = getNotificationByIdUseCase;
         this.deleteNotificationUseCase = deleteNotificationUseCase;
+        this.markNotificationAsReadUseCase = markNotificationAsReadUseCase;
         this.notificationDispatchService = notificationDispatchService;
         this.modelMapper = modelMapper;
     }
@@ -79,6 +83,12 @@ public class NotificationController implements NotificationsApi {
     public ResponseEntity<Void> deleteNotification(Long notificationId) {
         deleteNotificationUseCase.delete(notificationId);
         return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    public ResponseEntity<Void> markNotificationAsRead(Long notificationId, Long userId) {
+        markNotificationAsReadUseCase.markAsRead(notificationId, userId);
+        return ResponseEntity.ok().build();
     }
 
     @Override

@@ -122,6 +122,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  '/notifications/{notificationId}/read':
+    patch:
+      operationId: markNotificationAsRead
+      summary: Mark a notification as read
+      description: Marks a notification as read for the specified user. Idempotent — returns 200 if already read.
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID of the notification to mark as read
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID of the user marking the notification as read
+      responses:
+        '200':
+          description: Notification marked as read
+        '404':
+          description: Notification not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   '/notifications/{notificationId}/dispatch':
     post:
       operationId: dispatchNotification
@@ -216,6 +251,9 @@ components:
               format: int64
               readOnly: true
               description: Notification ID
+            isRead:
+              type: boolean
+              description: Whether the notification has been read by the requesting user
           required:
             - notificationId
     NotificationDispatchResponse:

@@ -159,6 +159,50 @@ paths:
               schema:
                 $ref: '#/components/schemas/ImmediatePushDeliveryResponse'
 
+  /devices:
+    post:
+      summary: Register a push device token
+      description: Registers or updates a device token for push notifications. If the device token already exists, updates the userId and platform.
+      operationId: registerPushDevice
+      tags:
+        - Device Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterPushDeviceRequest'
+      responses:
+        '201':
+          description: Device registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterPushDeviceResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /devices/{deviceToken}:
+    delete:
+      summary: Unregister a push device token
+      description: Removes a device token registration
+      operationId: unregisterPushDevice
+      tags:
+        - Device Management
+      parameters:
+        - name: deviceToken
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Device unregistered successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /devices/{deviceToken}/test:
     post:
       summary: Send test push notification
@@ -479,6 +523,48 @@ components:
         timestamp:
           type: string
           format: date-time
+
+    RegisterPushDeviceRequest:
+      type: object
+      required:
+        - userId
+        - deviceToken
+        - platform
+      properties:
+        userId:
+          type: integer
+          format: int64
+          description: ID of the user registering the device
+        deviceToken:
+          type: string
+          maxLength: 255
+          description: FCM or APNs device token
+        platform:
+          type: string
+          enum: [IOS, ANDROID]
+          description: Device platform
+        appVersion:
+          type: string
+          maxLength: 20
+          description: Application version
+
+    RegisterPushDeviceResponse:
+      type: object
+      properties:
+        pushDeviceId:
+          type: integer
+          format: int64
+          description: ID of the registered device
+        deviceToken:
+          type: string
+          description: The registered device token
+        platform:
+          type: string
+          description: Device platform
+      required:
+        - pushDeviceId
+        - deviceToken
+        - platform
 
     DevicePlatform:
       type: string

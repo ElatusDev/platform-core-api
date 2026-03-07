@@ -53,6 +53,7 @@ public final class EntityType {
     public static final String NOTIFICATION_DELIVERY = "entity.notification.delivery";
     public static final String EMAIL = "entity.email";
     public static final String EMAIL_TEMPLATE = "entity.email.template";
+    public static final String PUSH_DEVICE = "entity.push.device";
 
     // lead-management
     public static final String DEMO_REQUEST = "entity.demo.request";
