@@ -42,6 +42,9 @@ public class EmailDeliveryChannelStrategy implements DeliveryChannelStrategy {
     /** Error message when no email is found for the notification. */
     public static final String ERROR_EMAIL_NOT_FOUND = "Email not found for notification: %s";
 
+    /** SES Configuration Set header name for email event tracking. */
+    public static final String HEADER_SES_CONFIGURATION_SET = "X-SES-CONFIGURATION-SET";
+
     private final JavaMailSender javaMailSender;
     private final EmailRepository emailRepository;
 
@@ -50,6 +53,9 @@ public class EmailDeliveryChannelStrategy implements DeliveryChannelStrategy {
 
     @Value("${akademia.email.from-name}")
     private String fromName;
+
+    @Value("${akademia.email.ses-configuration-set:}")
+    private String sesConfigurationSet;
 
     @Override
     public DeliveryChannel getChannel() {
@@ -73,6 +79,10 @@ public class EmailDeliveryChannelStrategy implements DeliveryChannelStrategy {
             helper.setTo(recipientIdentifier);
             helper.setSubject(notification.getTitle());
             helper.setText(notification.getContent(), true);
+
+            if (sesConfigurationSet != null && !sesConfigurationSet.isBlank()) {
+                mimeMessage.setHeader(HEADER_SES_CONFIGURATION_SET, sesConfigurationSet);
+            }
 
             javaMailSender.send(mimeMessage);
             return DeliveryResult.sent();
