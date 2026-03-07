@@ -77,7 +77,7 @@ class NotificationControllerTest {
         @DisplayName("Should return 200 with empty list when no notifications exist")
         void shouldReturn200WithEmptyList_whenNoNotificationsExist() throws Exception {
             // Given
-            when(getAllNotificationsUseCase.getAll()).thenReturn(Collections.emptyList());
+            when(getAllNotificationsUseCase.getAll(null)).thenReturn(Collections.emptyList());
 
             // When & Then
             mockMvc.perform(get(BASE_PATH).accept(MediaType.APPLICATION_JSON))
@@ -85,7 +85,7 @@ class NotificationControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$", hasSize(0)));
 
-            verify(getAllNotificationsUseCase).getAll();
+            verify(getAllNotificationsUseCase).getAll(null);
             verifyNoMoreInteractions(getAllNotificationsUseCase);
         }
 
@@ -95,7 +95,7 @@ class NotificationControllerTest {
             // Given
             GetNotificationResponseDTO dto1 = new GetNotificationResponseDTO();
             GetNotificationResponseDTO dto2 = new GetNotificationResponseDTO();
-            when(getAllNotificationsUseCase.getAll()).thenReturn(List.of(dto1, dto2));
+            when(getAllNotificationsUseCase.getAll(null)).thenReturn(List.of(dto1, dto2));
 
             // When & Then
             mockMvc.perform(get(BASE_PATH).accept(MediaType.APPLICATION_JSON))
@@ -103,7 +103,7 @@ class NotificationControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$", hasSize(2)));
 
-            verify(getAllNotificationsUseCase).getAll();
+            verify(getAllNotificationsUseCase).getAll(null);
             verifyNoMoreInteractions(getAllNotificationsUseCase);
         }
     }

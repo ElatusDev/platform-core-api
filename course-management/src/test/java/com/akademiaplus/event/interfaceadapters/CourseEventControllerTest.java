@@ -78,7 +78,7 @@ class CourseEventControllerTest {
         @DisplayName("Should return 200 with empty list when no course events exist")
         void shouldReturn200WithEmptyList_whenNoCourseEventsExist() throws Exception {
             // Given
-            when(getAllCourseEventsUseCase.getAll()).thenReturn(Collections.emptyList());
+            when(getAllCourseEventsUseCase.getAll(null)).thenReturn(Collections.emptyList());
 
             // When & Then
             mockMvc.perform(get(BASE_PATH).accept(MediaType.APPLICATION_JSON))
@@ -86,7 +86,7 @@ class CourseEventControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$", hasSize(0)));
 
-            verify(getAllCourseEventsUseCase).getAll();
+            verify(getAllCourseEventsUseCase).getAll(null);
             verifyNoMoreInteractions(getAllCourseEventsUseCase);
         }
 
@@ -96,7 +96,7 @@ class CourseEventControllerTest {
             // Given
             GetCourseEventResponseDTO dto1 = new GetCourseEventResponseDTO();
             GetCourseEventResponseDTO dto2 = new GetCourseEventResponseDTO();
-            when(getAllCourseEventsUseCase.getAll()).thenReturn(List.of(dto1, dto2));
+            when(getAllCourseEventsUseCase.getAll(null)).thenReturn(List.of(dto1, dto2));
 
             // When & Then
             mockMvc.perform(get(BASE_PATH).accept(MediaType.APPLICATION_JSON))
@@ -104,7 +104,7 @@ class CourseEventControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$", hasSize(2)));
 
-            verify(getAllCourseEventsUseCase).getAll();
+            verify(getAllCourseEventsUseCase).getAll(null);
             verifyNoMoreInteractions(getAllCourseEventsUseCase);
         }
     }

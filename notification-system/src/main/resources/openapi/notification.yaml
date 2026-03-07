@@ -36,6 +36,14 @@ paths:
     get:
       operationId: getNotifications
       summary: Get all notifications
+      parameters:
+        - name: targetUserId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+          description: Filter notifications by target user ID
       responses:
         '200':
           description: List of notifications

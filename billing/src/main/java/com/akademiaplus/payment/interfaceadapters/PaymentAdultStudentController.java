@@ -56,8 +56,9 @@ public class PaymentAdultStudentController implements PaymentAdultStudentsApi {
     }
 
     @Override
-    public ResponseEntity<List<GetPaymentAdultStudentResponseDTO>> getPaymentAdultStudents() {
-        return ResponseEntity.ok(getAllPaymentAdultStudentsUseCase.getAll());
+    public ResponseEntity<List<GetPaymentAdultStudentResponseDTO>> getPaymentAdultStudents(
+            Long adultStudentId) {
+        return ResponseEntity.ok(getAllPaymentAdultStudentsUseCase.getAll(adultStudentId));
     }
 
     @Override

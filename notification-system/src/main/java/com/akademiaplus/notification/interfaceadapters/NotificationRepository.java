@@ -32,4 +32,12 @@ public interface NotificationRepository extends TenantScopedRepository<Notificat
     @Query("SELECT n FROM NotificationDataModel n WHERE n.scheduledAt <= :now "
          + "AND n.scheduledAt IS NOT NULL AND n.deletedAt IS NULL")
     List<NotificationDataModel> findScheduledBefore(@Param("now") LocalDateTime now);
+
+    /**
+     * Finds notifications targeted to a specific user within the current tenant.
+     *
+     * @param targetUserId the target user ID to filter by
+     * @return matching notifications
+     */
+    List<NotificationDataModel> findByTargetUserId(Long targetUserId);
 }

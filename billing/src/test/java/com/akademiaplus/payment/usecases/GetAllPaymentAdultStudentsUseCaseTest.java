@@ -50,7 +50,7 @@ class GetAllPaymentAdultStudentsUseCaseTest {
             // Given
             when(paymentAdultStudentRepository.findAll()).thenReturn(Collections.emptyList());
             // When
-            List<GetPaymentAdultStudentResponseDTO> result = useCase.getAll();
+            List<GetPaymentAdultStudentResponseDTO> result = useCase.getAll(null);
             // Then
             assertThat(result).isEmpty();
             verify(paymentAdultStudentRepository).findAll();
@@ -69,13 +69,38 @@ class GetAllPaymentAdultStudentsUseCaseTest {
             when(modelMapper.map(paymentAdultStudent1, GetPaymentAdultStudentResponseDTO.class)).thenReturn(dto1);
             when(modelMapper.map(paymentAdultStudent2, GetPaymentAdultStudentResponseDTO.class)).thenReturn(dto2);
             // When
-            List<GetPaymentAdultStudentResponseDTO> result = useCase.getAll();
+            List<GetPaymentAdultStudentResponseDTO> result = useCase.getAll(null);
             // Then
             assertThat(result).containsExactly(dto1, dto2);
             verify(paymentAdultStudentRepository).findAll();
             verify(modelMapper).map(paymentAdultStudent1, GetPaymentAdultStudentResponseDTO.class);
             verify(modelMapper).map(paymentAdultStudent2, GetPaymentAdultStudentResponseDTO.class);
             verifyNoMoreInteractions(paymentAdultStudentRepository, modelMapper);
+        }
+    }
+
+    @Nested
+    @DisplayName("Filtered Retrieval")
+    class FilteredRetrieval {
+
+        @Test
+        @DisplayName("Should return filtered results when adultStudentId is provided")
+        void shouldReturnFilteredResults_whenAdultStudentIdProvided() {
+            // Given
+            Long adultStudentId = 42L;
+            PaymentAdultStudentDataModel paymentAdultStudent = new PaymentAdultStudentDataModel();
+            GetPaymentAdultStudentResponseDTO dto = new GetPaymentAdultStudentResponseDTO();
+
+            when(paymentAdultStudentRepository.findByAdultStudentId(adultStudentId)).thenReturn(List.of(paymentAdultStudent));
+            when(modelMapper.map(paymentAdultStudent, GetPaymentAdultStudentResponseDTO.class)).thenReturn(dto);
+
+            // When
+            List<GetPaymentAdultStudentResponseDTO> result = useCase.getAll(adultStudentId);
+
+            // Then
+            assertThat(result).containsExactly(dto);
+            verify(paymentAdultStudentRepository).findByAdultStudentId(adultStudentId);
+            verifyNoMoreInteractions(paymentAdultStudentRepository);
         }
     }
 }

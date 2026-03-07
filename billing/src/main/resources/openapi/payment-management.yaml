@@ -148,6 +148,14 @@ paths:
     get:
       summary: Get all adult student payments
       operationId: getPaymentAdultStudents
+      parameters:
+        - name: adultStudentId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+          description: Filter payments by adult student ID
       responses:
         '200':
           description: List of adult student payments

@@ -35,12 +35,19 @@ public class GetAllCourseEventsUseCase {
     }
 
     /**
-     * Retrieves all course events for the current tenant context.
+     * Retrieves course events for the current tenant context.
      *
+     * <p>When {@code attendeeId} is provided, only events where the attendee
+     * is listed as an adult or minor attendee are returned.</p>
+     *
+     * @param attendeeId optional attendee ID filter
      * @return a list of course event response DTOs
      */
-    public List<GetCourseEventResponseDTO> getAll() {
-        return courseEventRepository.findAll().stream()
+    public List<GetCourseEventResponseDTO> getAll(Long attendeeId) {
+        var source = (attendeeId != null)
+                ? courseEventRepository.findByAttendeeId(attendeeId)
+                : courseEventRepository.findAll();
+        return source.stream()
                 .map(dataModel -> modelMapper.map(dataModel, GetCourseEventResponseDTO.class))
                 .toList();
     }

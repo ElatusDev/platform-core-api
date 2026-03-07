@@ -66,8 +66,8 @@ public class NotificationController implements NotificationsApi {
     }
 
     @Override
-    public ResponseEntity<List<GetNotificationResponseDTO>> getNotifications() {
-        return ResponseEntity.ok(getAllNotificationsUseCase.getAll());
+    public ResponseEntity<List<GetNotificationResponseDTO>> getNotifications(Long targetUserId) {
+        return ResponseEntity.ok(getAllNotificationsUseCase.getAll(targetUserId));
     }
 
     @Override

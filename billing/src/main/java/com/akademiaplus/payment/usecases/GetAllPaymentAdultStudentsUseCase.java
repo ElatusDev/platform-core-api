@@ -35,12 +35,19 @@ public class GetAllPaymentAdultStudentsUseCase {
     }
 
     /**
-     * Retrieves all payment adult students for the current tenant context.
+     * Retrieves payment adult students for the current tenant context.
      *
+     * <p>When {@code adultStudentId} is provided, only payments associated
+     * with that student (via membership) are returned.</p>
+     *
+     * @param adultStudentId optional adult student ID filter
      * @return a list of payment adult student response DTOs
      */
-    public List<GetPaymentAdultStudentResponseDTO> getAll() {
-        return paymentAdultStudentRepository.findAll().stream()
+    public List<GetPaymentAdultStudentResponseDTO> getAll(Long adultStudentId) {
+        var source = (adultStudentId != null)
+                ? paymentAdultStudentRepository.findByAdultStudentId(adultStudentId)
+                : paymentAdultStudentRepository.findAll();
+        return source.stream()
                 .map(dataModel -> modelMapper.map(dataModel, GetPaymentAdultStudentResponseDTO.class))
                 .toList();
     }

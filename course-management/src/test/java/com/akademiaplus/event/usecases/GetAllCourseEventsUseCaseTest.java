@@ -50,7 +50,7 @@ class GetAllCourseEventsUseCaseTest {
             when(courseEventRepository.findAll()).thenReturn(Collections.emptyList());
 
             // When
-            List<GetCourseEventResponseDTO> result = useCase.getAll();
+            List<GetCourseEventResponseDTO> result = useCase.getAll(null);
 
             // Then
             assertThat(result).isEmpty();
@@ -72,7 +72,7 @@ class GetAllCourseEventsUseCaseTest {
             when(modelMapper.map(courseEvent2, GetCourseEventResponseDTO.class)).thenReturn(dto2);
 
             // When
-            List<GetCourseEventResponseDTO> result = useCase.getAll();
+            List<GetCourseEventResponseDTO> result = useCase.getAll(null);
 
             // Then
             assertThat(result).containsExactly(dto1, dto2);
@@ -80,6 +80,31 @@ class GetAllCourseEventsUseCaseTest {
             verify(modelMapper).map(courseEvent1, GetCourseEventResponseDTO.class);
             verify(modelMapper).map(courseEvent2, GetCourseEventResponseDTO.class);
             verifyNoMoreInteractions(courseEventRepository, modelMapper);
+        }
+    }
+
+    @Nested
+    @DisplayName("Filtered Retrieval")
+    class FilteredRetrieval {
+
+        @Test
+        @DisplayName("Should return filtered results when attendeeId is provided")
+        void shouldReturnFilteredResults_whenAttendeeIdProvided() {
+            // Given
+            Long attendeeId = 42L;
+            CourseEventDataModel courseEvent = new CourseEventDataModel();
+            GetCourseEventResponseDTO dto = new GetCourseEventResponseDTO();
+
+            when(courseEventRepository.findByAttendeeId(attendeeId)).thenReturn(List.of(courseEvent));
+            when(modelMapper.map(courseEvent, GetCourseEventResponseDTO.class)).thenReturn(dto);
+
+            // When
+            List<GetCourseEventResponseDTO> result = useCase.getAll(attendeeId);
+
+            // Then
+            assertThat(result).containsExactly(dto);
+            verify(courseEventRepository).findByAttendeeId(attendeeId);
+            verifyNoMoreInteractions(courseEventRepository);
         }
     }
 }

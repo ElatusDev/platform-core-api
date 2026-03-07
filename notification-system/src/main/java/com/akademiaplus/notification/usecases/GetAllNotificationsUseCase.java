@@ -35,12 +35,19 @@ public class GetAllNotificationsUseCase {
     }
 
     /**
-     * Retrieves all notifications for the current tenant context.
+     * Retrieves notifications for the current tenant context.
      *
+     * <p>When {@code targetUserId} is provided, only notifications targeted
+     * to that user are returned.</p>
+     *
+     * @param targetUserId optional target user ID filter
      * @return a list of notification response DTOs
      */
-    public List<GetNotificationResponseDTO> getAll() {
-        return notificationRepository.findAll().stream()
+    public List<GetNotificationResponseDTO> getAll(Long targetUserId) {
+        var source = (targetUserId != null)
+                ? notificationRepository.findByTargetUserId(targetUserId)
+                : notificationRepository.findAll();
+        return source.stream()
                 .map(dataModel -> modelMapper.map(dataModel, GetNotificationResponseDTO.class))
                 .toList();
     }

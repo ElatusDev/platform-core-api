@@ -35,6 +35,14 @@ paths:
     get:
       summary: Get all course events
       operationId: getAllCourseEvent
+      parameters:
+        - name: attendeeId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+          description: Filter course events by attendee ID (adult or minor student)
       responses:
         '200':
           description: List of course events

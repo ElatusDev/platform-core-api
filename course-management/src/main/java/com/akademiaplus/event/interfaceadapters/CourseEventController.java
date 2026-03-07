@@ -61,8 +61,8 @@ public class CourseEventController implements CourseEventsApi {
     }
 
     @Override
-    public ResponseEntity<List<GetCourseEventResponseDTO>> getAllCourseEvent() {
-        return ResponseEntity.ok(getAllCourseEventsUseCase.getAll());
+    public ResponseEntity<List<GetCourseEventResponseDTO>> getAllCourseEvent(Long attendeeId) {
+        return ResponseEntity.ok(getAllCourseEventsUseCase.getAll(attendeeId));
     }
 
     @Override

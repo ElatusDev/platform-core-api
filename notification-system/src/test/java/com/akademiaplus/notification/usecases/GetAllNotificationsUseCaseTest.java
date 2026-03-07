@@ -50,7 +50,7 @@ class GetAllNotificationsUseCaseTest {
             when(notificationRepository.findAll()).thenReturn(Collections.emptyList());
 
             // When
-            List<GetNotificationResponseDTO> result = useCase.getAll();
+            List<GetNotificationResponseDTO> result = useCase.getAll(null);
 
             // Then
             assertThat(result).isEmpty();
@@ -72,7 +72,7 @@ class GetAllNotificationsUseCaseTest {
             when(modelMapper.map(notification2, GetNotificationResponseDTO.class)).thenReturn(dto2);
 
             // When
-            List<GetNotificationResponseDTO> result = useCase.getAll();
+            List<GetNotificationResponseDTO> result = useCase.getAll(null);
 
             // Then
             assertThat(result).containsExactly(dto1, dto2);
@@ -80,6 +80,31 @@ class GetAllNotificationsUseCaseTest {
             verify(modelMapper).map(notification1, GetNotificationResponseDTO.class);
             verify(modelMapper).map(notification2, GetNotificationResponseDTO.class);
             verifyNoMoreInteractions(notificationRepository, modelMapper);
+        }
+    }
+
+    @Nested
+    @DisplayName("Filtered Retrieval")
+    class FilteredRetrieval {
+
+        @Test
+        @DisplayName("Should return filtered results when targetUserId is provided")
+        void shouldReturnFilteredResults_whenTargetUserIdProvided() {
+            // Given
+            Long targetUserId = 42L;
+            NotificationDataModel notification = new NotificationDataModel();
+            GetNotificationResponseDTO dto = new GetNotificationResponseDTO();
+
+            when(notificationRepository.findByTargetUserId(targetUserId)).thenReturn(List.of(notification));
+            when(modelMapper.map(notification, GetNotificationResponseDTO.class)).thenReturn(dto);
+
+            // When
+            List<GetNotificationResponseDTO> result = useCase.getAll(targetUserId);
+
+            // Then
+            assertThat(result).containsExactly(dto);
+            verify(notificationRepository).findByTargetUserId(targetUserId);
+            verifyNoMoreInteractions(notificationRepository);
         }
     }
 }

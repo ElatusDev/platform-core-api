@@ -106,14 +106,14 @@ class PaymentAdultStudentControllerTest {
         @DisplayName("Should return 200 with empty list when none exist")
         void shouldReturn200WithEmptyList_whenNoneExist() throws Exception {
             // Given
-            when(getAllUseCase.getAll()).thenReturn(Collections.emptyList());
+            when(getAllUseCase.getAll(null)).thenReturn(Collections.emptyList());
 
             // When & Then
             mockMvc.perform(get(BASE_PATH))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(0)));
 
-            verify(getAllUseCase).getAll();
+            verify(getAllUseCase).getAll(null);
             verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase);
         }
 
@@ -127,7 +127,7 @@ class PaymentAdultStudentControllerTest {
             GetPaymentAdultStudentResponseDTO dto2 = new GetPaymentAdultStudentResponseDTO();
             dto2.setPaymentAdultStudentId(101L);
 
-            when(getAllUseCase.getAll()).thenReturn(List.of(dto1, dto2));
+            when(getAllUseCase.getAll(null)).thenReturn(List.of(dto1, dto2));
 
             // When & Then
             mockMvc.perform(get(BASE_PATH))
@@ -136,7 +136,7 @@ class PaymentAdultStudentControllerTest {
                     .andExpect(jsonPath("$[0].paymentAdultStudentId").value(100L))
                     .andExpect(jsonPath("$[1].paymentAdultStudentId").value(101L));
 
-            verify(getAllUseCase).getAll();
+            verify(getAllUseCase).getAll(null);
             verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase);
         }
     }
