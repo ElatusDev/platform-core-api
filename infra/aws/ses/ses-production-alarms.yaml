@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  CloudWatch alarms for SES bounce and complaint rates.
+  AWS suspends sending if bounce rate exceeds 10% or complaint rate exceeds 0.5%.
+  These alarms trigger at 5% and 0.1% respectively for early warning.
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+  AlarmEmail:
+    Type: String
+    Description: Email address for alarm notifications
+  BounceRateThreshold:
+    Type: Number
+    Default: 5
+    Description: Bounce rate threshold percentage (AWS limit is 10%)
+  ComplaintRateThreshold:
+    Type: Number
+    Default: 0.1
+    Description: Complaint rate threshold percentage (AWS limit is 0.5%)
+
+Resources:
+
+  AlarmNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub 'akademiaplus-ses-alarms-${Environment}'
+
+  AlarmEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: email
+      TopicArn: !Ref AlarmNotificationTopic
+      Endpoint: !Ref AlarmEmail
+
+  BounceRateAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'akademiaplus-ses-bounce-rate-${Environment}'
+      AlarmDescription: !Sub >-
+        SES bounce rate exceeds ${BounceRateThreshold}%.
+        AWS suspends sending at 10%. Investigate bounced addresses immediately.
+      Namespace: AWS/SES
+      MetricName: Reputation.BounceRate
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 3
+      Threshold: !Ref BounceRateThreshold
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmNotificationTopic
+      OKActions:
+        - !Ref AlarmNotificationTopic
+
+  ComplaintRateAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'akademiaplus-ses-complaint-rate-${Environment}'
+      AlarmDescription: !Sub >-
+        SES complaint rate exceeds ${ComplaintRateThreshold}%.
+        AWS suspends sending at 0.5%. Review email content and recipient lists.
+      Namespace: AWS/SES
+      MetricName: Reputation.ComplaintRate
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 3
+      Threshold: !Ref ComplaintRateThreshold
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlarmNotificationTopic
+      OKActions:
+        - !Ref AlarmNotificationTopic
+
+Outputs:
+  AlarmTopicArn:
+    Description: SNS topic ARN for alarm notifications
+    Value: !Ref AlarmNotificationTopic
+  BounceRateAlarmArn:
+    Description: Bounce rate alarm ARN
+    Value: !GetAtt BounceRateAlarm.Arn
+  ComplaintRateAlarmArn:
+    Description: Complaint rate alarm ARN
+    Value: !GetAtt ComplaintRateAlarm.Arn
