@@ -71,6 +71,12 @@ public class JwtTokenProvider {
     /** Claim key for the user ID. */
     public static final String USER_ID_CLAIM = "user_id";
 
+    /** Claim key for the full device fingerprint hash (IP + device). */
+    public static final String FINGERPRINT_CLAIM = "fpr";
+
+    /** Claim key for the device-only fingerprint hash (no IP). */
+    public static final String DEVICE_FINGERPRINT_CLAIM = "dfpr";
+
     private KeyPair keyPair;
     private JwtParser jwtParser;
 

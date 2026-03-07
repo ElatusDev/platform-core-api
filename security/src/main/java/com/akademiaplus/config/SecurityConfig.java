@@ -10,7 +10,12 @@ package com.akademiaplus.config;
 import com.akademiaplus.internal.interfaceadapters.filters.AppOriginContext;
 import com.akademiaplus.internal.interfaceadapters.filters.AppOriginFilter;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtRequestFilter;
+import com.akademiaplus.ratelimit.interfaceadapters.RateLimitingFilter;
+import com.akademiaplus.hmac.interfaceadapters.HmacResponseFilter;
+import com.akademiaplus.hmac.interfaceadapters.HmacSigningFilter;
+import com.akademiaplus.tokenbinding.interfaceadapters.TokenBindingFilter;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -43,6 +48,7 @@ import java.util.Set;
  */
 @Configuration
 @EnableWebSecurity
+@EnableConfigurationProperties({IpWhitelistProperties.class, RateLimitProperties.class})
 public class SecurityConfig {
 
     /**
@@ -67,7 +73,8 @@ public class SecurityConfig {
             Set<ModuleSecurityConfigurator> moduleSecurityConfigurators,
             HttpSecurity http,
             JwtRequestFilter jwtRequestFilter,
-            AppOriginFilter appOriginFilter) throws Exception {
+            AppOriginFilter appOriginFilter,
+            IpWhitelistFilter ipWhitelistFilter) throws Exception {
 
         http
                 .securityMatcher(new AkademiaRequestMatcher())
@@ -96,6 +103,7 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .addFilterBefore(appOriginFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(ipWhitelistFilter, JwtRequestFilter.class)
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -124,7 +132,11 @@ public class SecurityConfig {
             Set<ModuleSecurityConfigurator> moduleSecurityConfigurators,
             HttpSecurity http,
             JwtRequestFilter jwtRequestFilter,
-            AppOriginFilter appOriginFilter) throws Exception {
+            AppOriginFilter appOriginFilter,
+            RateLimitingFilter rateLimitingFilter,
+            TokenBindingFilter tokenBindingFilter,
+            HmacSigningFilter hmacSigningFilter,
+            HmacResponseFilter hmacResponseFilter) throws Exception {
 
         http
                 .securityMatcher("/**")
@@ -153,7 +165,11 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .addFilterBefore(appOriginFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(rateLimitingFilter, JwtRequestFilter.class)
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(tokenBindingFilter, JwtRequestFilter.class)
+                .addFilterAfter(hmacSigningFilter, TokenBindingFilter.class)
+                .addFilterAfter(hmacResponseFilter, HmacSigningFilter.class);
 
         return http.build();
     }

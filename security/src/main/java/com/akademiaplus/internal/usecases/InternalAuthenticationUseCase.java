@@ -80,6 +80,21 @@ public class InternalAuthenticationUseCase {
      */
     @Transactional
     public LoginResult login(String username, String password) {
+        return login(username, password, null);
+    }
+
+    /**
+     * Authenticates the user and issues an access + refresh token pair,
+     * merging optional fingerprint claims into the access token.
+     *
+     * @param username          the username
+     * @param password          the password
+     * @param fingerprintClaims optional fingerprint claims to embed in the JWT (may be null)
+     * @return a {@link LoginResult} containing the access token, refresh token, and username
+     * @throws InvalidLoginException if credentials are invalid
+     */
+    @Transactional
+    public LoginResult login(String username, String password, Map<String, Object> fingerprintClaims) {
         String usernameHash = hashingService.generateHash(username);
         InternalAuthDataModel auth = repository.findByUsernameHash(usernameHash)
                 .filter(user -> password.equals(user.getPassword()))
@@ -88,6 +103,9 @@ public class InternalAuthenticationUseCase {
         Map<String, Object> claims = new HashMap<>();
         claims.put("Has role", auth.getRole());
         claims.put(JwtTokenProvider.USER_ID_CLAIM, auth.getInternalAuthId());
+        if (fingerprintClaims != null) {
+            claims.putAll(fingerprintClaims);
+        }
 
         String accessToken = jwtTokenProvider.createAccessToken(auth.getUsername(), auth.getTenantId(), claims);
         String jti = jwtTokenProvider.getJti(accessToken);

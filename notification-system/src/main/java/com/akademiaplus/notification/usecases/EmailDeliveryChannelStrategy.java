@@ -42,7 +42,7 @@ public class EmailDeliveryChannelStrategy implements DeliveryChannelStrategy {
     /** Error message when no email is found for the notification. */
     public static final String ERROR_EMAIL_NOT_FOUND = "Email not found for notification: %s";
 
-    /** SES configuration set header name for email event tracking. */
+    /** SES Configuration Set header name for email event tracking. */
     public static final String HEADER_SES_CONFIGURATION_SET = "X-SES-CONFIGURATION-SET";
 
     private final JavaMailSender javaMailSender;

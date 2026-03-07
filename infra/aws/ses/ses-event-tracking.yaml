@@ -7,10 +7,15 @@ Parameters:
   Environment:
     Type: String
     Default: dev
-    AllowedValues: [dev, staging, prod]
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Environment name for resource naming
   DomainName:
     Type: String
     Default: akademiaplus.com
+    Description: Domain for identity ARN reference
   MessageRetentionPeriod:
     Type: Number
     Default: 1209600

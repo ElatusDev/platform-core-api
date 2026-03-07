@@ -7,13 +7,19 @@ Parameters:
   Environment:
     Type: String
     Default: dev
-    AllowedValues: [dev, staging, prod]
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Environment name for resource naming
   DomainName:
     Type: String
     Default: akademiaplus.com
+    Description: Email sending domain
   MailFromSubdomain:
     Type: String
     Default: mail
+    Description: Custom MAIL FROM subdomain (prepended to DomainName)
 
 Resources:
   SesDomainIdentity:

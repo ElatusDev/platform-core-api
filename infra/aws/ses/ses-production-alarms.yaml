@@ -8,7 +8,11 @@ Parameters:
   Environment:
     Type: String
     Default: dev
-    AllowedValues: [dev, staging, prod]
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Environment name for resource naming
   AlarmEmail:
     Type: String
     Description: Email address for alarm notifications
@@ -22,7 +26,6 @@ Parameters:
     Description: Complaint rate threshold percentage (AWS limit is 0.5%)
 
 Resources:
-
   AlarmNotificationTopic:
     Type: AWS::SNS::Topic
     Properties:
