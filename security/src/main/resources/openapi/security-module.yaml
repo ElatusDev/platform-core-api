@@ -16,9 +16,31 @@ components:
       $ref: './registration.yaml#/components/schemas/RegistrationRequest'
     RegistrationResponse:
       $ref: './registration.yaml#/components/schemas/RegistrationResponse'
+    PasskeyRegisterOptionsRequest:
+      $ref: './passkey-authentication.yaml#/components/schemas/PasskeyRegisterOptionsRequest'
+    PasskeyRegisterOptionsResponse:
+      $ref: './passkey-authentication.yaml#/components/schemas/PasskeyRegisterOptionsResponse'
+    PasskeyRegisterCompleteRequest:
+      $ref: './passkey-authentication.yaml#/components/schemas/PasskeyRegisterCompleteRequest'
+    PasskeyRegisterCompleteResponse:
+      $ref: './passkey-authentication.yaml#/components/schemas/PasskeyRegisterCompleteResponse'
+    PasskeyLoginOptionsRequest:
+      $ref: './passkey-authentication.yaml#/components/schemas/PasskeyLoginOptionsRequest'
+    PasskeyLoginOptionsResponse:
+      $ref: './passkey-authentication.yaml#/components/schemas/PasskeyLoginOptionsResponse'
+    PasskeyLoginCompleteRequest:
+      $ref: './passkey-authentication.yaml#/components/schemas/PasskeyLoginCompleteRequest'
 
 paths:
   /login/internal:
     $ref: './internal-authentication.yaml#/paths/~1login~1internal'
   /register:
     $ref: './registration.yaml#/paths/~1register'
+  /passkey/register/options:
+    $ref: './passkey-authentication.yaml#/paths/~1passkey~1register~1options'
+  /passkey/register/complete:
+    $ref: './passkey-authentication.yaml#/paths/~1passkey~1register~1complete'
+  /passkey/login/options:
+    $ref: './passkey-authentication.yaml#/paths/~1passkey~1login~1options'
+  /passkey/login/complete:
+    $ref: './passkey-authentication.yaml#/paths/~1passkey~1login~1complete'

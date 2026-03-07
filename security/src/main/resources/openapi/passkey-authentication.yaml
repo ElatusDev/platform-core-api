@@ -1,0 +1,196 @@
+openapi: 3.0.0
+info:
+  title: Passkey Authentication API
+  version: 1.0.0
+  description: WebAuthn/FIDO2 passkey registration and authentication endpoints
+
+paths:
+  /passkey/register/options:
+    post:
+      summary: Generate passkey registration options
+      description: >
+        Returns PublicKeyCredentialCreationOptions for the browser's
+        navigator.credentials.create() call. Requires an authenticated user.
+      operationId: passkeyRegisterOptions
+      tags:
+        - passkey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyRegisterOptionsRequest'
+      responses:
+        '200':
+          description: Registration options generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasskeyRegisterOptionsResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: './internal-authentication.yaml#/components/schemas/ErrorResponse'
+
+  /passkey/register/complete:
+    post:
+      summary: Complete passkey registration
+      description: >
+        Validates the authenticator's registration response and stores the
+        credential. Requires an authenticated user.
+      operationId: passkeyRegisterComplete
+      tags:
+        - passkey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyRegisterCompleteRequest'
+      responses:
+        '200':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasskeyRegisterCompleteResponse'
+        '400':
+          description: Registration validation failed
+          content:
+            application/json:
+              schema:
+                $ref: './internal-authentication.yaml#/components/schemas/ErrorResponse'
+
+  /passkey/login/options:
+    post:
+      summary: Generate passkey authentication options
+      description: >
+        Returns PublicKeyCredentialRequestOptions for the browser's
+        navigator.credentials.get() call. No authentication required.
+      operationId: passkeyLoginOptions
+      tags:
+        - passkey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyLoginOptionsRequest'
+      responses:
+        '200':
+          description: Authentication options generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasskeyLoginOptionsResponse'
+
+  /passkey/login/complete:
+    post:
+      summary: Complete passkey authentication
+      description: >
+        Validates the authenticator's assertion response, updates the
+        sign count, and issues a platform JWT.
+      operationId: passkeyLoginComplete
+      tags:
+        - passkey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasskeyLoginCompleteRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: './internal-authentication.yaml#/components/schemas/AuthTokenResponse'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: './internal-authentication.yaml#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    PasskeyRegisterOptionsRequest:
+      type: object
+      properties:
+        tenantId:
+          type: integer
+          format: int64
+          description: Tenant identifier
+        displayName:
+          type: string
+          description: Human-readable name for the credential
+      required:
+        - tenantId
+
+    PasskeyRegisterOptionsResponse:
+      type: object
+      properties:
+        optionsJson:
+          type: string
+          description: JSON-serialized PublicKeyCredentialCreationOptions
+
+    PasskeyRegisterCompleteRequest:
+      type: object
+      properties:
+        tenantId:
+          type: integer
+          format: int64
+          description: Tenant identifier
+        responseJson:
+          type: string
+          description: JSON-serialized authenticator registration response
+        displayName:
+          type: string
+          description: Human-readable name for the credential
+      required:
+        - tenantId
+        - responseJson
+
+    PasskeyRegisterCompleteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether registration succeeded
+        displayName:
+          type: string
+          description: Display name of the registered credential
+
+    PasskeyLoginOptionsRequest:
+      type: object
+      properties:
+        tenantId:
+          type: integer
+          format: int64
+          description: Tenant identifier
+      required:
+        - tenantId
+
+    PasskeyLoginOptionsResponse:
+      type: object
+      properties:
+        optionsJson:
+          type: string
+          description: JSON-serialized PublicKeyCredentialRequestOptions
+
+    PasskeyLoginCompleteRequest:
+      type: object
+      properties:
+        tenantId:
+          type: integer
+          format: int64
+          description: Tenant identifier
+        responseJson:
+          type: string
+          description: JSON-serialized authenticator assertion response
+      required:
+        - tenantId
+        - responseJson
