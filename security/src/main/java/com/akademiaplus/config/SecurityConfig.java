@@ -49,6 +49,8 @@ public class SecurityConfig {
                             .requestMatchers("/actuator/**").permitAll()
                             .requestMatchers("/v1/security/login/internal").permitAll()
                             .requestMatchers("/v1/security/register").permitAll()
+                            .requestMatchers("/v1/security/token/refresh").permitAll()
+                            .requestMatchers("/v1/security/logout").permitAll()
                             .requestMatchers("/v3/api-docs/**").permitAll()
                             .requestMatchers("/swagger-ui/**").permitAll()
                             .requestMatchers("/swagger-ui.html").permitAll();
@@ -78,13 +80,13 @@ public class SecurityConfig {
         defaultCorsConfig.setAllowedOriginPatterns(List.of("http://localhost:*", "https://localhost:*"));
         defaultCorsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         defaultCorsConfig.setAllowedHeaders(List.of("*"));
-        defaultCorsConfig.setAllowCredentials(false);
+        defaultCorsConfig.setAllowCredentials(true);
 
         CorsConfiguration loginCorsConfig = new CorsConfiguration();
         loginCorsConfig.setAllowedOriginPatterns(List.of("http://localhost:*", "https://localhost:*"));
         loginCorsConfig.setAllowedMethods(List.of("POST"));
         loginCorsConfig.setAllowedHeaders(List.of("Content-Type"));
-        loginCorsConfig.setAllowCredentials(false);
+        loginCorsConfig.setAllowCredentials(true);
 
         source.registerCorsConfiguration("/v1/**", defaultCorsConfig);
         source.registerCorsConfiguration("/v1/security/login/internal", loginCorsConfig);
