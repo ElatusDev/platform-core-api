@@ -10,6 +10,7 @@ package com.akademiaplus.config;
 import com.akademiaplus.internal.interfaceadapters.filters.AppOriginContext;
 import com.akademiaplus.internal.interfaceadapters.filters.AppOriginFilter;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtRequestFilter;
+import com.akademiaplus.ratelimit.interfaceadapters.RateLimitingFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -44,7 +45,7 @@ import java.util.Set;
  */
 @Configuration
 @EnableWebSecurity
-@EnableConfigurationProperties(IpWhitelistProperties.class)
+@EnableConfigurationProperties({IpWhitelistProperties.class, RateLimitProperties.class})
 public class SecurityConfig {
 
     /**
@@ -128,7 +129,8 @@ public class SecurityConfig {
             Set<ModuleSecurityConfigurator> moduleSecurityConfigurators,
             HttpSecurity http,
             JwtRequestFilter jwtRequestFilter,
-            AppOriginFilter appOriginFilter) throws Exception {
+            AppOriginFilter appOriginFilter,
+            RateLimitingFilter rateLimitingFilter) throws Exception {
 
         http
                 .securityMatcher("/**")
@@ -157,6 +159,7 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .addFilterBefore(appOriginFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(rateLimitingFilter, JwtRequestFilter.class)
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
