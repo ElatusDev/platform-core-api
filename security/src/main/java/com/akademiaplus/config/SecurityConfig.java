@@ -11,6 +11,7 @@ import com.akademiaplus.internal.interfaceadapters.filters.AppOriginContext;
 import com.akademiaplus.internal.interfaceadapters.filters.AppOriginFilter;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtRequestFilter;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -43,6 +44,7 @@ import java.util.Set;
  */
 @Configuration
 @EnableWebSecurity
+@EnableConfigurationProperties(IpWhitelistProperties.class)
 public class SecurityConfig {
 
     /**
@@ -67,7 +69,8 @@ public class SecurityConfig {
             Set<ModuleSecurityConfigurator> moduleSecurityConfigurators,
             HttpSecurity http,
             JwtRequestFilter jwtRequestFilter,
-            AppOriginFilter appOriginFilter) throws Exception {
+            AppOriginFilter appOriginFilter,
+            IpWhitelistFilter ipWhitelistFilter) throws Exception {
 
         http
                 .securityMatcher(new AkademiaRequestMatcher())
@@ -96,6 +99,7 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .addFilterBefore(appOriginFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(ipWhitelistFilter, JwtRequestFilter.class)
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
