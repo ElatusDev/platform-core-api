@@ -284,6 +284,23 @@ CREATE TABLE internal_auths (
     INDEX idx_tenant_active_internal_auth (tenant_id, deleted_at)
 );
 
+CREATE TABLE refresh_tokens (
+    tenant_id              BIGINT       NOT NULL,
+    refresh_token_id       BIGINT       NOT NULL AUTO_INCREMENT,
+    token_hash             VARCHAR(64)  NOT NULL,
+    family_id              VARCHAR(36)  NOT NULL,
+    user_id                BIGINT       NOT NULL,
+    username               VARCHAR(255) NOT NULL,
+    expires_at             TIMESTAMP(6) NOT NULL,
+    revoked_at             TIMESTAMP(6) NULL,
+    replaced_by_token_hash VARCHAR(64)  NULL,
+    created_at             TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (tenant_id, refresh_token_id),
+    UNIQUE KEY uk_refresh_token_hash (token_hash),
+    INDEX idx_refresh_token_family (family_id),
+    INDEX idx_refresh_token_user (tenant_id, user_id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
 --          USER MANAGEMENT MODULE          --
 
 CREATE TABLE person_piis (
