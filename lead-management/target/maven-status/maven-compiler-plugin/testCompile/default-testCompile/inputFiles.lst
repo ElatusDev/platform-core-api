@@ -1,0 +1,5 @@
+/Volumes/ElatusDev/ElatusDev/platform/core-api/lead-management/src/test/java/com/akademiaplus/leadmanagement/interfaceadapters/DemoRequestControllerTest.java
+/Volumes/ElatusDev/ElatusDev/platform/core-api/lead-management/src/test/java/com/akademiaplus/leadmanagement/usecases/DeleteDemoRequestUseCaseTest.java
+/Volumes/ElatusDev/ElatusDev/platform/core-api/lead-management/src/test/java/com/akademiaplus/leadmanagement/usecases/DemoRequestCreationUseCaseTest.java
+/Volumes/ElatusDev/ElatusDev/platform/core-api/lead-management/src/test/java/com/akademiaplus/leadmanagement/usecases/GetAllDemoRequestsUseCaseTest.java
+/Volumes/ElatusDev/ElatusDev/platform/core-api/lead-management/src/test/java/com/akademiaplus/leadmanagement/usecases/GetDemoRequestByIdUseCaseTest.java

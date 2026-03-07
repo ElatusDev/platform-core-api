@@ -301,6 +301,23 @@ CREATE TABLE refresh_tokens (
     INDEX idx_refresh_token_user (tenant_id, user_id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
+--          LEAD MANAGEMENT MODULE          --
+
+CREATE TABLE demo_requests (
+    demo_request_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    first_name      VARCHAR(100)  NOT NULL,
+    last_name       VARCHAR(100)  NOT NULL,
+    email           VARCHAR(255)  NOT NULL UNIQUE,
+    company_name    VARCHAR(200)  NOT NULL,
+    message         TEXT,
+    status          VARCHAR(20)   NOT NULL DEFAULT 'PENDING',
+    created_at      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at      TIMESTAMP     NULL,
+    INDEX idx_demo_request_email (email, deleted_at),
+    INDEX idx_demo_request_status (status, deleted_at)
+);
+
 --          USER MANAGEMENT MODULE          --
 
 CREATE TABLE person_piis (

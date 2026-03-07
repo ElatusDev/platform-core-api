@@ -64,6 +64,11 @@
         </dependency>
         <dependency>
             <groupId>com.akademiaplus</groupId>
+            <artifactId>lead-management</artifactId>
+            <version>${module.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.akademiaplus</groupId>
             <artifactId>infra-common</artifactId>
             <version>1.0</version>
         </dependency>

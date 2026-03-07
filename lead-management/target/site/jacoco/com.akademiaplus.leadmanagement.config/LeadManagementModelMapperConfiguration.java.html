@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LeadManagementModelMapperConfiguration.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">lead-management</a> &gt; <a href="index.source.html" class="el_package">com.akademiaplus.leadmanagement.config</a> &gt; <span class="el_source">LeadManagementModelMapperConfiguration.java</span></div><h1>LeadManagementModelMapperConfiguration.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2026 ElatusDev
+ * All rights reserved.
+ *
+ * This code is proprietary and confidential.
+ * Unauthorized copying, distribution, or modification is strictly prohibited.
+ */
+package com.akademiaplus.leadmanagement.config;
+
+import com.akademiaplus.leadmanagement.DemoRequestDataModel;
+import com.akademiaplus.leadmanagement.usecases.DemoRequestCreationUseCase;
+import openapi.akademiaplus.domain.lead.management.dto.DemoRequestCreationRequestDTO;
+import org.modelmapper.ModelMapper;
+import org.springframework.context.annotation.Configuration;
+
+import jakarta.annotation.PostConstruct;
+
+/**
+ * Registers module-specific named {@link org.modelmapper.TypeMap TypeMaps}
+ * for lead-management DTO → DataModel conversions.
+ *
+ * @see DemoRequestCreationUseCase
+ * @author ElatusDev
+ * @since 1.0
+ */
+@Configuration
+public class LeadManagementModelMapperConfiguration {
+
+    private final ModelMapper modelMapper;
+
+<span class="nc" id="L31">    public LeadManagementModelMapperConfiguration(ModelMapper modelMapper) {</span>
+<span class="nc" id="L32">        this.modelMapper = modelMapper;</span>
+<span class="nc" id="L33">    }</span>
+
+    @PostConstruct
+    void registerTypeMaps() {
+<span class="nc" id="L37">        modelMapper.getConfiguration().setImplicitMappingEnabled(false);</span>
+
+<span class="nc" id="L39">        registerDemoRequestMap();</span>
+
+<span class="nc" id="L41">        modelMapper.getConfiguration().setImplicitMappingEnabled(true);</span>
+<span class="nc" id="L42">    }</span>
+
+    private void registerDemoRequestMap() {
+<span class="nc" id="L45">        modelMapper.createTypeMap(</span>
+                DemoRequestCreationRequestDTO.class,
+                DemoRequestDataModel.class,
+                DemoRequestCreationUseCase.MAP_NAME
+<span class="nc" id="L49">        ).addMappings(mapper -&gt; {</span>
+<span class="nc" id="L50">            mapper.skip(DemoRequestDataModel::setDemoRequestId);</span>
+<span class="nc" id="L51">            mapper.skip(DemoRequestDataModel::setStatus);</span>
+<span class="nc" id="L52">        }).implicitMappings();</span>
+<span class="nc" id="L53">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

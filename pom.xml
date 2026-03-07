@@ -99,6 +99,7 @@
         <module>audit-system</module>
         <module>pos-system</module>
         <module>infra-common</module>
+        <module>lead-management</module>
     </modules>
 
     <profiles>
@@ -132,6 +133,7 @@
                 <module>security</module>
                 <module>multi-tenant-data</module>
                 <module>utilities</module>
+                <module>lead-management</module>
             </modules>
         </profile>
     </profiles>

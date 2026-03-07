@@ -1,0 +1,311 @@
+openapi: 3.0.3
+info:
+  description: Aggregator spec for the lead-management module
+  title: Platform Core API - Lead Management Module
+  version: 1.0.0
+servers:
+- url: /
+paths:
+  /lead-management/demo-requests:
+    get:
+      description: Retrieves all demo requests (authenticated)
+      operationId: getAllDemoRequests
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllDemoRequests200Response"
+          description: Successful response
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          description: Unauthorized
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          description: Internal server error
+      summary: List all demo requests
+      tags:
+      - DemoRequests
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: DemoRequests
+    post:
+      description: Creates a new product demo request (public endpoint)
+      operationId: createDemoRequest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DemoRequestCreationRequest"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoRequestCreationResponse"
+          description: Demo request created successfully
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          description: Bad request
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          description: Resource conflict
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          description: Internal server error
+      summary: Submit a demo request
+      tags:
+      - DemoRequests
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: DemoRequests
+  /lead-management/demo-requests/{id}:
+    delete:
+      description: Soft-deletes a demo request by its ID (authenticated)
+      operationId: deleteDemoRequest
+      parameters:
+      - description: Unique identifier of the demo request
+        in: path
+        name: id
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "204":
+          description: Demo request deleted successfully
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          description: Resource not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          description: Internal server error
+      summary: Delete a demo request
+      tags:
+      - DemoRequests
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: DemoRequests
+    get:
+      description: Retrieves a specific demo request by its ID (authenticated)
+      operationId: getDemoRequestById
+      parameters:
+      - description: Unique identifier of the demo request
+        in: path
+        name: id
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetDemoRequestResponse"
+          description: Successful response
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          description: Unauthorized
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          description: Resource not found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+          description: Internal server error
+      summary: Get demo request by ID
+      tags:
+      - DemoRequests
+      x-accepts:
+      - application/json
+      x-tags:
+      - tag: DemoRequests
+components:
+  parameters:
+    DemoRequestId:
+      description: Unique identifier of the demo request
+      in: path
+      name: id
+      required: true
+      schema:
+        format: int64
+        type: integer
+  responses:
+    Unauthorized:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+      description: Unauthorized
+    InternalServerError:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+      description: Internal server error
+    BadRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+      description: Bad request
+    Conflict:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+      description: Resource conflict
+    NotFound:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+      description: Resource not found
+  schemas:
+    DemoRequestCreationRequest:
+      properties:
+        first_name:
+          maxLength: 100
+          type: string
+        last_name:
+          maxLength: 100
+          type: string
+        email:
+          format: email
+          maxLength: 255
+          type: string
+        company_name:
+          maxLength: 200
+          type: string
+        message:
+          type: string
+      required:
+      - company_name
+      - email
+      - first_name
+      - last_name
+      type: object
+    DemoRequestCreationResponse:
+      example:
+        demo_request_id: 0
+      properties:
+        demo_request_id:
+          format: int64
+          type: integer
+      type: object
+    GetDemoRequestResponse:
+      example:
+        company_name: company_name
+        last_name: last_name
+        created_at: 2000-01-23T04:56:07.000+00:00
+        demo_request_id: 0
+        message: message
+        first_name: first_name
+        email: email
+        status: status
+      properties:
+        demo_request_id:
+          format: int64
+          type: integer
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+        company_name:
+          type: string
+        message:
+          type: string
+        status:
+          type: string
+        created_at:
+          format: date-time
+          type: string
+      type: object
+    GetAllDemoRequests200Response:
+      example:
+        demo_requests:
+        - company_name: company_name
+          last_name: last_name
+          created_at: 2000-01-23T04:56:07.000+00:00
+          demo_request_id: 0
+          message: message
+          first_name: first_name
+          email: email
+          status: status
+        - company_name: company_name
+          last_name: last_name
+          created_at: 2000-01-23T04:56:07.000+00:00
+          demo_request_id: 0
+          message: message
+          first_name: first_name
+          email: email
+          status: status
+      properties:
+        demo_requests:
+          items:
+            $ref: "#/components/schemas/GetDemoRequestResponse"
+          type: array
+      type: object
+    ErrorResponse:
+      example:
+        path: path
+        code: code
+        message: message
+        timestamp: 2000-01-23T04:56:07.000+00:00
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        timestamp:
+          format: date-time
+          type: string
+        path:
+          type: string
+      required:
+      - code
+      - message
+      type: object

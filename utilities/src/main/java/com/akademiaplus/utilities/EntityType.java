@@ -52,6 +52,9 @@ public final class EntityType {
     public static final String EMAIL = "entity.email";
     public static final String EMAIL_TEMPLATE = "entity.email.template";
 
+    // lead-management
+    public static final String DEMO_REQUEST = "entity.demo.request";
+
     // tenant
     public static final String TENANT = "entity.tenant";
     public static final String TENANT_SUBSCRIPTION = "entity.tenant.subscription";

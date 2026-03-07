@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LeadManagementControllerAdvice.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">lead-management</a> &gt; <a href="index.source.html" class="el_package">com.akademiaplus.leadmanagement.config</a> &gt; <span class="el_source">LeadManagementControllerAdvice.java</span></div><h1>LeadManagementControllerAdvice.java</h1><pre class="source lang-java linenums">/*
+ * Copyright (c) 2026 ElatusDev
+ * All rights reserved.
+ *
+ * This code is proprietary and confidential.
+ * Unauthorized copying, distribution, or modification is strictly prohibited.
+ */
+package com.akademiaplus.leadmanagement.config;
+
+import com.akademiaplus.leadmanagement.interfaceadapters.DemoRequestController;
+import com.akademiaplus.utilities.MessageService;
+import com.akademiaplus.utilities.web.BaseControllerAdvice;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+
+/**
+ * Exception handler for lead-management module REST controllers.
+ * &lt;p&gt;
+ * Extends {@link BaseControllerAdvice} to inherit standard exception
+ * mappings (EntityNotFoundException → 404, DuplicateEntityException → 409, etc.).
+ *
+ * @author ElatusDev
+ * @since 1.0
+ */
+@ControllerAdvice(basePackageClasses = DemoRequestController.class)
+public class LeadManagementControllerAdvice extends BaseControllerAdvice {
+
+    /**
+     * Constructs the controller advice with message service for i18n.
+     *
+     * @param messageService the message service
+     */
+    public LeadManagementControllerAdvice(MessageService messageService) {
+<span class="nc" id="L33">        super(messageService);</span>
+<span class="nc" id="L34">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>
