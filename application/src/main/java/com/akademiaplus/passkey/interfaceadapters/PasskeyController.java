@@ -8,9 +8,14 @@
 package com.akademiaplus.passkey.interfaceadapters;
 
 import com.akademiaplus.internal.interfaceadapters.jwt.CookieService;
+import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
 import com.akademiaplus.internal.usecases.domain.LoginResult;
 import com.akademiaplus.passkey.usecases.PasskeyAuthenticationUseCase;
+import com.akademiaplus.tokenbinding.usecases.DeviceFingerprintService;
+import com.akademiaplus.tokenbinding.usecases.domain.DeviceFingerprint;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.Map;
 import openapi.akademiaplus.domain.security.api.PasskeyApi;
 import openapi.akademiaplus.domain.security.dto.AuthTokenResponseDTO;
 import openapi.akademiaplus.domain.security.dto.PasskeyLoginCompleteRequestDTO;
@@ -43,6 +48,8 @@ public class PasskeyController implements PasskeyApi {
     private final PasskeyAuthenticationUseCase passkeyAuthenticationUseCase;
     private final CookieService cookieService;
     private final HttpServletResponse httpServletResponse;
+    private final HttpServletRequest httpServletRequest;
+    private final DeviceFingerprintService deviceFingerprintService;
 
     /**
      * Constructs the controller with required dependencies.
@@ -50,13 +57,19 @@ public class PasskeyController implements PasskeyApi {
      * @param passkeyAuthenticationUseCase the passkey authentication use case
      * @param cookieService               the cookie service for token delivery
      * @param httpServletResponse         the HTTP response for setting cookies
+     * @param httpServletRequest          the HTTP request for fingerprint computation
+     * @param deviceFingerprintService    the device fingerprint service
      */
     public PasskeyController(PasskeyAuthenticationUseCase passkeyAuthenticationUseCase,
                               CookieService cookieService,
-                              HttpServletResponse httpServletResponse) {
+                              HttpServletResponse httpServletResponse,
+                              HttpServletRequest httpServletRequest,
+                              DeviceFingerprintService deviceFingerprintService) {
         this.passkeyAuthenticationUseCase = passkeyAuthenticationUseCase;
         this.cookieService = cookieService;
         this.httpServletResponse = httpServletResponse;
+        this.httpServletRequest = httpServletRequest;
+        this.deviceFingerprintService = deviceFingerprintService;
     }
 
     @Override
@@ -100,8 +113,14 @@ public class PasskeyController implements PasskeyApi {
     public ResponseEntity<AuthTokenResponseDTO> passkeyLoginComplete(
             PasskeyLoginCompleteRequestDTO request) {
 
+        DeviceFingerprint fingerprint = deviceFingerprintService.computeFingerprint(httpServletRequest);
+        Map<String, Object> fingerprintClaims = Map.of(
+                JwtTokenProvider.FINGERPRINT_CLAIM, fingerprint.fullHash(),
+                JwtTokenProvider.DEVICE_FINGERPRINT_CLAIM, fingerprint.deviceOnlyHash()
+        );
+
         LoginResult result = passkeyAuthenticationUseCase.completeLogin(
-                request.getResponseJson(), request.getTenantId());
+                request.getResponseJson(), request.getTenantId(), fingerprintClaims);
 
         cookieService.addTokenCookies(httpServletResponse, result.accessToken(), result.refreshToken());
 

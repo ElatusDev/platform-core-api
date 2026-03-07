@@ -205,12 +205,8 @@ public class PasskeyAuthenticationUseCase {
     }
 
     /**
-     * Validates the assertion response, updates sign count, and issues a JWT.
-     *
-     * <p>Follows the same token issuance pattern as
-     * {@link com.akademiaplus.internal.usecases.InternalAuthenticationUseCase}:
-     * creates an access token (stored in Redis for session tracking) and a
-     * refresh token (hashed and persisted for rotation tracking).</p>
+     * Validates the assertion response, updates sign count, and issues a JWT
+     * without fingerprint claims.
      *
      * @param responseJson the authenticator's assertion response (JSON)
      * @param tenantId     the tenant ID from the request
@@ -219,6 +215,21 @@ public class PasskeyAuthenticationUseCase {
      */
     @Transactional
     public LoginResult completeLogin(String responseJson, Long tenantId) {
+        return completeLogin(responseJson, tenantId, null);
+    }
+
+    /**
+     * Validates the assertion response, updates sign count, and issues a JWT,
+     * merging optional fingerprint claims into the access token.
+     *
+     * @param responseJson      the authenticator's assertion response (JSON)
+     * @param tenantId          the tenant ID from the request
+     * @param fingerprintClaims optional fingerprint claims to embed in the JWT (may be null)
+     * @return a {@link LoginResult} containing the access token, refresh token, and username
+     * @throws PasskeyAuthenticationException if validation fails
+     */
+    @Transactional
+    public LoginResult completeLogin(String responseJson, Long tenantId, Map<String, Object> fingerprintClaims) {
         PublicKeyCredential<AuthenticatorAssertionResponse, ClientAssertionExtensionOutputs> pkc;
         try {
             pkc = PublicKeyCredential.parseAssertionResponseJson(responseJson);
@@ -286,6 +297,9 @@ public class PasskeyAuthenticationUseCase {
         claims.put(JWT_CLAIM_ROLE, auth.getRole());
         claims.put(JwtTokenProvider.USER_ID_CLAIM, auth.getInternalAuthId());
         claims.put(JWT_CLAIM_AUTH_METHOD, AUTH_METHOD_PASSKEY);
+        if (fingerprintClaims != null) {
+            claims.putAll(fingerprintClaims);
+        }
 
         String accessToken = jwtTokenProvider.createAccessToken(auth.getUsername(), tenantId, claims);
         String jti = jwtTokenProvider.getJti(accessToken);

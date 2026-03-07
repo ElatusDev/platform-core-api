@@ -11,6 +11,7 @@ import com.akademiaplus.internal.interfaceadapters.filters.AppOriginContext;
 import com.akademiaplus.internal.interfaceadapters.filters.AppOriginFilter;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtRequestFilter;
 import com.akademiaplus.ratelimit.interfaceadapters.RateLimitingFilter;
+import com.akademiaplus.tokenbinding.interfaceadapters.TokenBindingFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -130,7 +131,8 @@ public class SecurityConfig {
             HttpSecurity http,
             JwtRequestFilter jwtRequestFilter,
             AppOriginFilter appOriginFilter,
-            RateLimitingFilter rateLimitingFilter) throws Exception {
+            RateLimitingFilter rateLimitingFilter,
+            TokenBindingFilter tokenBindingFilter) throws Exception {
 
         http
                 .securityMatcher("/**")
@@ -160,7 +162,8 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .addFilterBefore(appOriginFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(rateLimitingFilter, JwtRequestFilter.class)
-                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(tokenBindingFilter, JwtRequestFilter.class);
 
         return http.build();
     }
