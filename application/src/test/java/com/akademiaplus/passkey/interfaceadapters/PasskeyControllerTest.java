@@ -10,7 +10,11 @@ package com.akademiaplus.passkey.interfaceadapters;
 import com.akademiaplus.internal.interfaceadapters.jwt.CookieService;
 import com.akademiaplus.internal.usecases.domain.LoginResult;
 import com.akademiaplus.passkey.usecases.PasskeyAuthenticationUseCase;
+import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
+import com.akademiaplus.tokenbinding.usecases.DeviceFingerprintService;
+import com.akademiaplus.tokenbinding.usecases.domain.DeviceFingerprint;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import openapi.akademiaplus.domain.security.dto.PasskeyLoginCompleteRequestDTO;
 import openapi.akademiaplus.domain.security.dto.PasskeyLoginOptionsRequestDTO;
@@ -30,6 +34,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Collections;
+import java.util.Map;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -56,10 +61,15 @@ class PasskeyControllerTest {
     private static final String DISPLAY_NAME = "My Passkey";
     private static final String ACCESS_TOKEN = "jwt-access-token";
     private static final String REFRESH_TOKEN = "jwt-refresh-token";
+    private static final String FULL_HASH = "full-fingerprint-hash";
+    private static final String DEVICE_HASH = "device-only-hash";
+    private static final String CLIENT_IP = "127.0.0.1";
 
     @Mock private PasskeyAuthenticationUseCase passkeyAuthenticationUseCase;
     @Mock private CookieService cookieService;
     @Mock private HttpServletResponse httpServletResponse;
+    @Mock private HttpServletRequest httpServletRequest;
+    @Mock private DeviceFingerprintService deviceFingerprintService;
 
     private MockMvc mockMvc;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -67,7 +77,8 @@ class PasskeyControllerTest {
     @BeforeEach
     void setUp() {
         PasskeyController controller = new PasskeyController(
-                passkeyAuthenticationUseCase, cookieService, httpServletResponse);
+                passkeyAuthenticationUseCase, cookieService, httpServletResponse,
+                httpServletRequest, deviceFingerprintService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .build();
     }
@@ -154,8 +165,14 @@ class PasskeyControllerTest {
         void shouldReturn200WithAccessToken_whenLoginSucceeds() throws Exception {
             // Given
             String responseJson = "{\"response\":{}}";
+            DeviceFingerprint fingerprint = new DeviceFingerprint(FULL_HASH, DEVICE_HASH, CLIENT_IP);
+            when(deviceFingerprintService.computeFingerprint(httpServletRequest)).thenReturn(fingerprint);
+
+            Map<String, Object> fingerprintClaims = Map.of(
+                    JwtTokenProvider.FINGERPRINT_CLAIM, FULL_HASH,
+                    JwtTokenProvider.DEVICE_FINGERPRINT_CLAIM, DEVICE_HASH);
             LoginResult loginResult = new LoginResult(ACCESS_TOKEN, REFRESH_TOKEN, USERNAME);
-            when(passkeyAuthenticationUseCase.completeLogin(responseJson, TENANT_ID))
+            when(passkeyAuthenticationUseCase.completeLogin(responseJson, TENANT_ID, fingerprintClaims))
                     .thenReturn(loginResult);
 
             PasskeyLoginCompleteRequestDTO request = new PasskeyLoginCompleteRequestDTO(TENANT_ID, responseJson);
@@ -173,8 +190,14 @@ class PasskeyControllerTest {
         void shouldSetHttpOnlyCookies_whenLoginSucceeds() throws Exception {
             // Given
             String responseJson = "{\"response\":{}}";
+            DeviceFingerprint fingerprint = new DeviceFingerprint(FULL_HASH, DEVICE_HASH, CLIENT_IP);
+            when(deviceFingerprintService.computeFingerprint(httpServletRequest)).thenReturn(fingerprint);
+
+            Map<String, Object> fingerprintClaims = Map.of(
+                    JwtTokenProvider.FINGERPRINT_CLAIM, FULL_HASH,
+                    JwtTokenProvider.DEVICE_FINGERPRINT_CLAIM, DEVICE_HASH);
             LoginResult loginResult = new LoginResult(ACCESS_TOKEN, REFRESH_TOKEN, USERNAME);
-            when(passkeyAuthenticationUseCase.completeLogin(responseJson, TENANT_ID))
+            when(passkeyAuthenticationUseCase.completeLogin(responseJson, TENANT_ID, fingerprintClaims))
                     .thenReturn(loginResult);
 
             PasskeyLoginCompleteRequestDTO request = new PasskeyLoginCompleteRequestDTO(TENANT_ID, responseJson);
