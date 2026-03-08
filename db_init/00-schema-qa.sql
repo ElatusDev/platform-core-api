@@ -326,6 +326,21 @@ CREATE INDEX idx_passkey_cred_tenant_user
 CREATE INDEX idx_passkey_cred_tenant_user_handle
     ON passkey_credentials (tenant_id, user_handle(255));
 
+CREATE TABLE magic_link_tokens (
+    tenant_id            BIGINT       NOT NULL,
+    magic_link_token_id  BIGINT       NOT NULL,
+    email                VARCHAR(500) NOT NULL,
+    token_hash           VARCHAR(64)  NOT NULL,
+    expires_at           TIMESTAMP    NOT NULL,
+    used_at              TIMESTAMP    NULL,
+    created_at           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at           TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at           TIMESTAMP    NULL,
+    PRIMARY KEY (tenant_id, magic_link_token_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
+    INDEX idx_magic_link_token_hash (tenant_id, token_hash, deleted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 --          LEAD MANAGEMENT MODULE          --
 
 CREATE TABLE demo_requests (
