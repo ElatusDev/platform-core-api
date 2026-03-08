@@ -1,6 +1,6 @@
 # Documentation Manifest — AkademiaPlus Platform Core API
 
-> **Last updated**: 2026-03-06
+> **Last updated**: 2026-03-08
 > **Purpose**: Single source of truth for all project documentation status.
 
 ---
@@ -77,9 +77,7 @@ Executable prompts for Claude Code CLI.
 
 ### Pending (`docs/prompts/pending/`)
 
-| Prompt | Purpose | Status |
-|--------|---------|--------|
-| [e2e-bootstrap-prompt.md](prompts/pending/e2e-bootstrap-prompt.md) | Registration-driven E2E bootstrap — register endpoint, tenant-scoped mock data, collection rewrite | 🟡 Ready to execute |
+_No pending prompts for core-api._
 
 ### Completed (`docs/prompts/completed/`)
 
@@ -96,6 +94,18 @@ Executable prompts for Claude Code CLI.
 | [course-management-update-usecase-prompt.md](prompts/completed/course-management-update-usecase-prompt.md) | Course management update use cases | Implemented |
 | [pos-business-logic-prompt.md](prompts/completed/pos-business-logic-prompt.md) | POS business logic implementation | Implemented |
 | [email-notification-delivery-prompt.md](prompts/completed/email-notification-delivery-prompt.md) | Email notification delivery via Jakarta Mail/SMTP — 10 phases | Implemented |
+| [jwt-refresh-token-rotation-prompt.md](prompts/completed/jwt-refresh-token-rotation-prompt.md) | JWT refresh token rotation with Redis | Implemented |
+| [aws-ses-email-infra-prompt.md](prompts/completed/aws-ses-email-infra-prompt.md) | AWS SES email infrastructure | Implemented |
+| [demo-request-migration-prompt.md](prompts/completed/demo-request-migration-prompt.md) | Demo request lead capture migration | Implemented |
+| [mobile-api-gaps-prompt.md](prompts/completed/mobile-api-gaps-prompt.md) | Mobile API gaps — /me, SSE, push endpoints | Implemented |
+| [branching-security-filter-prompt.md](prompts/completed/branching-security-filter-prompt.md) | Per-app branching SecurityFilterChain | Implemented |
+| [passkey-authentication-prompt.md](prompts/completed/passkey-authentication-prompt.md) | WebAuthn/FIDO2 passkey authentication | Implemented |
+| [ip-whitelist-filter-prompt.md](prompts/completed/ip-whitelist-filter-prompt.md) | IP whitelist filter for akademia-plus-web | Implemented |
+| [token-binding-antihijack-prompt.md](prompts/completed/token-binding-antihijack-prompt.md) | Token binding anti-hijack | Implemented |
+| [hmac-api-signing-prompt.md](prompts/completed/hmac-api-signing-prompt.md) | HMAC API request signing | Implemented |
+| [rate-limiting-prompt.md](prompts/completed/rate-limiting-prompt.md) | Redis sliding window rate limiting | Implemented |
+| [magic-link-auth-prompt.md](prompts/completed/magic-link-auth-prompt.md) | Magic link passwordless authentication | Implemented |
+| [component-test-coverage-gaps-prompt.md](prompts/completed/component-test-coverage-gaps-prompt.md) | Component tests for Phase 1–4 endpoints (26 tests) | Implemented |
 
 ---
 
@@ -105,9 +115,7 @@ Step-by-step implementation plans. Referenced by prompts.
 
 ### Pending (`docs/workflows/pending/`)
 
-| Document | Purpose | Status |
-|----------|---------|--------|
-| [e2e-bootstrap-workflow.md](workflows/pending/e2e-bootstrap-workflow.md) | Registration-driven auth + tenant-scoped mock data — architecture analysis, 4 phases, file inventory | 🟡 Ready to execute |
+_No pending workflows for core-api._
 
 ### Completed (`docs/workflows/completed/`)
 
@@ -126,6 +134,18 @@ Step-by-step implementation plans. Referenced by prompts.
 | [course-management-update-usecase-workflow.md](workflows/completed/course-management-update-usecase-workflow.md) | Course management update use cases | Implemented |
 | [pos-business-logic-workflow.md](workflows/completed/pos-business-logic-workflow.md) | POS business logic implementation | Implemented |
 | [email-notification-delivery-workflow.md](workflows/completed/email-notification-delivery-workflow.md) | Email notification delivery via Jakarta Mail/SMTP — 10 phases, ~35 new files | Implemented |
+| [jwt-refresh-token-rotation-workflow.md](workflows/completed/jwt-refresh-token-rotation-workflow.md) | JWT refresh token rotation with Redis sessions | Implemented |
+| [aws-ses-email-infra-workflow.md](workflows/completed/aws-ses-email-infra-workflow.md) | AWS SES email infrastructure | Implemented |
+| [demo-request-migration-workflow.md](workflows/completed/demo-request-migration-workflow.md) | Demo request lead capture migration | Implemented |
+| [mobile-api-gaps-workflow.md](workflows/completed/mobile-api-gaps-workflow.md) | Mobile API gaps — /me, SSE, push endpoints | Implemented |
+| [branching-security-filter-workflow.md](workflows/completed/branching-security-filter-workflow.md) | Per-app branching SecurityFilterChain | Implemented |
+| [passkey-authentication-workflow.md](workflows/completed/passkey-authentication-workflow.md) | WebAuthn/FIDO2 passkey authentication | Implemented |
+| [ip-whitelist-filter-workflow.md](workflows/completed/ip-whitelist-filter-workflow.md) | IP whitelist filter for akademia-plus-web | Implemented |
+| [token-binding-antihijack-workflow.md](workflows/completed/token-binding-antihijack-workflow.md) | Token binding anti-hijack | Implemented |
+| [hmac-api-signing-workflow.md](workflows/completed/hmac-api-signing-workflow.md) | HMAC API request signing | Implemented |
+| [rate-limiting-workflow.md](workflows/completed/rate-limiting-workflow.md) | Redis sliding window rate limiting | Implemented |
+| [magic-link-auth-workflow.md](workflows/completed/magic-link-auth-workflow.md) | Magic link passwordless authentication | Implemented |
+| [component-test-coverage-gaps-workflow.md](workflows/completed/component-test-coverage-gaps-workflow.md) | Component tests for Phase 1–4 endpoints (26 tests, 3 prod fixes) | Implemented |
 
 ---
 

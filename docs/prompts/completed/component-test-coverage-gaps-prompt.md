@@ -1,8 +1,9 @@
 # Prompt: Component Test Coverage Gaps
 
-> **Workflow**: [component-test-coverage-gaps-workflow.md](../../workflows/pending/component-test-coverage-gaps-workflow.md)
+> **Workflow**: [component-test-coverage-gaps-workflow.md](../../workflows/completed/component-test-coverage-gaps-workflow.md)
 > **Target**: core-api
 > **Prerequisite**: Read the completed `component-test-workflow.md` for patterns and base class details
+> **Status**: ✅ COMPLETED — 2026-03-08
 
 ---
 

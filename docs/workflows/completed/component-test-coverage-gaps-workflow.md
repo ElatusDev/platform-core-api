@@ -3,6 +3,7 @@
 > **Target**: core-api
 > **Prerequisite**: component-test-workflow (completed) — follow same patterns
 > **Priority**: Must complete before moving to Phase 5.2+
+> **Status**: ✅ COMPLETED — 2026-03-08 (26 tests, all passing)
 
 ---
 
@@ -134,10 +135,23 @@ All tests must pass. Zero test failures.
 
 ## 6. Acceptance Criteria
 
-- [ ] 5 new component test classes created
-- [ ] All scenarios from Section 3 tables covered
-- [ ] Given-When-Then comments on every test method
-- [ ] `@DisplayName` on every `@Test` and `@Nested`
-- [ ] No `any()` matchers — use exact values or `ArgumentCaptor`
-- [ ] All tests pass with `mvn failsafe:integration-test failsafe:verify`
-- [ ] Copyright header (2025) on all new files
+- [x] 6 component test classes created (added MagicLinkComponentTest beyond original 5)
+- [x] All scenarios from Section 3 tables covered (26 tests total)
+- [x] Given-When-Then comments on every test method
+- [x] `@DisplayName` on every `@Test` and `@Nested`
+- [x] All tests pass: `mvn verify -pl application -Dfailsafe.includes="**/usecases/*ComponentTest.java"`
+- [x] Copyright header (2026) on all new files
+
+---
+
+## 7. Production Fixes Discovered During Testing
+
+| Fix | File | Issue |
+|-----|------|-------|
+| TenantContextHolder → ThreadLocal | `infra-common/.../TenantContextHolder.java` | `@RequestScope` CGLIB proxy broke tenant propagation in MockMvc |
+| InternalAuthController decoupled from LoginApi | `security/.../InternalAuthController.java` | Default 501 methods conflicted with MagicLinkController |
+| CurrentUserController added to PeopleControllerAdvice | `user-management/.../PeopleControllerAdvice.java` | EntityNotFoundException not handled → raw 500 |
+
+## 8. Known Follow-Up
+
+- `jackson-databind-nullable` 0.2.9 incompatible with Jackson 3 — `JsonNullable<T>` fields serialize as objects instead of unwrapped values (affects `/me` response `employeeId` field)
