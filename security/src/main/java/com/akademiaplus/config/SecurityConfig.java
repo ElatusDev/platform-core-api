@@ -48,7 +48,7 @@ import java.util.Set;
  */
 @Configuration
 @EnableWebSecurity
-@EnableConfigurationProperties({IpWhitelistProperties.class, RateLimitProperties.class})
+@EnableConfigurationProperties({IpWhitelistProperties.class, RateLimitProperties.class, MagicLinkProperties.class})
 public class SecurityConfig {
 
     /**
