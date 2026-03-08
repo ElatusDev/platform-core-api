@@ -1,0 +1,91 @@
+openapi: 3.0.0
+info:
+  title: Magic Link Authentication API
+  version: 1.0.0
+  description: Passwordless email-based authentication endpoints
+
+paths:
+  /login/magic-link/request:
+    post:
+      summary: Request a magic link for email-based login
+      description: >
+        Sends a magic link to the provided email address. Always returns
+        200 regardless of whether the email exists (anti-enumeration).
+      operationId: requestMagicLink
+      tags:
+        - magic-link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MagicLinkRequest'
+      responses:
+        '200':
+          description: Magic link request accepted (always succeeds)
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: './internal-authentication.yaml#/components/schemas/ErrorResponse'
+
+  /login/magic-link/verify:
+    post:
+      summary: Verify a magic link token and obtain a JWT
+      description: >
+        Validates the magic link token and returns a platform JWT.
+        The token must be valid, not expired, and not previously used.
+      operationId: verifyMagicLink
+      tags:
+        - magic-link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MagicLinkVerifyRequest'
+      responses:
+        '200':
+          description: Token verified, JWT issued
+          content:
+            application/json:
+              schema:
+                $ref: './internal-authentication.yaml#/components/schemas/AuthTokenResponse'
+        '401':
+          description: Token invalid, expired, or already used
+          content:
+            application/json:
+              schema:
+                $ref: './internal-authentication.yaml#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    MagicLinkRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email address to send the magic link to
+        tenantId:
+          type: integer
+          format: int64
+          description: Tenant ID for the login context
+      required:
+        - email
+        - tenantId
+
+    MagicLinkVerifyRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          description: The magic link token from the email URL
+        tenantId:
+          type: integer
+          format: int64
+          description: Tenant ID for the login context
+      required:
+        - token
+        - tenantId
