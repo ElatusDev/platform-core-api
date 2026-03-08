@@ -246,6 +246,46 @@ CREATE TABLE internal_auths (
     INDEX idx_tenant_active_internal_auth (tenant_id, deleted_at)
 );
 
+CREATE TABLE passkey_credentials (
+    tenant_id             BIGINT       NOT NULL,
+    passkey_credential_id BIGINT       NOT NULL,
+    user_id               BIGINT       NOT NULL,
+    credential_id         BLOB         NOT NULL,
+    public_key            BLOB         NOT NULL,
+    sign_count            BIGINT       NOT NULL DEFAULT 0,
+    transports            VARCHAR(255),
+    created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_used_at          TIMESTAMP,
+    display_name          VARCHAR(255),
+    user_handle           BLOB         NOT NULL,
+    deleted_at            TIMESTAMP,
+    PRIMARY KEY (tenant_id, passkey_credential_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX idx_passkey_cred_tenant_credential
+    ON passkey_credentials (tenant_id, credential_id(255));
+
+CREATE INDEX idx_passkey_cred_tenant_user
+    ON passkey_credentials (tenant_id, user_id);
+
+CREATE INDEX idx_passkey_cred_tenant_user_handle
+    ON passkey_credentials (tenant_id, user_handle(255));
+
+CREATE TABLE magic_link_tokens (
+    tenant_id            BIGINT       NOT NULL,
+    magic_link_token_id  BIGINT       NOT NULL,
+    email                VARCHAR(500) NOT NULL,
+    token_hash           VARCHAR(64)  NOT NULL,
+    expires_at           TIMESTAMP    NOT NULL,
+    used_at              TIMESTAMP    NULL,
+    created_at           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at           TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at           TIMESTAMP    NULL,
+    PRIMARY KEY (tenant_id, magic_link_token_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
+    INDEX idx_magic_link_token_hash (tenant_id, token_hash, deleted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 --          USER MANAGEMENT MODULE          --
 
 CREATE TABLE person_piis (

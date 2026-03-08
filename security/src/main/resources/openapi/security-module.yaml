@@ -30,6 +30,10 @@ components:
       $ref: './passkey-authentication.yaml#/components/schemas/PasskeyLoginOptionsResponse'
     PasskeyLoginCompleteRequest:
       $ref: './passkey-authentication.yaml#/components/schemas/PasskeyLoginCompleteRequest'
+    MagicLinkRequest:
+      $ref: './magic-link-authentication.yaml#/components/schemas/MagicLinkRequest'
+    MagicLinkVerifyRequest:
+      $ref: './magic-link-authentication.yaml#/components/schemas/MagicLinkVerifyRequest'
 
 paths:
   /login/internal:
@@ -44,3 +48,7 @@ paths:
     $ref: './passkey-authentication.yaml#/paths/~1passkey~1login~1options'
   /passkey/login/complete:
     $ref: './passkey-authentication.yaml#/paths/~1passkey~1login~1complete'
+  /login/magic-link/request:
+    $ref: './magic-link-authentication.yaml#/paths/~1login~1magic-link~1request'
+  /login/magic-link/verify:
+    $ref: './magic-link-authentication.yaml#/paths/~1login~1magic-link~1verify'
