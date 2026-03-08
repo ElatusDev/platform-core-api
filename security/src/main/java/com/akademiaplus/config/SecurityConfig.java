@@ -191,6 +191,8 @@ public class SecurityConfig {
                 .requestMatchers("/v1/security/token/refresh").permitAll()
                 .requestMatchers("/v1/security/logout").permitAll()
                 .requestMatchers("/v1/security/passkey/login/**").permitAll()
+                .requestMatchers("/v1/security/login/magic-link/request").permitAll()
+                .requestMatchers("/v1/security/login/magic-link/verify").permitAll()
                 .requestMatchers("/v3/api-docs/**").permitAll()
                 .requestMatchers("/swagger-ui/**").permitAll()
                 .requestMatchers("/swagger-ui.html").permitAll();
@@ -221,6 +223,8 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/v1/**", defaultCorsConfig);
         source.registerCorsConfiguration("/v1/security/login/internal", loginCorsConfig);
         source.registerCorsConfiguration("/v1/security/passkey/login/**", loginCorsConfig);
+        source.registerCorsConfiguration("/v1/security/login/magic-link/request", loginCorsConfig);
+        source.registerCorsConfiguration("/v1/security/login/magic-link/verify", loginCorsConfig);
         return source;
     }
 
