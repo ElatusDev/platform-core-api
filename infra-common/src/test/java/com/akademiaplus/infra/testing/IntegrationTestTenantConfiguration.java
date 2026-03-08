@@ -83,4 +83,87 @@ public class IntegrationTestTenantConfiguration {
         registration.setEnabled(false);
         return registration;
     }
+
+    /**
+     * Disables the {@code IpWhitelistFilter} servlet filter so that
+     * integration tests are not subject to IP-based access control.
+     *
+     * <p>Uses {@link Qualifier} by bean name because the {@code security}
+     * module is not a compile dependency of {@code infra-common}.
+     *
+     * @param filter the auto-detected {@code IpWhitelistFilter} component
+     * @return a registration that prevents the filter from being applied
+     */
+    @Bean
+    public FilterRegistrationBean<Filter> disableIpWhitelistFilterForTests(
+            @Qualifier("ipWhitelistFilter") Filter filter) {
+        FilterRegistrationBean<Filter> registration =
+                new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    /**
+     * Disables the {@code HmacSigningFilter} servlet filter so that
+     * integration tests do not require HMAC request signing.
+     *
+     * @param filter the auto-detected {@code HmacSigningFilter} component
+     * @return a registration that prevents the filter from being applied
+     */
+    @Bean
+    public FilterRegistrationBean<Filter> disableHmacSigningFilterForTests(
+            @Qualifier("hmacSigningFilter") Filter filter) {
+        FilterRegistrationBean<Filter> registration =
+                new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    /**
+     * Disables the {@code HmacResponseFilter} servlet filter so that
+     * integration tests do not add HMAC response signatures.
+     *
+     * @param filter the auto-detected {@code HmacResponseFilter} component
+     * @return a registration that prevents the filter from being applied
+     */
+    @Bean
+    public FilterRegistrationBean<Filter> disableHmacResponseFilterForTests(
+            @Qualifier("hmacResponseFilter") Filter filter) {
+        FilterRegistrationBean<Filter> registration =
+                new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    /**
+     * Disables the {@code RateLimitingFilter} servlet filter so that
+     * integration tests are not subject to rate limiting.
+     *
+     * @param filter the auto-detected {@code RateLimitingFilter} component
+     * @return a registration that prevents the filter from being applied
+     */
+    @Bean
+    public FilterRegistrationBean<Filter> disableRateLimitingFilterForTests(
+            @Qualifier("rateLimitingFilter") Filter filter) {
+        FilterRegistrationBean<Filter> registration =
+                new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
+
+    /**
+     * Disables the {@code TokenBindingFilter} servlet filter so that
+     * integration tests do not enforce device fingerprint binding.
+     *
+     * @param filter the auto-detected {@code TokenBindingFilter} component
+     * @return a registration that prevents the filter from being applied
+     */
+    @Bean
+    public FilterRegistrationBean<Filter> disableTokenBindingFilterForTests(
+            @Qualifier("tokenBindingFilter") Filter filter) {
+        FilterRegistrationBean<Filter> registration =
+                new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
 }

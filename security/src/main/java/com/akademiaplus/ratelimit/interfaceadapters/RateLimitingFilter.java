@@ -10,7 +10,7 @@ package com.akademiaplus.ratelimit.interfaceadapters;
 import com.akademiaplus.config.RateLimitProperties;
 import com.akademiaplus.ratelimit.usecases.RateLimiterService;
 import com.akademiaplus.ratelimit.usecases.domain.RateLimitResult;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

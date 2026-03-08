@@ -16,10 +16,11 @@ import com.akademiaplus.tokenbinding.usecases.domain.DeviceFingerprint;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Map;
-import openapi.akademiaplus.domain.security.api.LoginApi;
 import openapi.akademiaplus.domain.security.dto.AuthTokenResponseDTO;
 import openapi.akademiaplus.domain.security.dto.LoginRequestDTO;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -35,7 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/v1/security")
-public class InternalAuthController implements LoginApi {
+public class InternalAuthController {
 
     private final InternalAuthenticationUseCase internalAuthenticationUseCase;
     private final CookieService cookieService;
@@ -64,8 +65,8 @@ public class InternalAuthController implements LoginApi {
         this.deviceFingerprintService = deviceFingerprintService;
     }
 
-    @Override
-    public ResponseEntity<AuthTokenResponseDTO> loginInternal(LoginRequestDTO loginRequestDTO) {
+    @PostMapping("/login/internal")
+    public ResponseEntity<AuthTokenResponseDTO> loginInternal(@RequestBody LoginRequestDTO loginRequestDTO) {
         DeviceFingerprint fingerprint = deviceFingerprintService.computeFingerprint(httpServletRequest);
         Map<String, Object> fingerprintClaims = Map.of(
                 JwtTokenProvider.FINGERPRINT_CLAIM, fingerprint.fullHash(),

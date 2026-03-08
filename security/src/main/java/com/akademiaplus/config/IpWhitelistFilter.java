@@ -9,7 +9,7 @@ package com.akademiaplus.config;
 
 import com.akademiaplus.internal.interfaceadapters.filters.AppOriginContext;
 import com.akademiaplus.utilities.network.CidrMatcher;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

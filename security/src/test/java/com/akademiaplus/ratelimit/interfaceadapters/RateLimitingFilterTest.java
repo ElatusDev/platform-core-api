@@ -10,7 +10,8 @@ package com.akademiaplus.ratelimit.interfaceadapters;
 import com.akademiaplus.config.RateLimitProperties;
 import com.akademiaplus.ratelimit.usecases.RateLimiterService;
 import com.akademiaplus.ratelimit.usecases.domain.RateLimitResult;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -55,7 +56,7 @@ class RateLimitingFilterTest {
     @Mock private FilterChain filterChain;
 
     private RateLimitingFilter filter;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new JsonMapper();
 
     private RateLimitProperties createEnabledProperties() {
         return new RateLimitProperties(true, Map.of(

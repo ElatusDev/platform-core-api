@@ -8,7 +8,8 @@
 package com.akademiaplus.config;
 
 import com.akademiaplus.internal.interfaceadapters.filters.AppOriginContext;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +47,7 @@ class IpWhitelistFilterTest {
     @Mock private FilterChain filterChain;
 
     private IpWhitelistFilter filter;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new JsonMapper();
 
     @BeforeEach
     void setUp() {

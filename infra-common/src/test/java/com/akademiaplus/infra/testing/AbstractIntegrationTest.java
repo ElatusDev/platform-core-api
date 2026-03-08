@@ -91,7 +91,7 @@ public abstract class AbstractIntegrationTest {
     private static void registerTestProperties(DynamicPropertyRegistry registry) {
         registry.add("jwt.keystore.password", () -> "testpassword");
         registry.add("jwt.keystore.alias", () -> "test-jwt");
-        registry.add("jwt.token.validity-ms", () -> "1800000");
+        registry.add("jwt.token.validity-ms", () -> "900000");
         registry.add("security.encryption-key",
                 () -> "zZhnG8Pe0W9bOHWNDrqTNHC0sDIdVHEsCW/jJWPt1cI=");
         registry.add("mp.access.token",

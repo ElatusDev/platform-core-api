@@ -70,16 +70,23 @@ public class RefreshTokenDataModel extends Auditable {
     /** Column name constant for replaced_by_token_hash. */
     public static final String COLUMN_REPLACED_BY = "replaced_by_token_hash";
 
+    /**
+     * Unique identifier for the refresh token within the tenant.
+     *
+     * <p><strong>IMPORTANT:</strong> This field MUST be declared before {@code tenantId}
+     * because {@link com.akademiaplus.infra.persistence.idassigner.EntityIntrospector#findIdField}
+     * returns the first {@code @Id} field found via {@code getDeclaredFields()}.
+     * The {@code EntityIdAssigner} must pick this field (not {@code tenantId}) for
+     * tenant-sequence-based ID generation.</p>
+     */
+    @Id
+    @Column(name = COLUMN_REFRESH_TOKEN_ID)
+    private Long refreshTokenId;
+
     /** Tenant identifier — part of composite primary key. */
     @Id
     @Column(name = COLUMN_TENANT_ID)
     private Long tenantId;
-
-    /** Unique identifier for the refresh token within the tenant. */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = COLUMN_REFRESH_TOKEN_ID)
-    private Long refreshTokenId;
 
     /** SHA-256 hash of the raw refresh token — unique across all tenants. */
     @Column(name = COLUMN_TOKEN_HASH, nullable = false, unique = true, length = 64)
