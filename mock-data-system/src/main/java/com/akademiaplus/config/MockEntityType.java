@@ -91,7 +91,20 @@ public enum MockEntityType {
 
     // ── Level 2: email children (FK → EMAIL) ──
     EMAIL_RECIPIENT(true, true, EMAIL),
-    EMAIL_ATTACHMENT(true, true, EMAIL);
+    EMAIL_ATTACHMENT(true, true, EMAIL),
+
+    // ── Level 0: platform-level entities (no tenant scoping) ──
+    DEMO_REQUEST(true, true),
+    PUSH_DEVICE(true, true),
+
+    // ── Level 4: attendance (FK → COURSE_EVENT) ──
+    ATTENDANCE_SESSION(true, true, COURSE_EVENT),
+
+    // ── Level 4: notification read status (FK → NOTIFICATION) ──
+    NOTIFICATION_READ_STATUS(true, true, NOTIFICATION),
+
+    // ── Level 5: attendance record (FK → ATTENDANCE_SESSION) ──
+    ATTENDANCE_RECORD(true, true, ATTENDANCE_SESSION);
 
     private final boolean loadable;
     private final boolean cleanable;

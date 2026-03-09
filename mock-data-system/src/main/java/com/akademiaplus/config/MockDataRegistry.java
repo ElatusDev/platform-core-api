@@ -26,9 +26,12 @@ import com.akademiaplus.collaborator.interfaceadapters.CollaboratorRepository;
 import com.akademiaplus.usecases.course.LoadCourseEventMockDataUseCase;
 import com.akademiaplus.usecases.course.LoadCourseMockDataUseCase;
 import com.akademiaplus.usecases.course.LoadScheduleMockDataUseCase;
+import com.akademiaplus.attendance.AttendanceSessionDataModel;
+import com.akademiaplus.attendance.interfaceadapters.AttendanceSessionRepository;
 import com.akademiaplus.courses.event.CourseEventDataModel;
 import com.akademiaplus.courses.program.CourseDataModel;
 import com.akademiaplus.courses.program.ScheduleDataModel;
+import com.akademiaplus.event.interfaceadapters.CourseEventRepository;
 import com.akademiaplus.customer.adultstudent.interfaceadapters.AdultStudentRepository;
 import com.akademiaplus.customer.interfaceadapters.TutorRepository;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
@@ -47,11 +50,16 @@ import com.akademiaplus.security.CustomerAuthDataModel;
 import com.akademiaplus.security.InternalAuthDataModel;
 import com.akademiaplus.store.interfaceadapters.StoreProductRepository;
 import com.akademiaplus.store.interfaceadapters.StoreTransactionRepository;
+import com.akademiaplus.usecases.attendance.LoadAttendanceRecordMockDataUseCase;
+import com.akademiaplus.usecases.attendance.LoadAttendanceSessionMockDataUseCase;
+import com.akademiaplus.usecases.leadmanagement.LoadDemoRequestMockDataUseCase;
 import com.akademiaplus.usecases.notification.LoadEmailAttachmentMockDataUseCase;
 import com.akademiaplus.usecases.notification.LoadEmailMockDataUseCase;
 import com.akademiaplus.usecases.notification.LoadEmailRecipientMockDataUseCase;
 import com.akademiaplus.usecases.notification.LoadNotificationDeliveryMockDataUseCase;
 import com.akademiaplus.usecases.notification.LoadNotificationMockDataUseCase;
+import com.akademiaplus.usecases.notification.LoadNotificationReadStatusMockDataUseCase;
+import com.akademiaplus.usecases.notification.LoadPushDeviceMockDataUseCase;
 import com.akademiaplus.usecases.store.LoadStoreSaleItemMockDataUseCase;
 import com.akademiaplus.usecases.store.LoadStoreProductMockDataUseCase;
 import com.akademiaplus.usecases.store.LoadStoreTransactionMockDataUseCase;
@@ -70,9 +78,13 @@ import com.akademiaplus.util.mock.billing.PaymentAdultStudentFactory;
 import com.akademiaplus.util.mock.billing.PaymentTutorFactory;
 import com.akademiaplus.util.mock.course.CourseEventFactory;
 import com.akademiaplus.util.mock.course.ScheduleFactory;
+import com.akademiaplus.util.mock.attendance.AttendanceRecordFactory;
+import com.akademiaplus.util.mock.attendance.AttendanceSessionFactory;
 import com.akademiaplus.util.mock.notification.EmailAttachmentFactory;
 import com.akademiaplus.util.mock.notification.EmailRecipientFactory;
 import com.akademiaplus.util.mock.notification.NotificationDeliveryFactory;
+import com.akademiaplus.util.mock.notification.NotificationReadStatusFactory;
+import com.akademiaplus.util.mock.notification.PushDeviceFactory;
 import com.akademiaplus.util.mock.store.StoreSaleItemFactory;
 import com.akademiaplus.util.mock.users.MinorStudentFactory;
 import com.akademiaplus.utilities.idgeneration.interfaceadapters.TenantSequence;
@@ -140,7 +152,12 @@ public class MockDataRegistry {
             LoadNotificationDeliveryMockDataUseCase notificationDeliveryUseCase,
             LoadEmailMockDataUseCase emailUseCase,
             LoadEmailRecipientMockDataUseCase emailRecipientUseCase,
-            LoadEmailAttachmentMockDataUseCase emailAttachmentUseCase) {
+            LoadEmailAttachmentMockDataUseCase emailAttachmentUseCase,
+            LoadAttendanceSessionMockDataUseCase attendanceSessionUseCase,
+            LoadAttendanceRecordMockDataUseCase attendanceRecordUseCase,
+            LoadDemoRequestMockDataUseCase demoRequestUseCase,
+            LoadNotificationReadStatusMockDataUseCase notificationReadStatusUseCase,
+            LoadPushDeviceMockDataUseCase pushDeviceUseCase) {
 
         Map<MockEntityType, IntConsumer> loaders = new EnumMap<>(MockEntityType.class);
 
@@ -184,6 +201,17 @@ public class MockDataRegistry {
         loaders.put(MockEntityType.EMAIL_RECIPIENT, emailRecipientUseCase::load);
         loaders.put(MockEntityType.EMAIL_ATTACHMENT, emailAttachmentUseCase::load);
 
+        // Attendance domain
+        loaders.put(MockEntityType.ATTENDANCE_SESSION, attendanceSessionUseCase::load);
+        loaders.put(MockEntityType.ATTENDANCE_RECORD, attendanceRecordUseCase::load);
+
+        // Lead management domain (platform-level)
+        loaders.put(MockEntityType.DEMO_REQUEST, demoRequestUseCase::load);
+
+        // Notification extensions (platform-level)
+        loaders.put(MockEntityType.NOTIFICATION_READ_STATUS, notificationReadStatusUseCase::load);
+        loaders.put(MockEntityType.PUSH_DEVICE, pushDeviceUseCase::load);
+
         return Collections.unmodifiableMap(loaders);
     }
 
@@ -222,7 +250,12 @@ public class MockDataRegistry {
             @Qualifier("customerAuthDataCleanUp")
             DataCleanUp<CustomerAuthDataModel, CustomerAuthDataModel.CustomerAuthCompositeId> customerAuthCleanUp,
             @Qualifier("personPIIDataCleanUp")
-            DataCleanUp<PersonPIIDataModel, PersonPIIDataModel.PersonPIICompositeId> personPIICleanUp) {
+            DataCleanUp<PersonPIIDataModel, PersonPIIDataModel.PersonPIICompositeId> personPIICleanUp,
+            LoadAttendanceSessionMockDataUseCase attendanceSessionUseCase,
+            LoadAttendanceRecordMockDataUseCase attendanceRecordUseCase,
+            LoadDemoRequestMockDataUseCase demoRequestUseCase,
+            LoadNotificationReadStatusMockDataUseCase notificationReadStatusUseCase,
+            LoadPushDeviceMockDataUseCase pushDeviceUseCase) {
 
         Map<MockEntityType, Runnable> cleaners = new EnumMap<>(MockEntityType.class);
 
@@ -272,6 +305,17 @@ public class MockDataRegistry {
         cleaners.put(MockEntityType.EMAIL_RECIPIENT, emailRecipientUseCase::clean);
         cleaners.put(MockEntityType.EMAIL_ATTACHMENT, emailAttachmentUseCase::clean);
 
+        // Attendance domain
+        cleaners.put(MockEntityType.ATTENDANCE_SESSION, attendanceSessionUseCase::clean);
+        cleaners.put(MockEntityType.ATTENDANCE_RECORD, attendanceRecordUseCase::clean);
+
+        // Lead management domain (platform-level)
+        cleaners.put(MockEntityType.DEMO_REQUEST, demoRequestUseCase::clean);
+
+        // Notification extensions (platform-level)
+        cleaners.put(MockEntityType.NOTIFICATION_READ_STATUS, notificationReadStatusUseCase::clean);
+        cleaners.put(MockEntityType.PUSH_DEVICE, pushDeviceUseCase::clean);
+
         return Collections.unmodifiableMap(cleaners);
     }
 
@@ -303,7 +347,13 @@ public class MockDataRegistry {
             NotificationRepository notificationRepository,
             EmailRepository emailRepository,
             EmailRecipientFactory emailRecipientFactory,
-            EmailAttachmentFactory emailAttachmentFactory) {
+            EmailAttachmentFactory emailAttachmentFactory,
+            CourseEventRepository courseEventRepository,
+            AttendanceSessionFactory attendanceSessionFactory,
+            AttendanceSessionRepository attendanceSessionRepository,
+            AttendanceRecordFactory attendanceRecordFactory,
+            NotificationReadStatusFactory notificationReadStatusFactory,
+            PushDeviceFactory pushDeviceFactory) {
 
         Map<MockEntityType, MockDataPostLoadHook> hooks = new EnumMap<>(MockEntityType.class);
 
@@ -361,12 +411,15 @@ public class MockDataRegistry {
             membershipTutorFactory.setAvailableMembershipIds(membershipIds);
         });
 
-        // After ADULT_STUDENT: inject adult student IDs into MembershipAdultStudentFactory
+        // After ADULT_STUDENT: inject adult student IDs into downstream factories
         hooks.put(MockEntityType.ADULT_STUDENT, () -> {
             List<Long> adultStudentIds = adultStudentRepository.findAll().stream()
                     .map(AdultStudentDataModel::getAdultStudentId)
                     .toList();
             membershipAdultStudentFactory.setAvailableAdultStudentIds(adultStudentIds);
+            attendanceRecordFactory.setAvailableAdultStudentIds(adultStudentIds);
+            pushDeviceFactory.setAvailableUserIds(adultStudentIds);
+            notificationReadStatusFactory.setAvailableUserIds(adultStudentIds);
         });
 
         // After MEMBERSHIP_ADULT_STUDENT: inject IDs into PaymentAdultStudentFactory
@@ -409,12 +462,13 @@ public class MockDataRegistry {
             storeSaleItemFactory.setAvailableStoreProductIds(productIds);
         });
 
-        // After NOTIFICATION: inject notification IDs into NotificationDeliveryFactory
+        // After NOTIFICATION: inject notification IDs into downstream factories
         hooks.put(MockEntityType.NOTIFICATION, () -> {
             List<Long> notificationIds = notificationRepository.findAll().stream()
                     .map(NotificationDataModel::getNotificationId)
                     .toList();
             notificationDeliveryFactory.setAvailableNotificationIds(notificationIds);
+            notificationReadStatusFactory.setAvailableNotificationIds(notificationIds);
         });
 
         // After EMAIL: inject email IDs into EmailRecipientFactory and EmailAttachmentFactory
@@ -424,6 +478,22 @@ public class MockDataRegistry {
                     .toList();
             emailRecipientFactory.setAvailableEmailIds(emailIds);
             emailAttachmentFactory.setAvailableEmailIds(emailIds);
+        });
+
+        // After COURSE_EVENT: inject course event IDs into AttendanceSessionFactory
+        hooks.put(MockEntityType.COURSE_EVENT, () -> {
+            List<Long> courseEventIds = courseEventRepository.findAll().stream()
+                    .map(CourseEventDataModel::getCourseEventId)
+                    .toList();
+            attendanceSessionFactory.setAvailableCourseEventIds(courseEventIds);
+        });
+
+        // After ATTENDANCE_SESSION: inject session IDs into AttendanceRecordFactory
+        hooks.put(MockEntityType.ATTENDANCE_SESSION, () -> {
+            List<Long> sessionIds = attendanceSessionRepository.findAll().stream()
+                    .map(AttendanceSessionDataModel::getAttendanceSessionId)
+                    .toList();
+            attendanceRecordFactory.setAvailableAttendanceSessionIds(sessionIds);
         });
 
         return Collections.unmodifiableMap(hooks);
