@@ -7,6 +7,8 @@
  */
 package com.akademiaplus.config;
 
+import com.akademiaplus.attendance.AttendanceSessionDataModel;
+import com.akademiaplus.attendance.interfaceadapters.AttendanceSessionRepository;
 import com.akademiaplus.billing.customerpayment.PaymentAdultStudentDataModel;
 import com.akademiaplus.billing.membership.MembershipAdultStudentDataModel;
 import com.akademiaplus.billing.membership.MembershipDataModel;
@@ -14,6 +16,7 @@ import com.akademiaplus.billing.membership.MembershipTutorDataModel;
 import com.akademiaplus.billing.store.StoreProductDataModel;
 import com.akademiaplus.billing.store.StoreTransactionDataModel;
 import com.akademiaplus.collaborator.interfaceadapters.CollaboratorRepository;
+import com.akademiaplus.event.interfaceadapters.CourseEventRepository;
 import com.akademiaplus.courses.event.CourseEventDataModel;
 import com.akademiaplus.courses.program.CourseDataModel;
 import com.akademiaplus.courses.program.ScheduleDataModel;
@@ -50,7 +53,11 @@ import com.akademiaplus.util.mock.course.CourseEventFactory;
 import com.akademiaplus.util.mock.course.ScheduleFactory;
 import com.akademiaplus.util.mock.notification.EmailAttachmentFactory;
 import com.akademiaplus.util.mock.notification.EmailRecipientFactory;
+import com.akademiaplus.util.mock.attendance.AttendanceRecordFactory;
+import com.akademiaplus.util.mock.attendance.AttendanceSessionFactory;
 import com.akademiaplus.util.mock.notification.NotificationDeliveryFactory;
+import com.akademiaplus.util.mock.notification.NotificationReadStatusFactory;
+import com.akademiaplus.util.mock.notification.PushDeviceFactory;
 import com.akademiaplus.util.mock.store.StoreSaleItemFactory;
 import com.akademiaplus.util.mock.users.MinorStudentFactory;
 import com.akademiaplus.utilities.idgeneration.interfaceadapters.TenantSequence;
@@ -67,8 +74,13 @@ import com.akademiaplus.usecases.course.LoadScheduleMockDataUseCase;
 import com.akademiaplus.usecases.notification.LoadEmailAttachmentMockDataUseCase;
 import com.akademiaplus.usecases.notification.LoadEmailMockDataUseCase;
 import com.akademiaplus.usecases.notification.LoadEmailRecipientMockDataUseCase;
+import com.akademiaplus.usecases.attendance.LoadAttendanceRecordMockDataUseCase;
+import com.akademiaplus.usecases.attendance.LoadAttendanceSessionMockDataUseCase;
+import com.akademiaplus.usecases.leadmanagement.LoadDemoRequestMockDataUseCase;
 import com.akademiaplus.usecases.notification.LoadNotificationDeliveryMockDataUseCase;
 import com.akademiaplus.usecases.notification.LoadNotificationMockDataUseCase;
+import com.akademiaplus.usecases.notification.LoadNotificationReadStatusMockDataUseCase;
+import com.akademiaplus.usecases.notification.LoadPushDeviceMockDataUseCase;
 import com.akademiaplus.usecases.store.LoadStoreSaleItemMockDataUseCase;
 import com.akademiaplus.usecases.store.LoadStoreProductMockDataUseCase;
 import com.akademiaplus.usecases.store.LoadStoreTransactionMockDataUseCase;
@@ -159,6 +171,17 @@ class MockDataRegistryTest {
     @Mock private LoadEmailRecipientMockDataUseCase emailRecipientUseCase;
     @Mock private LoadEmailAttachmentMockDataUseCase emailAttachmentUseCase;
 
+    // ── Attendance domain ──
+    @Mock private LoadAttendanceSessionMockDataUseCase attendanceSessionUseCase;
+    @Mock private LoadAttendanceRecordMockDataUseCase attendanceRecordUseCase;
+
+    // ── Lead management domain ──
+    @Mock private LoadDemoRequestMockDataUseCase demoRequestUseCase;
+
+    // ── Notification extensions ──
+    @Mock private LoadNotificationReadStatusMockDataUseCase notificationReadStatusUseCase;
+    @Mock private LoadPushDeviceMockDataUseCase pushDeviceUseCase;
+
     // ── Cleanup-only beans ──
     @Mock private DataCleanUp<TenantSequence, TenantSequence.TenantSequenceId> tenantSequenceCleanUp;
     @Mock private DataCleanUp<InternalAuthDataModel, InternalAuthDataModel.InternalAuthCompositeId> internalAuthCleanUp;
@@ -180,6 +203,8 @@ class MockDataRegistryTest {
     @Mock private StoreProductRepository storeProductRepository;
     @Mock private NotificationRepository notificationRepository;
     @Mock private EmailRepository emailRepository;
+    @Mock private CourseEventRepository courseEventRepository;
+    @Mock private AttendanceSessionRepository attendanceSessionRepository;
 
     // ── Factories for hooks ──
     @Mock private TenantContextHolder tenantContextHolder;
@@ -195,6 +220,10 @@ class MockDataRegistryTest {
     @Mock private NotificationDeliveryFactory notificationDeliveryFactory;
     @Mock private EmailRecipientFactory emailRecipientFactory;
     @Mock private EmailAttachmentFactory emailAttachmentFactory;
+    @Mock private AttendanceSessionFactory attendanceSessionFactory;
+    @Mock private AttendanceRecordFactory attendanceRecordFactory;
+    @Mock private NotificationReadStatusFactory notificationReadStatusFactory;
+    @Mock private PushDeviceFactory pushDeviceFactory;
 
     private MockDataRegistry registry;
 
@@ -223,12 +252,15 @@ class MockDataRegistryTest {
                     storeProductUseCase, storeTransactionUseCase,
                     storeSaleItemUseCase,
                     notificationUseCase, notificationDeliveryUseCase,
-                    emailUseCase, emailRecipientUseCase, emailAttachmentUseCase);
+                    emailUseCase, emailRecipientUseCase, emailAttachmentUseCase,
+                    attendanceSessionUseCase, attendanceRecordUseCase,
+                    demoRequestUseCase,
+                    notificationReadStatusUseCase, pushDeviceUseCase);
         }
 
         @Test
-        @DisplayName("Should contain exactly the twenty-six loadable entity types")
-        void shouldContainExactlyTwentySixLoadableEntityTypes() {
+        @DisplayName("Should contain all loadable entity types")
+        void shouldContainAllLoadableEntityTypes() {
             // Given — loaders built in setUp
 
             // When & Then
@@ -240,7 +272,10 @@ class MockDataRegistryTest {
                     PAYMENT_ADULT_STUDENT, PAYMENT_TUTOR, CARD_PAYMENT_INFO,
                     STORE_PRODUCT, STORE_TRANSACTION, STORE_SALE_ITEM,
                     NOTIFICATION, NOTIFICATION_DELIVERY,
-                    EMAIL, EMAIL_RECIPIENT, EMAIL_ATTACHMENT);
+                    EMAIL, EMAIL_RECIPIENT, EMAIL_ATTACHMENT,
+                    ATTENDANCE_SESSION, ATTENDANCE_RECORD,
+                    DEMO_REQUEST,
+                    NOTIFICATION_READ_STATUS, PUSH_DEVICE);
         }
 
         @Test
@@ -324,7 +359,10 @@ class MockDataRegistryTest {
                     notificationUseCase, notificationDeliveryUseCase,
                     emailUseCase, emailRecipientUseCase, emailAttachmentUseCase,
                     tenantSequenceCleanUp, internalAuthCleanUp,
-                    customerAuthCleanUp, personPIICleanUp);
+                    customerAuthCleanUp, personPIICleanUp,
+                    attendanceSessionUseCase, attendanceRecordUseCase,
+                    demoRequestUseCase,
+                    notificationReadStatusUseCase, pushDeviceUseCase);
         }
 
         @Test
@@ -342,7 +380,10 @@ class MockDataRegistryTest {
                     PAYMENT_ADULT_STUDENT, PAYMENT_TUTOR, CARD_PAYMENT_INFO,
                     STORE_PRODUCT, STORE_TRANSACTION, STORE_SALE_ITEM,
                     NOTIFICATION, NOTIFICATION_DELIVERY,
-                    EMAIL, EMAIL_RECIPIENT, EMAIL_ATTACHMENT);
+                    EMAIL, EMAIL_RECIPIENT, EMAIL_ATTACHMENT,
+                    ATTENDANCE_SESSION, ATTENDANCE_RECORD,
+                    DEMO_REQUEST,
+                    NOTIFICATION_READ_STATUS, PUSH_DEVICE);
         }
 
         @Test
@@ -437,12 +478,16 @@ class MockDataRegistryTest {
                     storeTransactionRepository, storeProductRepository,
                     storeSaleItemFactory,
                     notificationDeliveryFactory, notificationRepository,
-                    emailRepository, emailRecipientFactory, emailAttachmentFactory);
+                    emailRepository, emailRecipientFactory, emailAttachmentFactory,
+                    courseEventRepository,
+                    attendanceSessionFactory, attendanceSessionRepository,
+                    attendanceRecordFactory,
+                    notificationReadStatusFactory, pushDeviceFactory);
         }
 
         @Test
-        @DisplayName("Should contain all fourteen post-load hooks")
-        void shouldContainAllFourteenPostLoadHooks() {
+        @DisplayName("Should contain all post-load hooks")
+        void shouldContainAllPostLoadHooks() {
             // Given — hooks built in setUp
 
             // When & Then
@@ -452,7 +497,8 @@ class MockDataRegistryTest {
                     MEMBERSHIP_ADULT_STUDENT, MEMBERSHIP_TUTOR,
                     PAYMENT_ADULT_STUDENT,
                     STORE_TRANSACTION, STORE_PRODUCT,
-                    NOTIFICATION, EMAIL);
+                    NOTIFICATION, EMAIL,
+                    COURSE_EVENT, ATTENDANCE_SESSION);
         }
 
         @Test
@@ -572,6 +618,9 @@ class MockDataRegistryTest {
             // Then
             verify(adultStudentRepository).findAll();
             verify(membershipAdultStudentFactory).setAvailableAdultStudentIds(List.of(ADULT_STUDENT_ID_ONE));
+            verify(attendanceRecordFactory).setAvailableAdultStudentIds(List.of(ADULT_STUDENT_ID_ONE));
+            verify(pushDeviceFactory).setAvailableUserIds(List.of(ADULT_STUDENT_ID_ONE));
+            verify(notificationReadStatusFactory).setAvailableUserIds(List.of(ADULT_STUDENT_ID_ONE));
         }
 
         @Test
@@ -668,6 +717,7 @@ class MockDataRegistryTest {
             // Then
             verify(notificationRepository).findAll();
             verify(notificationDeliveryFactory).setAvailableNotificationIds(List.of(NOTIFICATION_ID_ONE));
+            verify(notificationReadStatusFactory).setAvailableNotificationIds(List.of(NOTIFICATION_ID_ONE));
         }
 
         @Test

@@ -16,6 +16,8 @@ COPY security/pom.xml              security/
 COPY tenant-management/pom.xml     tenant-management/
 COPY user-management/pom.xml       user-management/
 COPY utilities/pom.xml             utilities/
+COPY etl-system/pom.xml            etl-system/
+COPY lead-management/pom.xml       lead-management/
 
 RUN apk add --no-cache maven
 ENV JAVA_HOME=/opt/java/openjdk

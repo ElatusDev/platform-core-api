@@ -5,7 +5,7 @@
 # Dependency chain (mvn -pl mock-data-system -am):
 #   utilities → infra-common → multi-tenant-data → notification-system
 #   → security → user-management → course-management → billing
-#   → tenant-management → pos-system → mock-data-system
+#   → tenant-management → pos-system → lead-management → mock-data-system
 # =============================================================================
 
 # ── Build stage ──────────────────────────────────────────────────────────────
@@ -29,6 +29,8 @@ COPY utilities/pom.xml             utilities/
 COPY application/pom.xml           application/
 COPY audit-system/pom.xml          audit-system/
 COPY certificate-authority/pom.xml certificate-authority/
+COPY etl-system/pom.xml            etl-system/
+COPY lead-management/pom.xml       lead-management/
 
 RUN apk add --no-cache maven
 ENV JAVA_HOME=/opt/java/openjdk
@@ -46,6 +48,7 @@ COPY course-management/src      course-management/src
 COPY billing/src                billing/src
 COPY tenant-management/src      tenant-management/src
 COPY pos-system/src             pos-system/src
+COPY lead-management/src        lead-management/src
 COPY mock-data-system/src       mock-data-system/src
 
 RUN mvn clean install -pl mock-data-system -am -DskipTests -DskipITs -q
