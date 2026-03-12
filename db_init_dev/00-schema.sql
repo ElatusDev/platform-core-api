@@ -809,3 +809,28 @@ CREATE TABLE attendance_records (
     INDEX idx_attendance_record_session (tenant_id, attendance_session_id, deleted_at),
     INDEX idx_attendance_record_student (tenant_id, student_id, student_type, deleted_at)
 );
+
+-- ── TASK MODULE ──
+
+CREATE TABLE tasks (
+    tenant_id BIGINT NOT NULL,
+    task_id BIGINT NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    description VARCHAR(2000),
+    assignee_id BIGINT NOT NULL,
+    assignee_type VARCHAR(20) NOT NULL,
+    due_date DATE NOT NULL,
+    priority VARCHAR(10) NOT NULL DEFAULT 'MEDIUM',
+    status VARCHAR(15) NOT NULL DEFAULT 'PENDING',
+    created_by_user_id BIGINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, task_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
+    INDEX idx_task_assignee (tenant_id, assignee_id, assignee_type, deleted_at),
+    INDEX idx_task_status (tenant_id, status, deleted_at),
+    INDEX idx_task_priority (tenant_id, priority, deleted_at),
+    INDEX idx_task_due_date (tenant_id, due_date, status, deleted_at)
+);

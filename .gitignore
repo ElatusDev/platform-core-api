@@ -16,6 +16,7 @@ user-management/target/
 utilities/target/
 lead-management/target/
 etl-service/target/
+task-service/target/
 
 ### docker related ###
 .env
@@ -44,3 +45,4 @@ user-management/*.iml
 utilities/*.iml
 lead-management/*.iml
 etl-service/*.iml
+task-service/*.iml

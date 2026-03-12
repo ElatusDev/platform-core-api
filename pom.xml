@@ -103,6 +103,7 @@
         <module>infra-common</module>
         <module>lead-management</module>
         <module>etl-service</module>
+        <module>task-service</module>
     </modules>
 
     <profiles>
@@ -153,6 +154,7 @@
                 <module>multi-tenant-data</module>
                 <module>utilities</module>
                 <module>lead-management</module>
+                <module>task-service</module>
             </modules>
         </profile>
     </profiles>

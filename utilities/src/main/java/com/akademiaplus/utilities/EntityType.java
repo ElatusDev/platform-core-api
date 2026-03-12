@@ -55,6 +55,9 @@ public final class EntityType {
     public static final String EMAIL_TEMPLATE = "entity.email.template";
     public static final String PUSH_DEVICE = "entity.push.device";
 
+    // task
+    public static final String TASK = "entity.task";
+
     // lead-management
     public static final String DEMO_REQUEST = "entity.demo.request";
 
