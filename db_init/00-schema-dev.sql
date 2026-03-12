@@ -286,7 +286,7 @@ CREATE TABLE internal_auths (
 
 CREATE TABLE refresh_tokens (
     tenant_id              BIGINT       NOT NULL,
-    refresh_token_id       BIGINT       NOT NULL,
+    refresh_token_id       BIGINT       NOT NULL AUTO_INCREMENT,
     token_hash             VARCHAR(64)  NOT NULL,
     family_id              VARCHAR(36)  NOT NULL,
     user_id                BIGINT       NOT NULL,

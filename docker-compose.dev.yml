@@ -30,9 +30,9 @@
 # STARTUP ORDER (enforced by depends_on + healthchecks)
 # ──────────────────────────────────────────────────────
 #   trust-broker + multi_tenant_db + platform-core-redis
-#     └─► platform-core-api     (HTTP on 8080, registers JWKS on startup)
+#     └─► platform-core-api     (HTTP on 8100, registers JWKS on startup)
 #   platform-core-api
-#     └─► mock-data-system       (HTTP on 8180, seeds database)
+#     └─► mock-data-service       (HTTP on 8110, seeds database)
 #
 # webapp-service lives in AkademiaPlusWebApp/docker-compose.dev.yml and
 # joins these networks as external after this stack is healthy.
@@ -47,7 +47,7 @@ networks:
 
 services:
   # ─────────────────────────────────────────────────────────────────────────
-  # Trust Broker — JWT JWKS registry (HTTP on 8082)
+  # Trust Broker — JWT JWKS registry (HTTP on 8102)
   # Internal-only: no host port exposure. Services register JWT public keys
   # on startup; JWKS document is served for token verification.
   # ─────────────────────────────────────────────────────────────────────────
@@ -58,6 +58,9 @@ services:
     container_name: trust-broker
     networks:
       - akademia-internal
+      - akademia-external
+    ports:
+      - "8102:8082"
     volumes:
       - trust_broker_data:/certs
     environment:
@@ -82,6 +85,7 @@ services:
     restart: always
     networks:
       - akademia-internal
+      - akademia-external
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
@@ -94,10 +98,10 @@ services:
       MYSQL_USER: dev
       MYSQL_PASSWORD: 12345
     ports:
-      - "3307:3306"
+      - "3316:3306"
     volumes:
-      - /var/lib/mysql
-      - ./db_init:/docker-entrypoint-initdb.d
+      - mariadb_data:/var/lib/mysql
+      - ./db_init_dev:/docker-entrypoint-initdb.d
     command: >
       --general-log=1
       --general-log-file=/var/lib/mysql/mariadb-general.log
@@ -114,8 +118,9 @@ services:
     restart: always
     networks:
       - akademia-internal
+      - akademia-external
     ports:
-      - "6379:6379"
+      - "6389:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -126,7 +131,30 @@ services:
       start_period: 10s
 
   # ─────────────────────────────────────────────────────────────────────────
-  # platform-core-api — Spring Boot, HTTP on 8080
+  # MongoDB — ETL staging database
+  # ─────────────────────────────────────────────────────────────────────────
+  mongodb:
+    image: mongo:8.0
+    container_name: mongodb
+    restart: always
+    networks:
+      - akademia-internal
+      - akademia-external
+    ports:
+      - "27027:27017"
+    environment:
+      MONGO_INITDB_DATABASE: etl_staging
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand({ping:1})"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # platform-core-api — Spring Boot, HTTP on 8100
   # ─────────────────────────────────────────────────────────────────────────
   platform-core-api:
     image: elatusdevops/akademiaplus-platform-core-api:dev
@@ -145,7 +173,7 @@ services:
       - akademia-internal
       - akademia-external
     ports:
-      - "8080:8080"
+      - "8100:8080"
     env_file:
       - .env
     environment:
@@ -161,24 +189,28 @@ services:
       start_period: 90s
 
   # ─────────────────────────────────────────────────────────────────────────
-  # mock-data-system — Spring Boot data seeder, HTTP on 8180
+  # mock-data-service — Spring Boot data seeder, HTTP on 8110
   # ─────────────────────────────────────────────────────────────────────────
-  mock-data-system:
+  mock-data-service:
     build:
       context: .
-      dockerfile: mock-data-system/Dockerfile
-    container_name: mock-data-system
+      dockerfile: mock-data-service/Dockerfile
+    container_name: mock-data-service
     depends_on:
       platform-core-api:
+        condition: service_healthy
+      platform-core-redis:
         condition: service_healthy
     networks:
       - akademia-internal
     ports:
-      - "8180:8180"
+      - "8110:8180"
     env_file:
       - .env
     environment:
       SPRING_PROFILES_ACTIVE: mock-data-service
+      SPRING_DATA_REDIS_HOST: platform-core-redis
+      SPRING_DATA_REDIS_PORT: 6379
       SPRING_DATASOURCE_URL: jdbc:mariadb://multi_tenant_db:3306/${DATABASE}
     entrypoint: ["/app/docker-entrypoint.sh"]
     healthcheck:
@@ -189,6 +221,41 @@ services:
       start_period: 90s
 
 
+  # ─────────────────────────────────────────────────────────────────────────
+  # etl-service — ETL service, HTTP on 8120
+  # ─────────────────────────────────────────────────────────────────────────
+  etl-service:
+    build:
+      context: .
+      dockerfile: etl-service/Dockerfile
+    container_name: etl-service
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      multi_tenant_db:
+        condition: service_healthy
+      platform-core-redis:
+        condition: service_healthy
+    networks:
+      - akademia-internal
+      - akademia-external
+    ports:
+      - "8120:8280"
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: etl-service
+      SPRING_DATA_REDIS_HOST: platform-core-redis
+      SPRING_DATA_REDIS_PORT: 6379
+      MONGODB_URI: mongodb://mongodb:27017/etl_staging
+      SPRING_DATASOURCE_URL: jdbc:mariadb://multi_tenant_db:3306/${DATABASE}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8280/actuator/health > /dev/null 2>&1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
 secrets:
   ca_bootstrap_tokens:
     file: ./secrets/ca-bootstrap-tokens.json
@@ -196,3 +263,5 @@ secrets:
 volumes:
   redis_data: {}
   trust_broker_data: {}
+  mariadb_data: {}
+  mongodb_data: {}

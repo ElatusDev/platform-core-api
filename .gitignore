@@ -1,12 +1,12 @@
 
 ### maven modules ###
 application/target/
-audit-system/target/
+audit-service/target/
 billing/target/
 certificate-authority/target/
 course-management/target/
 infra-common/target/
-mock-data-system/target/
+mock-data-service/target/
 multi-tenant-data/target/
 notification-system/target/
 pos-system/target/
@@ -15,6 +15,7 @@ tenant-management/target/
 user-management/target/
 utilities/target/
 lead-management/target/
+etl-service/target/
 
 ### docker related ###
 .env
@@ -28,12 +29,12 @@ secrets/
 #intelliJ
 .idea/
 application/*.iml
-audit-system/*.iml
+audit-service/*.iml
 billing/*.iml
 certificate-authority/*.iml
 course-management/*.iml
 infra-common/*.iml
-mock-data-system/*.iml
+mock-data-service/*.iml
 multi-tenant-data/*.iml
 notification-system/*.iml
 pos-system/*.iml
@@ -42,3 +43,4 @@ tenant-management/*.iml
 user-management/*.iml
 utilities/*.iml
 lead-management/*.iml
+etl-service/*.iml
