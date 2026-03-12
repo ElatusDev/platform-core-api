@@ -8,6 +8,7 @@
 package com.akademiaplus.oauth.usecases;
 
 import com.akademiaplus.customer.adultstudent.interfaceadapters.AdultStudentRepository;
+import com.akademiaplus.customer.interfaceadapters.TutorRepository;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.interfaceadapters.PersonPIIRepository;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -61,6 +63,7 @@ public class OAuthAuthenticationUseCase {
     private final Map<String, OAuthProviderClient> providerClients;
     private final PersonPIIRepository personPIIRepository;
     private final AdultStudentRepository adultStudentRepository;
+    private final TutorRepository tutorRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final HashingService hashingService;
     private final PiiNormalizer piiNormalizer;
@@ -73,6 +76,7 @@ public class OAuthAuthenticationUseCase {
      * @param providerClients       map of provider name to client implementation
      * @param personPIIRepository   the person PII repository
      * @param adultStudentRepository the adult student repository
+     * @param tutorRepository       the tutor repository
      * @param jwtTokenProvider      the JWT token provider
      * @param hashingService        the hashing service
      * @param piiNormalizer         the PII normalizer
@@ -82,6 +86,7 @@ public class OAuthAuthenticationUseCase {
     public OAuthAuthenticationUseCase(Map<String, OAuthProviderClient> providerClients,
                                       PersonPIIRepository personPIIRepository,
                                       AdultStudentRepository adultStudentRepository,
+                                      TutorRepository tutorRepository,
                                       JwtTokenProvider jwtTokenProvider,
                                       HashingService hashingService,
                                       PiiNormalizer piiNormalizer,
@@ -90,6 +95,7 @@ public class OAuthAuthenticationUseCase {
         this.providerClients = providerClients;
         this.personPIIRepository = personPIIRepository;
         this.adultStudentRepository = adultStudentRepository;
+        this.tutorRepository = tutorRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.hashingService = hashingService;
         this.piiNormalizer = piiNormalizer;
@@ -130,13 +136,13 @@ public class OAuthAuthenticationUseCase {
         String emailHash = hashingService.generateHash(normalizedEmail);
 
         return personPIIRepository.findByEmailHash(emailHash)
-                .map(pii -> loginExistingUser(normalizedEmail, tenantId))
+                .map(pii -> loginExistingUser(pii, normalizedEmail, tenantId))
                 .orElseGet(() -> createAndLoginNewUser(normalizedEmail, emailHash, profile, normalizedProvider, tenantId));
     }
 
-    private LoginResult loginExistingUser(String email, Long tenantId) {
+    private LoginResult loginExistingUser(PersonPIIDataModel pii, String email, Long tenantId) {
         LOG.info("OAuth login for existing user: {}", email);
-        Map<String, Object> claims = Map.of(JWT_CLAIM_ROLE, ROLE_CUSTOMER);
+        Map<String, Object> claims = buildCustomerClaims(pii.getPersonPiiId());
         String accessToken = jwtTokenProvider.createAccessToken(email, tenantId, claims);
         String refreshToken = jwtTokenProvider.createRefreshToken(email, tenantId, UUID.randomUUID().toString());
         return new LoginResult(accessToken, refreshToken, email);
@@ -172,10 +178,38 @@ public class OAuthAuthenticationUseCase {
 
         adultStudentRepository.save(student);
 
-        Map<String, Object> claims = Map.of(JWT_CLAIM_ROLE, ROLE_CUSTOMER);
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(JWT_CLAIM_ROLE, ROLE_CUSTOMER);
+        claims.put(JwtTokenProvider.PROFILE_TYPE_CLAIM, JwtTokenProvider.PROFILE_TYPE_ADULT_STUDENT);
+        claims.put(JwtTokenProvider.PROFILE_ID_CLAIM, student.getAdultStudentId());
+
         String accessToken = jwtTokenProvider.createAccessToken(normalizedEmail, tenantId, claims);
         String refreshToken = jwtTokenProvider.createRefreshToken(normalizedEmail, tenantId, UUID.randomUUID().toString());
         return new LoginResult(accessToken, refreshToken, normalizedEmail);
+    }
+
+    /**
+     * Builds JWT claims with profile_type and profile_id for an existing customer.
+     *
+     * @param personPiiId the person PII ID to resolve the profile entity
+     * @return claims map with role, profile type, and profile ID
+     */
+    private Map<String, Object> buildCustomerClaims(Long personPiiId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(JWT_CLAIM_ROLE, ROLE_CUSTOMER);
+
+        adultStudentRepository.findByPersonPiiId(personPiiId).ifPresentOrElse(
+                student -> {
+                    claims.put(JwtTokenProvider.PROFILE_TYPE_CLAIM, JwtTokenProvider.PROFILE_TYPE_ADULT_STUDENT);
+                    claims.put(JwtTokenProvider.PROFILE_ID_CLAIM, student.getAdultStudentId());
+                },
+                () -> tutorRepository.findByPersonPiiId(personPiiId).ifPresent(tutor -> {
+                    claims.put(JwtTokenProvider.PROFILE_TYPE_CLAIM, JwtTokenProvider.PROFILE_TYPE_TUTOR);
+                    claims.put(JwtTokenProvider.PROFILE_ID_CLAIM, tutor.getTutorId());
+                })
+        );
+
+        return claims;
     }
 
     private String extractNameFromEmail(String email) {

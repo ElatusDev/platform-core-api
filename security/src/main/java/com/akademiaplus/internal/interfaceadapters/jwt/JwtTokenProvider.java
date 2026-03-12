@@ -77,6 +77,18 @@ public class JwtTokenProvider {
     /** Claim key for the device-only fingerprint hash (no IP). */
     public static final String DEVICE_FINGERPRINT_CLAIM = "dfpr";
 
+    /** Claim key for the customer profile type (ADULT_STUDENT or TUTOR). */
+    public static final String PROFILE_TYPE_CLAIM = "profile_type";
+
+    /** Claim key for the customer profile ID (adultStudentId or tutorId). */
+    public static final String PROFILE_ID_CLAIM = "profile_id";
+
+    /** Profile type value for adult students. */
+    public static final String PROFILE_TYPE_ADULT_STUDENT = "ADULT_STUDENT";
+
+    /** Profile type value for tutors. */
+    public static final String PROFILE_TYPE_TUTOR = "TUTOR";
+
     private KeyPair keyPair;
     private JwtParser jwtParser;
 

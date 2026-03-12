@@ -8,6 +8,7 @@
 package com.akademiaplus.magiclink.usecases;
 
 import com.akademiaplus.customer.adultstudent.interfaceadapters.AdultStudentRepository;
+import com.akademiaplus.customer.interfaceadapters.TutorRepository;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.interfaceadapters.PersonPIIRepository;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
@@ -29,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -70,6 +72,7 @@ public class MagicLinkVerificationUseCase {
     private final MagicLinkTokenRepository magicLinkTokenRepository;
     private final PersonPIIRepository personPIIRepository;
     private final AdultStudentRepository adultStudentRepository;
+    private final TutorRepository tutorRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final HashingService hashingService;
     private final PiiNormalizer piiNormalizer;
@@ -82,6 +85,7 @@ public class MagicLinkVerificationUseCase {
      * @param magicLinkTokenRepository the token repository
      * @param personPIIRepository      the person PII repository
      * @param adultStudentRepository   the adult student repository
+     * @param tutorRepository          the tutor repository
      * @param jwtTokenProvider         the JWT token provider
      * @param hashingService           the SHA-256 hashing service
      * @param piiNormalizer            the PII normalization service
@@ -91,6 +95,7 @@ public class MagicLinkVerificationUseCase {
     public MagicLinkVerificationUseCase(MagicLinkTokenRepository magicLinkTokenRepository,
                                         PersonPIIRepository personPIIRepository,
                                         AdultStudentRepository adultStudentRepository,
+                                        TutorRepository tutorRepository,
                                         JwtTokenProvider jwtTokenProvider,
                                         HashingService hashingService,
                                         PiiNormalizer piiNormalizer,
@@ -99,6 +104,7 @@ public class MagicLinkVerificationUseCase {
         this.magicLinkTokenRepository = magicLinkTokenRepository;
         this.personPIIRepository = personPIIRepository;
         this.adultStudentRepository = adultStudentRepository;
+        this.tutorRepository = tutorRepository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.hashingService = hashingService;
         this.piiNormalizer = piiNormalizer;
@@ -148,7 +154,7 @@ public class MagicLinkVerificationUseCase {
     }
 
     private LoginResult loginExistingUser(PersonPIIDataModel pii, String email, Long tenantId) {
-        Map<String, Object> claims = Map.of(JWT_CLAIM_ROLE, ROLE_CUSTOMER);
+        Map<String, Object> claims = buildCustomerClaims(pii.getPersonPiiId());
         String accessToken = jwtTokenProvider.createAccessToken(email, tenantId, claims);
         String refreshToken = jwtTokenProvider.createRefreshToken(email, tenantId,
                 java.util.UUID.randomUUID().toString());
@@ -162,11 +168,39 @@ public class MagicLinkVerificationUseCase {
 
         adultStudentRepository.save(student);
 
-        Map<String, Object> claims = Map.of(JWT_CLAIM_ROLE, ROLE_CUSTOMER);
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(JWT_CLAIM_ROLE, ROLE_CUSTOMER);
+        claims.put(JwtTokenProvider.PROFILE_TYPE_CLAIM, JwtTokenProvider.PROFILE_TYPE_ADULT_STUDENT);
+        claims.put(JwtTokenProvider.PROFILE_ID_CLAIM, student.getAdultStudentId());
+
         String accessToken = jwtTokenProvider.createAccessToken(normalizedEmail, tenantId, claims);
         String refreshToken = jwtTokenProvider.createRefreshToken(normalizedEmail, tenantId,
                 java.util.UUID.randomUUID().toString());
         return new LoginResult(accessToken, refreshToken, normalizedEmail);
+    }
+
+    /**
+     * Builds JWT claims with profile_type and profile_id for an existing customer.
+     *
+     * @param personPiiId the person PII ID to resolve the profile entity
+     * @return claims map with role, profile type, and profile ID
+     */
+    private Map<String, Object> buildCustomerClaims(Long personPiiId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(JWT_CLAIM_ROLE, ROLE_CUSTOMER);
+
+        adultStudentRepository.findByPersonPiiId(personPiiId).ifPresentOrElse(
+                student -> {
+                    claims.put(JwtTokenProvider.PROFILE_TYPE_CLAIM, JwtTokenProvider.PROFILE_TYPE_ADULT_STUDENT);
+                    claims.put(JwtTokenProvider.PROFILE_ID_CLAIM, student.getAdultStudentId());
+                },
+                () -> tutorRepository.findByPersonPiiId(personPiiId).ifPresent(tutor -> {
+                    claims.put(JwtTokenProvider.PROFILE_TYPE_CLAIM, JwtTokenProvider.PROFILE_TYPE_TUTOR);
+                    claims.put(JwtTokenProvider.PROFILE_ID_CLAIM, tutor.getTutorId());
+                })
+        );
+
+        return claims;
     }
 
     private PersonPIIDataModel buildPersonPII(String email, String emailHash, Long tenantId) {

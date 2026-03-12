@@ -9,6 +9,7 @@ package com.akademiaplus.config;
 
 import com.akademiaplus.internal.interfaceadapters.filters.AppOriginContext;
 import com.akademiaplus.internal.interfaceadapters.filters.AppOriginFilter;
+import com.akademiaplus.internal.interfaceadapters.filters.UserContextLoader;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtRequestFilter;
 import com.akademiaplus.ratelimit.interfaceadapters.RateLimitingFilter;
 import com.akademiaplus.hmac.interfaceadapters.HmacResponseFilter;
@@ -75,7 +76,8 @@ public class SecurityConfig {
             HttpSecurity http,
             JwtRequestFilter jwtRequestFilter,
             AppOriginFilter appOriginFilter,
-            IpWhitelistFilter ipWhitelistFilter) throws Exception {
+            IpWhitelistFilter ipWhitelistFilter,
+            UserContextLoader userContextLoader) throws Exception {
 
         http
                 .securityMatcher(new AkademiaRequestMatcher())
@@ -104,6 +106,7 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(userContextLoader, JwtRequestFilter.class)
                 .addFilterBefore(appOriginFilter, JwtRequestFilter.class)
                 .addFilterBefore(ipWhitelistFilter, JwtRequestFilter.class);
 
@@ -134,6 +137,7 @@ public class SecurityConfig {
             HttpSecurity http,
             JwtRequestFilter jwtRequestFilter,
             AppOriginFilter appOriginFilter,
+            UserContextLoader userContextLoader,
             RateLimitingFilter rateLimitingFilter,
             TokenBindingFilter tokenBindingFilter,
             HmacSigningFilter hmacSigningFilter,
@@ -166,9 +170,10 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(userContextLoader, JwtRequestFilter.class)
                 .addFilterBefore(appOriginFilter, JwtRequestFilter.class)
                 .addFilterBefore(rateLimitingFilter, JwtRequestFilter.class)
-                .addFilterAfter(tokenBindingFilter, JwtRequestFilter.class)
+                .addFilterAfter(tokenBindingFilter, UserContextLoader.class)
                 .addFilterAfter(hmacSigningFilter, TokenBindingFilter.class)
                 .addFilterAfter(hmacResponseFilter, HmacSigningFilter.class);
 
@@ -353,6 +358,13 @@ public class SecurityConfig {
     @Bean
     public FilterRegistrationBean<HmacResponseFilter> disableHmacResponseAutoRegistration(HmacResponseFilter f) {
         FilterRegistrationBean<HmacResponseFilter> r = new FilterRegistrationBean<>(f);
+        r.setEnabled(false);
+        return r;
+    }
+
+    @Bean
+    public FilterRegistrationBean<UserContextLoader> disableUserContextLoaderAutoRegistration(UserContextLoader f) {
+        FilterRegistrationBean<UserContextLoader> r = new FilterRegistrationBean<>(f);
         r.setEnabled(false);
         return r;
     }
