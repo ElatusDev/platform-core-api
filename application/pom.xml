@@ -69,6 +69,11 @@
         </dependency>
         <dependency>
             <groupId>com.akademiaplus</groupId>
+            <artifactId>task-service</artifactId>
+            <version>${module.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.akademiaplus</groupId>
             <artifactId>infra-common</artifactId>
             <version>1.0</version>
         </dependency>
@@ -87,6 +92,14 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.openapitools</groupId>
+            <artifactId>openapi-generator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.openapitools</groupId>
+            <artifactId>jackson-databind-nullable</artifactId>
         </dependency>
 
         <!-- Test dependencies -->
@@ -118,6 +131,43 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>generate-openapi-specs application</id>
+                        <phase>none</phase>
+                    </execution>
+                    <execution>
+                        <id>generate-analytics-api</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/openapi/analytics.yaml</inputSpec>
+                            <apiPackage>openapi.akademiaplus.domain.analytics.api</apiPackage>
+                            <modelPackage>openapi.akademiaplus.domain.analytics.dto</modelPackage>
+                            <modelNameSuffix>DTO</modelNameSuffix>
+                            <generatorName>spring</generatorName>
+                            <configOptions>
+                                <generateTests>false</generateTests>
+                                <useJakartaEe>true</useJakartaEe>
+                                <serializableModel>true</serializableModel>
+                                <useTags>false</useTags>
+                            </configOptions>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

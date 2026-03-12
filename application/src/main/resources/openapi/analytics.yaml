@@ -1,0 +1,245 @@
+openapi: 3.0.3
+info:
+  title: Analytics API
+  version: 1.0.0
+  contact:
+    name: ElatusDev
+    email: dev@elatusdev.com
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.akademiaplus.com/v1
+  - url: https://staging-api.akademiaplus.com/v1
+
+security:
+  - BearerAuth: []
+  - TenantAuth: []
+
+paths:
+  '/analytics/overview':
+    get:
+      operationId: getOverviewAnalytics
+      summary: Get overview analytics dashboard data
+      tags:
+        - Analytics
+      responses:
+        '200':
+          description: Overview analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OverviewAnalytics'
+
+  '/analytics/students':
+    get:
+      operationId: getStudentAnalytics
+      summary: Get student analytics
+      tags:
+        - Analytics
+      responses:
+        '200':
+          description: Student analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentAnalytics'
+
+  '/analytics/courses':
+    get:
+      operationId: getCourseAnalytics
+      summary: Get course analytics
+      tags:
+        - Analytics
+      responses:
+        '200':
+          description: Course analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CourseAnalytics'
+
+  '/analytics/staff':
+    get:
+      operationId: getStaffAnalytics
+      summary: Get staff analytics
+      tags:
+        - Analytics
+      responses:
+        '200':
+          description: Staff analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffAnalytics'
+
+  '/analytics/revenue':
+    get:
+      operationId: getRevenueAnalytics
+      summary: Get revenue analytics
+      tags:
+        - Analytics
+      responses:
+        '200':
+          description: Revenue analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevenueAnalytics'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    TenantAuth:
+      type: apiKey
+      in: header
+      name: X-Tenant-ID
+
+  schemas:
+    OverviewAnalytics:
+      type: object
+      properties:
+        totalStudents:
+          type: integer
+        revenueMTD:
+          type: number
+          format: double
+        courseUtilization:
+          type: number
+          format: double
+        staffCount:
+          type: integer
+        membershipRenewalRate:
+          type: number
+          format: double
+
+    StudentAnalytics:
+      type: object
+      properties:
+        adultCount:
+          type: integer
+        minorCount:
+          type: integer
+        newThisMonth:
+          type: integer
+        enrollmentTrend:
+          type: array
+          items:
+            $ref: '#/components/schemas/MonthlyCount'
+
+    MonthlyCount:
+      type: object
+      properties:
+        month:
+          type: string
+        count:
+          type: integer
+
+    CourseAnalytics:
+      type: object
+      properties:
+        enrollmentByCourse:
+          type: array
+          items:
+            $ref: '#/components/schemas/CourseEnrollment'
+        capacityUtilization:
+          type: array
+          items:
+            $ref: '#/components/schemas/CourseCapacity'
+        scheduleByDayOfWeek:
+          type: array
+          items:
+            $ref: '#/components/schemas/DaySchedule'
+
+    CourseEnrollment:
+      type: object
+      properties:
+        courseId:
+          type: integer
+          format: int64
+        courseName:
+          type: string
+        enrolledCount:
+          type: integer
+
+    CourseCapacity:
+      type: object
+      properties:
+        courseId:
+          type: integer
+          format: int64
+        courseName:
+          type: string
+        capacity:
+          type: integer
+        enrolled:
+          type: integer
+        utilizationPercent:
+          type: number
+          format: double
+
+    DaySchedule:
+      type: object
+      properties:
+        dayOfWeek:
+          type: string
+        classCount:
+          type: integer
+
+    StaffAnalytics:
+      type: object
+      properties:
+        employeeCount:
+          type: integer
+        tutorCount:
+          type: integer
+        collaboratorCount:
+          type: integer
+        distributionByRole:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleCount'
+
+    RoleCount:
+      type: object
+      properties:
+        role:
+          type: string
+        count:
+          type: integer
+
+    RevenueAnalytics:
+      type: object
+      properties:
+        revenueTrend:
+          type: array
+          items:
+            $ref: '#/components/schemas/MonthlyRevenue'
+        breakdownByType:
+          type: array
+          items:
+            $ref: '#/components/schemas/RevenueType'
+        outstandingPayments:
+          type: number
+          format: double
+
+    MonthlyRevenue:
+      type: object
+      properties:
+        month:
+          type: string
+        amount:
+          type: number
+          format: double
+
+    RevenueType:
+      type: object
+      properties:
+        type:
+          type: string
+        amount:
+          type: number
+          format: double
