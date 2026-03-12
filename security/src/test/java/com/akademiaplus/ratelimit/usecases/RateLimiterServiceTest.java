@@ -22,7 +22,8 @@ import org.springframework.data.redis.core.ZSetOperations;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -67,6 +68,11 @@ class RateLimiterServiceTest {
             assertThat(result.allowed()).isTrue();
             assertThat(result.limit()).isEqualTo(LIMIT);
             assertThat(result.remaining()).isEqualTo(2);
+            verify(zSetOps, times(1)).removeRangeByScore(eq(TEST_KEY), eq(0.0), anyDouble());
+            verify(zSetOps, times(1)).zCard(TEST_KEY);
+            verify(zSetOps, times(1)).add(eq(TEST_KEY), anyString(), anyDouble());
+            verify(redisTemplate, times(1)).expire(eq(TEST_KEY), anyLong(), eq(TimeUnit.SECONDS));
+            verifyNoMoreInteractions(redisTemplate, zSetOps);
         }
 
         @Test
@@ -82,6 +88,11 @@ class RateLimiterServiceTest {
             // Then
             assertThat(result.allowed()).isTrue();
             assertThat(result.remaining()).isEqualTo(0);
+            verify(zSetOps, times(1)).removeRangeByScore(eq(TEST_KEY), eq(0.0), anyDouble());
+            verify(zSetOps, times(1)).zCard(TEST_KEY);
+            verify(zSetOps, times(1)).add(eq(TEST_KEY), anyString(), anyDouble());
+            verify(redisTemplate, times(1)).expire(eq(TEST_KEY), anyLong(), eq(TimeUnit.SECONDS));
+            verifyNoMoreInteractions(redisTemplate, zSetOps);
         }
 
         @Test
@@ -97,6 +108,11 @@ class RateLimiterServiceTest {
             // Then
             assertThat(result.allowed()).isTrue();
             assertThat(result.remaining()).isEqualTo(4);
+            verify(zSetOps, times(1)).removeRangeByScore(eq(TEST_KEY), eq(0.0), anyDouble());
+            verify(zSetOps, times(1)).zCard(TEST_KEY);
+            verify(zSetOps, times(1)).add(eq(TEST_KEY), anyString(), anyDouble());
+            verify(redisTemplate, times(1)).expire(eq(TEST_KEY), anyLong(), eq(TimeUnit.SECONDS));
+            verifyNoMoreInteractions(redisTemplate, zSetOps);
         }
     }
 
@@ -117,6 +133,9 @@ class RateLimiterServiceTest {
             // Then
             assertThat(result.allowed()).isFalse();
             assertThat(result.remaining()).isEqualTo(0);
+            verify(zSetOps, times(1)).removeRangeByScore(eq(TEST_KEY), eq(0.0), anyDouble());
+            verify(zSetOps, times(1)).zCard(TEST_KEY);
+            verifyNoMoreInteractions(redisTemplate, zSetOps);
         }
 
         @Test
@@ -132,6 +151,9 @@ class RateLimiterServiceTest {
             // Then
             assertThat(result.allowed()).isFalse();
             assertThat(result.remaining()).isEqualTo(0);
+            verify(zSetOps, times(1)).removeRangeByScore(eq(TEST_KEY), eq(0.0), anyDouble());
+            verify(zSetOps, times(1)).zCard(TEST_KEY);
+            verifyNoMoreInteractions(redisTemplate, zSetOps);
         }
 
         @Test
@@ -146,6 +168,9 @@ class RateLimiterServiceTest {
 
             // Then
             verify(zSetOps, never()).add(eq(TEST_KEY), anyString(), anyDouble());
+            verify(zSetOps, times(1)).removeRangeByScore(eq(TEST_KEY), eq(0.0), anyDouble());
+            verify(zSetOps, times(1)).zCard(TEST_KEY);
+            verifyNoMoreInteractions(redisTemplate, zSetOps);
         }
     }
 
@@ -164,7 +189,11 @@ class RateLimiterServiceTest {
             service.checkRateLimit(TEST_KEY, LIMIT, WINDOW_MS);
 
             // Then
-            verify(zSetOps).removeRangeByScore(eq(TEST_KEY), eq(0.0), anyDouble());
+            verify(zSetOps, times(1)).removeRangeByScore(eq(TEST_KEY), eq(0.0), anyDouble());
+            verify(zSetOps, times(1)).zCard(TEST_KEY);
+            verify(zSetOps, times(1)).add(eq(TEST_KEY), anyString(), anyDouble());
+            verify(redisTemplate, times(1)).expire(eq(TEST_KEY), anyLong(), eq(TimeUnit.SECONDS));
+            verifyNoMoreInteractions(redisTemplate, zSetOps);
         }
 
         @Test
@@ -179,7 +208,11 @@ class RateLimiterServiceTest {
 
             // Then
             long expectedTtl = TimeUnit.MILLISECONDS.toSeconds(WINDOW_MS) + 1L;
-            verify(redisTemplate).expire(TEST_KEY, expectedTtl, TimeUnit.SECONDS);
+            verify(redisTemplate, times(1)).expire(TEST_KEY, expectedTtl, TimeUnit.SECONDS);
+            verify(zSetOps, times(1)).removeRangeByScore(eq(TEST_KEY), eq(0.0), anyDouble());
+            verify(zSetOps, times(1)).zCard(TEST_KEY);
+            verify(zSetOps, times(1)).add(eq(TEST_KEY), anyString(), anyDouble());
+            verifyNoMoreInteractions(redisTemplate, zSetOps);
         }
 
         @Test
@@ -194,8 +227,12 @@ class RateLimiterServiceTest {
 
             // Then
             ArgumentCaptor<Double> scoreCaptor = ArgumentCaptor.forClass(Double.class);
-            verify(zSetOps).add(eq(TEST_KEY), anyString(), scoreCaptor.capture());
+            verify(zSetOps, times(1)).add(eq(TEST_KEY), anyString(), scoreCaptor.capture());
             assertThat(scoreCaptor.getValue()).isPositive();
+            verify(zSetOps, times(1)).removeRangeByScore(eq(TEST_KEY), eq(0.0), anyDouble());
+            verify(zSetOps, times(1)).zCard(TEST_KEY);
+            verify(redisTemplate, times(1)).expire(eq(TEST_KEY), anyLong(), eq(TimeUnit.SECONDS));
+            verifyNoMoreInteractions(redisTemplate, zSetOps);
         }
     }
 
@@ -216,6 +253,32 @@ class RateLimiterServiceTest {
             // Then
             assertThat(result.allowed()).isTrue();
             assertThat(result.remaining()).isEqualTo(4);
+            verify(zSetOps, times(1)).removeRangeByScore(eq(TEST_KEY), eq(0.0), anyDouble());
+            verify(zSetOps, times(1)).zCard(TEST_KEY);
+            verify(zSetOps, times(1)).add(eq(TEST_KEY), anyString(), anyDouble());
+            verify(redisTemplate, times(1)).expire(eq(TEST_KEY), anyLong(), eq(TimeUnit.SECONDS));
+            verifyNoMoreInteractions(redisTemplate, zSetOps);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when redisTemplate throws")
+        void shouldPropagateException_whenRedisTemplateThrows() {
+            // Given
+            RuntimeException cause = new RuntimeException("Redis connection error");
+            when(redisTemplate.opsForZSet()).thenThrow(cause);
+
+            // When / Then
+            assertThatThrownBy(() -> service.checkRateLimit(TEST_KEY, LIMIT, WINDOW_MS))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Redis connection error");
+
+            verify(redisTemplate, times(1)).opsForZSet();
+            verifyNoMoreInteractions(redisTemplate, zSetOps);
         }
     }
 }

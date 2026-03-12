@@ -22,6 +22,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
@@ -85,7 +86,9 @@ class CourseControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$", hasSize(0)));
 
-            verify(getAllCoursesUseCase).getAll();
+            verify(getAllCoursesUseCase, times(1)).getAll();
+            verifyNoInteractions(createCourseUseCase, deleteCourseUseCase,
+                    getCourseByIdUseCase, courseUpdateUseCase, messageService);
             verifyNoMoreInteractions(getAllCoursesUseCase);
         }
 
@@ -103,7 +106,9 @@ class CourseControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$", hasSize(2)));
 
-            verify(getAllCoursesUseCase).getAll();
+            verify(getAllCoursesUseCase, times(1)).getAll();
+            verifyNoInteractions(createCourseUseCase, deleteCourseUseCase,
+                    getCourseByIdUseCase, courseUpdateUseCase, messageService);
             verifyNoMoreInteractions(getAllCoursesUseCase);
         }
     }
@@ -125,7 +130,9 @@ class CourseControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-            verify(getCourseByIdUseCase).get(COURSE_ID);
+            verify(getCourseByIdUseCase, times(1)).get(COURSE_ID);
+            verifyNoInteractions(createCourseUseCase, deleteCourseUseCase,
+                    getAllCoursesUseCase, courseUpdateUseCase, messageService);
             verifyNoMoreInteractions(getCourseByIdUseCase);
         }
 
@@ -143,9 +150,12 @@ class CourseControllerTest {
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound());
 
-            verify(getCourseByIdUseCase).get(COURSE_ID);
-            verify(messageService).getEntityNotFound(EntityType.COURSE, String.valueOf(COURSE_ID));
-            verifyNoMoreInteractions(getCourseByIdUseCase, messageService);
+            InOrder inOrder = inOrder(getCourseByIdUseCase, messageService);
+            inOrder.verify(getCourseByIdUseCase, times(1)).get(COURSE_ID);
+            inOrder.verify(messageService, times(1)).getEntityNotFound(EntityType.COURSE, String.valueOf(COURSE_ID));
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(createCourseUseCase, deleteCourseUseCase,
+                    getAllCoursesUseCase, courseUpdateUseCase);
         }
     }
 }

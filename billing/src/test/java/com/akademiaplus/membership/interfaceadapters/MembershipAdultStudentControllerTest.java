@@ -8,6 +8,7 @@
 package com.akademiaplus.membership.interfaceadapters;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -95,8 +96,8 @@ class MembershipAdultStudentControllerTest {
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.membershipAdultStudentId").value(MEMBERSHIP_ADULT_STUDENT_ID));
 
-            verify(creationUseCase).create(request);
-            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase);
+            verify(creationUseCase, times(1)).create(request);
+            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, deleteMembershipAdultStudentUseCase, messageService);
         }
     }
 
@@ -114,8 +115,8 @@ class MembershipAdultStudentControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(0)));
 
-            verify(getAllUseCase).getAll();
-            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase);
+            verify(getAllUseCase, times(1)).getAll();
+            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, deleteMembershipAdultStudentUseCase, messageService);
         }
 
         @Test
@@ -137,8 +138,8 @@ class MembershipAdultStudentControllerTest {
                     .andExpect(jsonPath("$[0].membershipAdultStudentId").value(100L))
                     .andExpect(jsonPath("$[1].membershipAdultStudentId").value(101L));
 
-            verify(getAllUseCase).getAll();
-            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase);
+            verify(getAllUseCase, times(1)).getAll();
+            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, deleteMembershipAdultStudentUseCase, messageService);
         }
     }
 
@@ -159,8 +160,8 @@ class MembershipAdultStudentControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.membershipAdultStudentId").value(MEMBERSHIP_ADULT_STUDENT_ID));
 
-            verify(getByIdUseCase).get(MEMBERSHIP_ADULT_STUDENT_ID);
-            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase);
+            verify(getByIdUseCase, times(1)).get(MEMBERSHIP_ADULT_STUDENT_ID);
+            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, deleteMembershipAdultStudentUseCase, messageService);
         }
 
         @Test
@@ -176,9 +177,9 @@ class MembershipAdultStudentControllerTest {
             mockMvc.perform(get(BASE_PATH + "/" + MEMBERSHIP_ADULT_STUDENT_ID))
                     .andExpect(status().isNotFound());
 
-            verify(getByIdUseCase).get(MEMBERSHIP_ADULT_STUDENT_ID);
-            verify(messageService).getEntityNotFound(EntityType.MEMBERSHIP_ADULT_STUDENT, String.valueOf(MEMBERSHIP_ADULT_STUDENT_ID));
-            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, messageService);
+            verify(getByIdUseCase, times(1)).get(MEMBERSHIP_ADULT_STUDENT_ID);
+            verify(messageService, times(1)).getEntityNotFound(EntityType.MEMBERSHIP_ADULT_STUDENT, String.valueOf(MEMBERSHIP_ADULT_STUDENT_ID));
+            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, deleteMembershipAdultStudentUseCase, messageService);
         }
     }
 }

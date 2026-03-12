@@ -10,7 +10,7 @@ package com.akademiaplus.usecases;
 import com.akademiaplus.config.AbstractIntegrationTest;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
-import com.akademiaplus.internal.interfaceadapters.session.RedisSessionStore;
+import com.akademiaplus.internal.interfaceadapters.session.AkademiaPlusRedisSessionStore;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -56,7 +56,7 @@ class LogoutComponentTest extends AbstractIntegrationTest {
     @Autowired private JwtTokenProvider jwtTokenProvider;
     @Autowired private TenantContextHolder tenantContextHolder;
 
-    @MockitoBean private RedisSessionStore redisSessionStore;
+    @MockitoBean private AkademiaPlusRedisSessionStore akademiaPlusRedisSessionStore;
 
     @BeforeEach
     void setUp() {

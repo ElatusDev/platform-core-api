@@ -10,7 +10,7 @@ package com.akademiaplus.passkey.usecases;
 import com.akademiaplus.internal.interfaceadapters.InternalAuthRepository;
 import com.akademiaplus.internal.interfaceadapters.RefreshTokenRepository;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
-import com.akademiaplus.internal.interfaceadapters.session.RedisSessionStore;
+import com.akademiaplus.internal.interfaceadapters.session.AkademiaPlusRedisSessionStore;
 import com.akademiaplus.passkey.exceptions.PasskeyAuthenticationException;
 import com.akademiaplus.passkey.interfaceadapters.PasskeyCredentialJpaRepository;
 import com.akademiaplus.security.InternalAuthDataModel;
@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
@@ -36,6 +37,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -66,7 +68,7 @@ class PasskeyAuthenticationUseCaseTest {
     @Mock private JwtTokenProvider jwtTokenProvider;
     @Mock private InternalAuthRepository internalAuthRepository;
     @Mock private HashingService hashingService;
-    @Mock private RedisSessionStore redisSessionStore;
+    @Mock private AkademiaPlusRedisSessionStore akademiaPlusRedisSessionStore;
     @Mock private RefreshTokenRepository refreshTokenRepository;
     @Mock private ApplicationContext applicationContext;
 
@@ -77,7 +79,7 @@ class PasskeyAuthenticationUseCaseTest {
         useCase = new PasskeyAuthenticationUseCase(
                 relyingParty, challengeStore, credentialRepository, registrationUseCase,
                 jwtTokenProvider, internalAuthRepository, hashingService,
-                redisSessionStore, refreshTokenRepository, applicationContext);
+                akademiaPlusRedisSessionStore, refreshTokenRepository, applicationContext);
     }
 
     private InternalAuthDataModel createAuthDataModel() {
@@ -118,8 +120,17 @@ class PasskeyAuthenticationUseCaseTest {
 
             // Then
             assertThat(result).isEqualTo(OPTIONS_JSON);
-            verify(registrationUseCase).generateRegistrationOptions(
+
+            InOrder inOrder = inOrder(hashingService, internalAuthRepository,
+                    credentialRepository, registrationUseCase);
+            inOrder.verify(hashingService, times(1)).generateHash(USERNAME);
+            inOrder.verify(internalAuthRepository, times(1)).findByUsernameHash(USERNAME_HASH);
+            inOrder.verify(credentialRepository, times(1)).findByUserId(USER_ID);
+            inOrder.verify(registrationUseCase, times(1)).generateRegistrationOptions(
                     USER_ID, USERNAME, USER_HANDLE_BYTES, TENANT_ID);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(relyingParty, challengeStore, jwtTokenProvider,
+                    akademiaPlusRedisSessionStore, refreshTokenRepository, applicationContext);
         }
 
         @Test
@@ -137,11 +148,23 @@ class PasskeyAuthenticationUseCaseTest {
                     .thenReturn(OPTIONS_JSON);
 
             // When
-            useCase.generateRegistrationOptions(USERNAME, TENANT_ID);
+            String result = useCase.generateRegistrationOptions(USERNAME, TENANT_ID);
 
             // Then
+            assertThat(result).isEqualTo(OPTIONS_JSON);
             byte[] generatedHandle = userHandleCaptor.getValue();
             assertThat(generatedHandle).hasSize(64);
+
+            InOrder inOrder = inOrder(hashingService, internalAuthRepository,
+                    credentialRepository, registrationUseCase);
+            inOrder.verify(hashingService, times(1)).generateHash(USERNAME);
+            inOrder.verify(internalAuthRepository, times(1)).findByUsernameHash(USERNAME_HASH);
+            inOrder.verify(credentialRepository, times(1)).findByUserId(USER_ID);
+            inOrder.verify(registrationUseCase, times(1)).generateRegistrationOptions(
+                    eq(USER_ID), eq(USERNAME), eq(generatedHandle), eq(TENANT_ID));
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(relyingParty, challengeStore, jwtTokenProvider,
+                    akademiaPlusRedisSessionStore, refreshTokenRepository, applicationContext);
         }
 
         @Test
@@ -156,6 +179,14 @@ class PasskeyAuthenticationUseCaseTest {
             assertThatThrownBy(() -> useCase.generateRegistrationOptions(USERNAME, TENANT_ID))
                     .isInstanceOf(PasskeyAuthenticationException.class)
                     .hasMessageContaining(PasskeyAuthenticationUseCase.ERROR_USER_NOT_FOUND);
+
+            InOrder inOrder = inOrder(hashingService, internalAuthRepository);
+            inOrder.verify(hashingService, times(1)).generateHash(USERNAME);
+            inOrder.verify(internalAuthRepository, times(1)).findByUsernameHash(USERNAME_HASH);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(relyingParty, challengeStore, credentialRepository,
+                    registrationUseCase, jwtTokenProvider,
+                    akademiaPlusRedisSessionStore, refreshTokenRepository, applicationContext);
         }
 
         @Test
@@ -171,7 +202,11 @@ class PasskeyAuthenticationUseCaseTest {
 
             // Then
             assertThat(result).isEqualTo(DISPLAY_NAME);
-            verify(registrationUseCase).completeRegistration(responseJson, TENANT_ID, DISPLAY_NAME);
+            verify(registrationUseCase, times(1)).completeRegistration(responseJson, TENANT_ID, DISPLAY_NAME);
+            verifyNoMoreInteractions(registrationUseCase);
+            verifyNoInteractions(relyingParty, challengeStore, credentialRepository,
+                    jwtTokenProvider, internalAuthRepository, hashingService,
+                    akademiaPlusRedisSessionStore, refreshTokenRepository, applicationContext);
         }
     }
 
@@ -187,55 +222,7 @@ class PasskeyAuthenticationUseCaseTest {
             PublicKeyCredentialRequestOptions requestOptions = mock(PublicKeyCredentialRequestOptions.class);
             ByteArray challenge = new ByteArray(CHALLENGE_BASE64.getBytes());
 
-            when(relyingParty.startAssertion(argThat(opts -> true))).thenReturn(assertionRequest);
-            when(assertionRequest.getPublicKeyCredentialRequestOptions()).thenReturn(requestOptions);
-            when(requestOptions.getChallenge()).thenReturn(challenge);
-            when(assertionRequest.toCredentialsGetJson()).thenReturn(CREDENTIALS_GET_JSON);
-            when(assertionRequest.toJson()).thenReturn(OPTIONS_JSON);
-
-            // When
-            useCase.generateLoginOptions(TENANT_ID);
-
-            // Then
-            ArgumentCaptor<PasskeyChallengeStore.ChallengeMetadata> metadataCaptor =
-                    ArgumentCaptor.forClass(PasskeyChallengeStore.ChallengeMetadata.class);
-            verify(challengeStore).store(eq(challenge.getBase64Url()), metadataCaptor.capture());
-            PasskeyChallengeStore.ChallengeMetadata captured = metadataCaptor.getValue();
-            assertThat(captured.userId()).isNull();
-            assertThat(captured.tenantId()).isEqualTo(TENANT_ID);
-            assertThat(captured.operation()).isEqualTo(PasskeyChallengeStore.OPERATION_LOGIN);
-        }
-
-        @Test
-        @DisplayName("Should store serialized assertion options in Redis")
-        void shouldStoreSerializedAssertionOptions_whenGeneratingLoginOptions() throws Exception {
-            // Given
-            AssertionRequest assertionRequest = mock(AssertionRequest.class);
-            PublicKeyCredentialRequestOptions requestOptions = mock(PublicKeyCredentialRequestOptions.class);
-            ByteArray challenge = new ByteArray(CHALLENGE_BASE64.getBytes());
-
-            when(relyingParty.startAssertion(argThat(opts -> true))).thenReturn(assertionRequest);
-            when(assertionRequest.getPublicKeyCredentialRequestOptions()).thenReturn(requestOptions);
-            when(requestOptions.getChallenge()).thenReturn(challenge);
-            when(assertionRequest.toCredentialsGetJson()).thenReturn(CREDENTIALS_GET_JSON);
-            when(assertionRequest.toJson()).thenReturn(OPTIONS_JSON);
-
-            // When
-            useCase.generateLoginOptions(TENANT_ID);
-
-            // Then
-            verify(challengeStore).storeOptions(challenge.getBase64Url(), OPTIONS_JSON);
-        }
-
-        @Test
-        @DisplayName("Should return credentials get JSON when generating login options")
-        void shouldReturnCredentialsGetJson_whenGeneratingLoginOptions() throws Exception {
-            // Given
-            AssertionRequest assertionRequest = mock(AssertionRequest.class);
-            PublicKeyCredentialRequestOptions requestOptions = mock(PublicKeyCredentialRequestOptions.class);
-            ByteArray challenge = new ByteArray(CHALLENGE_BASE64.getBytes());
-
-            when(relyingParty.startAssertion(argThat(opts -> true))).thenReturn(assertionRequest);
+            when(relyingParty.startAssertion(argThat(opts -> opts != null))).thenReturn(assertionRequest);
             when(assertionRequest.getPublicKeyCredentialRequestOptions()).thenReturn(requestOptions);
             when(requestOptions.getChallenge()).thenReturn(challenge);
             when(assertionRequest.toCredentialsGetJson()).thenReturn(CREDENTIALS_GET_JSON);
@@ -246,6 +233,84 @@ class PasskeyAuthenticationUseCaseTest {
 
             // Then
             assertThat(result).isEqualTo(CREDENTIALS_GET_JSON);
+
+            ArgumentCaptor<PasskeyChallengeStore.ChallengeMetadata> metadataCaptor =
+                    ArgumentCaptor.forClass(PasskeyChallengeStore.ChallengeMetadata.class);
+            InOrder inOrder = inOrder(relyingParty, challengeStore);
+            inOrder.verify(relyingParty, times(1)).startAssertion(argThat(opts -> opts != null));
+            inOrder.verify(challengeStore, times(1)).store(eq(challenge.getBase64Url()), metadataCaptor.capture());
+            inOrder.verify(challengeStore, times(1)).storeOptions(challenge.getBase64Url(), OPTIONS_JSON);
+            inOrder.verifyNoMoreInteractions();
+
+            PasskeyChallengeStore.ChallengeMetadata captured = metadataCaptor.getValue();
+            assertThat(captured.userId()).isNull();
+            assertThat(captured.tenantId()).isEqualTo(TENANT_ID);
+            assertThat(captured.operation()).isEqualTo(PasskeyChallengeStore.OPERATION_LOGIN);
+            verifyNoInteractions(credentialRepository, registrationUseCase,
+                    jwtTokenProvider, internalAuthRepository, hashingService,
+                    akademiaPlusRedisSessionStore, refreshTokenRepository, applicationContext);
+        }
+
+        @Test
+        @DisplayName("Should store serialized assertion options in Redis")
+        void shouldStoreSerializedAssertionOptions_whenGeneratingLoginOptions() throws Exception {
+            // Given
+            AssertionRequest assertionRequest = mock(AssertionRequest.class);
+            PublicKeyCredentialRequestOptions requestOptions = mock(PublicKeyCredentialRequestOptions.class);
+            ByteArray challenge = new ByteArray(CHALLENGE_BASE64.getBytes());
+
+            when(relyingParty.startAssertion(argThat(opts -> opts != null))).thenReturn(assertionRequest);
+            when(assertionRequest.getPublicKeyCredentialRequestOptions()).thenReturn(requestOptions);
+            when(requestOptions.getChallenge()).thenReturn(challenge);
+            when(assertionRequest.toCredentialsGetJson()).thenReturn(CREDENTIALS_GET_JSON);
+            when(assertionRequest.toJson()).thenReturn(OPTIONS_JSON);
+
+            // When
+            String result = useCase.generateLoginOptions(TENANT_ID);
+
+            // Then
+            assertThat(result).isEqualTo(CREDENTIALS_GET_JSON);
+
+            InOrder inOrder = inOrder(relyingParty, challengeStore);
+            inOrder.verify(relyingParty, times(1)).startAssertion(argThat(opts -> opts != null));
+            inOrder.verify(challengeStore, times(1)).store(eq(challenge.getBase64Url()),
+                    argThat(meta -> meta.tenantId().equals(TENANT_ID)));
+            inOrder.verify(challengeStore, times(1)).storeOptions(challenge.getBase64Url(), OPTIONS_JSON);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(credentialRepository, registrationUseCase,
+                    jwtTokenProvider, internalAuthRepository, hashingService,
+                    akademiaPlusRedisSessionStore, refreshTokenRepository, applicationContext);
+        }
+
+        @Test
+        @DisplayName("Should return credentials get JSON when generating login options")
+        void shouldReturnCredentialsGetJson_whenGeneratingLoginOptions() throws Exception {
+            // Given
+            AssertionRequest assertionRequest = mock(AssertionRequest.class);
+            PublicKeyCredentialRequestOptions requestOptions = mock(PublicKeyCredentialRequestOptions.class);
+            ByteArray challenge = new ByteArray(CHALLENGE_BASE64.getBytes());
+
+            when(relyingParty.startAssertion(argThat(opts -> opts != null))).thenReturn(assertionRequest);
+            when(assertionRequest.getPublicKeyCredentialRequestOptions()).thenReturn(requestOptions);
+            when(requestOptions.getChallenge()).thenReturn(challenge);
+            when(assertionRequest.toCredentialsGetJson()).thenReturn(CREDENTIALS_GET_JSON);
+            when(assertionRequest.toJson()).thenReturn(OPTIONS_JSON);
+
+            // When
+            String result = useCase.generateLoginOptions(TENANT_ID);
+
+            // Then
+            assertThat(result).isEqualTo(CREDENTIALS_GET_JSON);
+
+            InOrder inOrder = inOrder(relyingParty, challengeStore);
+            inOrder.verify(relyingParty, times(1)).startAssertion(argThat(opts -> opts != null));
+            inOrder.verify(challengeStore, times(1)).store(eq(challenge.getBase64Url()),
+                    argThat(meta -> meta.tenantId().equals(TENANT_ID)));
+            inOrder.verify(challengeStore, times(1)).storeOptions(challenge.getBase64Url(), OPTIONS_JSON);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(credentialRepository, registrationUseCase,
+                    jwtTokenProvider, internalAuthRepository, hashingService,
+                    akademiaPlusRedisSessionStore, refreshTokenRepository, applicationContext);
         }
     }
 
@@ -263,6 +328,11 @@ class PasskeyAuthenticationUseCaseTest {
             assertThatThrownBy(() -> useCase.completeLogin(invalidJson, TENANT_ID))
                     .isInstanceOf(PasskeyAuthenticationException.class)
                     .hasMessageContaining(PasskeyAuthenticationUseCase.ERROR_INVALID_RESPONSE);
+
+            verifyNoInteractions(relyingParty, challengeStore, credentialRepository,
+                    registrationUseCase, jwtTokenProvider, internalAuthRepository,
+                    hashingService, akademiaPlusRedisSessionStore, refreshTokenRepository,
+                    applicationContext);
         }
     }
 }

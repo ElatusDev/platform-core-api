@@ -70,10 +70,10 @@ class GetTutorByIdUseCaseTest {
 
             // Then
             assertThat(result).isEqualTo(expectedDto);
-            verify(tenantContextHolder).getTenantId();
-            verify(tutorRepository).findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID));
-            verify(modelMapper).map(tutor, GetTutorResponseDTO.class);
-            verify(modelMapper).map(personPII, expectedDto);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(tutorRepository, times(1)).findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID));
+            verify(modelMapper, times(1)).map(tutor, GetTutorResponseDTO.class);
+            verify(modelMapper, times(1)).map(personPII, expectedDto);
             verifyNoMoreInteractions(tenantContextHolder, tutorRepository, modelMapper);
         }
     }
@@ -93,14 +93,16 @@ class GetTutorByIdUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.get(TUTOR_ID))
                     .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(EntityType.TUTOR + " with ID " + TUTOR_ID + " not found")
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.TUTOR);
                         assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(TUTOR_ID));
                     });
-            verify(tenantContextHolder).getTenantId();
-            verify(tutorRepository).findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID));
-            verifyNoMoreInteractions(tenantContextHolder, tutorRepository, modelMapper);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(tutorRepository, times(1)).findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID));
+            verifyNoInteractions(modelMapper);
+            verifyNoMoreInteractions(tenantContextHolder, tutorRepository);
         }
     }
 
@@ -118,8 +120,9 @@ class GetTutorByIdUseCaseTest {
             assertThatThrownBy(() -> useCase.get(TUTOR_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(GetTutorByIdUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
-            verify(tenantContextHolder).getTenantId();
-            verifyNoMoreInteractions(tenantContextHolder, tutorRepository, modelMapper);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoMoreInteractions(tenantContextHolder);
+            verifyNoInteractions(tutorRepository, modelMapper);
         }
     }
 }

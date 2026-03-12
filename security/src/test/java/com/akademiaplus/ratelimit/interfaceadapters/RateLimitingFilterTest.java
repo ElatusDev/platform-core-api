@@ -118,8 +118,9 @@ class RateLimitingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
+            verify(filterChain, times(1)).doFilter(request, response);
             verifyNoInteractions(rateLimiterService);
+            verifyNoMoreInteractions(rateLimiterService, filterChain);
         }
     }
 
@@ -201,7 +202,12 @@ class RateLimitingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
+            assertThat(response.getStatus()).isEqualTo(200);
+            verify(rateLimiterService, times(1)).checkRateLimit(
+                    RateLimiterService.KEY_PREFIX_IP + CLIENT_IP + ":" + RateLimitingFilter.TIER_LOGIN,
+                    LOGIN_LIMIT, LOGIN_WINDOW_MS);
+            verify(filterChain, times(1)).doFilter(request, response);
+            verifyNoMoreInteractions(rateLimiterService, filterChain);
         }
 
         @Test
@@ -226,6 +232,11 @@ class RateLimitingFilterTest {
             assertThat(response.getHeader(RateLimitingFilter.HEADER_RATE_LIMIT)).isEqualTo(String.valueOf(LOGIN_LIMIT));
             assertThat(response.getHeader(RateLimitingFilter.HEADER_RATE_REMAINING)).isEqualTo("4");
             assertThat(response.getHeader(RateLimitingFilter.HEADER_RATE_RESET)).isEqualTo(String.valueOf(RESET_EPOCH));
+            verify(rateLimiterService, times(1)).checkRateLimit(
+                    RateLimiterService.KEY_PREFIX_IP + CLIENT_IP + ":" + RateLimitingFilter.TIER_LOGIN,
+                    LOGIN_LIMIT, LOGIN_WINDOW_MS);
+            verify(filterChain, times(1)).doFilter(request, response);
+            verifyNoMoreInteractions(rateLimiterService, filterChain);
         }
     }
 
@@ -258,7 +269,11 @@ class RateLimitingFilterTest {
 
             // Then
             assertThat(response.getStatus()).isEqualTo(429);
+            verify(rateLimiterService, times(1)).checkRateLimit(
+                    RateLimiterService.KEY_PREFIX_IP + CLIENT_IP + ":" + RateLimitingFilter.TIER_LOGIN,
+                    LOGIN_LIMIT, LOGIN_WINDOW_MS);
             verifyNoInteractions(filterChain);
+            verifyNoMoreInteractions(rateLimiterService, filterChain);
         }
 
         @Test
@@ -284,6 +299,8 @@ class RateLimitingFilterTest {
             String retryAfter = response.getHeader(RateLimitingFilter.HEADER_RETRY_AFTER);
             assertThat(retryAfter).isNotNull();
             assertThat(Long.parseLong(retryAfter)).isPositive();
+            verifyNoInteractions(filterChain);
+            verifyNoMoreInteractions(rateLimiterService, filterChain);
         }
 
         @Test
@@ -308,6 +325,8 @@ class RateLimitingFilterTest {
             String body = response.getContentAsString();
             assertThat(body).contains(RateLimitingFilter.ERROR_TOO_MANY_REQUESTS);
             assertThat(body).contains(RateLimitingFilter.ERROR_RATE_LIMIT_MESSAGE);
+            verifyNoInteractions(filterChain);
+            verifyNoMoreInteractions(rateLimiterService, filterChain);
         }
     }
 

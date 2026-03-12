@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link PasskeyCredentialRepositoryAdapter}.
@@ -102,6 +102,7 @@ class PasskeyCredentialRepositoryAdapterTest {
             assertThat(result).hasSize(1);
             PublicKeyCredentialDescriptor descriptor = result.iterator().next();
             assertThat(descriptor.getId().getBytes()).isEqualTo(CREDENTIAL_ID_BYTES);
+            verifyNoMoreInteractions(jpaRepository, internalAuthRepository, hashingService);
         }
 
         @Test
@@ -118,6 +119,7 @@ class PasskeyCredentialRepositoryAdapterTest {
 
             // Then
             assertThat(result).isEmpty();
+            verifyNoMoreInteractions(jpaRepository, internalAuthRepository, hashingService);
         }
 
         @Test
@@ -133,6 +135,8 @@ class PasskeyCredentialRepositoryAdapterTest {
 
             // Then
             assertThat(result).isEmpty();
+            verifyNoInteractions(jpaRepository);
+            verifyNoMoreInteractions(jpaRepository, internalAuthRepository, hashingService);
         }
     }
 
@@ -155,6 +159,7 @@ class PasskeyCredentialRepositoryAdapterTest {
             // Then
             assertThat(result).isPresent();
             assertThat(result.get().getBytes()).isEqualTo(USER_HANDLE_BYTES);
+            verifyNoMoreInteractions(jpaRepository, internalAuthRepository, hashingService);
         }
 
         @Test
@@ -170,6 +175,8 @@ class PasskeyCredentialRepositoryAdapterTest {
 
             // Then
             assertThat(result).isEmpty();
+            verifyNoInteractions(jpaRepository);
+            verifyNoMoreInteractions(jpaRepository, internalAuthRepository, hashingService);
         }
 
         @Test
@@ -186,6 +193,7 @@ class PasskeyCredentialRepositoryAdapterTest {
 
             // Then
             assertThat(result).isEmpty();
+            verifyNoMoreInteractions(jpaRepository, internalAuthRepository, hashingService);
         }
     }
 
@@ -207,6 +215,7 @@ class PasskeyCredentialRepositoryAdapterTest {
 
             // Then
             assertThat(result).isPresent().contains(USERNAME);
+            verifyNoMoreInteractions(jpaRepository, internalAuthRepository, hashingService);
         }
 
         @Test
@@ -220,6 +229,8 @@ class PasskeyCredentialRepositoryAdapterTest {
 
             // Then
             assertThat(result).isEmpty();
+            verifyNoInteractions(internalAuthRepository, hashingService);
+            verifyNoMoreInteractions(jpaRepository, internalAuthRepository, hashingService);
         }
     }
 
@@ -245,6 +256,8 @@ class PasskeyCredentialRepositoryAdapterTest {
             assertThat(registered.getUserHandle().getBytes()).isEqualTo(USER_HANDLE_BYTES);
             assertThat(registered.getPublicKeyCose().getBytes()).isEqualTo(PUBLIC_KEY_BYTES);
             assertThat(registered.getSignatureCount()).isEqualTo(SIGN_COUNT);
+            verifyNoInteractions(internalAuthRepository, hashingService);
+            verifyNoMoreInteractions(jpaRepository, internalAuthRepository, hashingService);
         }
 
         @Test
@@ -260,6 +273,8 @@ class PasskeyCredentialRepositoryAdapterTest {
 
             // Then
             assertThat(result).isEmpty();
+            verifyNoInteractions(internalAuthRepository, hashingService);
+            verifyNoMoreInteractions(jpaRepository, internalAuthRepository, hashingService);
         }
 
         @Test
@@ -276,6 +291,8 @@ class PasskeyCredentialRepositoryAdapterTest {
 
             // Then
             assertThat(result).isEmpty();
+            verifyNoInteractions(internalAuthRepository, hashingService);
+            verifyNoMoreInteractions(jpaRepository, internalAuthRepository, hashingService);
         }
     }
 
@@ -297,6 +314,8 @@ class PasskeyCredentialRepositoryAdapterTest {
             assertThat(result).hasSize(1);
             RegisteredCredential registered = result.iterator().next();
             assertThat(registered.getCredentialId().getBytes()).isEqualTo(CREDENTIAL_ID_BYTES);
+            verifyNoInteractions(internalAuthRepository, hashingService);
+            verifyNoMoreInteractions(jpaRepository, internalAuthRepository, hashingService);
         }
 
         @Test
@@ -311,6 +330,8 @@ class PasskeyCredentialRepositoryAdapterTest {
 
             // Then
             assertThat(result).isEmpty();
+            verifyNoInteractions(internalAuthRepository, hashingService);
+            verifyNoMoreInteractions(jpaRepository, internalAuthRepository, hashingService);
         }
     }
 }

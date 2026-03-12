@@ -11,7 +11,7 @@ import com.akademiaplus.config.AbstractIntegrationTest;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.internal.interfaceadapters.RefreshTokenRepository;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
-import com.akademiaplus.internal.interfaceadapters.session.RedisSessionStore;
+import com.akademiaplus.internal.interfaceadapters.session.AkademiaPlusRedisSessionStore;
 import com.akademiaplus.security.RefreshTokenDataModel;
 import com.akademiaplus.tenancy.TenantDataModel;
 import com.akademiaplus.utilities.security.HashingService;
@@ -66,7 +66,7 @@ class TokenRefreshComponentTest extends AbstractIntegrationTest {
     @Autowired private EntityManager entityManager;
     @Autowired private PlatformTransactionManager transactionManager;
 
-    @MockitoBean private RedisSessionStore redisSessionStore;
+    @MockitoBean private AkademiaPlusRedisSessionStore akademiaPlusRedisSessionStore;
 
     private static boolean dataCreated;
     private static Long tenantId;

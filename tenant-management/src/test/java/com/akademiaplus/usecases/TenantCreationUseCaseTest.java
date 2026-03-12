@@ -22,10 +22,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.ApplicationContext;
 
-
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("TenantCreationUseCase")
 @ExtendWith(MockitoExtension.class)
@@ -79,10 +81,15 @@ class TenantCreationUseCaseTest {
             when(applicationContext.getBean(TenantDataModel.class)).thenReturn(prototypeModel);
 
             // When
-            useCase.transform(dto);
+            TenantDataModel result = useCase.transform(dto);
 
             // Then
-            verify(applicationContext).getBean(TenantDataModel.class);
+            assertThat(result).isSameAs(prototypeModel);
+            InOrder inOrder = inOrder(applicationContext, modelMapper);
+            inOrder.verify(applicationContext, times(1)).getBean(TenantDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, TenantCreationUseCase.MAP_NAME);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoMoreInteractions(applicationContext, modelMapper, tenantRepository);
         }
 
         @Test
@@ -97,8 +104,12 @@ class TenantCreationUseCaseTest {
             TenantDataModel result = useCase.transform(dto);
 
             // Then
-            verify(modelMapper).map(dto, prototypeModel, TenantCreationUseCase.MAP_NAME);
             assertThat(result).isSameAs(prototypeModel);
+            InOrder inOrder = inOrder(applicationContext, modelMapper);
+            inOrder.verify(applicationContext, times(1)).getBean(TenantDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, TenantCreationUseCase.MAP_NAME);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoMoreInteractions(applicationContext, modelMapper, tenantRepository);
         }
     }
 
@@ -126,9 +137,13 @@ class TenantCreationUseCaseTest {
             TenantDTO result = useCase.create(dto);
 
             // Then
-            verify(tenantRepository).save(prototypeModel);
-            verify(modelMapper).map(savedModel, TenantDTO.class);
             assertThat(result.getTenantId()).isEqualTo(1L);
+            InOrder inOrder = inOrder(applicationContext, modelMapper, tenantRepository);
+            inOrder.verify(applicationContext, times(1)).getBean(TenantDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, TenantCreationUseCase.MAP_NAME);
+            inOrder.verify(tenantRepository, times(1)).save(prototypeModel);
+            inOrder.verify(modelMapper, times(1)).map(savedModel, TenantDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -146,14 +161,16 @@ class TenantCreationUseCaseTest {
             when(modelMapper.map(savedModel, TenantDTO.class)).thenReturn(responseDto);
 
             // When
-            useCase.create(dto);
+            TenantDTO result = useCase.create(dto);
 
             // Then — verify the exact object from transform() is what gets saved
+            assertThat(result).isSameAs(responseDto);
             InOrder inOrder = inOrder(applicationContext, modelMapper, tenantRepository);
-            inOrder.verify(applicationContext).getBean(TenantDataModel.class);
-            inOrder.verify(modelMapper).map(dto, prototypeModel, TenantCreationUseCase.MAP_NAME);
-            inOrder.verify(tenantRepository).save(prototypeModel);
-            inOrder.verify(modelMapper).map(savedModel, TenantDTO.class);
+            inOrder.verify(applicationContext, times(1)).getBean(TenantDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, TenantCreationUseCase.MAP_NAME);
+            inOrder.verify(tenantRepository, times(1)).save(prototypeModel);
+            inOrder.verify(modelMapper, times(1)).map(savedModel, TenantDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

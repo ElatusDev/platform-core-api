@@ -36,8 +36,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.Collections;
 import java.util.Map;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.mockito.InOrder;
+
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -105,6 +106,9 @@ class PasskeyControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.optionsJson").value(OPTIONS_JSON));
 
+            verify(passkeyAuthenticationUseCase, times(1)).generateRegistrationOptions(USERNAME, TENANT_ID);
+            verifyNoMoreInteractions(passkeyAuthenticationUseCase, cookieService,
+                    httpServletResponse, httpServletRequest, deviceFingerprintService);
             SecurityContextHolder.clearContext();
         }
     }
@@ -131,6 +135,10 @@ class PasskeyControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.displayName").value(DISPLAY_NAME));
+
+            verify(passkeyAuthenticationUseCase, times(1)).completeRegistration(responseJson, TENANT_ID, DISPLAY_NAME);
+            verifyNoMoreInteractions(passkeyAuthenticationUseCase, cookieService,
+                    httpServletResponse, httpServletRequest, deviceFingerprintService);
         }
     }
 
@@ -153,6 +161,10 @@ class PasskeyControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.optionsJson").value(OPTIONS_JSON));
+
+            verify(passkeyAuthenticationUseCase, times(1)).generateLoginOptions(TENANT_ID);
+            verifyNoMoreInteractions(passkeyAuthenticationUseCase, cookieService,
+                    httpServletResponse, httpServletRequest, deviceFingerprintService);
         }
     }
 
@@ -183,6 +195,13 @@ class PasskeyControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.token").value(ACCESS_TOKEN));
+
+            InOrder inOrder = inOrder(deviceFingerprintService, passkeyAuthenticationUseCase, cookieService);
+            inOrder.verify(deviceFingerprintService, times(1)).computeFingerprint(httpServletRequest);
+            inOrder.verify(passkeyAuthenticationUseCase, times(1)).completeLogin(responseJson, TENANT_ID, fingerprintClaims);
+            inOrder.verify(cookieService, times(1)).addTokenCookies(httpServletResponse, ACCESS_TOKEN, REFRESH_TOKEN);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoMoreInteractions(httpServletResponse, httpServletRequest);
         }
 
         @Test
@@ -209,7 +228,12 @@ class PasskeyControllerTest {
                     .andExpect(status().isOk());
 
             // Then
-            verify(cookieService).addTokenCookies(httpServletResponse, ACCESS_TOKEN, REFRESH_TOKEN);
+            InOrder inOrder = inOrder(deviceFingerprintService, passkeyAuthenticationUseCase, cookieService);
+            inOrder.verify(deviceFingerprintService, times(1)).computeFingerprint(httpServletRequest);
+            inOrder.verify(passkeyAuthenticationUseCase, times(1)).completeLogin(responseJson, TENANT_ID, fingerprintClaims);
+            inOrder.verify(cookieService, times(1)).addTokenCookies(httpServletResponse, ACCESS_TOKEN, REFRESH_TOKEN);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoMoreInteractions(httpServletResponse, httpServletRequest);
         }
     }
 }

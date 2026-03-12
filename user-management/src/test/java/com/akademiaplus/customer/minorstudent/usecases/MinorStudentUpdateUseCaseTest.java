@@ -27,6 +27,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -154,6 +155,12 @@ class MinorStudentUpdateUseCaseTest {
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.MINOR_STUDENT);
                         assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(MINOR_STUDENT_ID));
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, minorStudentRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(minorStudentRepository, times(1)).findById(compositeId);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(tutorRepository, personPIIRepository, modelMapper, piiNormalizer, hashingService);
         }
     }
 
@@ -187,6 +194,14 @@ class MinorStudentUpdateUseCaseTest {
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.TUTOR);
                         assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(TUTOR_ID));
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, minorStudentRepository, modelMapper, tutorRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(minorStudentRepository, times(1)).findById(compositeId);
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, MinorStudentUpdateUseCase.MAP_NAME);
+            inOrder.verify(tutorRepository, times(1)).findById(tutorCompositeId);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(personPIIRepository, piiNormalizer, hashingService);
         }
     }
 
@@ -208,9 +223,26 @@ class MinorStudentUpdateUseCaseTest {
             MinorStudentUpdateResponseDTO result = useCase.update(MINOR_STUDENT_ID, dto);
 
             // Then
-            verify(minorStudentRepository).saveAndFlush(existing);
             assertThat(result.getMinorStudentId()).isEqualTo(MINOR_STUDENT_ID);
             assertThat(result.getMessage()).isEqualTo(MinorStudentUpdateUseCase.UPDATE_SUCCESS_MESSAGE);
+
+            InOrder inOrder = inOrder(tenantContextHolder, minorStudentRepository, modelMapper,
+                    tutorRepository, piiNormalizer, hashingService, personPIIRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(minorStudentRepository, times(1)).findById(
+                    new MinorStudentDataModel.MinorStudentCompositeId(TENANT_ID, MINOR_STUDENT_ID));
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, MinorStudentUpdateUseCase.MAP_NAME);
+            inOrder.verify(tutorRepository, times(1)).findById(
+                    new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID));
+            inOrder.verify(modelMapper, times(1)).map(dto, pii);
+            inOrder.verify(piiNormalizer, times(1)).normalizeEmail(pii.getEmail());
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            inOrder.verify(personPIIRepository, times(1)).existsByEmailHashAndPersonPiiIdNot(EMAIL_HASH, PERSON_PII_ID);
+            inOrder.verify(piiNormalizer, times(1)).normalizePhoneNumber(pii.getPhoneNumber());
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_PHONE);
+            inOrder.verify(personPIIRepository, times(1)).existsByPhoneHashAndPersonPiiIdNot(PHONE_HASH, PERSON_PII_ID);
+            inOrder.verify(minorStudentRepository, times(1)).saveAndFlush(existing);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -229,13 +261,29 @@ class MinorStudentUpdateUseCaseTest {
             stubFullSuccessPath(dto, existing, pii);
 
             // When
-            useCase.update(MINOR_STUDENT_ID, dto);
+            MinorStudentUpdateResponseDTO result = useCase.update(MINOR_STUDENT_ID, dto);
 
             // Then
-            verify(piiNormalizer).normalizeEmail(TEST_EMAIL);
-            verify(piiNormalizer).normalizePhoneNumber(TEST_PHONE);
-            verify(hashingService).generateHash(NORMALIZED_EMAIL);
-            verify(hashingService).generateHash(NORMALIZED_PHONE);
+            assertThat(result.getMinorStudentId()).isEqualTo(MINOR_STUDENT_ID);
+            assertThat(result.getMessage()).isEqualTo(MinorStudentUpdateUseCase.UPDATE_SUCCESS_MESSAGE);
+
+            InOrder inOrder = inOrder(tenantContextHolder, minorStudentRepository, modelMapper,
+                    tutorRepository, piiNormalizer, hashingService, personPIIRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(minorStudentRepository, times(1)).findById(
+                    new MinorStudentDataModel.MinorStudentCompositeId(TENANT_ID, MINOR_STUDENT_ID));
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, MinorStudentUpdateUseCase.MAP_NAME);
+            inOrder.verify(tutorRepository, times(1)).findById(
+                    new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID));
+            inOrder.verify(modelMapper, times(1)).map(dto, pii);
+            inOrder.verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            inOrder.verify(personPIIRepository, times(1)).existsByEmailHashAndPersonPiiIdNot(EMAIL_HASH, PERSON_PII_ID);
+            inOrder.verify(piiNormalizer, times(1)).normalizePhoneNumber(TEST_PHONE);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_PHONE);
+            inOrder.verify(personPIIRepository, times(1)).existsByPhoneHashAndPersonPiiIdNot(PHONE_HASH, PERSON_PII_ID);
+            inOrder.verify(minorStudentRepository, times(1)).saveAndFlush(existing);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -274,6 +322,18 @@ class MinorStudentUpdateUseCaseTest {
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.MINOR_STUDENT);
                         assertThat(dee.getField()).isEqualTo(PiiField.EMAIL);
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, minorStudentRepository, modelMapper,
+                    tutorRepository, piiNormalizer, hashingService, personPIIRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(minorStudentRepository, times(1)).findById(compositeId);
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, MinorStudentUpdateUseCase.MAP_NAME);
+            inOrder.verify(tutorRepository, times(1)).findById(tutorCompositeId);
+            inOrder.verify(modelMapper, times(1)).map(dto, pii);
+            inOrder.verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            inOrder.verify(personPIIRepository, times(1)).existsByEmailHashAndPersonPiiIdNot(EMAIL_HASH, PERSON_PII_ID);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -308,6 +368,21 @@ class MinorStudentUpdateUseCaseTest {
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.MINOR_STUDENT);
                         assertThat(dee.getField()).isEqualTo(PiiField.PHONE_NUMBER);
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, minorStudentRepository, modelMapper,
+                    tutorRepository, piiNormalizer, hashingService, personPIIRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(minorStudentRepository, times(1)).findById(compositeId);
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, MinorStudentUpdateUseCase.MAP_NAME);
+            inOrder.verify(tutorRepository, times(1)).findById(tutorCompositeId);
+            inOrder.verify(modelMapper, times(1)).map(dto, pii);
+            inOrder.verify(piiNormalizer, times(1)).normalizeEmail(pii.getEmail());
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            inOrder.verify(personPIIRepository, times(1)).existsByEmailHashAndPersonPiiIdNot(EMAIL_HASH, PERSON_PII_ID);
+            inOrder.verify(piiNormalizer, times(1)).normalizePhoneNumber(pii.getPhoneNumber());
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_PHONE);
+            inOrder.verify(personPIIRepository, times(1)).existsByPhoneHashAndPersonPiiIdNot(PHONE_HASH, PERSON_PII_ID);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

@@ -30,6 +30,9 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @DisplayName("ImmediateSendUseCase")
@@ -101,6 +104,10 @@ class ImmediateSendUseCaseTest {
             assertThat(response.getDeliveryResults().get(1).getStatus())
                     .isEqualTo(ImmediateEmailDeliveryResponseDeliveryResultsInnerDTO.StatusEnum.SUCCESS);
             assertThat(response.getDeliveryResults().get(1).getRecipientEmail()).isEqualTo(RECIPIENT_TWO);
+            verify(javaMailSender, times(2)).createMimeMessage();
+            verify(javaMailSender, times(1)).send(mimeMessage1);
+            verify(javaMailSender, times(1)).send(mimeMessage2);
+            verifyNoMoreInteractions(javaMailSender, applicationContext);
         }
 
         @Test
@@ -125,6 +132,9 @@ class ImmediateSendUseCaseTest {
             assertThat(response.getDeliveryResults().get(0).getErrorMessage())
                     .isEqualTo(String.format(ImmediateSendUseCase.ERROR_SEND_FAILED,
                             RECIPIENT_ONE, MAIL_EXCEPTION_MESSAGE));
+            verify(javaMailSender, times(1)).createMimeMessage();
+            verify(javaMailSender, times(1)).send(mimeMessage);
+            verifyNoMoreInteractions(javaMailSender, applicationContext);
         }
 
         @Test
@@ -161,6 +171,11 @@ class ImmediateSendUseCaseTest {
             assertThat(response.getDeliveryResults().get(2).getStatus())
                     .isEqualTo(ImmediateEmailDeliveryResponseDeliveryResultsInnerDTO.StatusEnum.SUCCESS);
             assertThat(response.getDeliveryResults().get(2).getRecipientEmail()).isEqualTo(RECIPIENT_THREE);
+            verify(javaMailSender, times(3)).createMimeMessage();
+            verify(javaMailSender, times(1)).send(mimeMessage1);
+            verify(javaMailSender, times(1)).send(mimeMessage2);
+            verify(javaMailSender, times(1)).send(mimeMessage3);
+            verifyNoMoreInteractions(javaMailSender, applicationContext);
         }
     }
 }

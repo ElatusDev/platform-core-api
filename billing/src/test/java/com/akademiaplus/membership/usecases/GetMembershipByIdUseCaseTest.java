@@ -9,6 +9,7 @@ package com.akademiaplus.membership.usecases;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -64,9 +65,9 @@ class GetMembershipByIdUseCaseTest {
             GetMembershipResponseDTO result = useCase.get(MEMBERSHIP_ID);
             // Then
             assertThat(result).isEqualTo(expectedDto);
-            verify(tenantContextHolder).getTenantId();
-            verify(membershipRepository).findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID));
-            verify(modelMapper).map(membership, GetMembershipResponseDTO.class);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(membershipRepository, times(1)).findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID));
+            verify(modelMapper, times(1)).map(membership, GetMembershipResponseDTO.class);
             verifyNoMoreInteractions(tenantContextHolder, membershipRepository, modelMapper);
         }
     }
@@ -86,8 +87,8 @@ class GetMembershipByIdUseCaseTest {
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasFieldOrPropertyWithValue("entityType", EntityType.MEMBERSHIP)
                     .hasFieldOrPropertyWithValue("entityId", String.valueOf(MEMBERSHIP_ID));
-            verify(tenantContextHolder).getTenantId();
-            verify(membershipRepository).findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID));
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(membershipRepository, times(1)).findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID));
             verifyNoMoreInteractions(tenantContextHolder, membershipRepository, modelMapper);
         }
     }
@@ -104,7 +105,7 @@ class GetMembershipByIdUseCaseTest {
             assertThatThrownBy(() -> useCase.get(MEMBERSHIP_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(GetMembershipByIdUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
-            verify(tenantContextHolder).getTenantId();
+            verify(tenantContextHolder, times(1)).getTenantId();
             verifyNoMoreInteractions(tenantContextHolder, membershipRepository, modelMapper);
         }
     }

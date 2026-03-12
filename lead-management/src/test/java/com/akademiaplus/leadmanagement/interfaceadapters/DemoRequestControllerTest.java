@@ -28,7 +28,10 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -90,6 +93,11 @@ class DemoRequestControllerTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getDemoRequestId()).isEqualTo(DEMO_REQUEST_ID);
+
+            verify(demoRequestCreationUseCase, times(1)).create(request);
+            verifyNoMoreInteractions(demoRequestCreationUseCase);
+            verifyNoInteractions(getDemoRequestByIdUseCase, getAllDemoRequestsUseCase,
+                    deleteDemoRequestUseCase);
         }
     }
 
@@ -114,6 +122,11 @@ class DemoRequestControllerTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getDemoRequestId()).isEqualTo(DEMO_REQUEST_ID);
+
+            verify(getDemoRequestByIdUseCase, times(1)).get(DEMO_REQUEST_ID);
+            verifyNoMoreInteractions(getDemoRequestByIdUseCase);
+            verifyNoInteractions(demoRequestCreationUseCase, getAllDemoRequestsUseCase,
+                    deleteDemoRequestUseCase);
         }
     }
 
@@ -138,6 +151,11 @@ class DemoRequestControllerTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getDemoRequests()).hasSize(1);
+
+            verify(getAllDemoRequestsUseCase, times(1)).getAll();
+            verifyNoMoreInteractions(getAllDemoRequestsUseCase);
+            verifyNoInteractions(demoRequestCreationUseCase, getDemoRequestByIdUseCase,
+                    deleteDemoRequestUseCase);
         }
     }
 
@@ -153,7 +171,11 @@ class DemoRequestControllerTest {
 
             // Then
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-            verify(deleteDemoRequestUseCase).delete(DEMO_REQUEST_ID);
+
+            verify(deleteDemoRequestUseCase, times(1)).delete(DEMO_REQUEST_ID);
+            verifyNoMoreInteractions(deleteDemoRequestUseCase);
+            verifyNoInteractions(demoRequestCreationUseCase, getDemoRequestByIdUseCase,
+                    getAllDemoRequestsUseCase);
         }
     }
 }

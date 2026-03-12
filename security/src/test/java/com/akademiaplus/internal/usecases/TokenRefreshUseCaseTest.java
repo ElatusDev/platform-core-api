@@ -11,7 +11,7 @@ import com.akademiaplus.internal.exceptions.RefreshTokenExpiredException;
 import com.akademiaplus.internal.exceptions.TokenReuseDetectedException;
 import com.akademiaplus.internal.interfaceadapters.RefreshTokenRepository;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
-import com.akademiaplus.internal.interfaceadapters.session.RedisSessionStore;
+import com.akademiaplus.internal.interfaceadapters.session.AkademiaPlusRedisSessionStore;
 import com.akademiaplus.internal.usecases.domain.TokenRefreshResult;
 import com.akademiaplus.security.RefreshTokenDataModel;
 import com.akademiaplus.utilities.security.HashingService;
@@ -33,8 +33,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link TokenRefreshUseCase}.
@@ -65,7 +64,7 @@ class TokenRefreshUseCaseTest {
     private RefreshTokenRepository refreshTokenRepository;
 
     @Mock
-    private RedisSessionStore redisSessionStore;
+    private AkademiaPlusRedisSessionStore akademiaPlusRedisSessionStore;
 
     @Mock
     private HashingService hashingService;
@@ -81,7 +80,7 @@ class TokenRefreshUseCaseTest {
     @BeforeEach
     void setUp() {
         useCase = new TokenRefreshUseCase(
-                jwtTokenProvider, refreshTokenRepository, redisSessionStore,
+                jwtTokenProvider, refreshTokenRepository, akademiaPlusRedisSessionStore,
                 hashingService, applicationContext);
     }
 
@@ -130,6 +129,11 @@ class TokenRefreshUseCaseTest {
 
             // Then
             assertThat(result.accessToken()).isEqualTo(NEW_ACCESS_TOKEN);
+            verify(refreshTokenRepository, times(1)).save(any(RefreshTokenDataModel.class));
+            verify(akademiaPlusRedisSessionStore, times(1)).storeSession(
+                    NEW_JTI, USERNAME, TENANT_ID, Duration.ofMillis(ACCESS_TOKEN_VALIDITY_MS));
+            verifyNoMoreInteractions(jwtTokenProvider, refreshTokenRepository, akademiaPlusRedisSessionStore,
+                    hashingService, applicationContext, newRefreshTokenClaims);
         }
 
         @Test
@@ -146,6 +150,11 @@ class TokenRefreshUseCaseTest {
 
             // Then
             assertThat(result.refreshToken()).isEqualTo(NEW_REFRESH_TOKEN);
+            verify(refreshTokenRepository, times(1)).save(any(RefreshTokenDataModel.class));
+            verify(akademiaPlusRedisSessionStore, times(1)).storeSession(
+                    NEW_JTI, USERNAME, TENANT_ID, Duration.ofMillis(ACCESS_TOKEN_VALIDITY_MS));
+            verifyNoMoreInteractions(jwtTokenProvider, refreshTokenRepository, akademiaPlusRedisSessionStore,
+                    hashingService, applicationContext, newRefreshTokenClaims);
         }
 
         @Test
@@ -163,6 +172,11 @@ class TokenRefreshUseCaseTest {
             // Then
             assertThat(existingToken.getRevokedAt()).isNotNull();
             assertThat(existingToken.getReplacedByTokenHash()).isEqualTo(NEW_REFRESH_TOKEN_HASH);
+            verify(refreshTokenRepository, times(1)).save(any(RefreshTokenDataModel.class));
+            verify(akademiaPlusRedisSessionStore, times(1)).storeSession(
+                    NEW_JTI, USERNAME, TENANT_ID, Duration.ofMillis(ACCESS_TOKEN_VALIDITY_MS));
+            verifyNoMoreInteractions(jwtTokenProvider, refreshTokenRepository, akademiaPlusRedisSessionStore,
+                    hashingService, applicationContext, newRefreshTokenClaims);
         }
 
         @Test
@@ -179,11 +193,15 @@ class TokenRefreshUseCaseTest {
 
             // Then
             ArgumentCaptor<RefreshTokenDataModel> captor = ArgumentCaptor.forClass(RefreshTokenDataModel.class);
-            verify(refreshTokenRepository).save(captor.capture());
+            verify(refreshTokenRepository, times(1)).save(captor.capture());
             RefreshTokenDataModel saved = captor.getValue();
             assertThat(saved.getTokenHash()).isEqualTo(NEW_REFRESH_TOKEN_HASH);
             assertThat(saved.getFamilyId()).isEqualTo(FAMILY_ID);
             assertThat(saved.getTenantId()).isEqualTo(TENANT_ID);
+            verify(akademiaPlusRedisSessionStore, times(1)).storeSession(
+                    NEW_JTI, USERNAME, TENANT_ID, Duration.ofMillis(ACCESS_TOKEN_VALIDITY_MS));
+            verifyNoMoreInteractions(jwtTokenProvider, refreshTokenRepository, akademiaPlusRedisSessionStore,
+                    hashingService, applicationContext, newRefreshTokenClaims);
         }
 
         @Test
@@ -199,8 +217,12 @@ class TokenRefreshUseCaseTest {
             useCase.refresh(CURRENT_REFRESH_TOKEN);
 
             // Then
-            verify(redisSessionStore).storeSession(
+            assertThat(useCase).isNotNull();
+            verify(akademiaPlusRedisSessionStore, times(1)).storeSession(
                     NEW_JTI, USERNAME, TENANT_ID, Duration.ofMillis(ACCESS_TOKEN_VALIDITY_MS));
+            verify(refreshTokenRepository, times(1)).save(any(RefreshTokenDataModel.class));
+            verifyNoMoreInteractions(jwtTokenProvider, refreshTokenRepository, akademiaPlusRedisSessionStore,
+                    hashingService, applicationContext, newRefreshTokenClaims);
         }
     }
 
@@ -219,11 +241,16 @@ class TokenRefreshUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.refresh(CURRENT_REFRESH_TOKEN))
-                    .isInstanceOf(TokenReuseDetectedException.class);
+                    .isInstanceOf(TokenReuseDetectedException.class)
+                    .hasMessage(String.format(TokenReuseDetectedException.ERROR_MESSAGE, FAMILY_ID));
 
-            verify(refreshTokenRepository).revokeAllByFamilyId(
+            verify(refreshTokenRepository, times(1)).revokeAllByFamilyId(
                     org.mockito.ArgumentMatchers.eq(FAMILY_ID),
                     org.mockito.ArgumentMatchers.isA(Instant.class));
+            verify(akademiaPlusRedisSessionStore, times(1)).revokeAllSessionsForUser(USERNAME, TENANT_ID);
+            verifyNoInteractions(applicationContext, newRefreshTokenClaims);
+            verifyNoMoreInteractions(jwtTokenProvider, refreshTokenRepository, akademiaPlusRedisSessionStore,
+                    hashingService, applicationContext, newRefreshTokenClaims);
         }
 
         @Test
@@ -237,9 +264,36 @@ class TokenRefreshUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.refresh(CURRENT_REFRESH_TOKEN))
-                    .isInstanceOf(TokenReuseDetectedException.class);
+                    .isInstanceOf(TokenReuseDetectedException.class)
+                    .hasMessage(String.format(TokenReuseDetectedException.ERROR_MESSAGE, FAMILY_ID));
 
-            verify(redisSessionStore).revokeAllSessionsForUser(USERNAME, TENANT_ID);
+            verify(akademiaPlusRedisSessionStore, times(1)).revokeAllSessionsForUser(USERNAME, TENANT_ID);
+            verify(refreshTokenRepository, times(1)).revokeAllByFamilyId(
+                    org.mockito.ArgumentMatchers.eq(FAMILY_ID),
+                    org.mockito.ArgumentMatchers.isA(Instant.class));
+            verifyNoInteractions(applicationContext, newRefreshTokenClaims);
+            verifyNoMoreInteractions(jwtTokenProvider, refreshTokenRepository, akademiaPlusRedisSessionStore,
+                    hashingService, applicationContext, newRefreshTokenClaims);
+        }
+
+        @Test
+        @DisplayName("Should not create new tokens when reuse detected")
+        void shouldNotCreateNewTokens_whenReuseDetected() {
+            // Given
+            RefreshTokenDataModel existingToken = buildActiveToken();
+            existingToken.setRevokedAt(Instant.now().minusSeconds(60));
+            when(hashingService.generateHash(CURRENT_REFRESH_TOKEN)).thenReturn(CURRENT_TOKEN_HASH);
+            when(refreshTokenRepository.findByTokenHash(CURRENT_TOKEN_HASH)).thenReturn(Optional.of(existingToken));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.refresh(CURRENT_REFRESH_TOKEN))
+                    .isInstanceOf(TokenReuseDetectedException.class)
+                    .hasMessage(String.format(TokenReuseDetectedException.ERROR_MESSAGE, FAMILY_ID));
+
+            verify(jwtTokenProvider, never()).createAccessToken(USERNAME, TENANT_ID, java.util.Map.of(JwtTokenProvider.USER_ID_CLAIM, USER_ID));
+            verify(jwtTokenProvider, never()).createRefreshToken(USERNAME, TENANT_ID, FAMILY_ID);
+            verify(refreshTokenRepository, never()).save(org.mockito.ArgumentMatchers.isA(RefreshTokenDataModel.class));
+            verifyNoInteractions(applicationContext, newRefreshTokenClaims);
         }
     }
 
@@ -260,6 +314,9 @@ class TokenRefreshUseCaseTest {
             assertThatThrownBy(() -> useCase.refresh(CURRENT_REFRESH_TOKEN))
                     .isInstanceOf(RefreshTokenExpiredException.class)
                     .hasMessage(TokenRefreshUseCase.ERROR_REFRESH_TOKEN_EXPIRED);
+            verifyNoInteractions(akademiaPlusRedisSessionStore, applicationContext, newRefreshTokenClaims);
+            verifyNoMoreInteractions(jwtTokenProvider, refreshTokenRepository, akademiaPlusRedisSessionStore,
+                    hashingService, applicationContext, newRefreshTokenClaims);
         }
 
         @Test
@@ -273,6 +330,88 @@ class TokenRefreshUseCaseTest {
             assertThatThrownBy(() -> useCase.refresh(CURRENT_REFRESH_TOKEN))
                     .isInstanceOf(RefreshTokenExpiredException.class)
                     .hasMessage(TokenRefreshUseCase.ERROR_REFRESH_TOKEN_NOT_FOUND);
+            verifyNoInteractions(jwtTokenProvider, akademiaPlusRedisSessionStore, applicationContext, newRefreshTokenClaims);
+            verifyNoMoreInteractions(jwtTokenProvider, refreshTokenRepository, akademiaPlusRedisSessionStore,
+                    hashingService, applicationContext, newRefreshTokenClaims);
+        }
+
+        @Test
+        @DisplayName("Should not create new tokens when token expired")
+        void shouldNotCreateNewTokens_whenTokenExpired() {
+            // Given
+            RefreshTokenDataModel existingToken = buildActiveToken();
+            existingToken.setExpiresAt(Instant.now().minusSeconds(3600));
+            when(hashingService.generateHash(CURRENT_REFRESH_TOKEN)).thenReturn(CURRENT_TOKEN_HASH);
+            when(refreshTokenRepository.findByTokenHash(CURRENT_TOKEN_HASH)).thenReturn(Optional.of(existingToken));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.refresh(CURRENT_REFRESH_TOKEN))
+                    .isInstanceOf(RefreshTokenExpiredException.class)
+                    .hasMessage(TokenRefreshUseCase.ERROR_REFRESH_TOKEN_EXPIRED);
+
+            verify(jwtTokenProvider, never()).createAccessToken(USERNAME, TENANT_ID, java.util.Map.of(JwtTokenProvider.USER_ID_CLAIM, USER_ID));
+            verify(jwtTokenProvider, never()).createRefreshToken(USERNAME, TENANT_ID, FAMILY_ID);
+            verify(refreshTokenRepository, never()).save(org.mockito.ArgumentMatchers.isA(RefreshTokenDataModel.class));
+            verifyNoInteractions(akademiaPlusRedisSessionStore, applicationContext, newRefreshTokenClaims);
+        }
+
+        @Test
+        @DisplayName("Should not create new tokens when token not found")
+        void shouldNotCreateNewTokens_whenTokenNotFound() {
+            // Given
+            when(hashingService.generateHash(CURRENT_REFRESH_TOKEN)).thenReturn(CURRENT_TOKEN_HASH);
+            when(refreshTokenRepository.findByTokenHash(CURRENT_TOKEN_HASH)).thenReturn(Optional.empty());
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.refresh(CURRENT_REFRESH_TOKEN))
+                    .isInstanceOf(RefreshTokenExpiredException.class)
+                    .hasMessage(TokenRefreshUseCase.ERROR_REFRESH_TOKEN_NOT_FOUND);
+
+            verify(jwtTokenProvider, never()).createAccessToken(USERNAME, TENANT_ID, java.util.Map.of(JwtTokenProvider.USER_ID_CLAIM, USER_ID));
+            verify(jwtTokenProvider, never()).createRefreshToken(USERNAME, TENANT_ID, FAMILY_ID);
+            verify(refreshTokenRepository, never()).save(org.mockito.ArgumentMatchers.isA(RefreshTokenDataModel.class));
+            verifyNoInteractions(jwtTokenProvider, akademiaPlusRedisSessionStore, applicationContext, newRefreshTokenClaims);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate RuntimeException when hashingService throws")
+        void shouldPropagateException_whenHashingServiceThrows() {
+            // Given
+            RuntimeException cause = new RuntimeException("hashing failed");
+            when(hashingService.generateHash(CURRENT_REFRESH_TOKEN)).thenThrow(cause);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.refresh(CURRENT_REFRESH_TOKEN))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("hashing failed");
+
+            verify(hashingService, times(1)).generateHash(CURRENT_REFRESH_TOKEN);
+            verifyNoInteractions(refreshTokenRepository, jwtTokenProvider, akademiaPlusRedisSessionStore,
+                    applicationContext, newRefreshTokenClaims);
+        }
+
+        @Test
+        @DisplayName("Should propagate RuntimeException when refreshTokenRepository throws")
+        void shouldPropagateException_whenRefreshTokenRepositoryThrows() {
+            // Given
+            RuntimeException cause = new RuntimeException("db error");
+            when(hashingService.generateHash(CURRENT_REFRESH_TOKEN)).thenReturn(CURRENT_TOKEN_HASH);
+            when(refreshTokenRepository.findByTokenHash(CURRENT_TOKEN_HASH)).thenThrow(cause);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.refresh(CURRENT_REFRESH_TOKEN))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("db error");
+
+            verify(hashingService, times(1)).generateHash(CURRENT_REFRESH_TOKEN);
+            verify(refreshTokenRepository, times(1)).findByTokenHash(CURRENT_TOKEN_HASH);
+            verifyNoInteractions(jwtTokenProvider, akademiaPlusRedisSessionStore,
+                    applicationContext, newRefreshTokenClaims);
         }
     }
 }

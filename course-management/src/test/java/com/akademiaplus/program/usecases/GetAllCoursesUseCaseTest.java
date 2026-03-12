@@ -15,6 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -54,7 +55,7 @@ class GetAllCoursesUseCaseTest {
 
             // Then
             assertThat(result).isEmpty();
-            verify(courseRepository).findAll();
+            verify(courseRepository, times(1)).findAll();
             verifyNoMoreInteractions(courseRepository, modelMapper);
         }
 
@@ -76,10 +77,11 @@ class GetAllCoursesUseCaseTest {
 
             // Then
             assertThat(result).containsExactly(dto1, dto2);
-            verify(courseRepository).findAll();
-            verify(modelMapper).map(course1, GetCourseResponseDTO.class);
-            verify(modelMapper).map(course2, GetCourseResponseDTO.class);
-            verifyNoMoreInteractions(courseRepository, modelMapper);
+            InOrder inOrder = inOrder(courseRepository, modelMapper);
+            inOrder.verify(courseRepository, times(1)).findAll();
+            inOrder.verify(modelMapper, times(1)).map(course1, GetCourseResponseDTO.class);
+            inOrder.verify(modelMapper, times(1)).map(course2, GetCourseResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

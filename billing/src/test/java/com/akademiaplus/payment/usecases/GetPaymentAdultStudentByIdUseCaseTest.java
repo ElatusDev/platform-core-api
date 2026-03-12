@@ -9,6 +9,7 @@ package com.akademiaplus.payment.usecases;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -64,9 +65,9 @@ class GetPaymentAdultStudentByIdUseCaseTest {
             GetPaymentAdultStudentResponseDTO result = useCase.get(PAYMENT_ADULT_STUDENT_ID);
             // Then
             assertThat(result).isEqualTo(expectedDto);
-            verify(tenantContextHolder).getTenantId();
-            verify(paymentAdultStudentRepository).findById(new PaymentAdultStudentDataModel.PaymentAdultStudentCompositeId(TENANT_ID, PAYMENT_ADULT_STUDENT_ID));
-            verify(modelMapper).map(paymentAdultStudent, GetPaymentAdultStudentResponseDTO.class);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(paymentAdultStudentRepository, times(1)).findById(new PaymentAdultStudentDataModel.PaymentAdultStudentCompositeId(TENANT_ID, PAYMENT_ADULT_STUDENT_ID));
+            verify(modelMapper, times(1)).map(paymentAdultStudent, GetPaymentAdultStudentResponseDTO.class);
             verifyNoMoreInteractions(tenantContextHolder, paymentAdultStudentRepository, modelMapper);
         }
     }
@@ -86,8 +87,8 @@ class GetPaymentAdultStudentByIdUseCaseTest {
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasFieldOrPropertyWithValue("entityType", EntityType.PAYMENT_ADULT_STUDENT)
                     .hasFieldOrPropertyWithValue("entityId", String.valueOf(PAYMENT_ADULT_STUDENT_ID));
-            verify(tenantContextHolder).getTenantId();
-            verify(paymentAdultStudentRepository).findById(new PaymentAdultStudentDataModel.PaymentAdultStudentCompositeId(TENANT_ID, PAYMENT_ADULT_STUDENT_ID));
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(paymentAdultStudentRepository, times(1)).findById(new PaymentAdultStudentDataModel.PaymentAdultStudentCompositeId(TENANT_ID, PAYMENT_ADULT_STUDENT_ID));
             verifyNoMoreInteractions(tenantContextHolder, paymentAdultStudentRepository, modelMapper);
         }
     }
@@ -104,7 +105,7 @@ class GetPaymentAdultStudentByIdUseCaseTest {
             assertThatThrownBy(() -> useCase.get(PAYMENT_ADULT_STUDENT_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(GetPaymentAdultStudentByIdUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
-            verify(tenantContextHolder).getTenantId();
+            verify(tenantContextHolder, times(1)).getTenantId();
             verifyNoMoreInteractions(tenantContextHolder, paymentAdultStudentRepository, modelMapper);
         }
     }

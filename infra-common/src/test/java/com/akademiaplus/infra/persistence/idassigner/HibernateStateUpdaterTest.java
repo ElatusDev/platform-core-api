@@ -1,20 +1,25 @@
 package com.akademiaplus.infra.persistence.idassigner;
 
+import lombok.Setter;
 import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.persister.entity.EntityPersister;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for HibernateStateUpdater
  */
 @ExtendWith(MockitoExtension.class)
+@DisplayName("HibernateStateUpdater Tests")
 class HibernateStateUpdaterTest {
 
     private static final String ID_PROPERTY_NAME = "userId";
@@ -46,99 +51,221 @@ class HibernateStateUpdaterTest {
         updater = new HibernateStateUpdater();
     }
 
-    @Test
-    void shouldUpdatePropertyInStateWhenPropertyExists() {
-        // Given
-        String[] propertyNames = {ID_PROPERTY_NAME, NAME_PROPERTY_NAME};
-        Object[] state = {null, USER_NAME};
+    @Nested
+    @DisplayName("Property state update (tryUpdatePropertyState)")
+    class PropertyStateUpdate {
 
-        when(event.getPersister()).thenReturn(persister);
-        when(persister.getPropertyNames()).thenReturn(propertyNames);
-        when(event.getState()).thenReturn(state);
-        when(event.getEntity()).thenReturn(entity);
+        @Test
+        @DisplayName("Should update property in state when property exists")
+        void shouldUpdatePropertyInState_whenPropertyExists() {
+            // Given
+            String[] propertyNames = {ID_PROPERTY_NAME, NAME_PROPERTY_NAME};
+            Object[] state = {null, USER_NAME};
 
-        // When
-        updater.updatePropertyInState(event, ID_PROPERTY_NAME, GENERATED_ID);
+            when(event.getPersister()).thenReturn(persister);
+            when(persister.getPropertyNames()).thenReturn(propertyNames);
+            when(event.getState()).thenReturn(state);
+            when(event.getEntity()).thenReturn(entity);
 
-        // Then
-        assertThat(state[FIRST_INDEX]).isEqualTo(GENERATED_ID);
-        assertThat(state[SECOND_INDEX]).isEqualTo(USER_NAME); // Other properties unchanged
+            // When
+            updater.updatePropertyInState(event, ID_PROPERTY_NAME, GENERATED_ID);
+
+            // Then
+            assertThat(state[FIRST_INDEX]).isEqualTo(GENERATED_ID);
+            assertThat(state[SECOND_INDEX]).isEqualTo(USER_NAME);
+
+            InOrder inOrder = inOrder(event, persister);
+            inOrder.verify(event, times(1)).getPersister();
+            inOrder.verify(persister, times(1)).getPropertyNames();
+            inOrder.verify(event, times(1)).getState();
+            inOrder.verify(event, times(1)).getEntity();
+            verifyNoMoreInteractions(event, persister, entity);
+        }
+
+        @Test
+        @DisplayName("Should update property at correct index when property is not first")
+        void shouldUpdatePropertyAtCorrectIndex_whenPropertyIsNotFirst() {
+            // Given
+            String[] propertyNames = {NAME_PROPERTY_NAME, ID_PROPERTY_NAME, EMAIL_PROPERTY_NAME};
+            Object[] state = {USER_NAME, null, USER_EMAIL};
+
+            when(event.getPersister()).thenReturn(persister);
+            when(persister.getPropertyNames()).thenReturn(propertyNames);
+            when(event.getState()).thenReturn(state);
+            when(event.getEntity()).thenReturn(entity);
+
+            // When
+            updater.updatePropertyInState(event, ID_PROPERTY_NAME, GENERATED_ID);
+
+            // Then
+            assertThat(state[FIRST_INDEX]).isEqualTo(USER_NAME);
+            assertThat(state[SECOND_INDEX]).isEqualTo(GENERATED_ID);
+            assertThat(state[THIRD_INDEX]).isEqualTo(USER_EMAIL);
+
+            InOrder inOrder = inOrder(event, persister);
+            inOrder.verify(event, times(1)).getPersister();
+            inOrder.verify(persister, times(1)).getPropertyNames();
+            inOrder.verify(event, times(1)).getState();
+            inOrder.verify(event, times(1)).getEntity();
+            verifyNoMoreInteractions(event, persister, entity);
+        }
+
+        @Test
+        @DisplayName("Should update property with null value")
+        void shouldUpdatePropertyWithNullValue_whenNullValueProvided() {
+            // Given
+            String[] propertyNames = {ID_PROPERTY_NAME};
+            Object[] state = {EXISTING_ID};
+            Object nullValue = null;
+
+            when(event.getPersister()).thenReturn(persister);
+            when(persister.getPropertyNames()).thenReturn(propertyNames);
+            when(event.getState()).thenReturn(state);
+            when(event.getEntity()).thenReturn(entity);
+
+            // When
+            updater.updatePropertyInState(event, ID_PROPERTY_NAME, nullValue);
+
+            // Then
+            assertThat(state[FIRST_INDEX]).isNull();
+
+            InOrder inOrder = inOrder(event, persister);
+            inOrder.verify(event, times(1)).getPersister();
+            inOrder.verify(persister, times(1)).getPropertyNames();
+            inOrder.verify(event, times(1)).getState();
+            inOrder.verify(event, times(1)).getEntity();
+            verifyNoMoreInteractions(event, persister, entity);
+        }
+
+        @Test
+        @DisplayName("Should update property with different value type")
+        void shouldUpdateProperty_whenValueIsDifferentType() {
+            // Given
+            String[] propertyNames = {ID_PROPERTY_NAME};
+            Object[] state = {null};
+
+            when(event.getPersister()).thenReturn(persister);
+            when(persister.getPropertyNames()).thenReturn(propertyNames);
+            when(event.getState()).thenReturn(state);
+            when(event.getEntity()).thenReturn(entity);
+
+            // When
+            updater.updatePropertyInState(event, ID_PROPERTY_NAME, STRING_ID);
+
+            // Then
+            assertThat(state[FIRST_INDEX]).isEqualTo(STRING_ID);
+
+            InOrder inOrder = inOrder(event, persister);
+            inOrder.verify(event, times(1)).getPersister();
+            inOrder.verify(persister, times(1)).getPropertyNames();
+            inOrder.verify(event, times(1)).getState();
+            inOrder.verify(event, times(1)).getEntity();
+            verifyNoMoreInteractions(event, persister, entity);
+        }
     }
 
-    @Test
-    void shouldUpdatePropertyInStateAtCorrectIndex() {
-        // Given
-        String[] propertyNames = {NAME_PROPERTY_NAME, ID_PROPERTY_NAME, EMAIL_PROPERTY_NAME};
-        Object[] state = {USER_NAME, null, USER_EMAIL};
+    @Nested
+    @DisplayName("Identifier update fallback (tryUpdateIdentifier)")
+    class IdentifierUpdateFallback {
 
-        when(event.getPersister()).thenReturn(persister);
-        when(persister.getPropertyNames()).thenReturn(propertyNames);
-        when(event.getState()).thenReturn(state);
-        when(event.getEntity()).thenReturn(entity);
+        @Test
+        @DisplayName("Should update identifier field when property not found in state and identifier has matching field")
+        void shouldUpdateIdentifierField_whenPropertyNotInStateButIdentifierHasField() {
+            // Given
+            String[] propertyNames = {NAME_PROPERTY_NAME};
+            Object[] state = {USER_NAME};
+            IdentifierWithUserId identifier = new IdentifierWithUserId();
 
-        // When
-        updater.updatePropertyInState(event, ID_PROPERTY_NAME, GENERATED_ID);
+            when(event.getPersister()).thenReturn(persister);
+            when(persister.getPropertyNames()).thenReturn(propertyNames);
+            when(event.getState()).thenReturn(state);
+            when(event.getId()).thenReturn(identifier);
+            when(event.getEntity()).thenReturn(entity);
 
-        // Then
-        assertThat(state[FIRST_INDEX]).isEqualTo(USER_NAME); // First property unchanged
-        assertThat(state[SECOND_INDEX]).isEqualTo(GENERATED_ID); // ID updated
-        assertThat(state[THIRD_INDEX]).isEqualTo(USER_EMAIL); // Third property unchanged
+            // When
+            updater.updatePropertyInState(event, ID_PROPERTY_NAME, GENERATED_ID);
+
+            // Then
+            assertThat(identifier.getUserId()).isEqualTo(GENERATED_ID);
+            assertThat(state[FIRST_INDEX]).isEqualTo(USER_NAME);
+
+            InOrder inOrder = inOrder(event, persister);
+            inOrder.verify(event, times(1)).getPersister();
+            inOrder.verify(persister, times(1)).getPropertyNames();
+            inOrder.verify(event, times(1)).getState();
+            inOrder.verify(event, times(1)).getId();
+            inOrder.verify(event, times(1)).getEntity();
+            verifyNoMoreInteractions(event, persister, entity);
+        }
+
+        @Test
+        @DisplayName("Should log warning when property not found in state or identifier")
+        void shouldLogWarning_whenPropertyNotFoundAnywhere() {
+            // Given
+            String[] propertyNames = {NAME_PROPERTY_NAME, ID_PROPERTY_NAME};
+            Object[] state = {USER_NAME, null};
+
+            when(event.getPersister()).thenReturn(persister);
+            when(persister.getPropertyNames()).thenReturn(propertyNames);
+            when(event.getState()).thenReturn(state);
+            when(event.getId()).thenReturn(null);
+            when(event.getEntity()).thenReturn(entity);
+
+            // When
+            updater.updatePropertyInState(event, NON_EXISTENT_PROPERTY, GENERATED_ID);
+
+            // Then
+            assertThat(state[FIRST_INDEX]).isEqualTo(USER_NAME);
+            assertThat(state[SECOND_INDEX]).isNull();
+
+            InOrder inOrder = inOrder(event, persister);
+            inOrder.verify(event, times(1)).getPersister();
+            inOrder.verify(persister, times(1)).getPropertyNames();
+            inOrder.verify(event, times(1)).getState();
+            inOrder.verify(event, times(1)).getId();
+            inOrder.verify(event, times(1)).getEntity();
+            verifyNoMoreInteractions(event, persister, entity);
+        }
+
+        @Test
+        @DisplayName("Should log warning when identifier has no matching field")
+        void shouldLogWarning_whenIdentifierHasNoMatchingField() {
+            // Given
+            String[] propertyNames = {NAME_PROPERTY_NAME};
+            Object[] state = {USER_NAME};
+            IdentifierWithUserId identifier = new IdentifierWithUserId();
+
+            when(event.getPersister()).thenReturn(persister);
+            when(persister.getPropertyNames()).thenReturn(propertyNames);
+            when(event.getState()).thenReturn(state);
+            when(event.getId()).thenReturn(identifier);
+            when(event.getEntity()).thenReturn(entity);
+
+            // When
+            updater.updatePropertyInState(event, NON_EXISTENT_PROPERTY, GENERATED_ID);
+
+            // Then
+            assertThat(state[FIRST_INDEX]).isEqualTo(USER_NAME);
+
+            InOrder inOrder = inOrder(event, persister);
+            inOrder.verify(event, times(1)).getPersister();
+            inOrder.verify(persister, times(1)).getPropertyNames();
+            inOrder.verify(event, times(1)).getState();
+            inOrder.verify(event, times(1)).getId();
+            inOrder.verify(event, times(1)).getEntity();
+            verifyNoMoreInteractions(event, persister, entity);
+        }
     }
 
-    @Test
-    void shouldHandlePropertyNotFoundGracefully() {
-        // Given
-        String[] propertyNames = {NAME_PROPERTY_NAME, ID_PROPERTY_NAME};
-        Object[] state = {USER_NAME, null};
+    /**
+     * Test helper class simulating an @IdClass identifier object.
+     */
+    @Setter
+    private static class IdentifierWithUserId {
+        private Long userId;
 
-        when(event.getPersister()).thenReturn(persister);
-        when(persister.getPropertyNames()).thenReturn(propertyNames);
-        when(event.getState()).thenReturn(state);
-        when(event.getId()).thenReturn(null);
-        when(event.getEntity()).thenReturn(entity);
-
-        // When
-        updater.updatePropertyInState(event, NON_EXISTENT_PROPERTY, GENERATED_ID);
-
-        // Then - state should remain unchanged
-        assertThat(state[FIRST_INDEX]).isEqualTo(USER_NAME);
-        assertThat(state[SECOND_INDEX]).isNull();
-    }
-
-    @Test
-    void shouldUpdatePropertyWithNullValue() {
-        // Given
-        String[] propertyNames = {ID_PROPERTY_NAME};
-        Object[] state = {EXISTING_ID}; // Existing value
-        Object nullValue = null;
-
-        when(event.getPersister()).thenReturn(persister);
-        when(persister.getPropertyNames()).thenReturn(propertyNames);
-        when(event.getState()).thenReturn(state);
-        when(event.getEntity()).thenReturn(entity);
-
-        // When
-        updater.updatePropertyInState(event, ID_PROPERTY_NAME, nullValue);
-
-        // Then
-        assertThat(state[FIRST_INDEX]).isNull();
-    }
-
-    @Test
-    void shouldUpdatePropertyWithDifferentTypes() {
-        // Given
-        String[] propertyNames = {ID_PROPERTY_NAME};
-        Object[] state = {null};
-
-        when(event.getPersister()).thenReturn(persister);
-        when(persister.getPropertyNames()).thenReturn(propertyNames);
-        when(event.getState()).thenReturn(state);
-        when(event.getEntity()).thenReturn(entity);
-
-        // When
-        updater.updatePropertyInState(event, ID_PROPERTY_NAME, STRING_ID);
-
-        // Then
-        assertThat(state[FIRST_INDEX]).isEqualTo(STRING_ID);
+        Long getUserId() {
+            return userId;
+        }
     }
 }

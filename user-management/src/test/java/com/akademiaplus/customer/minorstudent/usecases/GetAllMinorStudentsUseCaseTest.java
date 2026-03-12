@@ -16,6 +16,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -55,7 +56,8 @@ class GetAllMinorStudentsUseCaseTest {
 
             // Then
             assertThat(result).isEmpty();
-            verify(minorStudentRepository).findAll();
+
+            verify(minorStudentRepository, times(1)).findAll();
             verifyNoMoreInteractions(minorStudentRepository, modelMapper);
         }
 
@@ -83,12 +85,14 @@ class GetAllMinorStudentsUseCaseTest {
 
             // Then
             assertThat(result).containsExactly(dto1, dto2);
-            verify(minorStudentRepository).findAll();
-            verify(modelMapper).map(minorStudent1, GetMinorStudentResponseDTO.class);
-            verify(modelMapper).map(personPII1, dto1);
-            verify(modelMapper).map(minorStudent2, GetMinorStudentResponseDTO.class);
-            verify(modelMapper).map(personPII2, dto2);
-            verifyNoMoreInteractions(minorStudentRepository, modelMapper);
+
+            InOrder inOrder = inOrder(minorStudentRepository, modelMapper);
+            inOrder.verify(minorStudentRepository, times(1)).findAll();
+            inOrder.verify(modelMapper, times(1)).map(minorStudent1, GetMinorStudentResponseDTO.class);
+            inOrder.verify(modelMapper, times(1)).map(personPII1, dto1);
+            inOrder.verify(modelMapper, times(1)).map(minorStudent2, GetMinorStudentResponseDTO.class);
+            inOrder.verify(modelMapper, times(1)).map(personPII2, dto2);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

@@ -24,7 +24,9 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -59,7 +61,9 @@ class DeleteUseCaseSupportTest {
             DeleteUseCaseSupport.executeDelete(repository, COMPOSITE_ID, ENTITY_TYPE, ENTITY_ID);
 
             // Then
-            verify(repository).delete(entity);
+            verify(repository, times(1)).findById(COMPOSITE_ID);
+            verify(repository, times(1)).delete(entity);
+            verifyNoMoreInteractions(repository);
         }
 
         @Test
@@ -78,6 +82,9 @@ class DeleteUseCaseSupportTest {
                         assertThat(enfe.getEntityType()).isEqualTo(ENTITY_TYPE);
                         assertThat(enfe.getEntityId()).isEqualTo(ENTITY_ID);
                     });
+
+            verify(repository, times(1)).findById(COMPOSITE_ID);
+            verifyNoMoreInteractions(repository);
         }
 
         @Test
@@ -103,6 +110,10 @@ class DeleteUseCaseSupportTest {
                         assertThat(edna.getReason()).isNull();
                         assertThat(edna.getCause()).isSameAs(cause);
                     });
+
+            verify(repository, times(1)).findById(COMPOSITE_ID);
+            verify(repository, times(1)).delete(entity);
+            verifyNoMoreInteractions(repository);
         }
     }
 
@@ -123,19 +134,30 @@ class DeleteUseCaseSupportTest {
 
             // Then
             assertThat(result).isSameAs(entity);
+            verify(repository, times(1)).findById(COMPOSITE_ID);
+            verifyNoMoreInteractions(repository);
         }
 
         @Test
         @DisplayName("Should throw EntityNotFoundException when not found")
         void shouldThrowEntityNotFound_whenNotFound() {
-            // Given
+            // Given: repository returns empty
             when(repository.findById(COMPOSITE_ID)).thenReturn(Optional.empty());
 
-            // When / Then
+            // When/Then: should throw EntityNotFoundException with correct fields
             assertThatThrownBy(() ->
                     DeleteUseCaseSupport.findOrThrow(
                             repository, COMPOSITE_ID, ENTITY_TYPE, ENTITY_ID))
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .satisfies(ex -> {
+                        EntityNotFoundException enfe = (EntityNotFoundException) ex;
+                        assertThat(enfe.getEntityType()).isEqualTo(ENTITY_TYPE);
+                        assertThat(enfe.getEntityId()).isEqualTo(ENTITY_ID);
+                    });
+
+            // Rule 9: only findById called, no downstream operations
+            verify(repository, times(1)).findById(COMPOSITE_ID);
+            verifyNoMoreInteractions(repository);
         }
     }
 }

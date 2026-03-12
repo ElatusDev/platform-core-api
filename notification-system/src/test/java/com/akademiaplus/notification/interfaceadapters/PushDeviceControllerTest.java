@@ -27,7 +27,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -85,8 +89,8 @@ class PushDeviceControllerTest {
                     .andExpect(jsonPath("$.deviceToken").value(DEVICE_TOKEN))
                     .andExpect(jsonPath("$.platform").value("ANDROID"));
 
-            verify(registerPushDeviceUseCase).register(request);
-            verifyNoMoreInteractions(registerPushDeviceUseCase, unregisterPushDeviceUseCase);
+            verify(registerPushDeviceUseCase, times(1)).register(request);
+            verifyNoMoreInteractions(registerPushDeviceUseCase, unregisterPushDeviceUseCase, messageService);
         }
     }
 
@@ -101,8 +105,8 @@ class PushDeviceControllerTest {
             mockMvc.perform(delete(BASE_PATH + "/{deviceToken}", DEVICE_TOKEN))
                     .andExpect(status().isNoContent());
 
-            verify(unregisterPushDeviceUseCase).unregister(DEVICE_TOKEN);
-            verifyNoMoreInteractions(registerPushDeviceUseCase, unregisterPushDeviceUseCase);
+            verify(unregisterPushDeviceUseCase, times(1)).unregister(DEVICE_TOKEN);
+            verifyNoMoreInteractions(registerPushDeviceUseCase, unregisterPushDeviceUseCase, messageService);
         }
 
         @Test
@@ -118,9 +122,9 @@ class PushDeviceControllerTest {
             mockMvc.perform(delete(BASE_PATH + "/{deviceToken}", DEVICE_TOKEN))
                     .andExpect(status().isNotFound());
 
-            verify(unregisterPushDeviceUseCase).unregister(DEVICE_TOKEN);
-            verify(messageService).getEntityNotFound(EntityType.PUSH_DEVICE, DEVICE_TOKEN);
-            verifyNoMoreInteractions(unregisterPushDeviceUseCase, messageService);
+            verify(unregisterPushDeviceUseCase, times(1)).unregister(DEVICE_TOKEN);
+            verify(messageService, times(1)).getEntityNotFound(EntityType.PUSH_DEVICE, DEVICE_TOKEN);
+            verifyNoMoreInteractions(registerPushDeviceUseCase, unregisterPushDeviceUseCase, messageService);
         }
     }
 }

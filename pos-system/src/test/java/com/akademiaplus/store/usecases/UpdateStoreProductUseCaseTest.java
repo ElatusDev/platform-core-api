@@ -19,6 +19,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -90,10 +91,14 @@ class UpdateStoreProductUseCaseTest {
             StoreProductCreationResponseDTO result = useCase.update(PRODUCT_ID, dto);
 
             // Then
-            verify(storeProductRepository).findById(compositeId);
-            verify(modelMapper).map(dto, existing, UpdateStoreProductUseCase.MAP_NAME);
-            verify(storeProductRepository).saveAndFlush(existing);
             assertThat(result.getStoreProductId()).isEqualTo(PRODUCT_ID);
+            InOrder inOrder = inOrder(tenantContextHolder, storeProductRepository, modelMapper);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(storeProductRepository, times(1)).findById(compositeId);
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, UpdateStoreProductUseCase.MAP_NAME);
+            inOrder.verify(storeProductRepository, times(1)).saveAndFlush(existing);
+            inOrder.verify(modelMapper, times(1)).map(saved, StoreProductCreationResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -120,6 +125,12 @@ class UpdateStoreProductUseCaseTest {
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.STORE_PRODUCT);
                         assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(PRODUCT_ID));
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, storeProductRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(storeProductRepository, times(1)).findById(compositeId);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(modelMapper);
         }
     }
 }

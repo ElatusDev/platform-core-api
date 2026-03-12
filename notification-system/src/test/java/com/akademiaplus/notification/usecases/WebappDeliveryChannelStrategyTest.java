@@ -23,7 +23,13 @@ import java.io.IOException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("WebappDeliveryChannelStrategy")
 @ExtendWith(MockitoExtension.class)
@@ -67,6 +73,7 @@ class WebappDeliveryChannelStrategyTest {
 
             // Then
             assertThat(channel).isEqualTo(DeliveryChannel.WEBAPP);
+            verifyNoInteractions(sseEmitterRegistry);
         }
     }
 
@@ -88,6 +95,9 @@ class WebappDeliveryChannelStrategyTest {
             // Then
             assertThat(result.status()).isEqualTo(DeliveryStatus.SENT);
             assertThat(result.failureReason()).isNull();
+            verify(sseEmitterRegistry, times(1)).getEmitter(TENANT_ID, USER_ID);
+            verify(emitter, times(1)).send(org.mockito.ArgumentMatchers.isA(SseEmitter.SseEventBuilder.class));
+            verifyNoMoreInteractions(sseEmitterRegistry, emitter);
         }
 
         @Test
@@ -102,7 +112,9 @@ class WebappDeliveryChannelStrategyTest {
             strategy.deliver(notification, RECIPIENT_IDENTIFIER);
 
             // Then
-            verify(emitter).send(org.mockito.ArgumentMatchers.isA(SseEmitter.SseEventBuilder.class));
+            verify(sseEmitterRegistry, times(1)).getEmitter(TENANT_ID, USER_ID);
+            verify(emitter, times(1)).send(org.mockito.ArgumentMatchers.isA(SseEmitter.SseEventBuilder.class));
+            verifyNoMoreInteractions(sseEmitterRegistry, emitter);
         }
 
         @Test
@@ -118,6 +130,8 @@ class WebappDeliveryChannelStrategyTest {
             // Then
             assertThat(result.status()).isEqualTo(DeliveryStatus.FAILED);
             assertThat(result.failureReason()).isEqualTo(WebappDeliveryChannelStrategy.ERROR_USER_NOT_CONNECTED);
+            verify(sseEmitterRegistry, times(1)).getEmitter(TENANT_ID, USER_ID);
+            verifyNoMoreInteractions(sseEmitterRegistry);
         }
 
         @Test
@@ -136,6 +150,10 @@ class WebappDeliveryChannelStrategyTest {
             // Then
             assertThat(result.status()).isEqualTo(DeliveryStatus.FAILED);
             assertThat(result.failureReason()).isEqualTo(IO_ERROR_MESSAGE);
+            verify(sseEmitterRegistry, times(1)).getEmitter(TENANT_ID, USER_ID);
+            verify(emitter, times(1)).send(org.mockito.ArgumentMatchers.isA(SseEmitter.SseEventBuilder.class));
+            verify(sseEmitterRegistry, times(1)).remove(TENANT_ID, USER_ID);
+            verifyNoMoreInteractions(sseEmitterRegistry, emitter);
         }
 
         @Test
@@ -152,7 +170,10 @@ class WebappDeliveryChannelStrategyTest {
             strategy.deliver(notification, RECIPIENT_IDENTIFIER);
 
             // Then
-            verify(sseEmitterRegistry).remove(TENANT_ID, USER_ID);
+            verify(sseEmitterRegistry, times(1)).getEmitter(TENANT_ID, USER_ID);
+            verify(emitter, times(1)).send(org.mockito.ArgumentMatchers.isA(SseEmitter.SseEventBuilder.class));
+            verify(sseEmitterRegistry, times(1)).remove(TENANT_ID, USER_ID);
+            verifyNoMoreInteractions(sseEmitterRegistry, emitter);
         }
     }
 }

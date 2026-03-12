@@ -24,6 +24,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -35,7 +36,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link GetCurrentUserUseCase}.
@@ -126,6 +127,13 @@ class GetCurrentUserUseCaseTest {
             assertThat(result.getEmail()).isEqualTo(EMAIL);
             assertThat(result.getBirthdate()).isEqualTo(BIRTHDATE);
             assertThat(result.getEntryDate()).isEqualTo(ENTRY_DATE);
+
+            InOrder inOrder = inOrder(hashingService, internalAuthRepository, employeeRepository);
+            inOrder.verify(hashingService, times(1)).generateHash(USERNAME);
+            inOrder.verify(internalAuthRepository, times(1)).findByUsernameHash(USERNAME_HASH);
+            inOrder.verify(employeeRepository, times(1)).findByInternalAuthId(INTERNAL_AUTH_ID);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(collaboratorRepository);
         }
     }
 
@@ -165,6 +173,13 @@ class GetCurrentUserUseCaseTest {
             assertThat(result.getEmail()).isEqualTo(EMAIL);
             assertThat(result.getBirthdate()).isEqualTo(BIRTHDATE);
             assertThat(result.getEntryDate()).isEqualTo(ENTRY_DATE);
+
+            InOrder inOrder = inOrder(hashingService, internalAuthRepository, employeeRepository, collaboratorRepository);
+            inOrder.verify(hashingService, times(1)).generateHash(USERNAME);
+            inOrder.verify(internalAuthRepository, times(1)).findByUsernameHash(USERNAME_HASH);
+            inOrder.verify(employeeRepository, times(1)).findByInternalAuthId(INTERNAL_AUTH_ID);
+            inOrder.verify(collaboratorRepository, times(1)).findByInternalAuthId(INTERNAL_AUTH_ID);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -181,6 +196,8 @@ class GetCurrentUserUseCaseTest {
             assertThatThrownBy(() -> useCase.getCurrentUser())
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessage(GetCurrentUserUseCase.ERROR_NO_AUTHENTICATION);
+
+            verifyNoInteractions(hashingService, internalAuthRepository, employeeRepository, collaboratorRepository);
         }
 
         @Test
@@ -196,6 +213,12 @@ class GetCurrentUserUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.getCurrentUser())
                     .isInstanceOf(EntityNotFoundException.class);
+
+            InOrder inOrder = inOrder(hashingService, internalAuthRepository);
+            inOrder.verify(hashingService, times(1)).generateHash(USERNAME);
+            inOrder.verify(internalAuthRepository, times(1)).findByUsernameHash(USERNAME_HASH);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(employeeRepository, collaboratorRepository);
         }
 
         @Test
@@ -216,6 +239,13 @@ class GetCurrentUserUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.getCurrentUser())
                     .isInstanceOf(EntityNotFoundException.class);
+
+            InOrder inOrder = inOrder(hashingService, internalAuthRepository, employeeRepository, collaboratorRepository);
+            inOrder.verify(hashingService, times(1)).generateHash(USERNAME);
+            inOrder.verify(internalAuthRepository, times(1)).findByUsernameHash(USERNAME_HASH);
+            inOrder.verify(employeeRepository, times(1)).findByInternalAuthId(INTERNAL_AUTH_ID);
+            inOrder.verify(collaboratorRepository, times(1)).findByInternalAuthId(INTERNAL_AUTH_ID);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -247,6 +277,13 @@ class GetCurrentUserUseCaseTest {
             assertThat(result.getFirstName()).isNull();
             assertThat(result.getLastName()).isNull();
             assertThat(result.getEmail()).isNull();
+
+            InOrder inOrder = inOrder(hashingService, internalAuthRepository, employeeRepository);
+            inOrder.verify(hashingService, times(1)).generateHash(USERNAME);
+            inOrder.verify(internalAuthRepository, times(1)).findByUsernameHash(USERNAME_HASH);
+            inOrder.verify(employeeRepository, times(1)).findByInternalAuthId(INTERNAL_AUTH_ID);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(collaboratorRepository);
         }
     }
 

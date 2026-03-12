@@ -16,6 +16,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -24,7 +25,11 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -75,6 +80,11 @@ class GetDemoRequestByIdUseCaseTest {
 
             // Then
             assertThat(result.getDemoRequestId()).isEqualTo(DEMO_REQUEST_ID);
+
+            InOrder inOrder = inOrder(demoRequestRepository, modelMapper);
+            inOrder.verify(demoRequestRepository, times(1)).findById(DEMO_REQUEST_ID);
+            inOrder.verify(modelMapper, times(1)).map(model, GetDemoRequestResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -92,6 +102,10 @@ class GetDemoRequestByIdUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.get(DEMO_REQUEST_ID))
                     .isInstanceOf(EntityNotFoundException.class);
+
+            verify(demoRequestRepository, times(1)).findById(DEMO_REQUEST_ID);
+            verifyNoMoreInteractions(demoRequestRepository);
+            verifyNoInteractions(modelMapper);
         }
     }
 }

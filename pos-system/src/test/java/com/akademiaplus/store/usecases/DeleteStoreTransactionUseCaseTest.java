@@ -18,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -26,9 +27,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link DeleteStoreTransactionUseCase}.
@@ -74,7 +73,12 @@ class DeleteStoreTransactionUseCaseTest {
             useCase.delete(STORE_TRANSACTION_ID);
 
             // Then
-            verify(repository).delete(entity);
+            assertThat(entity).isNotNull();
+            InOrder inOrder = inOrder(tenantContextHolder, repository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(repository, times(1)).findById(compositeId);
+            inOrder.verify(repository, times(1)).delete(entity);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -99,6 +103,11 @@ class DeleteStoreTransactionUseCaseTest {
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.STORE_TRANSACTION);
                         assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(STORE_TRANSACTION_ID));
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, repository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(repository, times(1)).findById(compositeId);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -128,6 +137,12 @@ class DeleteStoreTransactionUseCaseTest {
                         assertThat(edna.getEntityId()).isEqualTo(String.valueOf(STORE_TRANSACTION_ID));
                         assertThat(edna.getReason()).isNull();
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, repository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(repository, times(1)).findById(compositeId);
+            inOrder.verify(repository, times(1)).delete(entity);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

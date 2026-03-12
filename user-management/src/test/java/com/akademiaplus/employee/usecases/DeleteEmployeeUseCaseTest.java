@@ -18,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -26,9 +27,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link DeleteEmployeeUseCase}.
@@ -74,7 +73,13 @@ class DeleteEmployeeUseCaseTest {
             useCase.delete(EMPLOYEE_ID);
 
             // Then
-            verify(employeeRepository).delete(entity);
+            assertThat(entity).isNotNull();
+
+            InOrder inOrder = inOrder(tenantContextHolder, employeeRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(employeeRepository, times(1)).findById(compositeId);
+            inOrder.verify(employeeRepository, times(1)).delete(entity);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -94,11 +99,17 @@ class DeleteEmployeeUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(EMPLOYEE_ID))
                     .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(EntityType.EMPLOYEE + " with ID " + EMPLOYEE_ID + " not found")
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.EMPLOYEE);
                         assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(EMPLOYEE_ID));
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, employeeRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(employeeRepository, times(1)).findById(compositeId);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -121,6 +132,7 @@ class DeleteEmployeeUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(EMPLOYEE_ID))
                     .isInstanceOf(EntityDeletionNotAllowedException.class)
+                    .hasMessage("Deletion of " + EntityType.EMPLOYEE + " with ID " + EMPLOYEE_ID + " not allowed")
                     .satisfies(ex -> {
                         EntityDeletionNotAllowedException edna =
                                 (EntityDeletionNotAllowedException) ex;
@@ -128,6 +140,12 @@ class DeleteEmployeeUseCaseTest {
                         assertThat(edna.getEntityId()).isEqualTo(String.valueOf(EMPLOYEE_ID));
                         assertThat(edna.getReason()).isNull();
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, employeeRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(employeeRepository, times(1)).findById(compositeId);
+            inOrder.verify(employeeRepository, times(1)).delete(entity);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

@@ -8,6 +8,7 @@
 package com.akademiaplus.payment.usecases;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -53,7 +54,7 @@ class GetAllPaymentAdultStudentsUseCaseTest {
             List<GetPaymentAdultStudentResponseDTO> result = useCase.getAll(null);
             // Then
             assertThat(result).isEmpty();
-            verify(paymentAdultStudentRepository).findAll();
+            verify(paymentAdultStudentRepository, times(1)).findAll();
             verifyNoMoreInteractions(paymentAdultStudentRepository, modelMapper);
         }
 
@@ -72,9 +73,9 @@ class GetAllPaymentAdultStudentsUseCaseTest {
             List<GetPaymentAdultStudentResponseDTO> result = useCase.getAll(null);
             // Then
             assertThat(result).containsExactly(dto1, dto2);
-            verify(paymentAdultStudentRepository).findAll();
-            verify(modelMapper).map(paymentAdultStudent1, GetPaymentAdultStudentResponseDTO.class);
-            verify(modelMapper).map(paymentAdultStudent2, GetPaymentAdultStudentResponseDTO.class);
+            verify(paymentAdultStudentRepository, times(1)).findAll();
+            verify(modelMapper, times(1)).map(paymentAdultStudent1, GetPaymentAdultStudentResponseDTO.class);
+            verify(modelMapper, times(1)).map(paymentAdultStudent2, GetPaymentAdultStudentResponseDTO.class);
             verifyNoMoreInteractions(paymentAdultStudentRepository, modelMapper);
         }
     }
@@ -99,8 +100,9 @@ class GetAllPaymentAdultStudentsUseCaseTest {
 
             // Then
             assertThat(result).containsExactly(dto);
-            verify(paymentAdultStudentRepository).findByAdultStudentId(adultStudentId);
-            verifyNoMoreInteractions(paymentAdultStudentRepository);
+            verify(paymentAdultStudentRepository, times(1)).findByAdultStudentId(adultStudentId);
+            verify(modelMapper, times(1)).map(paymentAdultStudent, GetPaymentAdultStudentResponseDTO.class);
+            verifyNoMoreInteractions(paymentAdultStudentRepository, modelMapper);
         }
     }
 }

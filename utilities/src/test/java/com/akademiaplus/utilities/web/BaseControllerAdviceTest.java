@@ -33,7 +33,12 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -92,6 +97,8 @@ class BaseControllerAdviceTest {
 
             // Then
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+            verify(messageService, times(1)).getEntityNotFound(EntityType.EMPLOYEE, ENTITY_ID);
+            verifyNoMoreInteractions(messageService);
         }
 
         @Test
@@ -108,6 +115,8 @@ class BaseControllerAdviceTest {
             // Then
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode()).isEqualTo(BaseControllerAdvice.CODE_ENTITY_NOT_FOUND);
+            verify(messageService, times(1)).getEntityNotFound(EntityType.EMPLOYEE, ENTITY_ID);
+            verifyNoMoreInteractions(messageService);
         }
 
         @Test
@@ -124,6 +133,8 @@ class BaseControllerAdviceTest {
             // Then
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getMessage()).isEqualTo(NOT_FOUND_MESSAGE);
+            verify(messageService, times(1)).getEntityNotFound(EntityType.EMPLOYEE, ENTITY_ID);
+            verifyNoMoreInteractions(messageService);
         }
     }
 
@@ -149,6 +160,8 @@ class BaseControllerAdviceTest {
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode())
                     .isEqualTo(BaseControllerAdvice.CODE_DELETION_CONSTRAINT_VIOLATION);
+            verify(messageService, times(1)).getEntityDeleteNotAllowed(EntityType.EMPLOYEE);
+            verifyNoMoreInteractions(messageService);
         }
 
         @Test
@@ -169,6 +182,9 @@ class BaseControllerAdviceTest {
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode())
                     .isEqualTo(BaseControllerAdvice.CODE_DELETION_BUSINESS_RULE);
+            verify(messageService, times(1)).getEntityDeleteNotAllowedWithReason(
+                    EntityType.TUTOR, "7", BUSINESS_REASON);
+            verifyNoMoreInteractions(messageService);
         }
 
         @Test
@@ -187,6 +203,8 @@ class BaseControllerAdviceTest {
             // Then
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getMessage()).isEqualTo(DELETE_CONSTRAINT_MESSAGE);
+            verify(messageService, times(1)).getEntityDeleteNotAllowed(EntityType.EMPLOYEE);
+            verifyNoMoreInteractions(messageService);
         }
 
         @Test
@@ -205,6 +223,9 @@ class BaseControllerAdviceTest {
             // Then
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getMessage()).isEqualTo(DELETE_REASON_MESSAGE);
+            verify(messageService, times(1)).getEntityDeleteNotAllowedWithReason(
+                    EntityType.TUTOR, "7", BUSINESS_REASON);
+            verifyNoMoreInteractions(messageService);
         }
     }
 
@@ -226,6 +247,8 @@ class BaseControllerAdviceTest {
 
             // Then
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+            verify(messageService, times(1)).getEntityDuplicateField(EntityType.EMPLOYEE, "email");
+            verifyNoMoreInteractions(messageService);
         }
 
         @Test
@@ -244,6 +267,8 @@ class BaseControllerAdviceTest {
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode()).isEqualTo(BaseControllerAdvice.CODE_DUPLICATE_ENTITY);
             assertThat(response.getBody().getMessage()).isEqualTo(DUPLICATE_MESSAGE);
+            verify(messageService, times(1)).getEntityDuplicateField(EntityType.EMPLOYEE, "email");
+            verifyNoMoreInteractions(messageService);
         }
     }
 
@@ -266,6 +291,8 @@ class BaseControllerAdviceTest {
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode())
                     .isEqualTo(BaseControllerAdvice.CODE_DATA_INTEGRITY_VIOLATION);
+            verify(messageService, times(1)).getConstraintViolation();
+            verifyNoMoreInteractions(messageService);
         }
 
         @Test
@@ -281,6 +308,8 @@ class BaseControllerAdviceTest {
             // Then
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getMessage()).isEqualTo(CONSTRAINT_MESSAGE);
+            verify(messageService, times(1)).getConstraintViolation();
+            verifyNoMoreInteractions(messageService);
         }
     }
 
@@ -305,6 +334,7 @@ class BaseControllerAdviceTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode()).isEqualTo(BaseControllerAdvice.CODE_VALIDATION_ERROR);
+            verifyNoInteractions(messageService);
         }
 
         @Test
@@ -327,6 +357,7 @@ class BaseControllerAdviceTest {
             assertThat(response.getBody().getDetails().get(0).getField()).isEqualTo("email");
             assertThat(response.getBody().getDetails().get(0).getMessage()).isEqualTo("must not be blank");
             assertThat(response.getBody().getDetails().get(1).getField()).isEqualTo("birthDate");
+            verifyNoInteractions(messageService);
         }
     }
 
@@ -349,6 +380,8 @@ class BaseControllerAdviceTest {
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode()).isEqualTo(BaseControllerAdvice.CODE_INVALID_TENANT);
             assertThat(response.getBody().getMessage()).isEqualTo(INVALID_TENANT_MESSAGE);
+            verify(messageService, times(1)).getInvalidTenant();
+            verifyNoMoreInteractions(messageService);
         }
     }
 
@@ -371,6 +404,8 @@ class BaseControllerAdviceTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode()).isEqualTo(BaseControllerAdvice.CODE_INTERNAL_ERROR);
+            verify(messageService, times(1)).getInternalErrorHighSeverity();
+            verifyNoMoreInteractions(messageService);
         }
 
         @Test
@@ -388,6 +423,8 @@ class BaseControllerAdviceTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getMessage()).isEqualTo(INTERNAL_ERROR_MESSAGE);
+            verify(messageService, times(1)).getInternalErrorHighSeverity();
+            verifyNoMoreInteractions(messageService);
         }
     }
 
@@ -410,6 +447,50 @@ class BaseControllerAdviceTest {
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode()).isEqualTo(BaseControllerAdvice.CODE_INTERNAL_ERROR);
             assertThat(response.getBody().getMessage()).isEqualTo(INTERNAL_ERROR_MESSAGE);
+            verify(messageService, times(1)).getInternalErrorHighSeverity();
+            verifyNoMoreInteractions(messageService);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator exception propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when messageService.getEntityNotFound throws")
+        void shouldPropagateException_whenMessageServiceGetEntityNotFoundThrows() {
+            // Given: messageService throws on entity name resolution
+            EntityNotFoundException ex = new EntityNotFoundException(EntityType.EMPLOYEE, ENTITY_ID);
+            RuntimeException messageError = new RuntimeException("Message resolution failed");
+            when(messageService.getEntityNotFound(EntityType.EMPLOYEE, ENTITY_ID))
+                    .thenThrow(messageError);
+
+            // When/Then: exception should propagate
+            assertThatThrownBy(() -> advice.handleEntityNotFound(ex))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Message resolution failed");
+
+            verify(messageService, times(1)).getEntityNotFound(EntityType.EMPLOYEE, ENTITY_ID);
+            verifyNoMoreInteractions(messageService);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when messageService.getInternalErrorHighSeverity throws")
+        void shouldPropagateException_whenMessageServiceGetInternalErrorHighSeverityThrows() {
+            // Given: messageService throws on internal error resolution
+            EncryptionFailureException ex = new EncryptionFailureException("AES failed",
+                    new RuntimeException("key error"));
+            RuntimeException messageError = new RuntimeException("Message resolution failed");
+            when(messageService.getInternalErrorHighSeverity())
+                    .thenThrow(messageError);
+
+            // When/Then: exception should propagate
+            assertThatThrownBy(() -> advice.handleCryptoFailure(ex))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Message resolution failed");
+
+            verify(messageService, times(1)).getInternalErrorHighSeverity();
+            verifyNoMoreInteractions(messageService);
         }
     }
 }

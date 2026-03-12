@@ -26,6 +26,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -128,11 +129,18 @@ class CollaboratorUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(COLLABORATOR_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(EntityType.COLLABORATOR + " with ID " + COLLABORATOR_ID + " not found")
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.COLLABORATOR);
                         assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(COLLABORATOR_ID));
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, collaboratorRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(collaboratorRepository, times(1)).findById(compositeId);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(personPIIRepository, modelMapper, piiNormalizer, hashingService);
         }
     }
 
@@ -167,9 +175,23 @@ class CollaboratorUpdateUseCaseTest {
             CollaboratorUpdateResponseDTO result = useCase.update(COLLABORATOR_ID, dto);
 
             // Then
-            verify(collaboratorRepository).saveAndFlush(existing);
             assertThat(result.getCollaboratorId()).isEqualTo(COLLABORATOR_ID);
             assertThat(result.getMessage()).isEqualTo(CollaboratorUpdateUseCase.UPDATE_SUCCESS_MESSAGE);
+
+            InOrder inOrder = inOrder(tenantContextHolder, collaboratorRepository, modelMapper,
+                    piiNormalizer, hashingService, personPIIRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(collaboratorRepository, times(1)).findById(compositeId);
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, CollaboratorUpdateUseCase.MAP_NAME);
+            inOrder.verify(modelMapper, times(1)).map(dto, pii);
+            inOrder.verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            inOrder.verify(personPIIRepository, times(1)).existsByEmailHashAndPersonPiiIdNot(EMAIL_HASH, PERSON_PII_ID);
+            inOrder.verify(piiNormalizer, times(1)).normalizePhoneNumber(TEST_PHONE);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_PHONE);
+            inOrder.verify(personPIIRepository, times(1)).existsByPhoneHashAndPersonPiiIdNot(PHONE_HASH, PERSON_PII_ID);
+            inOrder.verify(collaboratorRepository, times(1)).saveAndFlush(existing);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -206,6 +228,21 @@ class CollaboratorUpdateUseCaseTest {
 
             // Then
             assertThat(auth.getRole()).isEqualTo(TEST_ROLE);
+
+            InOrder inOrder = inOrder(tenantContextHolder, collaboratorRepository, modelMapper,
+                    piiNormalizer, hashingService, personPIIRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(collaboratorRepository, times(1)).findById(compositeId);
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, CollaboratorUpdateUseCase.MAP_NAME);
+            inOrder.verify(modelMapper, times(1)).map(dto, pii);
+            inOrder.verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            inOrder.verify(personPIIRepository, times(1)).existsByEmailHashAndPersonPiiIdNot(EMAIL_HASH, PERSON_PII_ID);
+            inOrder.verify(piiNormalizer, times(1)).normalizePhoneNumber(TEST_PHONE);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_PHONE);
+            inOrder.verify(personPIIRepository, times(1)).existsByPhoneHashAndPersonPiiIdNot(PHONE_HASH, PERSON_PII_ID);
+            inOrder.verify(collaboratorRepository, times(1)).saveAndFlush(existing);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -240,10 +277,23 @@ class CollaboratorUpdateUseCaseTest {
             useCase.update(COLLABORATOR_ID, dto);
 
             // Then
-            verify(piiNormalizer).normalizeEmail(TEST_EMAIL);
-            verify(piiNormalizer).normalizePhoneNumber(TEST_PHONE);
-            verify(hashingService).generateHash(NORMALIZED_EMAIL);
-            verify(hashingService).generateHash(NORMALIZED_PHONE);
+            assertThat(pii.getEmailHash()).isEqualTo(EMAIL_HASH);
+            assertThat(pii.getPhoneHash()).isEqualTo(PHONE_HASH);
+
+            InOrder inOrder = inOrder(tenantContextHolder, collaboratorRepository, modelMapper,
+                    piiNormalizer, hashingService, personPIIRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(collaboratorRepository, times(1)).findById(compositeId);
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, CollaboratorUpdateUseCase.MAP_NAME);
+            inOrder.verify(modelMapper, times(1)).map(dto, pii);
+            inOrder.verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            inOrder.verify(personPIIRepository, times(1)).existsByEmailHashAndPersonPiiIdNot(EMAIL_HASH, PERSON_PII_ID);
+            inOrder.verify(piiNormalizer, times(1)).normalizePhoneNumber(TEST_PHONE);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_PHONE);
+            inOrder.verify(personPIIRepository, times(1)).existsByPhoneHashAndPersonPiiIdNot(PHONE_HASH, PERSON_PII_ID);
+            inOrder.verify(collaboratorRepository, times(1)).saveAndFlush(existing);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -279,6 +329,17 @@ class CollaboratorUpdateUseCaseTest {
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.COLLABORATOR);
                         assertThat(dee.getField()).isEqualTo(PiiField.EMAIL);
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, collaboratorRepository, modelMapper,
+                    piiNormalizer, hashingService, personPIIRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(collaboratorRepository, times(1)).findById(compositeId);
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, CollaboratorUpdateUseCase.MAP_NAME);
+            inOrder.verify(modelMapper, times(1)).map(dto, pii);
+            inOrder.verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            inOrder.verify(personPIIRepository, times(1)).existsByEmailHashAndPersonPiiIdNot(EMAIL_HASH, PERSON_PII_ID);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -310,6 +371,20 @@ class CollaboratorUpdateUseCaseTest {
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.COLLABORATOR);
                         assertThat(dee.getField()).isEqualTo(PiiField.PHONE_NUMBER);
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, collaboratorRepository, modelMapper,
+                    piiNormalizer, hashingService, personPIIRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(collaboratorRepository, times(1)).findById(compositeId);
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, CollaboratorUpdateUseCase.MAP_NAME);
+            inOrder.verify(modelMapper, times(1)).map(dto, pii);
+            inOrder.verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            inOrder.verify(personPIIRepository, times(1)).existsByEmailHashAndPersonPiiIdNot(EMAIL_HASH, PERSON_PII_ID);
+            inOrder.verify(piiNormalizer, times(1)).normalizePhoneNumber(TEST_PHONE);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_PHONE);
+            inOrder.verify(personPIIRepository, times(1)).existsByPhoneHashAndPersonPiiIdNot(PHONE_HASH, PERSON_PII_ID);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

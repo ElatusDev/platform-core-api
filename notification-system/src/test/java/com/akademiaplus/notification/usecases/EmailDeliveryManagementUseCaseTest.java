@@ -36,7 +36,10 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @DisplayName("EmailDeliveryManagementUseCase")
@@ -122,12 +125,16 @@ class EmailDeliveryManagementUseCaseTest {
 
             // Then
             assertThat(result).hasSize(1);
-            verify(notificationDeliveryRepository).save(deliveryModel);
+            verify(applicationContext, times(1)).getBean(NotificationDeliveryDataModel.class);
+            verify(notificationDeliveryRepository, times(1)).save(deliveryModel);
+            verify(modelMapper, times(1)).map(savedDelivery, EmailDeliveryResponseDTO.class);
             assertThat(deliveryModel.getNotificationId()).isEqualTo(NOTIFICATION_ID);
             assertThat(deliveryModel.getChannel()).isEqualTo(DeliveryChannel.EMAIL);
             assertThat(deliveryModel.getRecipientIdentifier()).isEqualTo(RECIPIENT_EMAIL);
             assertThat(deliveryModel.getStatus()).isEqualTo(DeliveryStatus.PENDING);
             assertThat(deliveryModel.getRetryCount()).isEqualTo(EmailDeliveryManagementUseCase.INITIAL_RETRY_COUNT);
+            verifyNoMoreInteractions(applicationContext, notificationDeliveryRepository,
+                    tenantContextHolder, emailDeliveryChannelStrategy, modelMapper);
         }
     }
 
@@ -151,7 +158,10 @@ class EmailDeliveryManagementUseCaseTest {
 
             // Then
             assertThat(result).hasSize(1);
-            verify(notificationDeliveryRepository).findByNotificationIdAndChannel(NOTIFICATION_ID, DeliveryChannel.EMAIL);
+            verify(notificationDeliveryRepository, times(1)).findByNotificationIdAndChannel(NOTIFICATION_ID, DeliveryChannel.EMAIL);
+            verify(modelMapper, times(1)).map(delivery, EmailDeliveryResponseDTO.class);
+            verifyNoMoreInteractions(applicationContext, notificationDeliveryRepository,
+                    tenantContextHolder, emailDeliveryChannelStrategy, modelMapper);
         }
     }
 
@@ -175,7 +185,10 @@ class EmailDeliveryManagementUseCaseTest {
 
             // Then
             assertThat(result).isEqualTo(detailDTO);
-            verify(notificationDeliveryRepository).findByNotificationDeliveryId(DELIVERY_ID);
+            verify(notificationDeliveryRepository, times(1)).findByNotificationDeliveryId(DELIVERY_ID);
+            verify(modelMapper, times(1)).map(delivery, EmailDeliveryDetailResponseDTO.class);
+            verifyNoMoreInteractions(applicationContext, notificationDeliveryRepository,
+                    tenantContextHolder, emailDeliveryChannelStrategy, modelMapper);
         }
 
         @Test
@@ -189,6 +202,10 @@ class EmailDeliveryManagementUseCaseTest {
             assertThatThrownBy(() -> useCase.getDeliveryById(DELIVERY_ID))
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasMessageContaining(String.valueOf(DELIVERY_ID));
+            verify(notificationDeliveryRepository, times(1)).findByNotificationDeliveryId(DELIVERY_ID);
+            verifyNoInteractions(modelMapper);
+            verifyNoMoreInteractions(applicationContext, notificationDeliveryRepository,
+                    tenantContextHolder, emailDeliveryChannelStrategy);
         }
     }
 
@@ -223,7 +240,11 @@ class EmailDeliveryManagementUseCaseTest {
             assertThat(delivery.getStatus()).isEqualTo(DeliveryStatus.DELIVERED);
             assertThat(delivery.getFailureReason()).isEqualTo(FAILURE_REASON);
             assertThat(delivery.getExternalId()).isEqualTo(EXTERNAL_ID);
-            verify(notificationDeliveryRepository).save(delivery);
+            verify(notificationDeliveryRepository, times(1)).findByNotificationDeliveryId(DELIVERY_ID);
+            verify(notificationDeliveryRepository, times(1)).save(delivery);
+            verify(modelMapper, times(1)).map(savedDelivery, EmailDeliveryResponseDTO.class);
+            verifyNoMoreInteractions(applicationContext, notificationDeliveryRepository,
+                    tenantContextHolder, emailDeliveryChannelStrategy, modelMapper);
         }
     }
 
@@ -257,8 +278,12 @@ class EmailDeliveryManagementUseCaseTest {
             assertThat(result).isEqualTo(responseDTO);
             assertThat(delivery.getStatus()).isEqualTo(DeliveryStatus.SENT);
             assertThat(delivery.getRetryCount()).isEqualTo(1);
-            verify(emailDeliveryChannelStrategy).deliver(notification, RECIPIENT_EMAIL);
-            verify(notificationDeliveryRepository).save(delivery);
+            verify(notificationDeliveryRepository, times(1)).findByNotificationDeliveryId(DELIVERY_ID);
+            verify(emailDeliveryChannelStrategy, times(1)).deliver(notification, RECIPIENT_EMAIL);
+            verify(notificationDeliveryRepository, times(1)).save(delivery);
+            verify(modelMapper, times(1)).map(savedDelivery, EmailDeliveryResponseDTO.class);
+            verifyNoMoreInteractions(applicationContext, notificationDeliveryRepository,
+                    tenantContextHolder, emailDeliveryChannelStrategy, modelMapper);
         }
 
         @Test
@@ -275,6 +300,9 @@ class EmailDeliveryManagementUseCaseTest {
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining(String.valueOf(DELIVERY_ID))
                     .hasMessageContaining(DeliveryStatus.SENT.name());
+            verify(notificationDeliveryRepository, times(1)).findByNotificationDeliveryId(DELIVERY_ID);
+            verifyNoInteractions(emailDeliveryChannelStrategy, modelMapper);
+            verifyNoMoreInteractions(applicationContext, notificationDeliveryRepository, tenantContextHolder);
         }
     }
 }

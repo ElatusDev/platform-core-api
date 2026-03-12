@@ -24,10 +24,15 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.Optional;
 
+import org.mockito.InOrder;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -74,7 +79,11 @@ class DeleteNotificationUseCaseTest {
             useCase.delete(NOTIFICATION_ID);
 
             // Then
-            verify(repository).delete(entity);
+            InOrder inOrder = inOrder(tenantContextHolder, repository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(repository, times(1)).findById(compositeId);
+            inOrder.verify(repository, times(1)).delete(entity);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -99,6 +108,9 @@ class DeleteNotificationUseCaseTest {
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.NOTIFICATION);
                         assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(NOTIFICATION_ID));
                     });
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(repository, times(1)).findById(compositeId);
+            verifyNoMoreInteractions(repository, tenantContextHolder);
         }
     }
 
@@ -128,6 +140,10 @@ class DeleteNotificationUseCaseTest {
                         assertThat(edna.getEntityId()).isEqualTo(String.valueOf(NOTIFICATION_ID));
                         assertThat(edna.getReason()).isNull();
                     });
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(repository, times(1)).findById(compositeId);
+            verify(repository, times(1)).delete(entity);
+            verifyNoMoreInteractions(repository, tenantContextHolder);
         }
     }
 }

@@ -32,9 +32,8 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -101,8 +100,9 @@ class TutorControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.data", hasSize(0)));
 
-            verify(getAllTutorsUseCase).getAll();
+            verify(getAllTutorsUseCase, times(1)).getAll();
             verifyNoMoreInteractions(getAllTutorsUseCase);
+            verifyNoInteractions(tutorCreationUseCase, tutorUpdateUseCase, getTutorByIdUseCase, deleteTutorUseCase, messageService);
         }
 
         @Test
@@ -119,8 +119,9 @@ class TutorControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.data", hasSize(2)));
 
-            verify(getAllTutorsUseCase).getAll();
+            verify(getAllTutorsUseCase, times(1)).getAll();
             verifyNoMoreInteractions(getAllTutorsUseCase);
+            verifyNoInteractions(tutorCreationUseCase, tutorUpdateUseCase, getTutorByIdUseCase, deleteTutorUseCase, messageService);
         }
     }
 
@@ -141,8 +142,9 @@ class TutorControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-            verify(getTutorByIdUseCase).get(TUTOR_ID);
+            verify(getTutorByIdUseCase, times(1)).get(TUTOR_ID);
             verifyNoMoreInteractions(getTutorByIdUseCase);
+            verifyNoInteractions(tutorCreationUseCase, tutorUpdateUseCase, getAllTutorsUseCase, deleteTutorUseCase, messageService);
         }
 
         @Test
@@ -160,8 +162,10 @@ class TutorControllerTest {
                     .andExpect(status().isNotFound())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-            verify(getTutorByIdUseCase).get(TUTOR_ID);
-            verifyNoMoreInteractions(getTutorByIdUseCase);
+            verify(getTutorByIdUseCase, times(1)).get(TUTOR_ID);
+            verify(messageService, times(1)).getEntityNotFound(EntityType.TUTOR, String.valueOf(TUTOR_ID));
+            verifyNoMoreInteractions(getTutorByIdUseCase, messageService);
+            verifyNoInteractions(tutorCreationUseCase, tutorUpdateUseCase, getAllTutorsUseCase, deleteTutorUseCase);
         }
     }
 }

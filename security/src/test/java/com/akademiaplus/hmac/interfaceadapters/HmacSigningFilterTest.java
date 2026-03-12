@@ -33,6 +33,8 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+import org.mockito.InOrder;
+
 /**
  * Unit tests for {@link HmacSigningFilter}.
  *
@@ -86,8 +88,11 @@ class HmacSigningFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
-            verifyNoInteractions(hmacSignatureService);
+            assertThat(response.getStatus()).isEqualTo(200);
+            verify(hmacProperties, times(1)).isEnabled();
+            verify(filterChain, times(1)).doFilter(request, response);
+            verifyNoInteractions(hmacSignatureService, nonceStore, hmacKeyService);
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
         }
 
         @Test
@@ -100,8 +105,11 @@ class HmacSigningFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
-            verifyNoInteractions(hmacSignatureService);
+            assertThat(response.getStatus()).isEqualTo(200);
+            verify(hmacProperties, times(1)).isEnabled();
+            verify(filterChain, times(1)).doFilter(request, response);
+            verifyNoInteractions(hmacSignatureService, nonceStore, hmacKeyService);
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
         }
     }
 
@@ -124,7 +132,9 @@ class HmacSigningFilterTest {
 
             // Then
             assertThat(response.getStatus()).isEqualTo(401);
-            verifyNoInteractions(filterChain);
+            verify(hmacProperties, times(1)).isEnabled();
+            verifyNoInteractions(hmacSignatureService, nonceStore, hmacKeyService, filterChain);
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
         }
 
         @Test
@@ -142,12 +152,35 @@ class HmacSigningFilterTest {
             Map<String, String> body = objectMapper.readValue(
                     response.getContentAsString(), Map.class);
             assertThat(body.get("code")).isEqualTo(HmacSignatureException.ERROR_CODE_HMAC);
+            verify(hmacProperties, times(1)).isEnabled();
+            verifyNoInteractions(hmacSignatureService, nonceStore, hmacKeyService, filterChain);
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
         }
     }
 
     @Nested
     @DisplayName("Timestamp validation")
     class TimestampValidation {
+
+        @Test
+        @DisplayName("should return 401 when timestamp is not a number")
+        void shouldReturn401_whenTimestampIsNotNumeric() throws Exception {
+            // Given
+            setAuthentication();
+            when(hmacProperties.isEnabled()).thenReturn(true);
+            when(hmacProperties.getTimestampToleranceSeconds()).thenReturn(TOLERANCE_SECONDS);
+            setAllHeaders(VALID_SIGNATURE, "not-a-number", VALID_NONCE, VALID_BODY_HASH);
+
+            // When
+            filter.doFilterInternal(request, response, filterChain);
+
+            // Then
+            assertThat(response.getStatus()).isEqualTo(401);
+            verify(hmacProperties, times(1)).isEnabled();
+            verify(hmacProperties, times(1)).getTimestampToleranceSeconds();
+            verifyNoInteractions(hmacSignatureService, nonceStore, hmacKeyService, filterChain);
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
+        }
 
         @Test
         @DisplayName("should return 401 when timestamp is outside tolerance")
@@ -164,7 +197,10 @@ class HmacSigningFilterTest {
 
             // Then
             assertThat(response.getStatus()).isEqualTo(401);
-            verifyNoInteractions(filterChain);
+            verify(hmacProperties, times(1)).isEnabled();
+            verify(hmacProperties, times(2)).getTimestampToleranceSeconds();
+            verifyNoInteractions(hmacSignatureService, nonceStore, hmacKeyService, filterChain);
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
         }
     }
 
@@ -187,7 +223,11 @@ class HmacSigningFilterTest {
 
             // Then
             assertThat(response.getStatus()).isEqualTo(401);
-            verifyNoInteractions(filterChain);
+            verify(hmacProperties, times(1)).isEnabled();
+            verify(hmacProperties, times(1)).getTimestampToleranceSeconds();
+            verify(nonceStore, times(1)).exists(VALID_NONCE);
+            verifyNoInteractions(hmacSignatureService, hmacKeyService, filterChain);
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
         }
     }
 
@@ -213,7 +253,12 @@ class HmacSigningFilterTest {
 
             // Then
             assertThat(response.getStatus()).isEqualTo(401);
-            verifyNoInteractions(filterChain);
+            verify(hmacProperties, times(1)).isEnabled();
+            verify(hmacProperties, times(1)).getTimestampToleranceSeconds();
+            verify(nonceStore, times(1)).exists(VALID_NONCE);
+            verify(hmacSignatureService, times(1)).computeBodyHash(REQUEST_BODY.getBytes(StandardCharsets.UTF_8));
+            verifyNoInteractions(hmacKeyService, filterChain);
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
         }
     }
 
@@ -245,8 +290,10 @@ class HmacSigningFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(any(CachedBodyHttpServletRequest.class), eq(response));
-            verify(nonceStore).store(VALID_NONCE, TOLERANCE_SECONDS);
+            assertThat(response.getStatus()).isEqualTo(200);
+            verify(filterChain, times(1)).doFilter(any(CachedBodyHttpServletRequest.class), eq(response));
+            verify(nonceStore, times(1)).store(VALID_NONCE, TOLERANCE_SECONDS);
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
         }
 
         @Test
@@ -275,6 +322,7 @@ class HmacSigningFilterTest {
             // Then
             assertThat(response.getStatus()).isEqualTo(401);
             verifyNoInteractions(filterChain);
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
         }
 
         @Test
@@ -301,7 +349,10 @@ class HmacSigningFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(nonceStore).store(VALID_NONCE, TOLERANCE_SECONDS);
+            assertThat(response.getStatus()).isEqualTo(200);
+            verify(nonceStore, times(1)).store(VALID_NONCE, TOLERANCE_SECONDS);
+            verify(filterChain, times(1)).doFilter(any(CachedBodyHttpServletRequest.class), eq(response));
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
         }
     }
 
@@ -333,6 +384,40 @@ class HmacSigningFilterTest {
             assertThat(result).contains(HmacSigningFilter.HEADER_TIMESTAMP);
             assertThat(result).doesNotContain(HmacSigningFilter.HEADER_NONCE);
             assertThat(result).contains(HmacSigningFilter.HEADER_BODY_HASH);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator exception propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("should propagate exception when hmacKeyService throws")
+        void shouldPropagateException_whenHmacKeyServiceThrows() throws Exception {
+            // Given
+            setAuthentication();
+            when(hmacProperties.isEnabled()).thenReturn(true);
+            when(hmacProperties.getTimestampToleranceSeconds()).thenReturn(TOLERANCE_SECONDS);
+            request.setContent(REQUEST_BODY.getBytes(StandardCharsets.UTF_8));
+            setAllHeaders(VALID_SIGNATURE, VALID_TIMESTAMP, VALID_NONCE, VALID_BODY_HASH);
+            when(nonceStore.exists(VALID_NONCE)).thenReturn(false);
+            when(hmacSignatureService.computeBodyHash(REQUEST_BODY.getBytes(StandardCharsets.UTF_8)))
+                    .thenReturn(VALID_BODY_HASH);
+            String stringToSign = "POST\n/v1/courses\n" + VALID_TIMESTAMP + "\n" + VALID_BODY_HASH + "\n" + VALID_NONCE;
+            when(hmacSignatureService.buildRequestStringToSign(
+                    "POST", "/v1/courses", VALID_TIMESTAMP, VALID_BODY_HASH, VALID_NONCE))
+                    .thenReturn(stringToSign);
+            RuntimeException cause = new RuntimeException("key resolution failed");
+            when(hmacKeyService.resolveDefaultKey()).thenThrow(cause);
+
+            // When / Then
+            org.assertj.core.api.Assertions.assertThatThrownBy(
+                    () -> filter.doFilterInternal(request, response, filterChain))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("key resolution failed");
+
+            verify(hmacKeyService, times(1)).resolveDefaultKey();
+            verifyNoInteractions(filterChain);
         }
     }
 

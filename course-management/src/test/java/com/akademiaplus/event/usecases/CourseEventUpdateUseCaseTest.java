@@ -28,6 +28,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -37,9 +38,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link CourseEventUpdateUseCase}.
@@ -168,6 +167,13 @@ class CourseEventUpdateUseCaseTest {
             assertThatThrownBy(() -> useCase.update(COURSE_EVENT_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasMessageContaining(String.valueOf(COURSE_EVENT_ID));
+
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(courseEventRepository, times(1)).findById(
+                    new CourseEventDataModel.CourseEventCompositeId(TENANT_ID, COURSE_EVENT_ID));
+            verifyNoInteractions(courseRepository, collaboratorRepository, scheduleRepository,
+                    adultStudentRepository, minorStudentRepository, modelMapper);
+            verifyNoMoreInteractions(tenantContextHolder, courseEventRepository);
         }
     }
 
@@ -192,6 +198,16 @@ class CourseEventUpdateUseCaseTest {
             assertThatThrownBy(() -> useCase.update(COURSE_EVENT_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasMessageContaining(String.valueOf(COURSE_ID));
+
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(courseEventRepository, times(1)).findById(
+                    new CourseEventDataModel.CourseEventCompositeId(TENANT_ID, COURSE_EVENT_ID));
+            verify(modelMapper, times(1)).map(dto, existing, CourseEventUpdateUseCase.MAP_NAME);
+            verify(courseRepository, times(1)).findById(
+                    new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            verifyNoInteractions(collaboratorRepository, scheduleRepository,
+                    adultStudentRepository, minorStudentRepository);
+            verifyNoMoreInteractions(tenantContextHolder, courseEventRepository, modelMapper, courseRepository);
         }
     }
 
@@ -217,6 +233,18 @@ class CourseEventUpdateUseCaseTest {
             assertThatThrownBy(() -> useCase.update(COURSE_EVENT_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasMessageContaining(String.valueOf(INSTRUCTOR_ID));
+
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(courseEventRepository, times(1)).findById(
+                    new CourseEventDataModel.CourseEventCompositeId(TENANT_ID, COURSE_EVENT_ID));
+            verify(modelMapper, times(1)).map(dto, existing, CourseEventUpdateUseCase.MAP_NAME);
+            verify(courseRepository, times(1)).findById(
+                    new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            verify(collaboratorRepository, times(1)).findById(
+                    new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID));
+            verifyNoInteractions(scheduleRepository, adultStudentRepository, minorStudentRepository);
+            verifyNoMoreInteractions(tenantContextHolder, courseEventRepository, modelMapper,
+                    courseRepository, collaboratorRepository);
         }
     }
 
@@ -243,6 +271,20 @@ class CourseEventUpdateUseCaseTest {
             assertThatThrownBy(() -> useCase.update(COURSE_EVENT_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasMessageContaining(String.valueOf(SCHEDULE_ID));
+
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(courseEventRepository, times(1)).findById(
+                    new CourseEventDataModel.CourseEventCompositeId(TENANT_ID, COURSE_EVENT_ID));
+            verify(modelMapper, times(1)).map(dto, existing, CourseEventUpdateUseCase.MAP_NAME);
+            verify(courseRepository, times(1)).findById(
+                    new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            verify(collaboratorRepository, times(1)).findById(
+                    new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID));
+            verify(scheduleRepository, times(1)).findById(
+                    new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID));
+            verifyNoInteractions(adultStudentRepository, minorStudentRepository);
+            verifyNoMoreInteractions(tenantContextHolder, courseEventRepository, modelMapper,
+                    courseRepository, collaboratorRepository, scheduleRepository);
         }
     }
 
@@ -274,6 +316,21 @@ class CourseEventUpdateUseCaseTest {
             assertThatThrownBy(() -> useCase.update(COURSE_EVENT_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasMessageContaining(String.valueOf(ADULT_ATTENDEE_ID_2));
+
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(courseEventRepository, times(1)).findById(
+                    new CourseEventDataModel.CourseEventCompositeId(TENANT_ID, COURSE_EVENT_ID));
+            verify(modelMapper, times(1)).map(dto, existing, CourseEventUpdateUseCase.MAP_NAME);
+            verify(courseRepository, times(1)).findById(
+                    new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            verify(collaboratorRepository, times(1)).findById(
+                    new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID));
+            verify(scheduleRepository, times(1)).findById(
+                    new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID));
+            verify(adultStudentRepository, times(1)).findAllById(compositeIds);
+            verifyNoInteractions(minorStudentRepository);
+            verifyNoMoreInteractions(tenantContextHolder, courseEventRepository, modelMapper,
+                    courseRepository, collaboratorRepository, scheduleRepository, adultStudentRepository);
         }
 
         @Test
@@ -301,6 +358,24 @@ class CourseEventUpdateUseCaseTest {
             assertThatThrownBy(() -> useCase.update(COURSE_EVENT_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasMessageContaining(String.valueOf(MINOR_ATTENDEE_ID_2));
+
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(courseEventRepository, times(1)).findById(
+                    new CourseEventDataModel.CourseEventCompositeId(TENANT_ID, COURSE_EVENT_ID));
+            verify(modelMapper, times(1)).map(dto, existing, CourseEventUpdateUseCase.MAP_NAME);
+            verify(courseRepository, times(1)).findById(
+                    new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            verify(collaboratorRepository, times(1)).findById(
+                    new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID));
+            verify(scheduleRepository, times(1)).findById(
+                    new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID));
+            verify(adultStudentRepository, times(1)).findAllById(List.of(
+                    new AdultStudentDataModel.AdultStudentCompositeId(TENANT_ID, ADULT_ATTENDEE_ID_1.longValue()),
+                    new AdultStudentDataModel.AdultStudentCompositeId(TENANT_ID, ADULT_ATTENDEE_ID_2.longValue())));
+            verify(minorStudentRepository, times(1)).findAllById(compositeIds);
+            verifyNoMoreInteractions(tenantContextHolder, courseEventRepository, modelMapper,
+                    courseRepository, collaboratorRepository, scheduleRepository,
+                    adultStudentRepository, minorStudentRepository);
         }
     }
 
@@ -328,12 +403,27 @@ class CourseEventUpdateUseCaseTest {
             CourseEventUpdateResponseDTO response = useCase.update(COURSE_EVENT_ID, dto);
 
             // Then
-            verify(courseEventRepository).saveAndFlush(existing);
             assertThat(response.getCourseEventId()).isEqualTo(COURSE_EVENT_ID);
             assertThat(response.getMessage()).isEqualTo(CourseEventUpdateUseCase.UPDATE_SUCCESS_MESSAGE);
             assertThat(existing.getCourseId()).isEqualTo(COURSE_ID);
             assertThat(existing.getCollaboratorId()).isEqualTo(INSTRUCTOR_ID);
             assertThat(existing.getScheduleId()).isEqualTo(SCHEDULE_ID);
+
+            InOrder inOrder = inOrder(tenantContextHolder, courseEventRepository, modelMapper,
+                    courseRepository, collaboratorRepository, scheduleRepository,
+                    adultStudentRepository, minorStudentRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(courseEventRepository, times(1)).findById(
+                    new CourseEventDataModel.CourseEventCompositeId(TENANT_ID, COURSE_EVENT_ID));
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, CourseEventUpdateUseCase.MAP_NAME);
+            inOrder.verify(courseRepository, times(1)).findById(
+                    new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            inOrder.verify(collaboratorRepository, times(1)).findById(
+                    new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID));
+            inOrder.verify(scheduleRepository, times(1)).findById(
+                    new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID));
+            inOrder.verify(courseEventRepository, times(1)).saveAndFlush(existing);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

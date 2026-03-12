@@ -25,7 +25,11 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("NotificationDispatchService")
 @ExtendWith(MockitoExtension.class)
@@ -81,6 +85,9 @@ class NotificationDispatchServiceTest {
 
             // Then
             assertThat(resolved).isSameAs(webappStrategy);
+            verify(webappStrategy, times(1)).getChannel();
+            verifyNoInteractions(applicationContext, notificationDeliveryRepository);
+            verifyNoMoreInteractions(webappStrategy);
         }
 
         @Test
@@ -94,6 +101,9 @@ class NotificationDispatchServiceTest {
                     .hasMessage(String.format(
                             NotificationDispatchService.ERROR_NO_STRATEGY,
                             DeliveryChannel.EMAIL));
+            verify(webappStrategy, times(1)).getChannel();
+            verifyNoInteractions(applicationContext, notificationDeliveryRepository);
+            verifyNoMoreInteractions(webappStrategy);
         }
     }
 
@@ -115,7 +125,11 @@ class NotificationDispatchServiceTest {
             dispatchService.dispatch(notification);
 
             // Then
-            verify(applicationContext).getBean(NotificationDeliveryDataModel.class);
+            verify(webappStrategy, times(1)).getChannel();
+            verify(applicationContext, times(1)).getBean(NotificationDeliveryDataModel.class);
+            verify(webappStrategy, times(1)).deliver(notification, RECIPIENT_IDENTIFIER);
+            verify(notificationDeliveryRepository, times(1)).save(deliveryModel);
+            verifyNoMoreInteractions(applicationContext, notificationDeliveryRepository, webappStrategy);
         }
 
         @Test
@@ -134,6 +148,11 @@ class NotificationDispatchServiceTest {
             // Then
             assertThat(deliveryModel.getStatus()).isEqualTo(DeliveryStatus.SENT);
             assertThat(deliveryModel.getSentAt()).isNotNull();
+            verify(webappStrategy, times(1)).getChannel();
+            verify(applicationContext, times(1)).getBean(NotificationDeliveryDataModel.class);
+            verify(webappStrategy, times(1)).deliver(notification, RECIPIENT_IDENTIFIER);
+            verify(notificationDeliveryRepository, times(1)).save(deliveryModel);
+            verifyNoMoreInteractions(applicationContext, notificationDeliveryRepository, webappStrategy);
         }
 
         @Test
@@ -153,6 +172,11 @@ class NotificationDispatchServiceTest {
             // Then
             assertThat(deliveryModel.getStatus()).isEqualTo(DeliveryStatus.FAILED);
             assertThat(deliveryModel.getFailureReason()).isEqualTo(FAILURE_REASON);
+            verify(webappStrategy, times(1)).getChannel();
+            verify(applicationContext, times(1)).getBean(NotificationDeliveryDataModel.class);
+            verify(webappStrategy, times(1)).deliver(notification, RECIPIENT_IDENTIFIER);
+            verify(notificationDeliveryRepository, times(1)).save(deliveryModel);
+            verifyNoMoreInteractions(applicationContext, notificationDeliveryRepository, webappStrategy);
         }
 
         @Test
@@ -166,6 +190,9 @@ class NotificationDispatchServiceTest {
             assertThatThrownBy(() -> dispatchService.dispatch(notification))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(NotificationDispatchService.ERROR_TARGET_USER_REQUIRED);
+            verify(webappStrategy, times(1)).getChannel();
+            verifyNoInteractions(applicationContext, notificationDeliveryRepository);
+            verifyNoMoreInteractions(webappStrategy);
         }
 
         @Test
@@ -184,6 +211,11 @@ class NotificationDispatchServiceTest {
 
             // Then
             assertThat(result).isSameAs(savedModel);
+            verify(webappStrategy, times(1)).getChannel();
+            verify(applicationContext, times(1)).getBean(NotificationDeliveryDataModel.class);
+            verify(webappStrategy, times(1)).deliver(notification, RECIPIENT_IDENTIFIER);
+            verify(notificationDeliveryRepository, times(1)).save(deliveryModel);
+            verifyNoMoreInteractions(applicationContext, notificationDeliveryRepository, webappStrategy);
         }
 
         @Test
@@ -204,6 +236,11 @@ class NotificationDispatchServiceTest {
             assertThat(deliveryModel.getChannel()).isEqualTo(DeliveryChannel.WEBAPP);
             assertThat(deliveryModel.getRecipientIdentifier()).isEqualTo(RECIPIENT_IDENTIFIER);
             assertThat(deliveryModel.getRetryCount()).isEqualTo(NotificationDispatchService.INITIAL_RETRY_COUNT);
+            verify(webappStrategy, times(1)).getChannel();
+            verify(applicationContext, times(1)).getBean(NotificationDeliveryDataModel.class);
+            verify(webappStrategy, times(1)).deliver(notification, RECIPIENT_IDENTIFIER);
+            verify(notificationDeliveryRepository, times(1)).save(deliveryModel);
+            verifyNoMoreInteractions(applicationContext, notificationDeliveryRepository, webappStrategy);
         }
     }
 
@@ -228,7 +265,11 @@ class NotificationDispatchServiceTest {
             // Then
             assertThat(result).isSameAs(deliveryModel);
             assertThat(deliveryModel.getChannel()).isEqualTo(DeliveryChannel.WEBAPP);
-            verify(webappStrategy).deliver(notification, RECIPIENT_IDENTIFIER);
+            verify(webappStrategy, times(1)).getChannel();
+            verify(applicationContext, times(1)).getBean(NotificationDeliveryDataModel.class);
+            verify(webappStrategy, times(1)).deliver(notification, RECIPIENT_IDENTIFIER);
+            verify(notificationDeliveryRepository, times(1)).save(deliveryModel);
+            verifyNoMoreInteractions(applicationContext, notificationDeliveryRepository, webappStrategy);
         }
 
         @Test
@@ -247,7 +288,11 @@ class NotificationDispatchServiceTest {
             // Then
             assertThat(result).isSameAs(deliveryModel);
             assertThat(deliveryModel.getChannel()).isEqualTo(DeliveryChannel.WEBAPP);
-            verify(webappStrategy).deliver(notification, RECIPIENT_IDENTIFIER);
+            verify(webappStrategy, times(1)).getChannel();
+            verify(applicationContext, times(1)).getBean(NotificationDeliveryDataModel.class);
+            verify(webappStrategy, times(1)).deliver(notification, RECIPIENT_IDENTIFIER);
+            verify(notificationDeliveryRepository, times(1)).save(deliveryModel);
+            verifyNoMoreInteractions(applicationContext, notificationDeliveryRepository, webappStrategy);
         }
     }
 }

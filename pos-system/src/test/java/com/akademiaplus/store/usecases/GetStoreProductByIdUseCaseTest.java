@@ -18,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -68,11 +69,12 @@ class GetStoreProductByIdUseCaseTest {
 
             // Then
             assertThat(result).isEqualTo(expectedDto);
-            verify(tenantContextHolder).getTenantId();
-            verify(storeProductRepository).findById(
+            InOrder inOrder = inOrder(tenantContextHolder, storeProductRepository, modelMapper);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(storeProductRepository, times(1)).findById(
                     new StoreProductDataModel.ProductCompositeId(TENANT_ID, STORE_PRODUCT_ID));
-            verify(modelMapper).map(product, GetStoreProductResponseDTO.class);
-            verifyNoMoreInteractions(tenantContextHolder, storeProductRepository, modelMapper);
+            inOrder.verify(modelMapper, times(1)).map(product, GetStoreProductResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -94,10 +96,13 @@ class GetStoreProductByIdUseCaseTest {
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasFieldOrPropertyWithValue("entityType", EntityType.STORE_PRODUCT)
                     .hasFieldOrPropertyWithValue("entityId", String.valueOf(STORE_PRODUCT_ID));
-            verify(tenantContextHolder).getTenantId();
-            verify(storeProductRepository).findById(
+
+            InOrder inOrder = inOrder(tenantContextHolder, storeProductRepository);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(storeProductRepository, times(1)).findById(
                     new StoreProductDataModel.ProductCompositeId(TENANT_ID, STORE_PRODUCT_ID));
-            verifyNoMoreInteractions(tenantContextHolder, storeProductRepository, modelMapper);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(modelMapper);
         }
     }
 
@@ -115,8 +120,10 @@ class GetStoreProductByIdUseCaseTest {
             assertThatThrownBy(() -> useCase.get(STORE_PRODUCT_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(GetStoreProductByIdUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
-            verify(tenantContextHolder).getTenantId();
-            verifyNoMoreInteractions(tenantContextHolder, storeProductRepository, modelMapper);
+
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoMoreInteractions(tenantContextHolder);
+            verifyNoInteractions(storeProductRepository, modelMapper);
         }
     }
 }

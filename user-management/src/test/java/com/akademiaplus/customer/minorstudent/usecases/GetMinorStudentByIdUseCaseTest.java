@@ -19,6 +19,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -70,11 +71,13 @@ class GetMinorStudentByIdUseCaseTest {
 
             // Then
             assertThat(result).isEqualTo(expectedDto);
-            verify(tenantContextHolder).getTenantId();
-            verify(minorStudentRepository).findById(new MinorStudentDataModel.MinorStudentCompositeId(TENANT_ID, MINOR_STUDENT_ID));
-            verify(modelMapper).map(minorStudent, GetMinorStudentResponseDTO.class);
-            verify(modelMapper).map(personPII, expectedDto);
-            verifyNoMoreInteractions(tenantContextHolder, minorStudentRepository, modelMapper);
+
+            InOrder inOrder = inOrder(tenantContextHolder, minorStudentRepository, modelMapper);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(minorStudentRepository, times(1)).findById(new MinorStudentDataModel.MinorStudentCompositeId(TENANT_ID, MINOR_STUDENT_ID));
+            inOrder.verify(modelMapper, times(1)).map(minorStudent, GetMinorStudentResponseDTO.class);
+            inOrder.verify(modelMapper, times(1)).map(personPII, expectedDto);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -98,9 +101,12 @@ class GetMinorStudentByIdUseCaseTest {
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.MINOR_STUDENT);
                         assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(MINOR_STUDENT_ID));
                     });
-            verify(tenantContextHolder).getTenantId();
-            verify(minorStudentRepository).findById(new MinorStudentDataModel.MinorStudentCompositeId(TENANT_ID, MINOR_STUDENT_ID));
-            verifyNoMoreInteractions(tenantContextHolder, minorStudentRepository, modelMapper);
+
+            InOrder inOrder = inOrder(tenantContextHolder, minorStudentRepository);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(minorStudentRepository, times(1)).findById(new MinorStudentDataModel.MinorStudentCompositeId(TENANT_ID, MINOR_STUDENT_ID));
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(modelMapper);
         }
     }
 
@@ -118,8 +124,10 @@ class GetMinorStudentByIdUseCaseTest {
             assertThatThrownBy(() -> useCase.get(MINOR_STUDENT_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(GetMinorStudentByIdUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
-            verify(tenantContextHolder).getTenantId();
-            verifyNoMoreInteractions(tenantContextHolder, minorStudentRepository, modelMapper);
+
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoMoreInteractions(tenantContextHolder);
+            verifyNoInteractions(minorStudentRepository, modelMapper);
         }
     }
 }

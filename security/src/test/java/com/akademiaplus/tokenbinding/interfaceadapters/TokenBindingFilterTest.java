@@ -94,8 +94,10 @@ class TokenBindingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
-            verifyNoInteractions(jwtTokenProvider, deviceFingerprintService);
+            verify(filterChain, times(1)).doFilter(request, response);
+            verifyNoInteractions(jwtTokenProvider, deviceFingerprintService, anomalyDetectionService, cookieService, claims);
+            verifyNoMoreInteractions(jwtTokenProvider, deviceFingerprintService, anomalyDetectionService,
+                    tokenBindingProperties, cookieService, filterChain, claims);
         }
 
         @Test
@@ -108,8 +110,10 @@ class TokenBindingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
-            verifyNoInteractions(jwtTokenProvider);
+            verify(filterChain, times(1)).doFilter(request, response);
+            verifyNoInteractions(jwtTokenProvider, deviceFingerprintService, anomalyDetectionService, cookieService, claims);
+            verifyNoMoreInteractions(jwtTokenProvider, deviceFingerprintService, anomalyDetectionService,
+                    tokenBindingProperties, cookieService, filterChain, claims);
         }
 
         @Test
@@ -124,8 +128,11 @@ class TokenBindingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
-            verifyNoInteractions(deviceFingerprintService);
+            verify(filterChain, times(1)).doFilter(request, response);
+            verify(cookieService, times(1)).extractAccessToken(request);
+            verifyNoInteractions(jwtTokenProvider, deviceFingerprintService, anomalyDetectionService, claims);
+            verifyNoMoreInteractions(jwtTokenProvider, deviceFingerprintService, anomalyDetectionService,
+                    tokenBindingProperties, cookieService, filterChain, claims);
         }
 
         @Test
@@ -142,8 +149,12 @@ class TokenBindingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
-            verifyNoInteractions(deviceFingerprintService);
+            verify(filterChain, times(1)).doFilter(request, response);
+            verify(claims, times(1)).get(JwtTokenProvider.FINGERPRINT_CLAIM, String.class);
+            verify(claims, times(1)).get(JwtTokenProvider.DEVICE_FINGERPRINT_CLAIM, String.class);
+            verifyNoInteractions(deviceFingerprintService, anomalyDetectionService);
+            verifyNoMoreInteractions(jwtTokenProvider, deviceFingerprintService, anomalyDetectionService,
+                    tokenBindingProperties, cookieService, filterChain, claims);
         }
     }
 
@@ -164,9 +175,11 @@ class TokenBindingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(cookieService).extractAccessToken(request);
-            verify(jwtTokenProvider).getClaims(ACCESS_TOKEN);
-            verify(filterChain).doFilter(request, response);
+            verify(cookieService, times(1)).extractAccessToken(request);
+            verify(jwtTokenProvider, times(1)).getClaims(ACCESS_TOKEN);
+            verify(filterChain, times(1)).doFilter(request, response);
+            verifyNoMoreInteractions(jwtTokenProvider, deviceFingerprintService, anomalyDetectionService,
+                    tokenBindingProperties, cookieService, filterChain, claims);
         }
 
         @Test
@@ -184,8 +197,10 @@ class TokenBindingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(jwtTokenProvider).getClaims(ACCESS_TOKEN);
-            verify(filterChain).doFilter(request, response);
+            verify(jwtTokenProvider, times(1)).getClaims(ACCESS_TOKEN);
+            verify(filterChain, times(1)).doFilter(request, response);
+            verifyNoMoreInteractions(jwtTokenProvider, deviceFingerprintService, anomalyDetectionService,
+                    tokenBindingProperties, cookieService, filterChain, claims);
         }
     }
 
@@ -206,8 +221,11 @@ class TokenBindingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
+            verify(filterChain, times(1)).doFilter(request, response);
             assertThat(response.getStatus()).isEqualTo(200);
+            verifyNoInteractions(anomalyDetectionService);
+            verifyNoMoreInteractions(jwtTokenProvider, deviceFingerprintService, anomalyDetectionService,
+                    tokenBindingProperties, cookieService, filterChain, claims);
         }
 
         @Test
@@ -229,6 +247,9 @@ class TokenBindingFilterTest {
                     response.getContentAsString(), Map.class);
             assertThat(body.get("code")).isEqualTo(TokenBindingFilter.ERROR_RESPONSE_CODE);
             assertThat(body.get("message")).isEqualTo(TokenBindingFilter.ERROR_RESPONSE_MESSAGE);
+            verify(anomalyDetectionService, times(1)).logAnomaly(any(AnomalyEvent.class));
+            verifyNoMoreInteractions(jwtTokenProvider, deviceFingerprintService, anomalyDetectionService,
+                    tokenBindingProperties, cookieService, filterChain, claims);
         }
 
         @Test
@@ -245,12 +266,14 @@ class TokenBindingFilterTest {
 
             // Then
             ArgumentCaptor<AnomalyEvent> captor = ArgumentCaptor.forClass(AnomalyEvent.class);
-            verify(anomalyDetectionService).logAnomaly(captor.capture());
+            verify(anomalyDetectionService, times(1)).logAnomaly(captor.capture());
             AnomalyEvent event = captor.getValue();
             assertThat(event.username()).isEqualTo(USERNAME);
             assertThat(event.eventType()).isEqualTo(AnomalyEvent.EVENT_TYPE_FULL_MISMATCH);
             assertThat(event.actualIp()).isEqualTo(CLIENT_IP);
             assertThat(event.tenantId()).isEqualTo(TENANT_ID);
+            verifyNoMoreInteractions(jwtTokenProvider, deviceFingerprintService, anomalyDetectionService,
+                    tokenBindingProperties, cookieService, filterChain, claims);
         }
     }
 
@@ -277,10 +300,12 @@ class TokenBindingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
+            verify(filterChain, times(1)).doFilter(request, response);
             ArgumentCaptor<AnomalyEvent> captor = ArgumentCaptor.forClass(AnomalyEvent.class);
-            verify(anomalyDetectionService).logAnomaly(captor.capture());
+            verify(anomalyDetectionService, times(1)).logAnomaly(captor.capture());
             assertThat(captor.getValue().eventType()).isEqualTo(AnomalyEvent.EVENT_TYPE_IP_CHANGE);
+            verifyNoMoreInteractions(jwtTokenProvider, deviceFingerprintService, anomalyDetectionService,
+                    tokenBindingProperties, cookieService, filterChain, claims);
         }
 
         @Test
@@ -304,6 +329,9 @@ class TokenBindingFilterTest {
             // Then
             verifyNoInteractions(filterChain);
             assertThat(response.getStatus()).isEqualTo(401);
+            verify(anomalyDetectionService, times(1)).logAnomaly(any(AnomalyEvent.class));
+            verifyNoMoreInteractions(jwtTokenProvider, deviceFingerprintService, anomalyDetectionService,
+                    tokenBindingProperties, cookieService, filterChain, claims);
         }
 
         @Test
@@ -326,8 +354,10 @@ class TokenBindingFilterTest {
 
             // Then
             ArgumentCaptor<AnomalyEvent> captor = ArgumentCaptor.forClass(AnomalyEvent.class);
-            verify(anomalyDetectionService).logAnomaly(captor.capture());
+            verify(anomalyDetectionService, times(1)).logAnomaly(captor.capture());
             assertThat(captor.getValue().eventType()).isEqualTo(AnomalyEvent.EVENT_TYPE_DEVICE_MISMATCH);
+            verifyNoMoreInteractions(jwtTokenProvider, deviceFingerprintService, anomalyDetectionService,
+                    tokenBindingProperties, cookieService, filterChain, claims);
         }
 
         @Test
@@ -349,8 +379,10 @@ class TokenBindingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
+            verify(filterChain, times(1)).doFilter(request, response);
             verifyNoInteractions(anomalyDetectionService);
+            verifyNoMoreInteractions(jwtTokenProvider, deviceFingerprintService, anomalyDetectionService,
+                    tokenBindingProperties, cookieService, filterChain, claims);
         }
 
         @Test
@@ -372,8 +404,10 @@ class TokenBindingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
+            verify(filterChain, times(1)).doFilter(request, response);
             verifyNoInteractions(anomalyDetectionService);
+            verifyNoMoreInteractions(jwtTokenProvider, deviceFingerprintService, anomalyDetectionService,
+                    tokenBindingProperties, cookieService, filterChain, claims);
         }
     }
 

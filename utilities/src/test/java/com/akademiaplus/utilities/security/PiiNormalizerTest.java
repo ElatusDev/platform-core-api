@@ -21,7 +21,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static com.akademiaplus.utilities.security.PiiNormalizer.ERROR_EMAIL_NULL_OR_EMPTY;
@@ -83,6 +85,7 @@ class PiiNormalizerTest {
 
             // Then
             assertThat(result).isEqualTo("test@example.com");
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -96,6 +99,7 @@ class PiiNormalizerTest {
 
             // Then
             assertThat(result).isEqualTo("test@example.com");
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -109,6 +113,7 @@ class PiiNormalizerTest {
 
             // Then
             assertThat(result).isEqualTo("user123@test456.com");
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -122,6 +127,7 @@ class PiiNormalizerTest {
 
             // Then
             assertThat(result).isEqualTo("user+test_123@example.com");
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -135,6 +141,7 @@ class PiiNormalizerTest {
 
             // Then
             assertThat(result).isEqualTo("user@mail.example.com");
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -148,6 +155,7 @@ class PiiNormalizerTest {
 
             // Then
             assertThat(result).isEqualTo("first.last@example.com");
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -160,6 +168,7 @@ class PiiNormalizerTest {
             assertThatThrownBy(() -> piiNormalizer.normalizeEmail(nullEmail))
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(ERROR_EMAIL_NULL_OR_EMPTY);
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -172,6 +181,7 @@ class PiiNormalizerTest {
             assertThatThrownBy(() -> piiNormalizer.normalizeEmail(emptyEmail))
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(ERROR_EMAIL_NULL_OR_EMPTY);
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -184,6 +194,7 @@ class PiiNormalizerTest {
             assertThatThrownBy(() -> piiNormalizer.normalizeEmail(whitespaceEmail))
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(ERROR_EMAIL_NULL_OR_EMPTY);
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -198,6 +209,7 @@ class PiiNormalizerTest {
             assertThatThrownBy(() -> piiNormalizer.normalizeEmail(tooLongEmail))
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(String.format(ERROR_EMAIL_EXCEEDS_MAX_LENGTH, MAX_EMAIL_LENGTH));
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -210,6 +222,7 @@ class PiiNormalizerTest {
             assertThatThrownBy(() -> piiNormalizer.normalizeEmail(emailWithoutAt))
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(String.format(ERROR_EMAIL_INVALID_FORMAT, emailWithoutAt));
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -222,6 +235,7 @@ class PiiNormalizerTest {
             assertThatThrownBy(() -> piiNormalizer.normalizeEmail(emailWithMultipleAt))
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(String.format(ERROR_EMAIL_INVALID_FORMAT, emailWithMultipleAt));
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -234,6 +248,7 @@ class PiiNormalizerTest {
             assertThatThrownBy(() -> piiNormalizer.normalizeEmail(emailWithInvalidChars))
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(String.format(ERROR_EMAIL_INVALID_FORMAT, emailWithInvalidChars));
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -246,6 +261,7 @@ class PiiNormalizerTest {
             assertThatThrownBy(() -> piiNormalizer.normalizeEmail(emailWithSpace))
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(String.format(ERROR_EMAIL_INVALID_FORMAT, emailWithSpace));
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -259,6 +275,7 @@ class PiiNormalizerTest {
             assertThatThrownBy(() -> piiNormalizer.normalizeEmail(emailWithLongLocalPart))
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(String.format(ERROR_LOCAL_PART_EXCEEDS_MAX_LENGTH, MAX_LOCAL_PART_LENGTH));
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -272,6 +289,7 @@ class PiiNormalizerTest {
             assertThatThrownBy(() -> piiNormalizer.normalizeEmail(emailWithLongDomain))
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(String.format(ERROR_DOMAIN_EXCEEDS_MAX_LENGTH, MAX_DOMAIN_LENGTH));
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -284,6 +302,7 @@ class PiiNormalizerTest {
             assertThatThrownBy(() -> piiNormalizer.normalizeEmail(emailWithConsecutiveDots))
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(String.format(ERROR_EMAIL_INVALID_FORMAT, emailWithConsecutiveDots));
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -296,6 +315,7 @@ class PiiNormalizerTest {
             assertThatThrownBy(() -> piiNormalizer.normalizeEmail(emailWithDotStart))
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(String.format(ERROR_EMAIL_INVALID_FORMAT, emailWithDotStart));
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -308,6 +328,7 @@ class PiiNormalizerTest {
             assertThatThrownBy(() -> piiNormalizer.normalizeEmail(emailWithDotEnd))
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(String.format(ERROR_EMAIL_INVALID_FORMAT, emailWithDotEnd));
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -320,6 +341,7 @@ class PiiNormalizerTest {
             assertThatThrownBy(() -> piiNormalizer.normalizeEmail(emailWithSingleCharTld))
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(String.format(ERROR_EMAIL_INVALID_FORMAT, emailWithSingleCharTld));
+            verifyNoInteractions(phoneUtil);
         }
     }
 
@@ -344,9 +366,9 @@ class PiiNormalizerTest {
 
             // Then
             assertThat(result).isEqualTo("(202) 555-1234");
-            verify(phoneUtil).parse(validPhone, DEFAULT_REGION_CODE);
-            verify(phoneUtil).isValidNumber(parsedNumber);
-            verify(phoneUtil).format(parsedNumber, PhoneNumberUtil.PhoneNumberFormat.NATIONAL);
+            verify(phoneUtil, times(1)).parse(validPhone, DEFAULT_REGION_CODE);
+            verify(phoneUtil, times(1)).isValidNumber(parsedNumber);
+            verify(phoneUtil, times(1)).format(parsedNumber, PhoneNumberUtil.PhoneNumberFormat.NATIONAL);
             verifyNoMoreInteractions(phoneUtil);
         }
 
@@ -368,9 +390,9 @@ class PiiNormalizerTest {
 
             // Then
             assertThat(result).isEqualTo("(202) 555-1234");
-            verify(phoneUtil).parse(trimmedPhone, DEFAULT_REGION_CODE);
-            verify(phoneUtil).isValidNumber(parsedNumber);
-            verify(phoneUtil).format(parsedNumber, PhoneNumberUtil.PhoneNumberFormat.NATIONAL);
+            verify(phoneUtil, times(1)).parse(trimmedPhone, DEFAULT_REGION_CODE);
+            verify(phoneUtil, times(1)).isValidNumber(parsedNumber);
+            verify(phoneUtil, times(1)).format(parsedNumber, PhoneNumberUtil.PhoneNumberFormat.NATIONAL);
             verifyNoMoreInteractions(phoneUtil);
         }
 
@@ -391,9 +413,9 @@ class PiiNormalizerTest {
 
             // Then
             assertThat(result).isEqualTo("(202) 555-1234");
-            verify(phoneUtil).parse(phoneWithoutCountryCode, DEFAULT_REGION_CODE);
-            verify(phoneUtil).isValidNumber(parsedNumber);
-            verify(phoneUtil).format(parsedNumber, PhoneNumberUtil.PhoneNumberFormat.NATIONAL);
+            verify(phoneUtil, times(1)).parse(phoneWithoutCountryCode, DEFAULT_REGION_CODE);
+            verify(phoneUtil, times(1)).isValidNumber(parsedNumber);
+            verify(phoneUtil, times(1)).format(parsedNumber, PhoneNumberUtil.PhoneNumberFormat.NATIONAL);
             verifyNoMoreInteractions(phoneUtil);
         }
 
@@ -414,9 +436,9 @@ class PiiNormalizerTest {
 
             // Then
             assertThat(result).isEqualTo("(202) 555-1234");
-            verify(phoneUtil).parse(phoneWithDashes, DEFAULT_REGION_CODE);
-            verify(phoneUtil).isValidNumber(parsedNumber);
-            verify(phoneUtil).format(parsedNumber, PhoneNumberUtil.PhoneNumberFormat.NATIONAL);
+            verify(phoneUtil, times(1)).parse(phoneWithDashes, DEFAULT_REGION_CODE);
+            verify(phoneUtil, times(1)).isValidNumber(parsedNumber);
+            verify(phoneUtil, times(1)).format(parsedNumber, PhoneNumberUtil.PhoneNumberFormat.NATIONAL);
             verifyNoMoreInteractions(phoneUtil);
         }
 
@@ -431,7 +453,7 @@ class PiiNormalizerTest {
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(ERROR_PHONE_NULL_OR_EMPTY);
 
-            verifyNoMoreInteractions(phoneUtil);
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -445,7 +467,7 @@ class PiiNormalizerTest {
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(ERROR_PHONE_NULL_OR_EMPTY);
 
-            verifyNoMoreInteractions(phoneUtil);
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -459,7 +481,7 @@ class PiiNormalizerTest {
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(ERROR_PHONE_NULL_OR_EMPTY);
 
-            verifyNoMoreInteractions(phoneUtil);
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -480,7 +502,7 @@ class PiiNormalizerTest {
                     .hasMessage(String.format(ERROR_PHONE_PARSE_FAILED, invalidPhone))
                     .hasCause(parseException);
 
-            verify(phoneUtil).parse(invalidPhone, DEFAULT_REGION_CODE);
+            verify(phoneUtil, times(1)).parse(invalidPhone, DEFAULT_REGION_CODE);
             verifyNoMoreInteractions(phoneUtil);
         }
 
@@ -499,8 +521,8 @@ class PiiNormalizerTest {
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(String.format(ERROR_PHONE_INVALID, parseableButInvalidPhone));
 
-            verify(phoneUtil).parse(parseableButInvalidPhone, DEFAULT_REGION_CODE);
-            verify(phoneUtil).isValidNumber(parsedNumber);
+            verify(phoneUtil, times(1)).parse(parseableButInvalidPhone, DEFAULT_REGION_CODE);
+            verify(phoneUtil, times(1)).isValidNumber(parsedNumber);
             verifyNoMoreInteractions(phoneUtil);
         }
 
@@ -522,7 +544,7 @@ class PiiNormalizerTest {
                     .hasMessage(String.format(ERROR_PHONE_PARSE_FAILED, tooShortPhone))
                     .hasCause(parseException);
 
-            verify(phoneUtil).parse(tooShortPhone, DEFAULT_REGION_CODE);
+            verify(phoneUtil, times(1)).parse(tooShortPhone, DEFAULT_REGION_CODE);
             verifyNoMoreInteractions(phoneUtil);
         }
 
@@ -544,7 +566,31 @@ class PiiNormalizerTest {
                     .hasMessage(String.format(ERROR_PHONE_PARSE_FAILED, tooLongPhone))
                     .hasCause(parseException);
 
-            verify(phoneUtil).parse(tooLongPhone, DEFAULT_REGION_CODE);
+            verify(phoneUtil, times(1)).parse(tooLongPhone, DEFAULT_REGION_CODE);
+            verifyNoMoreInteractions(phoneUtil);
+        }
+
+        @Test
+        @DisplayName("Should propagate RuntimeException when phoneUtil.format throws")
+        void shouldPropagateRuntimeException_whenPhoneUtilFormatThrows() throws NumberParseException {
+            // Given: parse and validate succeed, but format throws
+            String validPhone = "+12025551234";
+            Phonenumber.PhoneNumber parsedNumber = createPhoneNumber(1, 2025551234L);
+            RuntimeException formatException = new RuntimeException("Format failed");
+
+            when(phoneUtil.parse(validPhone, DEFAULT_REGION_CODE)).thenReturn(parsedNumber);
+            when(phoneUtil.isValidNumber(parsedNumber)).thenReturn(true);
+            when(phoneUtil.format(parsedNumber, PhoneNumberUtil.PhoneNumberFormat.NATIONAL))
+                    .thenThrow(formatException);
+
+            // When/Then: exception should propagate
+            assertThatThrownBy(() -> piiNormalizer.normalizePhoneNumber(validPhone))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Format failed");
+
+            verify(phoneUtil, times(1)).parse(validPhone, DEFAULT_REGION_CODE);
+            verify(phoneUtil, times(1)).isValidNumber(parsedNumber);
+            verify(phoneUtil, times(1)).format(parsedNumber, PhoneNumberUtil.PhoneNumberFormat.NATIONAL);
             verifyNoMoreInteractions(phoneUtil);
         }
 

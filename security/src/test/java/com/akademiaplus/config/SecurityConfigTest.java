@@ -21,6 +21,8 @@ import org.springframework.security.config.annotation.web.configurers.AuthorizeH
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+import org.mockito.InOrder;
+
 @DisplayName("SecurityConfig")
 @ExtendWith(MockitoExtension.class)
 class SecurityConfigTest {
@@ -43,8 +45,10 @@ class SecurityConfigTest {
             configurator.configure(auth, AppOriginContext.ORIGIN_AKADEMIA);
 
             // Then
-            verify(configurator).configure(auth, AppOriginContext.ORIGIN_AKADEMIA);
-            verify(configurator).configure(auth);
+            assertThat(configurator).isNotNull();
+            verify(configurator, times(1)).configure(auth, AppOriginContext.ORIGIN_AKADEMIA);
+            verify(configurator, times(1)).configure(auth);
+            verifyNoMoreInteractions(configurator, auth);
         }
 
         @Test
@@ -58,15 +62,16 @@ class SecurityConfigTest {
             configurator.configure(auth, AppOriginContext.ORIGIN_ELATUS);
 
             // Then
-            verify(configurator).configure(auth, AppOriginContext.ORIGIN_ELATUS);
-            verify(configurator).configure(auth);
+            assertThat(configurator).isNotNull();
+            verify(configurator, times(1)).configure(auth, AppOriginContext.ORIGIN_ELATUS);
+            verify(configurator, times(1)).configure(auth);
+            verifyNoMoreInteractions(configurator, auth);
         }
 
         @Test
         @DisplayName("Should delegate to base configure when default method used")
         void shouldDelegateToBaseConfigure_whenDefaultMethodUsed() throws Exception {
             // Given
-            ArgumentCaptor<String> originCaptor = ArgumentCaptor.forClass(String.class);
             ModuleSecurityConfigurator configurator = mock(ModuleSecurityConfigurator.class);
             doCallRealMethod().when(configurator).configure(auth, AppOriginContext.ORIGIN_AKADEMIA);
 
@@ -74,8 +79,9 @@ class SecurityConfigTest {
             configurator.configure(auth, AppOriginContext.ORIGIN_AKADEMIA);
 
             // Then
-            verify(configurator).configure(auth);
-            verifyNoMoreInteractions(auth);
+            assertThat(configurator).isNotNull();
+            verify(configurator, times(1)).configure(auth);
+            verifyNoMoreInteractions(configurator, auth);
         }
     }
 

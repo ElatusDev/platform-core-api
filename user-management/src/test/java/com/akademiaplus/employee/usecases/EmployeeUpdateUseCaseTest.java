@@ -26,6 +26,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -128,11 +129,17 @@ class EmployeeUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(EMPLOYEE_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(EntityType.EMPLOYEE + " with ID " + EMPLOYEE_ID + " not found")
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.EMPLOYEE);
                         assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(EMPLOYEE_ID));
                     });
+
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(employeeRepository, times(1)).findById(compositeId);
+            verifyNoMoreInteractions(tenantContextHolder, employeeRepository);
+            verifyNoInteractions(personPIIRepository, modelMapper, piiNormalizer, hashingService);
         }
     }
 
@@ -167,9 +174,23 @@ class EmployeeUpdateUseCaseTest {
             EmployeeUpdateResponseDTO result = useCase.update(EMPLOYEE_ID, dto);
 
             // Then
-            verify(employeeRepository).saveAndFlush(existing);
             assertThat(result.getEmployeeId()).isEqualTo(EMPLOYEE_ID);
             assertThat(result.getMessage()).isEqualTo(EmployeeUpdateUseCase.UPDATE_SUCCESS_MESSAGE);
+
+            InOrder inOrder = inOrder(tenantContextHolder, employeeRepository, modelMapper,
+                    piiNormalizer, hashingService, personPIIRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(employeeRepository, times(1)).findById(compositeId);
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, EmployeeUpdateUseCase.MAP_NAME);
+            inOrder.verify(modelMapper, times(1)).map(dto, pii);
+            inOrder.verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            inOrder.verify(personPIIRepository, times(1)).existsByEmailHashAndPersonPiiIdNot(EMAIL_HASH, PERSON_PII_ID);
+            inOrder.verify(piiNormalizer, times(1)).normalizePhoneNumber(TEST_PHONE);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_PHONE);
+            inOrder.verify(personPIIRepository, times(1)).existsByPhoneHashAndPersonPiiIdNot(PHONE_HASH, PERSON_PII_ID);
+            inOrder.verify(employeeRepository, times(1)).saveAndFlush(existing);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -206,6 +227,21 @@ class EmployeeUpdateUseCaseTest {
 
             // Then
             assertThat(auth.getRole()).isEqualTo(TEST_ROLE);
+
+            InOrder inOrder = inOrder(tenantContextHolder, employeeRepository, modelMapper,
+                    piiNormalizer, hashingService, personPIIRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(employeeRepository, times(1)).findById(compositeId);
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, EmployeeUpdateUseCase.MAP_NAME);
+            inOrder.verify(modelMapper, times(1)).map(dto, pii);
+            inOrder.verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            inOrder.verify(personPIIRepository, times(1)).existsByEmailHashAndPersonPiiIdNot(EMAIL_HASH, PERSON_PII_ID);
+            inOrder.verify(piiNormalizer, times(1)).normalizePhoneNumber(TEST_PHONE);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_PHONE);
+            inOrder.verify(personPIIRepository, times(1)).existsByPhoneHashAndPersonPiiIdNot(PHONE_HASH, PERSON_PII_ID);
+            inOrder.verify(employeeRepository, times(1)).saveAndFlush(existing);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -240,10 +276,20 @@ class EmployeeUpdateUseCaseTest {
             useCase.update(EMPLOYEE_ID, dto);
 
             // Then
-            verify(piiNormalizer).normalizeEmail(TEST_EMAIL);
-            verify(piiNormalizer).normalizePhoneNumber(TEST_PHONE);
-            verify(hashingService).generateHash(NORMALIZED_EMAIL);
-            verify(hashingService).generateHash(NORMALIZED_PHONE);
+            InOrder inOrder = inOrder(tenantContextHolder, employeeRepository, modelMapper,
+                    piiNormalizer, hashingService, personPIIRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(employeeRepository, times(1)).findById(compositeId);
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, EmployeeUpdateUseCase.MAP_NAME);
+            inOrder.verify(modelMapper, times(1)).map(dto, pii);
+            inOrder.verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            inOrder.verify(personPIIRepository, times(1)).existsByEmailHashAndPersonPiiIdNot(EMAIL_HASH, PERSON_PII_ID);
+            inOrder.verify(piiNormalizer, times(1)).normalizePhoneNumber(TEST_PHONE);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_PHONE);
+            inOrder.verify(personPIIRepository, times(1)).existsByPhoneHashAndPersonPiiIdNot(PHONE_HASH, PERSON_PII_ID);
+            inOrder.verify(employeeRepository, times(1)).saveAndFlush(existing);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -274,11 +320,23 @@ class EmployeeUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(EMPLOYEE_ID, dto))
                     .isInstanceOf(DuplicateEntityException.class)
+                    .hasMessage("Duplicate " + PiiField.EMAIL + " for " + EntityType.EMPLOYEE)
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.EMPLOYEE);
                         assertThat(dee.getField()).isEqualTo(PiiField.EMAIL);
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, employeeRepository, modelMapper,
+                    piiNormalizer, hashingService, personPIIRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(employeeRepository, times(1)).findById(compositeId);
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, EmployeeUpdateUseCase.MAP_NAME);
+            inOrder.verify(modelMapper, times(1)).map(dto, pii);
+            inOrder.verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            inOrder.verify(personPIIRepository, times(1)).existsByEmailHashAndPersonPiiIdNot(EMAIL_HASH, PERSON_PII_ID);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -305,11 +363,26 @@ class EmployeeUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(EMPLOYEE_ID, dto))
                     .isInstanceOf(DuplicateEntityException.class)
+                    .hasMessage("Duplicate " + PiiField.PHONE_NUMBER + " for " + EntityType.EMPLOYEE)
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.EMPLOYEE);
                         assertThat(dee.getField()).isEqualTo(PiiField.PHONE_NUMBER);
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, employeeRepository, modelMapper,
+                    piiNormalizer, hashingService, personPIIRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(employeeRepository, times(1)).findById(compositeId);
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, EmployeeUpdateUseCase.MAP_NAME);
+            inOrder.verify(modelMapper, times(1)).map(dto, pii);
+            inOrder.verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            inOrder.verify(personPIIRepository, times(1)).existsByEmailHashAndPersonPiiIdNot(EMAIL_HASH, PERSON_PII_ID);
+            inOrder.verify(piiNormalizer, times(1)).normalizePhoneNumber(TEST_PHONE);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_PHONE);
+            inOrder.verify(personPIIRepository, times(1)).existsByPhoneHashAndPersonPiiIdNot(PHONE_HASH, PERSON_PII_ID);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

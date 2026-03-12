@@ -8,6 +8,7 @@
 package com.akademiaplus.payment.usecases;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -53,7 +54,7 @@ class GetAllPaymentTutorsUseCaseTest {
             List<GetPaymentTutorResponseDTO> result = useCase.getAll();
             // Then
             assertThat(result).isEmpty();
-            verify(paymentTutorRepository).findAll();
+            verify(paymentTutorRepository, times(1)).findAll();
             verifyNoMoreInteractions(paymentTutorRepository, modelMapper);
         }
 
@@ -72,9 +73,9 @@ class GetAllPaymentTutorsUseCaseTest {
             List<GetPaymentTutorResponseDTO> result = useCase.getAll();
             // Then
             assertThat(result).containsExactly(dto1, dto2);
-            verify(paymentTutorRepository).findAll();
-            verify(modelMapper).map(paymentTutor1, GetPaymentTutorResponseDTO.class);
-            verify(modelMapper).map(paymentTutor2, GetPaymentTutorResponseDTO.class);
+            verify(paymentTutorRepository, times(1)).findAll();
+            verify(modelMapper, times(1)).map(paymentTutor1, GetPaymentTutorResponseDTO.class);
+            verify(modelMapper, times(1)).map(paymentTutor2, GetPaymentTutorResponseDTO.class);
             verifyNoMoreInteractions(paymentTutorRepository, modelMapper);
         }
     }

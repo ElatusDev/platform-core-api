@@ -23,6 +23,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 /**
  * Unit tests for {@link MagicLinkControllerAdvice}.
@@ -60,6 +61,7 @@ class MagicLinkControllerAdviceTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode()).isEqualTo(MagicLinkControllerAdvice.CODE_TOKEN_NOT_FOUND);
+            verifyNoInteractions(messageService);
         }
     }
 
@@ -80,6 +82,7 @@ class MagicLinkControllerAdviceTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode()).isEqualTo(MagicLinkControllerAdvice.CODE_TOKEN_EXPIRED);
+            verifyNoInteractions(messageService);
         }
     }
 
@@ -100,6 +103,7 @@ class MagicLinkControllerAdviceTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode()).isEqualTo(MagicLinkControllerAdvice.CODE_TOKEN_ALREADY_USED);
+            verifyNoInteractions(messageService);
         }
     }
 }

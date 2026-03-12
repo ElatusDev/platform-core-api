@@ -26,7 +26,10 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("GetNotificationByIdUseCase")
 @ExtendWith(MockitoExtension.class)
@@ -68,10 +71,10 @@ class GetNotificationByIdUseCaseTest {
 
             // Then
             assertThat(result).isEqualTo(expectedDto);
-            verify(tenantContextHolder).getTenantId();
-            verify(notificationRepository).findById(
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(notificationRepository, times(1)).findById(
                     new NotificationDataModel.NotificationCompositeId(TENANT_ID, NOTIFICATION_ID));
-            verify(modelMapper).map(notification, GetNotificationResponseDTO.class);
+            verify(modelMapper, times(1)).map(notification, GetNotificationResponseDTO.class);
             verifyNoMoreInteractions(tenantContextHolder, notificationRepository, modelMapper);
         }
     }
@@ -94,8 +97,8 @@ class GetNotificationByIdUseCaseTest {
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasFieldOrPropertyWithValue("entityType", EntityType.NOTIFICATION)
                     .hasFieldOrPropertyWithValue("entityId", String.valueOf(NOTIFICATION_ID));
-            verify(tenantContextHolder).getTenantId();
-            verify(notificationRepository).findById(
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(notificationRepository, times(1)).findById(
                     new NotificationDataModel.NotificationCompositeId(TENANT_ID, NOTIFICATION_ID));
             verifyNoMoreInteractions(tenantContextHolder, notificationRepository, modelMapper);
         }
@@ -115,7 +118,7 @@ class GetNotificationByIdUseCaseTest {
             assertThatThrownBy(() -> useCase.get(NOTIFICATION_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(GetNotificationByIdUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
-            verify(tenantContextHolder).getTenantId();
+            verify(tenantContextHolder, times(1)).getTenantId();
             verifyNoMoreInteractions(tenantContextHolder, notificationRepository, modelMapper);
         }
     }
@@ -140,8 +143,8 @@ class GetNotificationByIdUseCaseTest {
 
             // Then
             assertThat(result).isSameAs(notification);
-            verify(tenantContextHolder).getTenantId();
-            verify(notificationRepository).findById(
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(notificationRepository, times(1)).findById(
                     new NotificationDataModel.NotificationCompositeId(TENANT_ID, NOTIFICATION_ID));
             verifyNoMoreInteractions(tenantContextHolder, notificationRepository);
         }
@@ -160,8 +163,8 @@ class GetNotificationByIdUseCaseTest {
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasFieldOrPropertyWithValue("entityType", EntityType.NOTIFICATION)
                     .hasFieldOrPropertyWithValue("entityId", String.valueOf(NOTIFICATION_ID));
-            verify(tenantContextHolder).getTenantId();
-            verify(notificationRepository).findById(
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(notificationRepository, times(1)).findById(
                     new NotificationDataModel.NotificationCompositeId(TENANT_ID, NOTIFICATION_ID));
             verifyNoMoreInteractions(tenantContextHolder, notificationRepository);
         }
@@ -176,7 +179,7 @@ class GetNotificationByIdUseCaseTest {
             assertThatThrownBy(() -> useCase.getEntity(NOTIFICATION_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(GetNotificationByIdUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
-            verify(tenantContextHolder).getTenantId();
+            verify(tenantContextHolder, times(1)).getTenantId();
             verifyNoMoreInteractions(tenantContextHolder, notificationRepository);
         }
     }

@@ -25,7 +25,11 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("GetEmailTemplateByIdUseCase")
 @ExtendWith(MockitoExtension.class)
@@ -67,8 +71,9 @@ class GetEmailTemplateByIdUseCaseTest {
 
             // Then
             assertThat(result).isSameAs(expectedResponse);
-            verify(emailTemplateRepository).findByTemplateId(TEMPLATE_ID);
-            verify(modelMapper).map(template, EmailTemplateResponseDTO.class);
+            verify(emailTemplateRepository, times(1)).findByTemplateId(TEMPLATE_ID);
+            verify(modelMapper, times(1)).map(template, EmailTemplateResponseDTO.class);
+            verifyNoMoreInteractions(emailTemplateRepository, modelMapper);
         }
 
         @Test
@@ -83,6 +88,9 @@ class GetEmailTemplateByIdUseCaseTest {
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasMessageContaining(EntityType.EMAIL_TEMPLATE)
                     .hasMessageContaining(String.valueOf(TEMPLATE_ID));
+            verify(emailTemplateRepository, times(1)).findByTemplateId(TEMPLATE_ID);
+            verifyNoInteractions(modelMapper);
+            verifyNoMoreInteractions(emailTemplateRepository);
         }
     }
 }

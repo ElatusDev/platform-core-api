@@ -18,8 +18,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.mockito.InOrder;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("MarkNotificationAsReadUseCase")
 @ExtendWith(MockitoExtension.class)
@@ -54,7 +60,11 @@ class MarkNotificationAsReadUseCaseTest {
             // Then
             ArgumentCaptor<NotificationReadStatusDataModel> captor =
                     ArgumentCaptor.forClass(NotificationReadStatusDataModel.class);
-            verify(notificationReadStatusRepository).save(captor.capture());
+            InOrder inOrder = inOrder(notificationReadStatusRepository);
+            inOrder.verify(notificationReadStatusRepository, times(1))
+                    .existsByNotificationIdAndUserId(NOTIFICATION_ID, USER_ID);
+            inOrder.verify(notificationReadStatusRepository, times(1)).save(captor.capture());
+            inOrder.verifyNoMoreInteractions();
             NotificationReadStatusDataModel saved = captor.getValue();
             assertThat(saved.getNotificationId()).isEqualTo(NOTIFICATION_ID);
             assertThat(saved.getUserId()).isEqualTo(USER_ID);
@@ -72,7 +82,7 @@ class MarkNotificationAsReadUseCaseTest {
             useCase.markAsRead(NOTIFICATION_ID, USER_ID);
 
             // Then
-            verify(notificationReadStatusRepository).existsByNotificationIdAndUserId(NOTIFICATION_ID, USER_ID);
+            verify(notificationReadStatusRepository, times(1)).existsByNotificationIdAndUserId(NOTIFICATION_ID, USER_ID);
             verifyNoMoreInteractions(notificationReadStatusRepository);
         }
     }

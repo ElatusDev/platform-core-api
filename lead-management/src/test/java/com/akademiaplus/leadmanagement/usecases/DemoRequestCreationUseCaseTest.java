@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -25,8 +26,11 @@ import org.springframework.context.ApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -95,6 +99,14 @@ class DemoRequestCreationUseCaseTest {
 
             // Then
             assertThat(response.getDemoRequestId()).isEqualTo(SAVED_ID);
+
+            InOrder inOrder = inOrder(demoRequestRepository, applicationContext, modelMapper);
+            inOrder.verify(demoRequestRepository, times(1)).existsByEmail(EMAIL);
+            inOrder.verify(applicationContext, times(1)).getBean(DemoRequestDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, model,
+                    DemoRequestCreationUseCase.MAP_NAME);
+            inOrder.verify(demoRequestRepository, times(1)).save(model);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -116,9 +128,17 @@ class DemoRequestCreationUseCaseTest {
             // Then
             ArgumentCaptor<DemoRequestDataModel> captor =
                     ArgumentCaptor.forClass(DemoRequestDataModel.class);
-            verify(demoRequestRepository).save(captor.capture());
+            verify(demoRequestRepository, times(1)).save(captor.capture());
             assertThat(captor.getValue().getStatus())
                     .isEqualTo(DemoRequestCreationUseCase.STATUS_PENDING);
+
+            InOrder inOrder = inOrder(demoRequestRepository, applicationContext, modelMapper);
+            inOrder.verify(demoRequestRepository, times(1)).existsByEmail(EMAIL);
+            inOrder.verify(applicationContext, times(1)).getBean(DemoRequestDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, model,
+                    DemoRequestCreationUseCase.MAP_NAME);
+            inOrder.verify(demoRequestRepository, times(1)).save(model);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -138,7 +158,15 @@ class DemoRequestCreationUseCaseTest {
             useCase.create(dto);
 
             // Then
-            verify(modelMapper).map(dto, model, DemoRequestCreationUseCase.MAP_NAME);
+            assertThat(savedModel.getDemoRequestId()).isEqualTo(SAVED_ID);
+
+            InOrder inOrder = inOrder(demoRequestRepository, applicationContext, modelMapper);
+            inOrder.verify(demoRequestRepository, times(1)).existsByEmail(EMAIL);
+            inOrder.verify(applicationContext, times(1)).getBean(DemoRequestDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, model,
+                    DemoRequestCreationUseCase.MAP_NAME);
+            inOrder.verify(demoRequestRepository, times(1)).save(model);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -156,6 +184,10 @@ class DemoRequestCreationUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.create(dto))
                     .isInstanceOf(DuplicateEntityException.class);
+
+            verify(demoRequestRepository, times(1)).existsByEmail(EMAIL);
+            verifyNoMoreInteractions(demoRequestRepository);
+            verifyNoInteractions(applicationContext, modelMapper);
         }
     }
 }

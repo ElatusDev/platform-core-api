@@ -26,8 +26,13 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.net.URI;
 import java.util.List;
 
+import org.mockito.InOrder;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @DisplayName("EmailCreationUseCase")
@@ -89,7 +94,12 @@ class EmailCreationUseCaseTest {
             useCase.create(TEST_SUBJECT, TEST_BODY, TEST_SENDER, recipients, null);
 
             // Then
-            verify(emailRepository).saveAndFlush(email);
+            assertThat(email.getSubject()).isEqualTo(TEST_SUBJECT);
+            InOrder inOrder = inOrder(applicationContext, emailRepository);
+            inOrder.verify(applicationContext, times(1)).getBean(EmailDataModel.class);
+            inOrder.verify(applicationContext, times(1)).getBean(EmailRecipientDataModel.class);
+            inOrder.verify(emailRepository, times(1)).saveAndFlush(email);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -112,6 +122,9 @@ class EmailCreationUseCaseTest {
             // Then
             assertThat(result.getSubject()).isEqualTo(TEST_SUBJECT);
             assertThat(result.getBody()).isEqualTo(TEST_BODY);
+            verify(applicationContext, times(1)).getBean(EmailDataModel.class);
+            verify(applicationContext, times(1)).getBean(EmailRecipientDataModel.class);
+            verifyNoMoreInteractions(applicationContext, emailRepository);
         }
 
         @Test
@@ -131,6 +144,9 @@ class EmailCreationUseCaseTest {
             assertThat(result.getRecipients()).hasSize(1);
             assertThat(result.getRecipients().get(0).getRecipientEmail()).isEqualTo(RECIPIENT_TO);
             assertThat(result.getRecipients().get(0).getEmail()).isEqualTo(email);
+            verify(applicationContext, times(1)).getBean(EmailDataModel.class);
+            verify(applicationContext, times(1)).getBean(EmailRecipientDataModel.class);
+            verifyNoMoreInteractions(applicationContext, emailRepository);
         }
 
         @Test
@@ -154,6 +170,9 @@ class EmailCreationUseCaseTest {
 
             // Then
             assertThat(result.getRecipients()).hasSize(3);
+            verify(applicationContext, times(1)).getBean(EmailDataModel.class);
+            verify(applicationContext, times(3)).getBean(EmailRecipientDataModel.class);
+            verifyNoMoreInteractions(applicationContext, emailRepository);
         }
 
         @Test
@@ -175,6 +194,10 @@ class EmailCreationUseCaseTest {
             assertThat(result.getAttachments()).hasSize(1);
             assertThat(result.getAttachments().get(0).getAttachmentUrl()).isEqualTo(ATTACHMENT_URL.toString());
             assertThat(result.getAttachments().get(0).getEmail()).isEqualTo(email);
+            verify(applicationContext, times(1)).getBean(EmailDataModel.class);
+            verify(applicationContext, times(1)).getBean(EmailRecipientDataModel.class);
+            verify(applicationContext, times(1)).getBean(EmailAttachmentDataModel.class);
+            verifyNoMoreInteractions(applicationContext, emailRepository);
         }
 
         @Test
@@ -191,6 +214,9 @@ class EmailCreationUseCaseTest {
 
             // Then
             assertThat(result.getSender()).isEqualTo(DEFAULT_FROM_ADDRESS);
+            verify(applicationContext, times(1)).getBean(EmailDataModel.class);
+            verify(applicationContext, times(1)).getBean(EmailRecipientDataModel.class);
+            verifyNoMoreInteractions(applicationContext, emailRepository);
         }
 
         @Test
@@ -207,6 +233,9 @@ class EmailCreationUseCaseTest {
 
             // Then
             assertThat(result.getSender()).isEqualTo(TEST_SENDER);
+            verify(applicationContext, times(1)).getBean(EmailDataModel.class);
+            verify(applicationContext, times(1)).getBean(EmailRecipientDataModel.class);
+            verifyNoMoreInteractions(applicationContext, emailRepository);
         }
     }
 }

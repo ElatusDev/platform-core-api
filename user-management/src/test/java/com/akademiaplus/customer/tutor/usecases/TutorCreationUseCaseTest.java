@@ -22,6 +22,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -114,8 +115,10 @@ class TutorCreationUseCaseTest {
             // Then
             assertThat(result.getPersonPII()).isEqualTo(personPII);
             assertThat(result.getEntryDate()).isEqualTo(LocalDate.now());
-            verify(applicationContext).getBean(TutorDataModel.class);
-            verify(applicationContext).getBean(PersonPIIDataModel.class);
+            verify(applicationContext, times(1)).getBean(TutorDataModel.class);
+            verify(applicationContext, times(1)).getBean(PersonPIIDataModel.class);
+            verifyNoMoreInteractions(applicationContext, modelMapper, piiNormalizer, hashingService);
+            verifyNoInteractions(tutorRepository, minorStudentRepository, personPIIRepository, tenantContextHolder);
         }
 
         @Test
@@ -145,6 +148,8 @@ class TutorCreationUseCaseTest {
             assertThat(result.getCustomerAuth()).isNotNull();
             assertThat(result.getCustomerAuth().getProvider()).isEqualTo(provider);
             assertThat(result.getCustomerAuth().getToken()).isEqualTo(token);
+            verifyNoMoreInteractions(applicationContext, modelMapper, piiNormalizer, hashingService);
+            verifyNoInteractions(tutorRepository, minorStudentRepository, personPIIRepository, tenantContextHolder);
         }
 
         @Test
@@ -165,6 +170,8 @@ class TutorCreationUseCaseTest {
 
             // Then
             assertThat(result.getCustomerAuth()).isNull();
+            verifyNoMoreInteractions(applicationContext, modelMapper, piiNormalizer, hashingService);
+            verifyNoInteractions(tutorRepository, minorStudentRepository, personPIIRepository, tenantContextHolder);
         }
 
         @Test
@@ -184,12 +191,14 @@ class TutorCreationUseCaseTest {
             useCase.transformTutor(tutorDto);
 
             // Then
-            verify(piiNormalizer).normalizeEmail(TEST_EMAIL);
-            verify(hashingService).generateHash(NORMALIZED_EMAIL);
-            verify(piiNormalizer).normalizePhoneNumber(TEST_PHONE);
-            verify(hashingService).generateHash(NORMALIZED_PHONE);
+            verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
+            verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            verify(piiNormalizer, times(1)).normalizePhoneNumber(TEST_PHONE);
+            verify(hashingService, times(1)).generateHash(NORMALIZED_PHONE);
             assertThat(personPII.getEmailHash()).isEqualTo(EMAIL_HASH);
             assertThat(personPII.getPhoneHash()).isEqualTo(PHONE_HASH);
+            verifyNoMoreInteractions(applicationContext, modelMapper, piiNormalizer, hashingService);
+            verifyNoInteractions(tutorRepository, minorStudentRepository, personPIIRepository, tenantContextHolder);
         }
     }
 
@@ -248,9 +257,13 @@ class TutorCreationUseCaseTest {
             assertThat(result.getCustomerAuth()).isEqualTo(customerAuth);
             assertThat(result.getCustomerAuth().getProvider()).isEqualTo("GOOGLE");
             assertThat(result.getCustomerAuth().getToken()).isEqualTo("oauth_token123");
-            verify(applicationContext).getBean(MinorStudentDataModel.class);
-            verify(applicationContext).getBean(PersonPIIDataModel.class);
+            verify(applicationContext, times(1)).getBean(MinorStudentDataModel.class);
+            verify(applicationContext, times(1)).getBean(PersonPIIDataModel.class);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoMoreInteractions(applicationContext, modelMapper, piiNormalizer, hashingService, tutorRepository, tenantContextHolder);
+            verifyNoInteractions(minorStudentRepository, personPIIRepository);
         }
+
 
         @Test
         @DisplayName("Should look up tutor when transforming minor student")
@@ -271,8 +284,36 @@ class TutorCreationUseCaseTest {
             MinorStudentDataModel result = useCase.transformMinorStudent(minorDto);
 
             // Then
-            verify(tutorRepository).findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID));
+            verify(tutorRepository, times(1)).findById(new TutorDataModel.TutorCompositeId(TENANT_ID, TUTOR_ID));
             assertThat(result.getTutor()).isEqualTo(existingTutor);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoMoreInteractions(applicationContext, modelMapper, piiNormalizer, hashingService, tutorRepository, tenantContextHolder);
+            verifyNoInteractions(minorStudentRepository, personPIIRepository);
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when tenant context is missing")
+        void shouldThrowIllegalArgumentException_whenTenantContextMissing() {
+            // Given
+            CustomerAuthDataModel customerAuth = new CustomerAuthDataModel();
+            when(applicationContext.getBean(PersonPIIDataModel.class)).thenReturn(personPII);
+            doNothing().when(modelMapper).map(minorDto, personPII);
+            when(applicationContext.getBean(MinorStudentDataModel.class)).thenReturn(minorModel);
+            doNothing().when(modelMapper).map(minorDto, minorModel, TutorCreationUseCase.MINOR_STUDENT_MAP_NAME);
+            when(applicationContext.getBean(CustomerAuthDataModel.class)).thenReturn(customerAuth);
+            when(piiNormalizer.normalizeEmail(TEST_EMAIL)).thenReturn(NORMALIZED_EMAIL);
+            when(piiNormalizer.normalizePhoneNumber(TEST_PHONE)).thenReturn(NORMALIZED_PHONE);
+            when(hashingService.generateHash(NORMALIZED_EMAIL)).thenReturn(EMAIL_HASH);
+            when(hashingService.generateHash(NORMALIZED_PHONE)).thenReturn(PHONE_HASH);
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.empty());
+
+            // When & Then
+            assertThatThrownBy(() -> useCase.transformMinorStudent(minorDto))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage(TutorCreationUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
+
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoInteractions(tutorRepository, minorStudentRepository, personPIIRepository);
         }
 
         @Test
@@ -293,7 +334,11 @@ class TutorCreationUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.transformMinorStudent(minorDto))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining(String.valueOf(TUTOR_ID));
+                    .hasMessage(TutorCreationUseCase.ERROR_TUTOR_NOT_FOUND + TUTOR_ID);
+
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoMoreInteractions(applicationContext, modelMapper, piiNormalizer, hashingService, tutorRepository, tenantContextHolder);
+            verifyNoInteractions(minorStudentRepository, personPIIRepository);
         }
 
         @Test
@@ -315,12 +360,15 @@ class TutorCreationUseCaseTest {
             useCase.transformMinorStudent(minorDto);
 
             // Then
-            verify(piiNormalizer).normalizeEmail(TEST_EMAIL);
-            verify(hashingService).generateHash(NORMALIZED_EMAIL);
-            verify(piiNormalizer).normalizePhoneNumber(TEST_PHONE);
-            verify(hashingService).generateHash(NORMALIZED_PHONE);
+            verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
+            verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            verify(piiNormalizer, times(1)).normalizePhoneNumber(TEST_PHONE);
+            verify(hashingService, times(1)).generateHash(NORMALIZED_PHONE);
             assertThat(personPII.getEmailHash()).isEqualTo(EMAIL_HASH);
             assertThat(personPII.getPhoneHash()).isEqualTo(PHONE_HASH);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoMoreInteractions(applicationContext, modelMapper, piiNormalizer, hashingService, tutorRepository, tenantContextHolder);
+            verifyNoInteractions(minorStudentRepository, personPIIRepository);
         }
     }
 
@@ -362,8 +410,12 @@ class TutorCreationUseCaseTest {
             TutorCreationResponseDTO result = useCase.create(tutorDto);
 
             // Then
-            verify(tutorRepository).saveAndFlush(tutorModel);
             assertThat(result).isEqualTo(expectedResponse);
+
+            verify(tutorRepository, times(1)).saveAndFlush(tutorModel);
+            verify(personPIIRepository, times(1)).existsByEmailHash(EMAIL_HASH);
+            verify(personPIIRepository, times(1)).existsByPhoneHash(PHONE_HASH);
+            verifyNoInteractions(minorStudentRepository, tenantContextHolder);
         }
 
         @Test
@@ -408,8 +460,11 @@ class TutorCreationUseCaseTest {
             MinorStudentCreationResponseDTO result = useCase.createMinorStudent(minorDto);
 
             // Then
-            verify(minorStudentRepository).saveAndFlush(minorModel);
             assertThat(result).isEqualTo(expectedResponse);
+
+            verify(minorStudentRepository, times(1)).saveAndFlush(minorModel);
+            verify(personPIIRepository, times(1)).existsByEmailHash(EMAIL_HASH);
+            verify(personPIIRepository, times(1)).existsByPhoneHash(PHONE_HASH);
         }
     }
 
@@ -445,11 +500,15 @@ class TutorCreationUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.create(tutorDto))
                     .isInstanceOf(DuplicateEntityException.class)
+                    .hasMessage("Duplicate " + PiiField.EMAIL + " for " + EntityType.TUTOR)
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.TUTOR);
                         assertThat(dee.getField()).isEqualTo(PiiField.EMAIL);
                     });
+
+            verify(personPIIRepository, times(1)).existsByEmailHash(EMAIL_HASH);
+            verifyNoInteractions(tutorRepository, minorStudentRepository);
         }
 
         @Test
@@ -481,11 +540,16 @@ class TutorCreationUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.create(tutorDto))
                     .isInstanceOf(DuplicateEntityException.class)
+                    .hasMessage("Duplicate " + PiiField.PHONE_NUMBER + " for " + EntityType.TUTOR)
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.TUTOR);
                         assertThat(dee.getField()).isEqualTo(PiiField.PHONE_NUMBER);
                     });
+
+            verify(personPIIRepository, times(1)).existsByEmailHash(EMAIL_HASH);
+            verify(personPIIRepository, times(1)).existsByPhoneHash(PHONE_HASH);
+            verifyNoInteractions(tutorRepository, minorStudentRepository);
         }
 
         @Test
@@ -523,11 +587,15 @@ class TutorCreationUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.createMinorStudent(minorDto))
                     .isInstanceOf(DuplicateEntityException.class)
+                    .hasMessage("Duplicate " + PiiField.EMAIL + " for " + EntityType.MINOR_STUDENT)
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.MINOR_STUDENT);
                         assertThat(dee.getField()).isEqualTo(PiiField.EMAIL);
                     });
+
+            verify(personPIIRepository, times(1)).existsByEmailHash(EMAIL_HASH);
+            verifyNoInteractions(minorStudentRepository);
         }
 
         @Test
@@ -566,11 +634,16 @@ class TutorCreationUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.createMinorStudent(minorDto))
                     .isInstanceOf(DuplicateEntityException.class)
+                    .hasMessage("Duplicate " + PiiField.PHONE_NUMBER + " for " + EntityType.MINOR_STUDENT)
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.MINOR_STUDENT);
                         assertThat(dee.getField()).isEqualTo(PiiField.PHONE_NUMBER);
                     });
+
+            verify(personPIIRepository, times(1)).existsByEmailHash(EMAIL_HASH);
+            verify(personPIIRepository, times(1)).existsByPhoneHash(PHONE_HASH);
+            verifyNoInteractions(minorStudentRepository);
         }
     }
 }

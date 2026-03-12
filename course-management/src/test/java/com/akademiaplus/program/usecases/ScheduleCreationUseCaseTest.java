@@ -80,10 +80,17 @@ class ScheduleCreationUseCaseTest {
             when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(course));
 
             // When
-            useCase.transform(dto);
+            ScheduleDataModel result = useCase.transform(dto);
 
             // Then
-            verify(applicationContext).getBean(ScheduleDataModel.class);
+            assertThat(result).isSameAs(prototypeModel);
+            InOrder inOrder = inOrder(applicationContext, modelMapper, tenantContextHolder, courseRepository);
+            inOrder.verify(applicationContext, times(1)).getBean(ScheduleDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, ScheduleCreationUseCase.MAP_NAME);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(courseRepository, times(1)).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(scheduleRepository);
         }
 
         @Test
@@ -100,8 +107,11 @@ class ScheduleCreationUseCaseTest {
             ScheduleDataModel result = useCase.transform(dto);
 
             // Then
-            verify(modelMapper).map(dto, prototypeModel, ScheduleCreationUseCase.MAP_NAME);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, ScheduleCreationUseCase.MAP_NAME);
             assertThat(result).isSameAs(prototypeModel);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoInteractions(scheduleRepository);
+            verifyNoMoreInteractions(applicationContext, courseRepository, tenantContextHolder, modelMapper);
         }
 
         @Test
@@ -118,8 +128,14 @@ class ScheduleCreationUseCaseTest {
             ScheduleDataModel result = useCase.transform(dto);
 
             // Then
-            verify(courseRepository).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
             assertThat(result.getCourse()).isSameAs(course);
+            InOrder inOrder = inOrder(applicationContext, modelMapper, tenantContextHolder, courseRepository);
+            inOrder.verify(applicationContext, times(1)).getBean(ScheduleDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, ScheduleCreationUseCase.MAP_NAME);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(courseRepository, times(1)).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(scheduleRepository);
         }
 
         @Test
@@ -135,6 +151,13 @@ class ScheduleCreationUseCaseTest {
             assertThatThrownBy(() -> useCase.transform(dto))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining(String.valueOf(COURSE_ID));
+
+            verify(applicationContext, times(1)).getBean(ScheduleDataModel.class);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, ScheduleCreationUseCase.MAP_NAME);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(courseRepository, times(1)).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            verifyNoInteractions(scheduleRepository);
+            verifyNoMoreInteractions(applicationContext, courseRepository, tenantContextHolder, modelMapper);
         }
     }
 
@@ -164,9 +187,12 @@ class ScheduleCreationUseCaseTest {
             ScheduleCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(scheduleRepository).saveAndFlush(prototypeModel);
-            verify(modelMapper).map(savedModel, ScheduleCreationResponseDTO.class);
             assertThat(result.getScheduleId()).isEqualTo(SAVED_ID);
+            verify(scheduleRepository, times(1)).saveAndFlush(prototypeModel);
+            verify(modelMapper, times(1)).map(savedModel, ScheduleCreationResponseDTO.class);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoMoreInteractions(applicationContext, scheduleRepository, courseRepository,
+                    tenantContextHolder, modelMapper);
         }
 
         @Test
@@ -186,15 +212,18 @@ class ScheduleCreationUseCaseTest {
             when(modelMapper.map(savedModel, ScheduleCreationResponseDTO.class)).thenReturn(responseDto);
 
             // When
-            useCase.create(dto);
+            ScheduleCreationResponseDTO result = useCase.create(dto);
 
             // Then — verify the exact object from transform() is what gets saved
-            InOrder inOrder = inOrder(applicationContext, modelMapper, courseRepository, scheduleRepository);
-            inOrder.verify(applicationContext).getBean(ScheduleDataModel.class);
-            inOrder.verify(modelMapper).map(dto, prototypeModel, ScheduleCreationUseCase.MAP_NAME);
-            inOrder.verify(courseRepository).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
-            inOrder.verify(scheduleRepository).saveAndFlush(prototypeModel);
-            inOrder.verify(modelMapper).map(savedModel, ScheduleCreationResponseDTO.class);
+            assertThat(result).isSameAs(responseDto);
+            InOrder inOrder = inOrder(applicationContext, modelMapper, tenantContextHolder, courseRepository, scheduleRepository);
+            inOrder.verify(applicationContext, times(1)).getBean(ScheduleDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, ScheduleCreationUseCase.MAP_NAME);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(courseRepository, times(1)).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            inOrder.verify(scheduleRepository, times(1)).saveAndFlush(prototypeModel);
+            inOrder.verify(modelMapper, times(1)).map(savedModel, ScheduleCreationResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

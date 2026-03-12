@@ -26,7 +26,11 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("SseController")
 @ExtendWith(MockitoExtension.class)
@@ -80,8 +84,8 @@ class SseControllerTest {
 
             // Then
             assertThat(result).isSameAs(expectedEmitter);
-            verify(tenantContextHolder).requireTenantId();
-            verify(sseEmitterRegistry).register(TENANT_ID, USER_ID);
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(sseEmitterRegistry, times(1)).register(TENANT_ID, USER_ID);
             verifyNoMoreInteractions(tenantContextHolder, sseEmitterRegistry);
         }
     }
@@ -101,6 +105,7 @@ class SseControllerTest {
 
             // Then
             assertThat(result).isEqualTo(USER_ID);
+            verifyNoInteractions(sseEmitterRegistry, tenantContextHolder);
         }
 
         @Test
@@ -112,6 +117,7 @@ class SseControllerTest {
             assertThatThrownBy(() -> sseController.extractAuthenticatedUserId())
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessage(SseController.ERROR_USER_ID_NOT_FOUND);
+            verifyNoInteractions(sseEmitterRegistry, tenantContextHolder);
         }
 
         @Test
@@ -127,6 +133,7 @@ class SseControllerTest {
             assertThatThrownBy(() -> sseController.extractAuthenticatedUserId())
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessage(SseController.ERROR_USER_ID_NOT_FOUND);
+            verifyNoInteractions(sseEmitterRegistry, tenantContextHolder);
         }
 
         @Test
@@ -143,6 +150,7 @@ class SseControllerTest {
             assertThatThrownBy(() -> sseController.extractAuthenticatedUserId())
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessage(SseController.ERROR_USER_ID_NOT_FOUND);
+            verifyNoInteractions(sseEmitterRegistry, tenantContextHolder);
         }
 
         @Test
@@ -160,6 +168,7 @@ class SseControllerTest {
 
             // Then
             assertThat(result).isEqualTo(USER_ID);
+            verifyNoInteractions(sseEmitterRegistry, tenantContextHolder);
         }
     }
 }

@@ -17,7 +17,6 @@ import openapi.akademiaplus.domain.certificate.authority.dto.EnrollmentRequestDT
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -84,6 +83,13 @@ class EnrollServiceUseCaseTest {
 
             // Then
             assertThat(result).isSameAs(expectedResponse);
+
+            var inOrder = inOrder(tokenManifest, signCertificateUseCase);
+            inOrder.verify(tokenManifest, times(1)).validate(VALID_TOKEN, BOUND_CN);
+            inOrder.verify(signCertificateUseCase, times(1)).parseCsr(FAKE_CSR_BASE64);
+            inOrder.verify(signCertificateUseCase, times(1)).signEnrollment(mockCsr, BOUND_CN);
+            inOrder.verify(tokenManifest, times(1)).invalidate(VALID_TOKEN);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -102,10 +108,17 @@ class EnrollServiceUseCaseTest {
             when(signCertificateUseCase.signEnrollment(mockCsr, BOUND_CN)).thenReturn(response);
 
             // When
-            useCase.enroll(request);
+            CertificateResponseDTO result = useCase.enroll(request);
 
             // Then
-            verify(tokenManifest).invalidate(VALID_TOKEN);
+            assertThat(result).isSameAs(response);
+
+            var inOrder = inOrder(tokenManifest, signCertificateUseCase);
+            inOrder.verify(tokenManifest, times(1)).validate(VALID_TOKEN, BOUND_CN);
+            inOrder.verify(signCertificateUseCase, times(1)).parseCsr(FAKE_CSR_BASE64);
+            inOrder.verify(signCertificateUseCase, times(1)).signEnrollment(mockCsr, BOUND_CN);
+            inOrder.verify(tokenManifest, times(1)).invalidate(VALID_TOKEN);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -124,15 +137,18 @@ class EnrollServiceUseCaseTest {
             when(signCertificateUseCase.signEnrollment(mockCsr, BOUND_CN)).thenReturn(response);
 
             // When
-            useCase.enroll(request);
+            CertificateResponseDTO result = useCase.enroll(request);
+
+            // Then
+            assertThat(result).isSameAs(response);
 
             // Then — verify order: validate → parseCsr → signEnrollment → invalidate
             var inOrder = inOrder(tokenManifest, signCertificateUseCase);
-            inOrder.verify(tokenManifest).validate(VALID_TOKEN, BOUND_CN);
-            inOrder.verify(signCertificateUseCase).parseCsr(FAKE_CSR_BASE64);
-            inOrder.verify(signCertificateUseCase).signEnrollment(mockCsr, BOUND_CN);
-            inOrder.verify(tokenManifest).invalidate(VALID_TOKEN);
-            verifyNoMoreInteractions(tokenManifest, signCertificateUseCase);
+            inOrder.verify(tokenManifest, times(1)).validate(VALID_TOKEN, BOUND_CN);
+            inOrder.verify(signCertificateUseCase, times(1)).parseCsr(FAKE_CSR_BASE64);
+            inOrder.verify(signCertificateUseCase, times(1)).signEnrollment(mockCsr, BOUND_CN);
+            inOrder.verify(tokenManifest, times(1)).invalidate(VALID_TOKEN);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -153,7 +169,9 @@ class EnrollServiceUseCaseTest {
                     .isInstanceOf(InvalidBootstrapTokenException.class)
                     .hasMessage(TokenManifest.INVALID_TOKEN_MSG);
 
+            verify(tokenManifest, times(1)).validate(VALID_TOKEN, BOUND_CN);
             verifyNoInteractions(signCertificateUseCase);
+            verifyNoMoreInteractions(tokenManifest, signCertificateUseCase);
         }
 
         @Test
@@ -169,7 +187,9 @@ class EnrollServiceUseCaseTest {
                     .isInstanceOf(TokenAlreadyUsedException.class)
                     .hasMessage(TokenManifest.TOKEN_ALREADY_USED_MSG);
 
+            verify(tokenManifest, times(1)).validate(VALID_TOKEN, BOUND_CN);
             verifyNoInteractions(signCertificateUseCase);
+            verifyNoMoreInteractions(tokenManifest, signCertificateUseCase);
         }
 
         @Test
@@ -185,7 +205,9 @@ class EnrollServiceUseCaseTest {
                     .isInstanceOf(TokenCnMismatchException.class)
                     .hasMessage(TokenManifest.TOKEN_CN_MISMATCH_MSG);
 
+            verify(tokenManifest, times(1)).validate(VALID_TOKEN, BOUND_CN);
             verifyNoInteractions(signCertificateUseCase);
+            verifyNoMoreInteractions(tokenManifest, signCertificateUseCase);
         }
 
         @Test
@@ -203,9 +225,14 @@ class EnrollServiceUseCaseTest {
 
             // When & Then
             assertThatThrownBy(() -> useCase.enroll(request))
-                    .isInstanceOf(IllegalStateException.class);
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("Signing failed");
 
-            verify(tokenManifest, never()).invalidate(VALID_TOKEN);
+            var inOrder = inOrder(tokenManifest, signCertificateUseCase);
+            inOrder.verify(tokenManifest, times(1)).validate(VALID_TOKEN, BOUND_CN);
+            inOrder.verify(signCertificateUseCase, times(1)).parseCsr(FAKE_CSR_BASE64);
+            inOrder.verify(signCertificateUseCase, times(1)).signEnrollment(mockCsr, BOUND_CN);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

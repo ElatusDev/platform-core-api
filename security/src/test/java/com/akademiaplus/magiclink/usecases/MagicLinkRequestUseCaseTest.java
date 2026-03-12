@@ -30,7 +30,7 @@ import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
-import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -70,7 +70,15 @@ class MagicLinkRequestUseCaseTest {
         properties = new MagicLinkProperties(TEST_BASE_URL, TEST_TOKEN_EXPIRY_MINUTES, TEST_MAX_REQUESTS, TEST_EMAIL_SUBJECT);
         useCase = new MagicLinkRequestUseCase(
                 magicLinkTokenRepository, hashingService, properties,
-                tenantContextHolder, applicationContext, emailSender);
+                tenantContextHolder, applicationContext);
+        // Inject emailSender via reflection since it's @Autowired(required=false)
+        try {
+            var field = MagicLinkRequestUseCase.class.getDeclaredField("emailSender");
+            field.setAccessible(true);
+            field.set(useCase, emailSender);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private MagicLinkRequestDTO buildRequest() {
@@ -99,8 +107,13 @@ class MagicLinkRequestUseCaseTest {
             useCase.requestMagicLink(dto);
 
             // Then
-            verify(magicLinkTokenRepository).save(tokenCaptor.capture());
+            verify(magicLinkTokenRepository, times(1)).save(tokenCaptor.capture());
             assertThat(tokenCaptor.getValue().getTokenHash()).isEqualTo(TEST_TOKEN_HASH);
+            verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
+            verify(applicationContext, times(1)).getBean(MagicLinkTokenDataModel.class);
+            verify(emailSender, times(1)).send(anyString(), anyString(), anyString());
+            verifyNoMoreInteractions(magicLinkTokenRepository, hashingService, tenantContextHolder,
+                    applicationContext, emailSender);
         }
 
         @Test
@@ -115,8 +128,14 @@ class MagicLinkRequestUseCaseTest {
 
             // Then
             ArgumentCaptor<String> rawTokenCaptor = ArgumentCaptor.forClass(String.class);
-            verify(hashingService).generateHash(rawTokenCaptor.capture());
+            verify(hashingService, times(1)).generateHash(rawTokenCaptor.capture());
             assertThat(rawTokenCaptor.getValue()).hasSize(43);
+            verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
+            verify(applicationContext, times(1)).getBean(MagicLinkTokenDataModel.class);
+            verify(magicLinkTokenRepository, times(1)).save(any(MagicLinkTokenDataModel.class));
+            verify(emailSender, times(1)).send(anyString(), anyString(), anyString());
+            verifyNoMoreInteractions(magicLinkTokenRepository, hashingService, tenantContextHolder,
+                    applicationContext, emailSender);
         }
     }
 
@@ -135,10 +154,16 @@ class MagicLinkRequestUseCaseTest {
             useCase.requestMagicLink(dto);
 
             // Then
-            verify(magicLinkTokenRepository).save(tokenCaptor.capture());
+            verify(magicLinkTokenRepository, times(1)).save(tokenCaptor.capture());
             MagicLinkTokenDataModel saved = tokenCaptor.getValue();
             assertThat(saved.getEmail()).isEqualTo(TEST_EMAIL);
             assertThat(saved.getTenantId()).isEqualTo(TEST_TENANT_ID);
+            verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
+            verify(hashingService, times(1)).generateHash(anyString());
+            verify(applicationContext, times(1)).getBean(MagicLinkTokenDataModel.class);
+            verify(emailSender, times(1)).send(anyString(), anyString(), anyString());
+            verifyNoMoreInteractions(magicLinkTokenRepository, hashingService, tenantContextHolder,
+                    applicationContext, emailSender);
         }
 
         @Test
@@ -152,10 +177,16 @@ class MagicLinkRequestUseCaseTest {
             useCase.requestMagicLink(dto);
 
             // Then
-            verify(magicLinkTokenRepository).save(tokenCaptor.capture());
+            verify(magicLinkTokenRepository, times(1)).save(tokenCaptor.capture());
             Instant expectedExpiry = Instant.now().plusSeconds(TEST_TOKEN_EXPIRY_MINUTES * 60L);
             assertThat(tokenCaptor.getValue().getExpiresAt())
                     .isCloseTo(expectedExpiry, within(5, java.time.temporal.ChronoUnit.SECONDS));
+            verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
+            verify(hashingService, times(1)).generateHash(anyString());
+            verify(applicationContext, times(1)).getBean(MagicLinkTokenDataModel.class);
+            verify(emailSender, times(1)).send(anyString(), anyString(), anyString());
+            verifyNoMoreInteractions(magicLinkTokenRepository, hashingService, tenantContextHolder,
+                    applicationContext, emailSender);
         }
     }
 
@@ -174,9 +205,15 @@ class MagicLinkRequestUseCaseTest {
             useCase.requestMagicLink(dto);
 
             // Then
-            verify(emailSender).send(emailCaptor.capture(), subjectCaptor.capture(), htmlCaptor.capture());
+            verify(emailSender, times(1)).send(emailCaptor.capture(), subjectCaptor.capture(), htmlCaptor.capture());
             assertThat(emailCaptor.getValue()).isEqualTo(TEST_EMAIL);
             assertThat(subjectCaptor.getValue()).isEqualTo(TEST_EMAIL_SUBJECT);
+            verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
+            verify(hashingService, times(1)).generateHash(anyString());
+            verify(applicationContext, times(1)).getBean(MagicLinkTokenDataModel.class);
+            verify(magicLinkTokenRepository, times(1)).save(any(MagicLinkTokenDataModel.class));
+            verifyNoMoreInteractions(magicLinkTokenRepository, hashingService, tenantContextHolder,
+                    applicationContext, emailSender);
         }
 
         @Test
@@ -190,10 +227,16 @@ class MagicLinkRequestUseCaseTest {
             useCase.requestMagicLink(dto);
 
             // Then
-            verify(emailSender).send(emailCaptor.capture(), subjectCaptor.capture(), htmlCaptor.capture());
+            verify(emailSender, times(1)).send(emailCaptor.capture(), subjectCaptor.capture(), htmlCaptor.capture());
             String html = htmlCaptor.getValue();
             assertThat(html).contains(TEST_BASE_URL + "/auth/magic-link?token=");
             assertThat(html).contains("&tenant=" + TEST_TENANT_ID);
+            verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
+            verify(hashingService, times(1)).generateHash(anyString());
+            verify(applicationContext, times(1)).getBean(MagicLinkTokenDataModel.class);
+            verify(magicLinkTokenRepository, times(1)).save(any(MagicLinkTokenDataModel.class));
+            verifyNoMoreInteractions(magicLinkTokenRepository, hashingService, tenantContextHolder,
+                    applicationContext, emailSender);
         }
     }
 
@@ -207,12 +250,15 @@ class MagicLinkRequestUseCaseTest {
         void setUpRateLimiter() {
             useCase = new MagicLinkRequestUseCase(
                     magicLinkTokenRepository, hashingService, properties,
-                    tenantContextHolder, applicationContext, emailSender);
-            // Inject rate limiter via reflection since it's @Autowired(required=false)
+                    tenantContextHolder, applicationContext);
+            // Inject optional dependencies via reflection
             try {
-                var field = MagicLinkRequestUseCase.class.getDeclaredField("rateLimiterService");
-                field.setAccessible(true);
-                field.set(useCase, rateLimiterService);
+                var emailField = MagicLinkRequestUseCase.class.getDeclaredField("emailSender");
+                emailField.setAccessible(true);
+                emailField.set(useCase, emailSender);
+                var rateLimitField = MagicLinkRequestUseCase.class.getDeclaredField("rateLimiterService");
+                rateLimitField.setAccessible(true);
+                rateLimitField.set(useCase, rateLimiterService);
             } catch (ReflectiveOperationException e) {
                 throw new RuntimeException(e);
             }
@@ -234,10 +280,17 @@ class MagicLinkRequestUseCaseTest {
             useCase.requestMagicLink(dto);
 
             // Then
-            verify(rateLimiterService).checkRateLimit(
+            verify(rateLimiterService, times(1)).checkRateLimit(
                     MagicLinkRequestUseCase.RATE_LIMIT_KEY_PREFIX + TEST_EMAIL,
                     TEST_MAX_REQUESTS,
                     MagicLinkRequestUseCase.RATE_LIMIT_WINDOW_MS);
+            verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
+            verify(hashingService, times(1)).generateHash(anyString());
+            verify(applicationContext, times(1)).getBean(MagicLinkTokenDataModel.class);
+            verify(magicLinkTokenRepository, times(1)).save(any(MagicLinkTokenDataModel.class));
+            verify(emailSender, times(1)).send(anyString(), anyString(), anyString());
+            verifyNoMoreInteractions(magicLinkTokenRepository, hashingService, tenantContextHolder,
+                    applicationContext, emailSender, rateLimiterService);
         }
 
         @Test
@@ -255,8 +308,15 @@ class MagicLinkRequestUseCaseTest {
             useCase.requestMagicLink(dto);
 
             // Then
-            verifyNoInteractions(emailSender);
-            verifyNoInteractions(magicLinkTokenRepository);
+            assertThat(useCase).isNotNull();
+            verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
+            verify(rateLimiterService, times(1)).checkRateLimit(
+                    MagicLinkRequestUseCase.RATE_LIMIT_KEY_PREFIX + TEST_EMAIL,
+                    TEST_MAX_REQUESTS,
+                    MagicLinkRequestUseCase.RATE_LIMIT_WINDOW_MS);
+            verifyNoInteractions(emailSender, magicLinkTokenRepository, hashingService, applicationContext);
+            verifyNoMoreInteractions(magicLinkTokenRepository, hashingService, tenantContextHolder,
+                    applicationContext, emailSender, rateLimiterService);
         }
 
         @Test
@@ -272,6 +332,16 @@ class MagicLinkRequestUseCaseTest {
 
             // When / Then — no exception thrown
             useCase.requestMagicLink(dto);
+
+            assertThat(useCase).isNotNull();
+            verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
+            verify(rateLimiterService, times(1)).checkRateLimit(
+                    MagicLinkRequestUseCase.RATE_LIMIT_KEY_PREFIX + TEST_EMAIL,
+                    TEST_MAX_REQUESTS,
+                    MagicLinkRequestUseCase.RATE_LIMIT_WINDOW_MS);
+            verifyNoInteractions(emailSender, magicLinkTokenRepository, hashingService, applicationContext);
+            verifyNoMoreInteractions(magicLinkTokenRepository, hashingService, tenantContextHolder,
+                    applicationContext, emailSender, rateLimiterService);
         }
     }
 
@@ -290,9 +360,15 @@ class MagicLinkRequestUseCaseTest {
             useCase.requestMagicLink(dto);
 
             // Then — no exception thrown, email still sent
-            verify(emailSender).send(emailCaptor.capture(), subjectCaptor.capture(), htmlCaptor.capture());
+            verify(emailSender, times(1)).send(emailCaptor.capture(), subjectCaptor.capture(), htmlCaptor.capture());
             assertThat(emailCaptor.getValue()).isEqualTo(TEST_EMAIL);
             assertThat(subjectCaptor.getValue()).isEqualTo(TEST_EMAIL_SUBJECT);
+            verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
+            verify(hashingService, times(1)).generateHash(anyString());
+            verify(applicationContext, times(1)).getBean(MagicLinkTokenDataModel.class);
+            verify(magicLinkTokenRepository, times(1)).save(any(MagicLinkTokenDataModel.class));
+            verifyNoMoreInteractions(magicLinkTokenRepository, hashingService, tenantContextHolder,
+                    applicationContext, emailSender);
         }
     }
 
@@ -311,7 +387,14 @@ class MagicLinkRequestUseCaseTest {
             useCase.requestMagicLink(dto);
 
             // Then
-            verify(tenantContextHolder).setTenantId(TEST_TENANT_ID);
+            assertThat(useCase).isNotNull();
+            verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
+            verify(hashingService, times(1)).generateHash(anyString());
+            verify(applicationContext, times(1)).getBean(MagicLinkTokenDataModel.class);
+            verify(magicLinkTokenRepository, times(1)).save(any(MagicLinkTokenDataModel.class));
+            verify(emailSender, times(1)).send(anyString(), anyString(), anyString());
+            verifyNoMoreInteractions(magicLinkTokenRepository, hashingService, tenantContextHolder,
+                    applicationContext, emailSender);
         }
     }
 }

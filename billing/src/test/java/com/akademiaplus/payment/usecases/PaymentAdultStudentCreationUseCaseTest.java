@@ -85,7 +85,8 @@ class PaymentAdultStudentCreationUseCaseTest {
             useCase.transform(dto);
 
             // Then
-            verify(applicationContext).getBean(PaymentAdultStudentDataModel.class);
+            verify(applicationContext, times(1)).getBean(PaymentAdultStudentDataModel.class);
+            verifyNoMoreInteractions(applicationContext, paymentRepository);
         }
 
         @Test
@@ -102,8 +103,9 @@ class PaymentAdultStudentCreationUseCaseTest {
             PaymentAdultStudentDataModel result = useCase.transform(dto);
 
             // Then
-            verify(modelMapper).map(dto, prototypeModel, PaymentAdultStudentCreationUseCase.MAP_NAME);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, PaymentAdultStudentCreationUseCase.MAP_NAME);
             assertThat(result).isSameAs(prototypeModel);
+            verifyNoMoreInteractions(applicationContext, paymentRepository);
         }
 
         @Test
@@ -122,6 +124,7 @@ class PaymentAdultStudentCreationUseCaseTest {
 
             // Then
             assertThat(result.getMembershipAdultStudent()).isSameAs(membershipAdultStudent);
+            verifyNoMoreInteractions(applicationContext, paymentRepository);
         }
 
         @Test
@@ -138,6 +141,11 @@ class PaymentAdultStudentCreationUseCaseTest {
             assertThatThrownBy(() -> useCase.transform(dto))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining(String.valueOf(MEMBERSHIP_ADULT_STUDENT_ID));
+
+            verify(applicationContext, times(1)).getBean(PaymentAdultStudentDataModel.class);
+            verify(membershipAdultStudentRepository, times(1)).findById(new MembershipAdultStudentDataModel.MembershipAdultStudentCompositeId(TENANT_ID, MEMBERSHIP_ADULT_STUDENT_ID));
+            verifyNoInteractions(paymentRepository);
+            verifyNoMoreInteractions(applicationContext, membershipAdultStudentRepository);
         }
     }
 
@@ -167,8 +175,9 @@ class PaymentAdultStudentCreationUseCaseTest {
             PaymentAdultStudentCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(paymentRepository).saveAndFlush(prototypeModel);
+            verify(paymentRepository, times(1)).saveAndFlush(prototypeModel);
             assertThat(result.getPaymentAdultStudentId()).isEqualTo(SAVED_ID);
+            verifyNoMoreInteractions(applicationContext, paymentRepository, membershipAdultStudentRepository, modelMapper);
         }
 
         @Test
@@ -192,11 +201,12 @@ class PaymentAdultStudentCreationUseCaseTest {
 
             // Then
             InOrder inOrder = inOrder(applicationContext, modelMapper, membershipAdultStudentRepository, paymentRepository);
-            inOrder.verify(applicationContext).getBean(PaymentAdultStudentDataModel.class);
-            inOrder.verify(modelMapper).map(dto, prototypeModel, PaymentAdultStudentCreationUseCase.MAP_NAME);
-            inOrder.verify(membershipAdultStudentRepository).findById(new MembershipAdultStudentDataModel.MembershipAdultStudentCompositeId(TENANT_ID, MEMBERSHIP_ADULT_STUDENT_ID));
-            inOrder.verify(paymentRepository).saveAndFlush(prototypeModel);
-            inOrder.verify(modelMapper).map(savedModel, PaymentAdultStudentCreationResponseDTO.class);
+            inOrder.verify(applicationContext, times(1)).getBean(PaymentAdultStudentDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, PaymentAdultStudentCreationUseCase.MAP_NAME);
+            inOrder.verify(membershipAdultStudentRepository, times(1)).findById(new MembershipAdultStudentDataModel.MembershipAdultStudentCompositeId(TENANT_ID, MEMBERSHIP_ADULT_STUDENT_ID));
+            inOrder.verify(paymentRepository, times(1)).saveAndFlush(prototypeModel);
+            inOrder.verify(modelMapper, times(1)).map(savedModel, PaymentAdultStudentCreationResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

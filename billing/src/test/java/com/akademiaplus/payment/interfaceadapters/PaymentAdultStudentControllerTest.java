@@ -8,6 +8,7 @@
 package com.akademiaplus.payment.interfaceadapters;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -94,8 +95,8 @@ class PaymentAdultStudentControllerTest {
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.paymentAdultStudentId").value(PAYMENT_ADULT_STUDENT_ID));
 
-            verify(creationUseCase).create(request);
-            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase);
+            verify(creationUseCase, times(1)).create(request);
+            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, deletePaymentAdultStudentUseCase, messageService);
         }
     }
 
@@ -113,8 +114,8 @@ class PaymentAdultStudentControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(0)));
 
-            verify(getAllUseCase).getAll(null);
-            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase);
+            verify(getAllUseCase, times(1)).getAll(null);
+            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, deletePaymentAdultStudentUseCase, messageService);
         }
 
         @Test
@@ -136,8 +137,8 @@ class PaymentAdultStudentControllerTest {
                     .andExpect(jsonPath("$[0].paymentAdultStudentId").value(100L))
                     .andExpect(jsonPath("$[1].paymentAdultStudentId").value(101L));
 
-            verify(getAllUseCase).getAll(null);
-            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase);
+            verify(getAllUseCase, times(1)).getAll(null);
+            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, deletePaymentAdultStudentUseCase, messageService);
         }
     }
 
@@ -158,8 +159,8 @@ class PaymentAdultStudentControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.paymentAdultStudentId").value(PAYMENT_ADULT_STUDENT_ID));
 
-            verify(getByIdUseCase).get(PAYMENT_ADULT_STUDENT_ID);
-            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase);
+            verify(getByIdUseCase, times(1)).get(PAYMENT_ADULT_STUDENT_ID);
+            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, deletePaymentAdultStudentUseCase, messageService);
         }
 
         @Test
@@ -175,9 +176,9 @@ class PaymentAdultStudentControllerTest {
             mockMvc.perform(get(BASE_PATH + "/" + PAYMENT_ADULT_STUDENT_ID))
                     .andExpect(status().isNotFound());
 
-            verify(getByIdUseCase).get(PAYMENT_ADULT_STUDENT_ID);
-            verify(messageService).getEntityNotFound(EntityType.PAYMENT_ADULT_STUDENT, String.valueOf(PAYMENT_ADULT_STUDENT_ID));
-            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, messageService);
+            verify(getByIdUseCase, times(1)).get(PAYMENT_ADULT_STUDENT_ID);
+            verify(messageService, times(1)).getEntityNotFound(EntityType.PAYMENT_ADULT_STUDENT, String.valueOf(PAYMENT_ADULT_STUDENT_ID));
+            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, deletePaymentAdultStudentUseCase, messageService);
         }
     }
 }

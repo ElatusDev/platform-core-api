@@ -8,6 +8,7 @@
 package com.akademiaplus.membership.usecases;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -53,7 +54,7 @@ class GetAllMembershipAdultStudentsUseCaseTest {
             List<GetMembershipAdultStudentResponseDTO> result = useCase.getAll();
             // Then
             assertThat(result).isEmpty();
-            verify(membershipAdultStudentRepository).findAll();
+            verify(membershipAdultStudentRepository, times(1)).findAll();
             verifyNoMoreInteractions(membershipAdultStudentRepository, modelMapper);
         }
 
@@ -72,9 +73,9 @@ class GetAllMembershipAdultStudentsUseCaseTest {
             List<GetMembershipAdultStudentResponseDTO> result = useCase.getAll();
             // Then
             assertThat(result).containsExactly(dto1, dto2);
-            verify(membershipAdultStudentRepository).findAll();
-            verify(modelMapper).map(membershipAdultStudent1, GetMembershipAdultStudentResponseDTO.class);
-            verify(modelMapper).map(membershipAdultStudent2, GetMembershipAdultStudentResponseDTO.class);
+            verify(membershipAdultStudentRepository, times(1)).findAll();
+            verify(modelMapper, times(1)).map(membershipAdultStudent1, GetMembershipAdultStudentResponseDTO.class);
+            verify(modelMapper, times(1)).map(membershipAdultStudent2, GetMembershipAdultStudentResponseDTO.class);
             verifyNoMoreInteractions(membershipAdultStudentRepository, modelMapper);
         }
     }

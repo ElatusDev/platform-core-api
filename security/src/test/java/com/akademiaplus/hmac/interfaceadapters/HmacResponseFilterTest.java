@@ -30,6 +30,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import org.mockito.InOrder;
+
 /**
  * Unit tests for {@link HmacResponseFilter}.
  *
@@ -77,8 +79,11 @@ class HmacResponseFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
-            verifyNoInteractions(hmacSignatureService);
+            assertThat(response.getStatus()).isEqualTo(200);
+            verify(hmacProperties, times(1)).isEnabled();
+            verify(filterChain, times(1)).doFilter(request, response);
+            verifyNoInteractions(hmacSignatureService, hmacKeyService);
+            verifyNoMoreInteractions(hmacSignatureService, hmacKeyService, hmacProperties, filterChain);
         }
 
         @Test
@@ -91,8 +96,11 @@ class HmacResponseFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
-            verifyNoInteractions(hmacSignatureService);
+            assertThat(response.getStatus()).isEqualTo(200);
+            verify(hmacProperties, times(1)).isEnabled();
+            verify(filterChain, times(1)).doFilter(request, response);
+            verifyNoInteractions(hmacSignatureService, hmacKeyService);
+            verifyNoMoreInteractions(hmacSignatureService, hmacKeyService, hmacProperties, filterChain);
         }
 
         @Test
@@ -106,8 +114,11 @@ class HmacResponseFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
-            verifyNoInteractions(hmacSignatureService);
+            assertThat(response.getStatus()).isEqualTo(200);
+            verify(hmacProperties, times(1)).isEnabled();
+            verify(filterChain, times(1)).doFilter(request, response);
+            verifyNoInteractions(hmacSignatureService, hmacKeyService);
+            verifyNoMoreInteractions(hmacSignatureService, hmacKeyService, hmacProperties, filterChain);
         }
     }
 
@@ -145,6 +156,14 @@ class HmacResponseFilterTest {
             // Then
             assertThat(response.getHeader(HmacResponseFilter.HEADER_RESPONSE_SIGNATURE))
                     .isEqualTo(RESPONSE_SIGNATURE);
+            verify(hmacProperties, times(1)).isEnabled();
+            verify(filterChain, times(1)).doFilter(eq(request), any(CachedBodyHttpServletResponse.class));
+            verify(hmacSignatureService, times(1)).computeBodyHash(RESPONSE_BODY.getBytes(StandardCharsets.UTF_8));
+            verify(hmacSignatureService, times(1)).buildResponseStringToSign(
+                    eq("200"), eq(RESPONSE_BODY_HASH), anyString(), eq(REQUEST_NONCE));
+            verify(hmacKeyService, times(1)).resolveDefaultKey();
+            verify(hmacSignatureService, times(1)).computeHmac(SIGNING_KEY, "string-to-sign");
+            verifyNoMoreInteractions(hmacSignatureService, hmacKeyService, hmacProperties, filterChain);
         }
 
         @Test
@@ -178,6 +197,14 @@ class HmacResponseFilterTest {
             assertThat(response.getHeader(HmacResponseFilter.HEADER_RESPONSE_TIMESTAMP))
                     .isNotNull()
                     .matches("\\d+");
+            verify(hmacProperties, times(1)).isEnabled();
+            verify(filterChain, times(1)).doFilter(eq(request), any(CachedBodyHttpServletResponse.class));
+            verify(hmacSignatureService, times(1)).computeBodyHash(RESPONSE_BODY.getBytes(StandardCharsets.UTF_8));
+            verify(hmacSignatureService, times(1)).buildResponseStringToSign(
+                    eq("200"), eq(RESPONSE_BODY_HASH), anyString(), eq(REQUEST_NONCE));
+            verify(hmacKeyService, times(1)).resolveDefaultKey();
+            verify(hmacSignatureService, times(1)).computeHmac(SIGNING_KEY, "string-to-sign");
+            verifyNoMoreInteractions(hmacSignatureService, hmacKeyService, hmacProperties, filterChain);
         }
 
         @Test
@@ -209,6 +236,51 @@ class HmacResponseFilterTest {
 
             // Then
             assertThat(response.getContentAsString()).isEqualTo(RESPONSE_BODY);
+            verify(hmacProperties, times(1)).isEnabled();
+            verify(filterChain, times(1)).doFilter(eq(request), any(CachedBodyHttpServletResponse.class));
+            verify(hmacSignatureService, times(1)).computeBodyHash(RESPONSE_BODY.getBytes(StandardCharsets.UTF_8));
+            verify(hmacSignatureService, times(1)).buildResponseStringToSign(
+                    eq("200"), eq(RESPONSE_BODY_HASH), anyString(), eq(REQUEST_NONCE));
+            verify(hmacKeyService, times(1)).resolveDefaultKey();
+            verify(hmacSignatureService, times(1)).computeHmac(SIGNING_KEY, "string-to-sign");
+            verifyNoMoreInteractions(hmacSignatureService, hmacKeyService, hmacProperties, filterChain);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator exception propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("should propagate exception when hmacKeyService throws during response signing")
+        void shouldPropagateException_whenHmacKeyServiceThrows() throws Exception {
+            // Given
+            setAuthentication();
+            when(hmacProperties.isEnabled()).thenReturn(true);
+            request.setAttribute(HmacSigningFilter.REQUEST_ATTR_NONCE, REQUEST_NONCE);
+
+            doAnswer(invocation -> {
+                CachedBodyHttpServletResponse cachedResponse = invocation.getArgument(1);
+                cachedResponse.getWriter().write(RESPONSE_BODY);
+                cachedResponse.getWriter().flush();
+                return null;
+            }).when(filterChain).doFilter(eq(request), any(CachedBodyHttpServletResponse.class));
+
+            when(hmacSignatureService.computeBodyHash(RESPONSE_BODY.getBytes(StandardCharsets.UTF_8)))
+                    .thenReturn(RESPONSE_BODY_HASH);
+            when(hmacSignatureService.buildResponseStringToSign(
+                    eq("200"), eq(RESPONSE_BODY_HASH), anyString(), eq(REQUEST_NONCE)))
+                    .thenReturn("string-to-sign");
+            RuntimeException cause = new RuntimeException("key resolution error");
+            when(hmacKeyService.resolveDefaultKey()).thenThrow(cause);
+
+            // When / Then
+            org.assertj.core.api.Assertions.assertThatThrownBy(
+                    () -> filter.doFilterInternal(request, response, filterChain))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("key resolution error");
+
+            verify(hmacKeyService, times(1)).resolveDefaultKey();
         }
     }
 

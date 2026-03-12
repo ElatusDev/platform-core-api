@@ -27,8 +27,13 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+
+import org.mockito.InOrder;
 
 /**
  * Unit tests for {@link DeletePaymentAdultStudentUseCase}.
@@ -74,7 +79,12 @@ class DeletePaymentAdultStudentUseCaseTest {
             useCase.delete(PAYMENT_ADULT_STUDENT_ID);
 
             // Then
-            verify(repository).delete(entity);
+            assertThat(entity).isNotNull();
+            InOrder inOrder = inOrder(tenantContextHolder, repository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(repository, times(1)).findById(compositeId);
+            inOrder.verify(repository, times(1)).delete(entity);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -99,6 +109,10 @@ class DeletePaymentAdultStudentUseCaseTest {
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.PAYMENT_ADULT_STUDENT);
                         assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(PAYMENT_ADULT_STUDENT_ID));
                     });
+
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(repository, times(1)).findById(compositeId);
+            verifyNoMoreInteractions(tenantContextHolder, repository);
         }
     }
 
@@ -128,6 +142,12 @@ class DeletePaymentAdultStudentUseCaseTest {
                         assertThat(edna.getEntityId()).isEqualTo(String.valueOf(PAYMENT_ADULT_STUDENT_ID));
                         assertThat(edna.getReason()).isNull();
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, repository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(repository, times(1)).findById(compositeId);
+            inOrder.verify(repository, times(1)).delete(entity);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

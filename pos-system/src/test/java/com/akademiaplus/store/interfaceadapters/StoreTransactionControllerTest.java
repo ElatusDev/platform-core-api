@@ -21,6 +21,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
@@ -77,8 +78,9 @@ class StoreTransactionControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$", hasSize(0)));
 
-            verify(getAllStoreTransactionsUseCase).getAll();
-            verifyNoMoreInteractions(getAllStoreTransactionsUseCase);
+            verify(getAllStoreTransactionsUseCase, times(1)).getAll();
+            verifyNoMoreInteractions(storeTransactionCreationUseCase, deleteStoreTransactionUseCase,
+                    getAllStoreTransactionsUseCase, getStoreTransactionByIdUseCase, messageService);
         }
 
         @Test
@@ -95,8 +97,9 @@ class StoreTransactionControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$", hasSize(2)));
 
-            verify(getAllStoreTransactionsUseCase).getAll();
-            verifyNoMoreInteractions(getAllStoreTransactionsUseCase);
+            verify(getAllStoreTransactionsUseCase, times(1)).getAll();
+            verifyNoMoreInteractions(storeTransactionCreationUseCase, deleteStoreTransactionUseCase,
+                    getAllStoreTransactionsUseCase, getStoreTransactionByIdUseCase, messageService);
         }
     }
 
@@ -117,8 +120,9 @@ class StoreTransactionControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-            verify(getStoreTransactionByIdUseCase).get(STORE_TRANSACTION_ID);
-            verifyNoMoreInteractions(getStoreTransactionByIdUseCase);
+            verify(getStoreTransactionByIdUseCase, times(1)).get(STORE_TRANSACTION_ID);
+            verifyNoMoreInteractions(storeTransactionCreationUseCase, deleteStoreTransactionUseCase,
+                    getAllStoreTransactionsUseCase, getStoreTransactionByIdUseCase, messageService);
         }
 
         @Test
@@ -135,9 +139,12 @@ class StoreTransactionControllerTest {
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound());
 
-            verify(getStoreTransactionByIdUseCase).get(STORE_TRANSACTION_ID);
-            verify(messageService).getEntityNotFound(EntityType.STORE_TRANSACTION, String.valueOf(STORE_TRANSACTION_ID));
-            verifyNoMoreInteractions(getStoreTransactionByIdUseCase, messageService);
+            InOrder inOrder = inOrder(getStoreTransactionByIdUseCase, messageService);
+            inOrder.verify(getStoreTransactionByIdUseCase, times(1)).get(STORE_TRANSACTION_ID);
+            inOrder.verify(messageService, times(1)).getEntityNotFound(EntityType.STORE_TRANSACTION, String.valueOf(STORE_TRANSACTION_ID));
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(storeTransactionCreationUseCase, deleteStoreTransactionUseCase,
+                    getAllStoreTransactionsUseCase);
         }
     }
 }

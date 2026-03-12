@@ -19,8 +19,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link DeviceFingerprintService}.
@@ -77,6 +77,7 @@ class DeviceFingerprintServiceTest {
             assertThat(result.fullHash()).isEqualTo(FULL_HASH);
             assertThat(result.deviceOnlyHash()).isEqualTo(DEVICE_ONLY_HASH);
             assertThat(result.clientIp()).isEqualTo(CLIENT_IP);
+            verifyNoMoreInteractions(hashingService);
         }
 
         @Test
@@ -99,8 +100,9 @@ class DeviceFingerprintServiceTest {
             // Then
             assertThat(result.fullHash()).isEqualTo(FULL_HASH);
             assertThat(result.deviceOnlyHash()).isEqualTo(DEVICE_ONLY_HASH);
-            verify(hashingService).generateHash(fullComponents);
-            verify(hashingService).generateHash(deviceComponents);
+            verify(hashingService, times(1)).generateHash(fullComponents);
+            verify(hashingService, times(1)).generateHash(deviceComponents);
+            verifyNoMoreInteractions(hashingService);
         }
 
         @Test
@@ -124,6 +126,7 @@ class DeviceFingerprintServiceTest {
 
             // Then
             assertThat(result.fullHash()).isEqualTo(FULL_HASH);
+            verifyNoMoreInteractions(hashingService);
         }
 
         @Test
@@ -149,7 +152,9 @@ class DeviceFingerprintServiceTest {
 
             // Then
             assertThat(result.clientIp()).isEqualTo(proxyIp);
-            verify(hashingService).generateHash(fullComponents);
+            verify(hashingService, times(1)).generateHash(fullComponents);
+            verify(hashingService, times(1)).generateHash(deviceComponents);
+            verifyNoMoreInteractions(hashingService);
         }
 
         @Test
@@ -173,6 +178,7 @@ class DeviceFingerprintServiceTest {
 
             // Then
             assertThat(result.clientIp()).isEqualTo(CLIENT_IP);
+            verifyNoMoreInteractions(hashingService);
         }
 
         @Test
@@ -208,6 +214,36 @@ class DeviceFingerprintServiceTest {
             // Then
             assertThat(result1.fullHash()).isNotEqualTo(result2.fullHash());
             assertThat(result1.deviceOnlyHash()).isEqualTo(result2.deviceOnlyHash());
+            verifyNoMoreInteractions(hashingService);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator exception propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("should propagate exception when hashingService throws")
+        void shouldPropagateException_whenHashingServiceThrows() {
+            // Given
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRemoteAddr(CLIENT_IP);
+            request.addHeader(DeviceFingerprintService.HEADER_USER_AGENT, USER_AGENT);
+            request.addHeader(DeviceFingerprintService.HEADER_ACCEPT_LANGUAGE, ACCEPT_LANGUAGE);
+            request.addHeader(DeviceFingerprintService.HEADER_DEVICE_ID, DEVICE_ID);
+
+            String deviceComponents = USER_AGENT + SEP + ACCEPT_LANGUAGE + SEP + DEVICE_ID;
+            String fullComponents = CLIENT_IP + SEP + deviceComponents;
+            RuntimeException cause = new RuntimeException("hash failure");
+            when(hashingService.generateHash(fullComponents)).thenThrow(cause);
+
+            // When / Then
+            assertThatThrownBy(() -> service.computeFingerprint(request))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("hash failure");
+
+            verify(hashingService, times(1)).generateHash(fullComponents);
+            verifyNoMoreInteractions(hashingService);
         }
     }
 }

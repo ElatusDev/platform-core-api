@@ -67,7 +67,9 @@ class CompensationCreationUseCaseTest {
             useCase.transform(dto);
 
             // Then
-            verify(applicationContext).getBean(CompensationDataModel.class);
+            verify(applicationContext, times(1)).getBean(CompensationDataModel.class);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, CompensationCreationUseCase.MAP_NAME);
+            verifyNoMoreInteractions(applicationContext, compensationRepository, modelMapper);
         }
 
         @Test
@@ -82,8 +84,9 @@ class CompensationCreationUseCaseTest {
             CompensationDataModel result = useCase.transform(dto);
 
             // Then
-            verify(modelMapper).map(dto, prototypeModel, CompensationCreationUseCase.MAP_NAME);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, CompensationCreationUseCase.MAP_NAME);
             assertThat(result).isSameAs(prototypeModel);
+            verifyNoMoreInteractions(applicationContext, compensationRepository, modelMapper);
         }
     }
 
@@ -111,9 +114,10 @@ class CompensationCreationUseCaseTest {
             CompensationCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(compensationRepository).saveAndFlush(prototypeModel);
-            verify(modelMapper).map(savedModel, CompensationCreationResponseDTO.class);
+            verify(compensationRepository, times(1)).saveAndFlush(prototypeModel);
+            verify(modelMapper, times(1)).map(savedModel, CompensationCreationResponseDTO.class);
             assertThat(result.getCompensationId()).isEqualTo(SAVED_ID);
+            verifyNoMoreInteractions(applicationContext, compensationRepository, modelMapper);
         }
 
         @Test
@@ -135,10 +139,11 @@ class CompensationCreationUseCaseTest {
 
             // Then
             InOrder inOrder = inOrder(applicationContext, modelMapper, compensationRepository);
-            inOrder.verify(applicationContext).getBean(CompensationDataModel.class);
-            inOrder.verify(modelMapper).map(dto, prototypeModel, CompensationCreationUseCase.MAP_NAME);
-            inOrder.verify(compensationRepository).saveAndFlush(prototypeModel);
-            inOrder.verify(modelMapper).map(savedModel, CompensationCreationResponseDTO.class);
+            inOrder.verify(applicationContext, times(1)).getBean(CompensationDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, CompensationCreationUseCase.MAP_NAME);
+            inOrder.verify(compensationRepository, times(1)).saveAndFlush(prototypeModel);
+            inOrder.verify(modelMapper, times(1)).map(savedModel, CompensationCreationResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

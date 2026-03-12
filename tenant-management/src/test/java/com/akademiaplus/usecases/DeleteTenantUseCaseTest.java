@@ -17,6 +17,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -26,7 +27,10 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -70,7 +74,11 @@ class DeleteTenantUseCaseTest {
             useCase.delete(TENANT_ID);
 
             // Then
-            verify(repository).delete(entity);
+            assertThat(entity).isNotNull();
+            InOrder inOrder = inOrder(repository);
+            inOrder.verify(repository, times(1)).findById(TENANT_ID);
+            inOrder.verify(repository, times(1)).delete(entity);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -92,6 +100,8 @@ class DeleteTenantUseCaseTest {
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.TENANT);
                         assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(TENANT_ID));
                     });
+            verify(repository, times(1)).findById(TENANT_ID);
+            verifyNoMoreInteractions(repository);
         }
     }
 
@@ -118,6 +128,10 @@ class DeleteTenantUseCaseTest {
                         assertThat(edna.getEntityId()).isEqualTo(String.valueOf(TENANT_ID));
                         assertThat(edna.getReason()).isNull();
                     });
+            InOrder inOrder = inOrder(repository);
+            inOrder.verify(repository, times(1)).findById(TENANT_ID);
+            inOrder.verify(repository, times(1)).delete(entity);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

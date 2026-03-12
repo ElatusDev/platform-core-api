@@ -15,13 +15,18 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -64,7 +69,12 @@ class DeleteDemoRequestUseCaseTest {
             useCase.delete(DEMO_REQUEST_ID);
 
             // Then
-            verify(demoRequestRepository).delete(model);
+            assertThat(model.getDemoRequestId()).isEqualTo(DEMO_REQUEST_ID);
+
+            InOrder inOrder = inOrder(demoRequestRepository);
+            inOrder.verify(demoRequestRepository, times(1)).findById(DEMO_REQUEST_ID);
+            inOrder.verify(demoRequestRepository, times(1)).delete(model);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -82,6 +92,9 @@ class DeleteDemoRequestUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(DEMO_REQUEST_ID))
                     .isInstanceOf(EntityNotFoundException.class);
+
+            verify(demoRequestRepository, times(1)).findById(DEMO_REQUEST_ID);
+            verifyNoMoreInteractions(demoRequestRepository);
         }
     }
 }

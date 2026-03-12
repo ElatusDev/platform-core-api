@@ -15,6 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -23,6 +24,8 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -71,10 +74,11 @@ class GetAllTenantSubscriptionsUseCaseTest {
 
             // Then
             assertThat(result).containsExactly(dto1, dto2);
-            verify(tenantSubscriptionRepository).findAll();
-            verify(modelMapper).map(entity1, TenantSubscriptionDTO.class);
-            verify(modelMapper).map(entity2, TenantSubscriptionDTO.class);
-            verifyNoMoreInteractions(tenantSubscriptionRepository, modelMapper);
+            InOrder inOrder = inOrder(tenantSubscriptionRepository, modelMapper);
+            inOrder.verify(tenantSubscriptionRepository, times(1)).findAll();
+            inOrder.verify(modelMapper, times(1)).map(entity1, TenantSubscriptionDTO.class);
+            inOrder.verify(modelMapper, times(1)).map(entity2, TenantSubscriptionDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -88,7 +92,7 @@ class GetAllTenantSubscriptionsUseCaseTest {
 
             // Then
             assertThat(result).isEmpty();
-            verify(tenantSubscriptionRepository).findAll();
+            verify(tenantSubscriptionRepository, times(1)).findAll();
             verifyNoMoreInteractions(tenantSubscriptionRepository, modelMapper);
         }
     }

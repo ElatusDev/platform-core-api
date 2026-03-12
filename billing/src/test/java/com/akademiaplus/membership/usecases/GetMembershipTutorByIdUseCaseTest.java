@@ -9,6 +9,7 @@ package com.akademiaplus.membership.usecases;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -64,9 +65,9 @@ class GetMembershipTutorByIdUseCaseTest {
             GetMembershipTutorResponseDTO result = useCase.get(MEMBERSHIP_TUTOR_ID);
             // Then
             assertThat(result).isEqualTo(expectedDto);
-            verify(tenantContextHolder).getTenantId();
-            verify(membershipTutorRepository).findById(new MembershipTutorDataModel.MembershipTutorCompositeId(TENANT_ID, MEMBERSHIP_TUTOR_ID));
-            verify(modelMapper).map(membershipTutor, GetMembershipTutorResponseDTO.class);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(membershipTutorRepository, times(1)).findById(new MembershipTutorDataModel.MembershipTutorCompositeId(TENANT_ID, MEMBERSHIP_TUTOR_ID));
+            verify(modelMapper, times(1)).map(membershipTutor, GetMembershipTutorResponseDTO.class);
             verifyNoMoreInteractions(tenantContextHolder, membershipTutorRepository, modelMapper);
         }
     }
@@ -86,8 +87,8 @@ class GetMembershipTutorByIdUseCaseTest {
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasFieldOrPropertyWithValue("entityType", EntityType.MEMBERSHIP_TUTOR)
                     .hasFieldOrPropertyWithValue("entityId", String.valueOf(MEMBERSHIP_TUTOR_ID));
-            verify(tenantContextHolder).getTenantId();
-            verify(membershipTutorRepository).findById(new MembershipTutorDataModel.MembershipTutorCompositeId(TENANT_ID, MEMBERSHIP_TUTOR_ID));
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(membershipTutorRepository, times(1)).findById(new MembershipTutorDataModel.MembershipTutorCompositeId(TENANT_ID, MEMBERSHIP_TUTOR_ID));
             verifyNoMoreInteractions(tenantContextHolder, membershipTutorRepository, modelMapper);
         }
     }
@@ -104,7 +105,7 @@ class GetMembershipTutorByIdUseCaseTest {
             assertThatThrownBy(() -> useCase.get(MEMBERSHIP_TUTOR_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(GetMembershipTutorByIdUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
-            verify(tenantContextHolder).getTenantId();
+            verify(tenantContextHolder, times(1)).getTenantId();
             verifyNoMoreInteractions(tenantContextHolder, membershipTutorRepository, modelMapper);
         }
     }

@@ -25,7 +25,12 @@ import org.modelmapper.ModelMapper;
 import org.springframework.context.ApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("NotificationCreationUseCase")
 @ExtendWith(MockitoExtension.class)
@@ -74,7 +79,9 @@ class NotificationCreationUseCaseTest {
             useCase.transform(dto);
 
             // Then
-            verify(applicationContext).getBean(NotificationDataModel.class);
+            verify(applicationContext, times(1)).getBean(NotificationDataModel.class);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, NotificationCreationUseCase.MAP_NAME);
+            verifyNoMoreInteractions(applicationContext, notificationRepository, modelMapper);
         }
 
         @Test
@@ -89,8 +96,10 @@ class NotificationCreationUseCaseTest {
             NotificationDataModel result = useCase.transform(dto);
 
             // Then
-            verify(modelMapper).map(dto, prototypeModel, NotificationCreationUseCase.MAP_NAME);
+            verify(applicationContext, times(1)).getBean(NotificationDataModel.class);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, NotificationCreationUseCase.MAP_NAME);
             assertThat(result).isSameAs(prototypeModel);
+            verifyNoMoreInteractions(applicationContext, notificationRepository, modelMapper);
         }
 
         @Test
@@ -106,6 +115,9 @@ class NotificationCreationUseCaseTest {
 
             // Then
             assertThat(result.getType()).isEqualTo(NotificationType.COURSE_REMINDER);
+            verify(applicationContext, times(1)).getBean(NotificationDataModel.class);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, NotificationCreationUseCase.MAP_NAME);
+            verifyNoMoreInteractions(applicationContext, notificationRepository, modelMapper);
         }
 
         @Test
@@ -121,6 +133,9 @@ class NotificationCreationUseCaseTest {
 
             // Then
             assertThat(result.getPriority()).isEqualTo(NotificationPriority.HIGH);
+            verify(applicationContext, times(1)).getBean(NotificationDataModel.class);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, NotificationCreationUseCase.MAP_NAME);
+            verifyNoMoreInteractions(applicationContext, notificationRepository, modelMapper);
         }
 
         @Test
@@ -137,6 +152,9 @@ class NotificationCreationUseCaseTest {
 
             // Then
             assertThat(result.getType()).isNull();
+            verify(applicationContext, times(1)).getBean(NotificationDataModel.class);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, NotificationCreationUseCase.MAP_NAME);
+            verifyNoMoreInteractions(applicationContext, notificationRepository, modelMapper);
         }
 
         @Test
@@ -153,6 +171,9 @@ class NotificationCreationUseCaseTest {
 
             // Then
             assertThat(result.getPriority()).isNull();
+            verify(applicationContext, times(1)).getBean(NotificationDataModel.class);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, NotificationCreationUseCase.MAP_NAME);
+            verifyNoMoreInteractions(applicationContext, notificationRepository, modelMapper);
         }
     }
 
@@ -180,8 +201,9 @@ class NotificationCreationUseCaseTest {
             NotificationCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(notificationRepository).saveAndFlush(prototypeModel);
+            verify(notificationRepository, times(1)).saveAndFlush(prototypeModel);
             assertThat(result.getNotificationId()).isEqualTo(SAVED_ID);
+            verifyNoMoreInteractions(applicationContext, notificationRepository, modelMapper);
         }
 
         @Test
@@ -203,10 +225,11 @@ class NotificationCreationUseCaseTest {
 
             // Then
             InOrder inOrder = inOrder(applicationContext, modelMapper, notificationRepository);
-            inOrder.verify(applicationContext).getBean(NotificationDataModel.class);
-            inOrder.verify(modelMapper).map(dto, prototypeModel, NotificationCreationUseCase.MAP_NAME);
-            inOrder.verify(notificationRepository).saveAndFlush(prototypeModel);
-            inOrder.verify(modelMapper).map(savedModel, NotificationCreationResponseDTO.class);
+            inOrder.verify(applicationContext, times(1)).getBean(NotificationDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, NotificationCreationUseCase.MAP_NAME);
+            inOrder.verify(notificationRepository, times(1)).saveAndFlush(prototypeModel);
+            inOrder.verify(modelMapper, times(1)).map(savedModel, NotificationCreationResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

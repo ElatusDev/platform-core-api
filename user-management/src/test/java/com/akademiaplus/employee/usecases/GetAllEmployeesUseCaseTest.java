@@ -55,7 +55,7 @@ class GetAllEmployeesUseCaseTest {
 
             // Then
             assertThat(result).isEmpty();
-            verify(employeeRepository).findAll();
+            verify(employeeRepository, times(1)).findAll();
             verifyNoMoreInteractions(employeeRepository, modelMapper);
         }
 
@@ -83,11 +83,11 @@ class GetAllEmployeesUseCaseTest {
 
             // Then
             assertThat(result).containsExactly(dto1, dto2);
-            verify(employeeRepository).findAll();
-            verify(modelMapper).map(personPII1, GetEmployeeResponseDTO.class);
-            verify(modelMapper).map(employee1, dto1);
-            verify(modelMapper).map(personPII2, GetEmployeeResponseDTO.class);
-            verify(modelMapper).map(employee2, dto2);
+            verify(employeeRepository, times(1)).findAll();
+            verify(modelMapper, times(1)).map(personPII1, GetEmployeeResponseDTO.class);
+            verify(modelMapper, times(1)).map(employee1, dto1);
+            verify(modelMapper, times(1)).map(personPII2, GetEmployeeResponseDTO.class);
+            verify(modelMapper, times(1)).map(employee2, dto2);
             verifyNoMoreInteractions(employeeRepository, modelMapper);
         }
     }

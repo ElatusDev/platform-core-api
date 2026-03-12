@@ -18,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -26,9 +27,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link DeleteScheduleUseCase}.
@@ -74,7 +73,11 @@ class DeleteScheduleUseCaseTest {
             useCase.delete(SCHEDULE_ID);
 
             // Then
-            verify(repository).delete(entity);
+            InOrder inOrder = inOrder(tenantContextHolder, repository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(repository, times(1)).findById(compositeId);
+            inOrder.verify(repository, times(1)).delete(entity);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -99,6 +102,10 @@ class DeleteScheduleUseCaseTest {
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.SCHEDULE);
                         assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(SCHEDULE_ID));
                     });
+
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(repository, times(1)).findById(compositeId);
+            verifyNoMoreInteractions(tenantContextHolder, repository);
         }
     }
 
@@ -128,6 +135,11 @@ class DeleteScheduleUseCaseTest {
                         assertThat(edna.getEntityId()).isEqualTo(String.valueOf(SCHEDULE_ID));
                         assertThat(edna.getReason()).isNull();
                     });
+
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(repository, times(1)).findById(compositeId);
+            verify(repository, times(1)).delete(entity);
+            verifyNoMoreInteractions(tenantContextHolder, repository);
         }
     }
 }
