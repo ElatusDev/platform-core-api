@@ -113,6 +113,15 @@ module/
 - `EntityIdAssigner` generates IDs via Hibernate `PreInsertEvent` listener
 - Tenant ID is injected automatically — entities never set their own IDs
 
+### User-Level Data Isolation
+
+- **Two isolation layers**: tenant isolation (automatic via Hibernate filter) + user isolation (explicit via `UserContextHolder`)
+- Customer-facing JWT (OAuth/magic-link) embeds `profile_type` (`ADULT_STUDENT` | `TUTOR`) and `profile_id` (adultStudentId/tutorId) as claims
+- `UserContextLoader` filter (order 4, after `JwtRequestFilter`) reads claims into `UserContextHolder` (ThreadLocal, same pattern as `TenantContextHolder`)
+- `/v1/my/*` endpoints derive the user's profile ID from `UserContextHolder.requireProfileId()` — **never** from request parameters
+- Admin endpoints (`/v1/user-management/*`, `/v1/billing/*`) remain unchanged — they accept explicit IDs for staff use
+- Internal users (employees/collaborators) do not get profile claims — they use admin endpoints only
+
 ### Security Layers
 
 | Layer | Implementation |
@@ -121,6 +130,7 @@ module/
 | PII normalization | `PiiNormalizer` — ReDoS-safe email regex, libphonenumber for phones |
 | Data hashing | `HashingService` — SHA-256, salted hashing, constant-time comparison |
 | JWT authentication | `JwtTokenProvider` + `JwtRequestFilter` |
+| User data isolation | `UserContextHolder` + `UserContextLoader` — profile ID from JWT, never client-supplied |
 | Module security | Per-module `SecurityConfiguration` classes |
 | Soft delete | `@SQLDelete` + `@SQLRestriction` — no physical deletes |
 
@@ -239,6 +249,7 @@ Workflow and prompt documents MUST include test phases for all three tiers. A fe
 - [ ] Copyright header present on all new files
 - [ ] Commit messages follow Conventional Commits
 - [ ] No tenant isolation bypass (if touching data layer)
+- [ ] No user isolation bypass — `/v1/my/*` endpoints use `UserContextHolder`, never request params for user ID
 
 ---
 

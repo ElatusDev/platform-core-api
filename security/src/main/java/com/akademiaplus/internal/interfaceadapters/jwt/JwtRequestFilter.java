@@ -9,20 +9,26 @@ package com.akademiaplus.internal.interfaceadapters.jwt;
 
 import com.akademiaplus.internal.interfaceadapters.session.AkademiaPlusRedisSessionStore;
 import com.akademiaplus.internal.usecases.InternalAuthorizationUseCase;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -39,6 +45,8 @@ import java.util.Optional;
 @Component
 @Order(3)
 public class JwtRequestFilter extends OncePerRequestFilter {
+
+    private static final Logger LOG = LoggerFactory.getLogger(JwtRequestFilter.class);
 
     /** Authorization header name. */
     public static final String AUTHORIZATION_HEADER = "Authorization";
@@ -107,12 +115,36 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.internalAuthorizationUseCase.loadUserByUsername(username);
-            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-                    userDetails, userDetails.getUsername(), userDetails.getAuthorities());
-            authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            try {
+                UserDetails userDetails = this.internalAuthorizationUseCase.loadUserByUsername(username);
+                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                        userDetails, userDetails.getUsername(), userDetails.getAuthorities());
+                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            } catch (UsernameNotFoundException e) {
+                authenticateCustomerToken(jwtToken, username, request);
+            }
         }
         chain.doFilter(request, response);
+    }
+
+    /**
+     * Authenticates a customer JWT when the internal auth lookup fails.
+     * Customer tokens carry a {@code profile_type} claim that distinguishes
+     * them from internal user tokens.
+     */
+    private void authenticateCustomerToken(String jwtToken, String username, HttpServletRequest request) {
+        Claims claims = jwtTokenProvider.getClaims(jwtToken);
+        String profileType = claims.get(JwtTokenProvider.PROFILE_TYPE_CLAIM, String.class);
+
+        if (profileType != null) {
+            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                    username, null, List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER")));
+            authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            LOG.debug("Authenticated customer token for: {} ({})", username, profileType);
+        } else {
+            LOG.warn("JWT for '{}' not found in internal auth and has no profile_type claim", username);
+        }
     }
 }

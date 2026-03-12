@@ -11,6 +11,8 @@ import com.akademiaplus.utilities.persistence.repository.TenantScopedRepository;
 import com.akademiaplus.users.customer.MinorStudentDataModel;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  * Repository for {@link MinorStudentDataModel} with tenant-scoped queries.
  *
@@ -33,4 +35,12 @@ public interface MinorStudentRepository extends TenantScopedRepository<MinorStud
      * @return the count of active minor students for the given tutor
      */
     long countByTenantIdAndTutorId(Long tenantId, Long tutorId);
+
+    /**
+     * Finds all minor students linked to a specific tutor.
+     *
+     * @param tutorId the tutor's entity-specific ID
+     * @return list of minor students for this tutor
+     */
+    List<MinorStudentDataModel> findByTutorId(Long tutorId);
 }

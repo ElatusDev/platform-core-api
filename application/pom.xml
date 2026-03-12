@@ -162,6 +162,25 @@
                             </configOptions>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>generate-my-endpoints-api</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/openapi/my-endpoints.yaml</inputSpec>
+                            <apiPackage>openapi.akademiaplus.domain.my.api</apiPackage>
+                            <modelPackage>openapi.akademiaplus.domain.my.dto</modelPackage>
+                            <modelNameSuffix>DTO</modelNameSuffix>
+                            <generatorName>spring</generatorName>
+                            <configOptions>
+                                <generateTests>false</generateTests>
+                                <useJakartaEe>true</useJakartaEe>
+                                <serializableModel>true</serializableModel>
+                                <useTags>false</useTags>
+                            </configOptions>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin>

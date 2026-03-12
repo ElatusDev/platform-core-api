@@ -79,6 +79,7 @@ Executable prompts for Claude Code CLI.
 
 | Prompt | Purpose | Status |
 |--------|---------|--------|
+| [user-isolation-api-prompt.md](prompts/pending/user-isolation-api-prompt.md) | User-level data isolation — JWT claims, UserContextHolder, /v1/my/* endpoints, tests | 🟡 Ready to execute |
 | [etl-service-prompt.md](prompts/pending/etl-service-prompt.md) | ETL module — MongoDB staging, Excel/Word parsing, Claude API analysis, MariaDB load | 🟡 Ready to execute |
 
 ### Completed (`docs/prompts/completed/`)
@@ -109,6 +110,7 @@ Executable prompts for Claude Code CLI.
 | [magic-link-auth-prompt.md](prompts/completed/magic-link-auth-prompt.md) | Magic link passwordless authentication | Implemented |
 | [component-test-coverage-gaps-prompt.md](prompts/completed/component-test-coverage-gaps-prompt.md) | Component tests for Phase 1–4 endpoints (26 tests) | Implemented |
 | [mock-data-new-loaders-prompt.md](prompts/completed/mock-data-new-loaders-prompt.md) | 5 new mock data loaders for unseeded entities | Implemented |
+| [central-redesign-api-prompt.md](prompts/completed/central-redesign-api-prompt.md) | Task-service + analytics endpoints + 41 tests (unit, component, isolation) | Implemented |
 
 ---
 
@@ -120,6 +122,7 @@ Step-by-step implementation plans. Referenced by prompts.
 
 | Workflow | Purpose | Status |
 |----------|---------|--------|
+| [user-isolation-api-workflow.md](workflows/pending/user-isolation-api-workflow.md) | User-level data isolation — JWT claims, UserContextHolder, /v1/my/* endpoints (3 phases) | 🟡 Ready to execute |
 | [etl-service-workflow.md](workflows/pending/etl-service-workflow.md) | ETL module — MongoDB staging, Excel/Word parsing, Claude API analysis, MariaDB load (5 phases) | 🟡 Ready to execute |
 
 ### Completed (`docs/workflows/completed/`)

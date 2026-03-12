@@ -1,0 +1,325 @@
+openapi: 3.0.3
+info:
+  title: My Endpoints API
+  version: 1.0.0
+  description: Self-service endpoints for customer users (students and tutors)
+  contact:
+    name: ElatusDev
+    email: dev@elatusdev.com
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.akademiaplus.com/v1
+  - url: https://staging-api.akademiaplus.com/v1
+
+security:
+  - BearerAuth: []
+  - TenantAuth: []
+
+paths:
+  '/my/profile':
+    get:
+      operationId: getMyProfile
+      summary: Get authenticated user's own profile
+      tags:
+        - MyEndpoints
+      responses:
+        '200':
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyProfileResponse'
+        '401':
+          description: Authentication required
+    put:
+      operationId: updateMyProfile
+      summary: Update authenticated user's own profile
+      tags:
+        - MyEndpoints
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMyProfileRequest'
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyProfileResponse'
+        '401':
+          description: Authentication required
+
+  '/my/courses':
+    get:
+      operationId: getMyCourses
+      summary: List courses the authenticated student is enrolled in
+      tags:
+        - MyEndpoints
+      responses:
+        '200':
+          description: Courses retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MyCourse'
+        '401':
+          description: Authentication required
+
+  '/my/schedule':
+    get:
+      operationId: getMySchedule
+      summary: Get class schedule for the authenticated student's enrolled courses
+      tags:
+        - MyEndpoints
+      responses:
+        '200':
+          description: Schedule retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MySchedule'
+        '401':
+          description: Authentication required
+
+  '/my/memberships':
+    get:
+      operationId: getMyMemberships
+      summary: List active memberships for the authenticated student
+      tags:
+        - MyEndpoints
+      responses:
+        '200':
+          description: Memberships retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MyMembership'
+        '401':
+          description: Authentication required
+
+  '/my/payments':
+    get:
+      operationId: getMyPayments
+      summary: List payment history for the authenticated student
+      tags:
+        - MyEndpoints
+      responses:
+        '200':
+          description: Payments retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MyPayment'
+        '401':
+          description: Authentication required
+
+  '/my/children':
+    get:
+      operationId: getMyChildren
+      summary: List minor students for the authenticated tutor
+      tags:
+        - MyEndpoints
+      responses:
+        '200':
+          description: Children retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MyChild'
+        '401':
+          description: Authentication required
+        '403':
+          description: Only tutors can access this endpoint
+
+  '/my/children/{minorStudentId}/courses':
+    get:
+      operationId: getMyChildCourses
+      summary: List courses for a specific child of the authenticated tutor
+      tags:
+        - MyEndpoints
+      parameters:
+        - name: minorStudentId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Child courses retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MyCourse'
+        '401':
+          description: Authentication required
+        '403':
+          description: Only tutors can access this endpoint
+        '404':
+          description: Child not found or does not belong to this tutor
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    TenantAuth:
+      type: apiKey
+      in: header
+      name: X-Tenant-ID
+
+  schemas:
+    MyProfileResponse:
+      type: object
+      properties:
+        profileId:
+          type: integer
+          format: int64
+        profileType:
+          type: string
+          enum:
+            - ADULT_STUDENT
+            - TUTOR
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phoneNumber:
+          type: string
+        address:
+          type: string
+        zipCode:
+          type: string
+        birthDate:
+          type: string
+          format: date
+        entryDate:
+          type: string
+          format: date
+
+    UpdateMyProfileRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        phoneNumber:
+          type: string
+          maxLength: 30
+        address:
+          type: string
+          maxLength: 255
+        zipCode:
+          type: string
+          maxLength: 20
+
+    MyCourse:
+      type: object
+      properties:
+        courseId:
+          type: integer
+          format: int64
+        courseName:
+          type: string
+        courseDescription:
+          type: string
+        maxCapacity:
+          type: integer
+
+    MySchedule:
+      type: object
+      properties:
+        scheduleId:
+          type: integer
+          format: int64
+        courseId:
+          type: integer
+          format: int64
+        courseName:
+          type: string
+        scheduleDay:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+
+    MyMembership:
+      type: object
+      properties:
+        membershipAdultStudentId:
+          type: integer
+          format: int64
+        membershipType:
+          type: string
+        fee:
+          type: number
+          format: double
+        startDate:
+          type: string
+          format: date
+        dueDate:
+          type: string
+          format: date
+        courseId:
+          type: integer
+          format: int64
+        courseName:
+          type: string
+
+    MyPayment:
+      type: object
+      properties:
+        paymentAdultStudentId:
+          type: integer
+          format: int64
+        amount:
+          type: number
+          format: double
+        paymentDate:
+          type: string
+          format: date
+        paymentMethod:
+          type: string
+
+    MyChild:
+      type: object
+      properties:
+        minorStudentId:
+          type: integer
+          format: int64
+        firstName:
+          type: string
+        lastName:
+          type: string
+        birthDate:
+          type: string
+          format: date
+        entryDate:
+          type: string
+          format: date

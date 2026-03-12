@@ -36,7 +36,7 @@ components:
         userType:
           type: string
           description: The type of user profile resolved from the JWT
-          enum: [EMPLOYEE, COLLABORATOR]
+          enum: [EMPLOYEE, COLLABORATOR, ADULT_STUDENT, TUTOR]
           example: "EMPLOYEE"
         employeeId:
           type: integer

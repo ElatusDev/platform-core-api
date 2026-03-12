@@ -8,9 +8,15 @@
 package com.akademiaplus.currentuser.usecases;
 
 import com.akademiaplus.collaborator.interfaceadapters.CollaboratorRepository;
+import com.akademiaplus.customer.adultstudent.interfaceadapters.AdultStudentRepository;
+import com.akademiaplus.customer.interfaceadapters.TutorRepository;
 import com.akademiaplus.employee.interfaceadapters.EmployeeRepository;
+import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.internal.interfaceadapters.InternalAuthRepository;
+import com.akademiaplus.internal.interfaceadapters.UserContextHolder;
+import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
 import com.akademiaplus.security.InternalAuthDataModel;
+import com.akademiaplus.users.base.AbstractUser;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
 import com.akademiaplus.users.employee.EmployeeDataModel;
 import com.akademiaplus.utilities.EntityType;
@@ -47,7 +53,11 @@ public class GetCurrentUserUseCase {
     private final InternalAuthRepository internalAuthRepository;
     private final EmployeeRepository employeeRepository;
     private final CollaboratorRepository collaboratorRepository;
+    private final AdultStudentRepository adultStudentRepository;
+    private final TutorRepository tutorRepository;
     private final HashingService hashingService;
+    private final UserContextHolder userContextHolder;
+    private final TenantContextHolder tenantContextHolder;
 
     /**
      * Constructs the use case with all required dependencies.
@@ -55,16 +65,28 @@ public class GetCurrentUserUseCase {
      * @param internalAuthRepository the internal auth repository
      * @param employeeRepository     the employee repository
      * @param collaboratorRepository the collaborator repository
+     * @param adultStudentRepository the adult student repository
+     * @param tutorRepository        the tutor repository
      * @param hashingService         the hashing service for username lookup
+     * @param userContextHolder      the user context holder for customer profiles
+     * @param tenantContextHolder    the tenant context holder
      */
     public GetCurrentUserUseCase(InternalAuthRepository internalAuthRepository,
                                   EmployeeRepository employeeRepository,
                                   CollaboratorRepository collaboratorRepository,
-                                  HashingService hashingService) {
+                                  AdultStudentRepository adultStudentRepository,
+                                  TutorRepository tutorRepository,
+                                  HashingService hashingService,
+                                  UserContextHolder userContextHolder,
+                                  TenantContextHolder tenantContextHolder) {
         this.internalAuthRepository = internalAuthRepository;
         this.employeeRepository = employeeRepository;
         this.collaboratorRepository = collaboratorRepository;
+        this.adultStudentRepository = adultStudentRepository;
+        this.tutorRepository = tutorRepository;
         this.hashingService = hashingService;
+        this.userContextHolder = userContextHolder;
+        this.tenantContextHolder = tenantContextHolder;
     }
 
     /**
@@ -78,6 +100,11 @@ public class GetCurrentUserUseCase {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || authentication.getName() == null) {
             throw new IllegalStateException(ERROR_NO_AUTHENTICATION);
+        }
+
+        java.util.Optional<UserContextHolder.UserContext> userContext = userContextHolder.get();
+        if (userContext.isPresent()) {
+            return resolveCustomerProfile(userContext.get());
         }
 
         String username = authentication.getName();
@@ -95,6 +122,36 @@ public class GetCurrentUserUseCase {
                         .map(collaborator -> mapCollaborator(collaborator, auth))
                         .orElseThrow(() -> new EntityNotFoundException(
                                 EntityType.USER, username)));
+    }
+
+    private GetCurrentUserResponseDTO resolveCustomerProfile(UserContextHolder.UserContext userContext) {
+        String profileType = userContext.profileType();
+        Long profileId = userContext.profileId();
+        Long tenantId = tenantContextHolder.requireTenantId();
+
+        AbstractUser user;
+        GetCurrentUserResponseDTO.UserTypeEnum userTypeEnum;
+
+        if (JwtTokenProvider.PROFILE_TYPE_ADULT_STUDENT.equals(profileType)) {
+            user = adultStudentRepository.findById(
+                    new com.akademiaplus.users.customer.AdultStudentDataModel.AdultStudentCompositeId(tenantId, profileId))
+                    .orElseThrow(() -> new EntityNotFoundException(EntityType.ADULT_STUDENT, profileId.toString()));
+            userTypeEnum = GetCurrentUserResponseDTO.UserTypeEnum.ADULT_STUDENT;
+        } else if (JwtTokenProvider.PROFILE_TYPE_TUTOR.equals(profileType)) {
+            user = tutorRepository.findById(
+                    new com.akademiaplus.users.customer.TutorDataModel.TutorCompositeId(tenantId, profileId))
+                    .orElseThrow(() -> new EntityNotFoundException(EntityType.TUTOR, profileId.toString()));
+            userTypeEnum = GetCurrentUserResponseDTO.UserTypeEnum.TUTOR;
+        } else {
+            throw new EntityNotFoundException(profileType, profileId.toString());
+        }
+
+        GetCurrentUserResponseDTO dto = new GetCurrentUserResponseDTO();
+        dto.setUserType(userTypeEnum);
+        mapPii(dto, user);
+        dto.setBirthdate(user.getBirthDate());
+        dto.setEntryDate(user.getEntryDate());
+        return dto;
     }
 
     private GetCurrentUserResponseDTO mapEmployee(EmployeeDataModel employee,

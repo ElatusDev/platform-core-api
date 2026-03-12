@@ -433,7 +433,39 @@ All Java source files include the proprietary copyright header:
  */
 ```
 
-### 3.16 OpenAPI DTO Naming Convention
+### 3.16 User-Level Data Isolation
+
+Two isolation layers protect tenant and user data:
+
+1. **Tenant isolation** (automatic): Hibernate `tenantFilter` + `TenantContextHolder` (ThreadLocal) — enforced on every query
+2. **User isolation** (explicit): `UserContextHolder` + `UserContextLoader` filter — profile ID derived from JWT, never client-supplied
+
+**JWT claim extensions** (customer-facing tokens only):
+- `profile_type`: `ADULT_STUDENT` | `TUTOR` — determines which entity table holds the user's profile
+- `profile_id`: the user's `adultStudentId` or `tutorId` — embedded at login (OAuth/magic-link), zero per-request overhead
+
+**Filter chain order**:
+```
+JwtRequestFilter (order 3) → UserContextLoader (order 4) → Controller
+```
+
+**`UserContextHolder`** follows the same ThreadLocal pattern as `TenantContextHolder`:
+```java
+public class UserContextHolder {
+    private static final ThreadLocal<UserContext> CONTEXT = new ThreadLocal<>();
+
+    public record UserContext(String profileType, Long profileId) {}
+
+    public static Long requireProfileId() { /* throws if absent */ }
+}
+```
+
+**`/v1/my/*` endpoints** — self-service endpoints for students/tutors:
+- Derive user identity from `UserContextHolder.requireProfileId()` — never from request parameters
+- Admin endpoints (`/v1/user-management/*`, `/v1/billing/*`) remain unchanged — they accept explicit IDs for staff use
+- Internal users (employees/collaborators) do not get profile claims — they use admin endpoints only
+
+### 3.17 OpenAPI DTO Naming Convention
 
 Generated DTOs follow the pattern:
 - `{Entity}CreationRequestDTO` — POST request body
@@ -698,3 +730,4 @@ GitHub Actions → SonarQube analysis → Docker build → AWS deployment
 | 2026-02 | BaseControllerAdvice consolidation | Generic exception handlers extracted to `utilities`; per-module ControllerAdvice extends base |
 | 2026-02 | DeleteUseCaseSupport composition | Shared find-or-throw → try-delete → catch-constraint pattern composed into all 20+ delete use cases |
 | 2026-02 | Documentation reorganization | Canonical `docs/` structure: directives/, design/, prompts/, workflows/ with naming conventions |
+| 2026-03 | User-level data isolation via JWT claims | `profile_type` + `profile_id` embedded in customer JWT at login; `UserContextHolder` (ThreadLocal) + `UserContextLoader` filter (order 4); `/v1/my/*` endpoints derive ID from JWT — never client-supplied. Chosen over per-request DB lookup (Option B) for zero per-request overhead |
