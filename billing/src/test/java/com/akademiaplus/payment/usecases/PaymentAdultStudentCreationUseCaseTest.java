@@ -85,7 +85,8 @@ class PaymentAdultStudentCreationUseCaseTest {
             useCase.transform(dto);
 
             // Then
-            verify(applicationContext).getBean(PaymentAdultStudentDataModel.class);
+            verify(applicationContext, times(1)).getBean(PaymentAdultStudentDataModel.class);
+            verifyNoMoreInteractions(applicationContext, paymentRepository);
         }
 
         @Test
@@ -102,8 +103,9 @@ class PaymentAdultStudentCreationUseCaseTest {
             PaymentAdultStudentDataModel result = useCase.transform(dto);
 
             // Then
-            verify(modelMapper).map(dto, prototypeModel, PaymentAdultStudentCreationUseCase.MAP_NAME);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, PaymentAdultStudentCreationUseCase.MAP_NAME);
             assertThat(result).isSameAs(prototypeModel);
+            verifyNoMoreInteractions(applicationContext, paymentRepository);
         }
 
         @Test

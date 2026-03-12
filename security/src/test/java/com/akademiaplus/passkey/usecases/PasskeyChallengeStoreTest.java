@@ -23,8 +23,7 @@ import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link PasskeyChallengeStore}.
@@ -80,7 +79,8 @@ class PasskeyChallengeStoreTest {
             String expectedValue = USER_ID + PasskeyChallengeStore.METADATA_DELIMITER
                     + TENANT_ID + PasskeyChallengeStore.METADATA_DELIMITER
                     + PasskeyChallengeStore.OPERATION_REGISTER;
-            verify(valueOperations).set(CHALLENGE_KEY, expectedValue, Duration.ofSeconds(CHALLENGE_TTL_SECONDS));
+            verify(valueOperations, times(1)).set(CHALLENGE_KEY, expectedValue, Duration.ofSeconds(CHALLENGE_TTL_SECONDS));
+            verifyNoMoreInteractions(redisTemplate, valueOperations, properties);
         }
 
         @Test
@@ -99,7 +99,8 @@ class PasskeyChallengeStoreTest {
             String expectedValue = PasskeyChallengeStore.METADATA_DELIMITER
                     + TENANT_ID + PasskeyChallengeStore.METADATA_DELIMITER
                     + PasskeyChallengeStore.OPERATION_LOGIN;
-            verify(valueOperations).set(CHALLENGE_KEY, expectedValue, Duration.ofSeconds(600L));
+            verify(valueOperations, times(1)).set(CHALLENGE_KEY, expectedValue, Duration.ofSeconds(600L));
+            verifyNoMoreInteractions(redisTemplate, valueOperations, properties);
         }
     }
 
@@ -124,6 +125,8 @@ class PasskeyChallengeStoreTest {
             assertThat(result.userId()).isEqualTo(USER_ID);
             assertThat(result.tenantId()).isEqualTo(TENANT_ID);
             assertThat(result.operation()).isEqualTo(PasskeyChallengeStore.OPERATION_REGISTER);
+            verify(valueOperations, times(1)).getAndDelete(CHALLENGE_KEY);
+            verifyNoMoreInteractions(redisTemplate, valueOperations, properties);
         }
 
         @Test
@@ -140,7 +143,9 @@ class PasskeyChallengeStoreTest {
             challengeStore.consumeChallenge(CHALLENGE_BASE64);
 
             // Then
-            verify(valueOperations).getAndDelete(CHALLENGE_KEY);
+            verify(valueOperations, times(1)).getAndDelete(CHALLENGE_KEY);
+            assertThat(challengeStore).isNotNull();
+            verifyNoMoreInteractions(redisTemplate, valueOperations, properties);
         }
 
         @Test
@@ -160,6 +165,8 @@ class PasskeyChallengeStoreTest {
             assertThat(result.userId()).isNull();
             assertThat(result.tenantId()).isEqualTo(TENANT_ID);
             assertThat(result.operation()).isEqualTo(PasskeyChallengeStore.OPERATION_LOGIN);
+            verify(valueOperations, times(1)).getAndDelete(CHALLENGE_KEY);
+            verifyNoMoreInteractions(redisTemplate, valueOperations, properties);
         }
 
         @Test
@@ -173,6 +180,8 @@ class PasskeyChallengeStoreTest {
             assertThatThrownBy(() -> challengeStore.consumeChallenge(CHALLENGE_BASE64))
                     .isInstanceOf(PasskeyAuthenticationException.class)
                     .hasMessage(PasskeyChallengeStore.ERROR_CHALLENGE_NOT_FOUND);
+            verify(valueOperations, times(1)).getAndDelete(CHALLENGE_KEY);
+            verifyNoMoreInteractions(redisTemplate, valueOperations, properties);
         }
     }
 
@@ -191,7 +200,8 @@ class PasskeyChallengeStoreTest {
             challengeStore.storeOptions(CHALLENGE_BASE64, OPTIONS_JSON);
 
             // Then
-            verify(valueOperations).set(OPTIONS_KEY, OPTIONS_JSON, Duration.ofSeconds(CHALLENGE_TTL_SECONDS));
+            verify(valueOperations, times(1)).set(OPTIONS_KEY, OPTIONS_JSON, Duration.ofSeconds(CHALLENGE_TTL_SECONDS));
+            verifyNoMoreInteractions(redisTemplate, valueOperations, properties);
         }
 
         @Test
@@ -206,6 +216,8 @@ class PasskeyChallengeStoreTest {
 
             // Then
             assertThat(result).isEqualTo(OPTIONS_JSON);
+            verify(valueOperations, times(1)).getAndDelete(OPTIONS_KEY);
+            verifyNoMoreInteractions(redisTemplate, valueOperations, properties);
         }
 
         @Test
@@ -219,6 +231,8 @@ class PasskeyChallengeStoreTest {
             assertThatThrownBy(() -> challengeStore.consumeOptions(CHALLENGE_BASE64))
                     .isInstanceOf(PasskeyAuthenticationException.class)
                     .hasMessage(PasskeyChallengeStore.ERROR_CHALLENGE_NOT_FOUND);
+            verify(valueOperations, times(1)).getAndDelete(OPTIONS_KEY);
+            verifyNoMoreInteractions(redisTemplate, valueOperations, properties);
         }
     }
 }

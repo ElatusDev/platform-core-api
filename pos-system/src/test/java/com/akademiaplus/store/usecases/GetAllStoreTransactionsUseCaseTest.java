@@ -15,6 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -54,7 +55,7 @@ class GetAllStoreTransactionsUseCaseTest {
 
             // Then
             assertThat(result).isEmpty();
-            verify(storeTransactionRepository).findAll();
+            verify(storeTransactionRepository, times(1)).findAll();
             verifyNoMoreInteractions(storeTransactionRepository, modelMapper);
         }
 
@@ -76,10 +77,11 @@ class GetAllStoreTransactionsUseCaseTest {
 
             // Then
             assertThat(result).containsExactly(dto1, dto2);
-            verify(storeTransactionRepository).findAll();
-            verify(modelMapper).map(transaction1, GetStoreTransactionResponseDTO.class);
-            verify(modelMapper).map(transaction2, GetStoreTransactionResponseDTO.class);
-            verifyNoMoreInteractions(storeTransactionRepository, modelMapper);
+            InOrder inOrder = inOrder(storeTransactionRepository, modelMapper);
+            inOrder.verify(storeTransactionRepository, times(1)).findAll();
+            inOrder.verify(modelMapper, times(1)).map(transaction1, GetStoreTransactionResponseDTO.class);
+            inOrder.verify(modelMapper, times(1)).map(transaction2, GetStoreTransactionResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

@@ -121,7 +121,7 @@ bridges both internal and external networks since it serves external traffic.
 - **Serial Number Tracking**: Monotonically increasing serial numbers persisted to the CA
   volume. Required for future CRL/OCSP support and audit trail.
 - **Audit Logging**: Every certificate issuance logged with timestamp, CN, serial number,
-  validity period, and requesting source. Feeds into `audit-system` module.
+  validity period, and requesting source. Feeds into `audit-service` module.
 
 ## Alternatives Considered
 

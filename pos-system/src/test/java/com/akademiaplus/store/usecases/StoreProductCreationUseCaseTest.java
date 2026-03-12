@@ -69,10 +69,15 @@ class StoreProductCreationUseCaseTest {
             when(applicationContext.getBean(StoreProductDataModel.class)).thenReturn(prototypeModel);
 
             // When
-            useCase.transform(dto);
+            StoreProductDataModel result = useCase.transform(dto);
 
             // Then
-            verify(applicationContext).getBean(StoreProductDataModel.class);
+            assertThat(result).isSameAs(prototypeModel);
+            InOrder inOrder = inOrder(applicationContext, modelMapper);
+            inOrder.verify(applicationContext, times(1)).getBean(StoreProductDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, StoreProductCreationUseCase.MAP_NAME);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(storeProductRepository);
         }
 
         @Test
@@ -87,8 +92,12 @@ class StoreProductCreationUseCaseTest {
             StoreProductDataModel result = useCase.transform(dto);
 
             // Then
-            verify(modelMapper).map(dto, prototypeModel, StoreProductCreationUseCase.MAP_NAME);
             assertThat(result).isSameAs(prototypeModel);
+            InOrder inOrder = inOrder(applicationContext, modelMapper);
+            inOrder.verify(applicationContext, times(1)).getBean(StoreProductDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, StoreProductCreationUseCase.MAP_NAME);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(storeProductRepository);
         }
     }
 
@@ -116,8 +125,13 @@ class StoreProductCreationUseCaseTest {
             StoreProductCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(storeProductRepository).saveAndFlush(prototypeModel);
             assertThat(result.getStoreProductId()).isEqualTo(SAVED_ID);
+            InOrder inOrder = inOrder(applicationContext, modelMapper, storeProductRepository);
+            inOrder.verify(applicationContext, times(1)).getBean(StoreProductDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, StoreProductCreationUseCase.MAP_NAME);
+            inOrder.verify(storeProductRepository, times(1)).saveAndFlush(prototypeModel);
+            inOrder.verify(modelMapper, times(1)).map(savedModel, StoreProductCreationResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -135,14 +149,16 @@ class StoreProductCreationUseCaseTest {
             when(modelMapper.map(savedModel, StoreProductCreationResponseDTO.class)).thenReturn(responseDto);
 
             // When
-            useCase.create(dto);
+            StoreProductCreationResponseDTO result = useCase.create(dto);
 
             // Then
+            assertThat(result).isSameAs(responseDto);
             InOrder inOrder = inOrder(applicationContext, modelMapper, storeProductRepository);
-            inOrder.verify(applicationContext).getBean(StoreProductDataModel.class);
-            inOrder.verify(modelMapper).map(dto, prototypeModel, StoreProductCreationUseCase.MAP_NAME);
-            inOrder.verify(storeProductRepository).saveAndFlush(prototypeModel);
-            inOrder.verify(modelMapper).map(savedModel, StoreProductCreationResponseDTO.class);
+            inOrder.verify(applicationContext, times(1)).getBean(StoreProductDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, StoreProductCreationUseCase.MAP_NAME);
+            inOrder.verify(storeProductRepository, times(1)).saveAndFlush(prototypeModel);
+            inOrder.verify(modelMapper, times(1)).map(savedModel, StoreProductCreationResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

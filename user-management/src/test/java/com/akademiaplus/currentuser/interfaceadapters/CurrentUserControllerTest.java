@@ -20,7 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link CurrentUserController}.
@@ -65,6 +65,9 @@ class CurrentUserControllerTest {
             assertThat(response.getBody().getUserType())
                     .isEqualTo(GetCurrentUserResponseDTO.UserTypeEnum.EMPLOYEE);
             assertThat(response.getBody().getUsername()).isEqualTo("john.doe");
+
+            verify(getCurrentUserUseCase, times(1)).getCurrentUser();
+            verifyNoMoreInteractions(getCurrentUserUseCase);
         }
     }
 }

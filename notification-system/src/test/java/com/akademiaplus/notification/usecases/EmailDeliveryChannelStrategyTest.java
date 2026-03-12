@@ -28,7 +28,14 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("EmailDeliveryChannelStrategy")
 @ExtendWith(MockitoExtension.class)
@@ -82,6 +89,7 @@ class EmailDeliveryChannelStrategyTest {
 
             // Then
             assertThat(channel).isEqualTo(DeliveryChannel.EMAIL);
+            verifyNoInteractions(javaMailSender, emailRepository);
         }
     }
 
@@ -104,6 +112,9 @@ class EmailDeliveryChannelStrategyTest {
             // Then
             assertThat(result.status()).isEqualTo(DeliveryStatus.SENT);
             assertThat(result.failureReason()).isNull();
+            verify(javaMailSender, times(1)).createMimeMessage();
+            verify(javaMailSender, times(1)).send(mimeMessage);
+            verifyNoMoreInteractions(javaMailSender, emailRepository);
         }
 
         @Test
@@ -124,6 +135,9 @@ class EmailDeliveryChannelStrategyTest {
             assertThat(result.failureReason()).isEqualTo(
                     String.format(EmailDeliveryChannelStrategy.ERROR_SEND_FAILED,
                             RECIPIENT_EMAIL, MAIL_SEND_ERROR));
+            verify(javaMailSender, times(1)).createMimeMessage();
+            verify(javaMailSender, times(1)).send(mimeMessage);
+            verifyNoMoreInteractions(javaMailSender, emailRepository);
         }
 
         @Test
@@ -145,6 +159,8 @@ class EmailDeliveryChannelStrategyTest {
             assertThat(result.failureReason()).isEqualTo(
                     String.format(EmailDeliveryChannelStrategy.ERROR_SEND_FAILED,
                             RECIPIENT_EMAIL, MESSAGING_ERROR));
+            verify(javaMailSender, times(1)).createMimeMessage();
+            verifyNoMoreInteractions(javaMailSender, emailRepository);
         }
     }
 }

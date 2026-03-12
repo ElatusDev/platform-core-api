@@ -9,7 +9,7 @@ package com.akademiaplus.internal.usecases;
 
 import com.akademiaplus.internal.interfaceadapters.RefreshTokenRepository;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
-import com.akademiaplus.internal.interfaceadapters.session.RedisSessionStore;
+import com.akademiaplus.internal.interfaceadapters.session.AkademiaPlusRedisSessionStore;
 import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,8 +21,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
+
+import org.mockito.InOrder;
 
 /**
  * Unit tests for {@link LogoutUseCase}.
@@ -43,7 +45,7 @@ class LogoutUseCaseTest {
     private RefreshTokenRepository refreshTokenRepository;
 
     @Mock
-    private RedisSessionStore redisSessionStore;
+    private AkademiaPlusRedisSessionStore akademiaPlusRedisSessionStore;
 
     @Mock
     private JwtTokenProvider jwtTokenProvider;
@@ -55,7 +57,7 @@ class LogoutUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        useCase = new LogoutUseCase(refreshTokenRepository, redisSessionStore, jwtTokenProvider);
+        useCase = new LogoutUseCase(refreshTokenRepository, akademiaPlusRedisSessionStore, jwtTokenProvider);
     }
 
     @Nested
@@ -75,10 +77,18 @@ class LogoutUseCaseTest {
             useCase.logout(ACCESS_TOKEN);
 
             // Then
-            verify(refreshTokenRepository).revokeAllByUserIdAndTenantId(
+            assertThat(useCase).isNotNull();
+            InOrder inOrder = inOrder(jwtTokenProvider, claims, refreshTokenRepository, akademiaPlusRedisSessionStore);
+            inOrder.verify(jwtTokenProvider, times(1)).getClaims(ACCESS_TOKEN);
+            inOrder.verify(claims, times(1)).getSubject();
+            inOrder.verify(claims, times(1)).get(JwtTokenProvider.TENANT_ID_CLAIM, Long.class);
+            inOrder.verify(claims, times(1)).get(JwtTokenProvider.USER_ID_CLAIM, Long.class);
+            inOrder.verify(refreshTokenRepository, times(1)).revokeAllByUserIdAndTenantId(
                     org.mockito.ArgumentMatchers.eq(USER_ID),
                     org.mockito.ArgumentMatchers.eq(TENANT_ID),
                     org.mockito.ArgumentMatchers.isA(Instant.class));
+            inOrder.verify(akademiaPlusRedisSessionStore, times(1)).revokeAllSessionsForUser(USERNAME, TENANT_ID);
+            verifyNoMoreInteractions(refreshTokenRepository, akademiaPlusRedisSessionStore, jwtTokenProvider, claims);
         }
 
         @Test
@@ -94,7 +104,15 @@ class LogoutUseCaseTest {
             useCase.logout(ACCESS_TOKEN);
 
             // Then
-            verify(redisSessionStore).revokeAllSessionsForUser(USERNAME, TENANT_ID);
+            assertThat(useCase).isNotNull();
+            InOrder inOrder = inOrder(jwtTokenProvider, claims, refreshTokenRepository, akademiaPlusRedisSessionStore);
+            inOrder.verify(jwtTokenProvider, times(1)).getClaims(ACCESS_TOKEN);
+            inOrder.verify(refreshTokenRepository, times(1)).revokeAllByUserIdAndTenantId(
+                    org.mockito.ArgumentMatchers.eq(USER_ID),
+                    org.mockito.ArgumentMatchers.eq(TENANT_ID),
+                    org.mockito.ArgumentMatchers.isA(Instant.class));
+            inOrder.verify(akademiaPlusRedisSessionStore, times(1)).revokeAllSessionsForUser(USERNAME, TENANT_ID);
+            verifyNoMoreInteractions(refreshTokenRepository, akademiaPlusRedisSessionStore, jwtTokenProvider, claims);
         }
     }
 }

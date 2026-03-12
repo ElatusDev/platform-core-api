@@ -1,7 +1,7 @@
 # Mock-Data New Loaders — Claude Code Execution Prompt
 
 > **Workflow**: [`mock-data-new-loaders-workflow.md`](../../workflows/pending/mock-data-new-loaders-workflow.md)
-> **Project**: core-api (mock-data-system module)
+> **Project**: core-api (mock-data-service module)
 
 ---
 
@@ -10,7 +10,7 @@
 1. **Read every file before modifying it**
 2. Follow existing patterns exactly — read a working loader (e.g., CourseEvent) as reference
 3. Copyright header: standard ElatusDev header on all new files
-4. Verify: `mvn compile -pl mock-data-system -am` after each step
+4. Verify: `mvn compile -pl mock-data-service -am` after each step
 
 ---
 
@@ -19,15 +19,15 @@
 ### Read these files first
 
 ```
-mock-data-system/src/main/java/com/akademiaplus/config/MockEntityType.java
-mock-data-system/src/main/java/com/akademiaplus/config/MockDataRegistry.java
-mock-data-system/src/main/java/com/akademiaplus/config/MockDataOrchestrator.java
-mock-data-system/src/main/java/com/akademiaplus/config/MockDataExecutionPlan.java
-mock-data-system/src/main/java/com/akademiaplus/usecases/course/LoadCourseEventMockDataUseCase.java
-mock-data-system/src/main/java/com/akademiaplus/util/mock/course/CourseEventFactory.java
-mock-data-system/src/main/java/com/akademiaplus/config/CourseDataLoaderConfiguration.java
-mock-data-system/src/main/java/com/akademiaplus/util/base/DataLoader.java
-mock-data-system/src/main/java/com/akademiaplus/util/base/DataCleanUp.java
+mock-data-service/src/main/java/com/akademiaplus/config/MockEntityType.java
+mock-data-service/src/main/java/com/akademiaplus/config/MockDataRegistry.java
+mock-data-service/src/main/java/com/akademiaplus/config/MockDataOrchestrator.java
+mock-data-service/src/main/java/com/akademiaplus/config/MockDataExecutionPlan.java
+mock-data-service/src/main/java/com/akademiaplus/usecases/course/LoadCourseEventMockDataUseCase.java
+mock-data-service/src/main/java/com/akademiaplus/util/mock/course/CourseEventFactory.java
+mock-data-service/src/main/java/com/akademiaplus/config/CourseDataLoaderConfiguration.java
+mock-data-service/src/main/java/com/akademiaplus/util/base/DataLoader.java
+mock-data-service/src/main/java/com/akademiaplus/util/base/DataCleanUp.java
 ```
 
 ### Read the target entity models + repositories
@@ -71,7 +71,7 @@ ATTENDANCE_RECORD(true, true, ATTENDANCE_SESSION),
 
 ### Verify
 ```bash
-mvn compile -pl mock-data-system -am -q
+mvn compile -pl mock-data-service -am -q
 ```
 
 ---
@@ -146,7 +146,7 @@ Verify by running the full generation endpoint.
 
 ```bash
 # Compile
-mvn compile -pl mock-data-system -am -q
+mvn compile -pl mock-data-service -am -q
 
 # Start the full dev stack
 cd ../

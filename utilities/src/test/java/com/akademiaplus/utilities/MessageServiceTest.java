@@ -19,6 +19,9 @@ import org.springframework.context.MessageSource;
 import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -65,6 +68,10 @@ class MessageServiceTest {
 
             // Then
             assertThat(result).isEqualTo("Empleado con ID: 42 no existe!");
+            verify(messageSource, times(1)).getMessage(EntityType.EMPLOYEE, null, LOCALE);
+            verify(messageSource, times(1)).getMessage(MessageService.KEY_ENTITY_NOT_FOUND,
+                    new Object[]{ENTITY_NAME_EMPLEADO, ENTITY_ID}, LOCALE);
+            verifyNoMoreInteractions(messageSource);
         }
 
         @Test
@@ -82,6 +89,10 @@ class MessageServiceTest {
 
             // Then
             assertThat(result).isEqualTo("Eliminacion de Empleado no esta permitida!...");
+            verify(messageSource, times(1)).getMessage(EntityType.EMPLOYEE, null, LOCALE);
+            verify(messageSource, times(1)).getMessage(MessageService.KEY_ENTITY_DELETE_NOT_ALLOWED,
+                    new Object[]{ENTITY_NAME_EMPLEADO}, LOCALE);
+            verifyNoMoreInteractions(messageSource);
         }
 
         @Test
@@ -101,6 +112,10 @@ class MessageServiceTest {
 
             // Then
             assertThat(result).startsWith("Eliminacion de Tutor con ID: 7 no es posible:");
+            verify(messageSource, times(1)).getMessage(EntityType.TUTOR, null, LOCALE);
+            verify(messageSource, times(1)).getMessage(MessageService.KEY_ENTITY_DELETE_NOT_ALLOWED_REASON,
+                    new Object[]{ENTITY_NAME_TUTOR, "7", reason}, LOCALE);
+            verifyNoMoreInteractions(messageSource);
         }
 
         @Test
@@ -118,6 +133,10 @@ class MessageServiceTest {
 
             // Then
             assertThat(result).isEqualTo("Error: el campo email del Empleado ya esta registrado");
+            verify(messageSource, times(1)).getMessage(EntityType.EMPLOYEE, null, LOCALE);
+            verify(messageSource, times(1)).getMessage(MessageService.KEY_ENTITY_DUPLICATE_FIELD,
+                    new Object[]{ENTITY_NAME_EMPLEADO, "email"}, LOCALE);
+            verifyNoMoreInteractions(messageSource);
         }
 
         @Test
@@ -132,6 +151,8 @@ class MessageServiceTest {
 
             // Then
             assertThat(result).isEqualTo("Operacion no permitida: conflicto de integridad de datos");
+            verify(messageSource, times(1)).getMessage(MessageService.KEY_ENTITY_CONSTRAINT_VIOLATION, null, LOCALE);
+            verifyNoMoreInteractions(messageSource);
         }
 
         @Test
@@ -146,6 +167,8 @@ class MessageServiceTest {
 
             // Then
             assertThat(result).isEqualTo("Contexto de organizacion es requerido");
+            verify(messageSource, times(1)).getMessage(MessageService.KEY_INVALID_TENANT, null, LOCALE);
+            verifyNoMoreInteractions(messageSource);
         }
     }
 }

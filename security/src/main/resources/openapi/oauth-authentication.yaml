@@ -1,0 +1,59 @@
+openapi: 3.0.0
+info:
+  title: OAuth Authentication API
+  version: '1.0.0'
+components:
+  schemas:
+    OAuthLoginRequest:
+      type: object
+      properties:
+        provider:
+          type: string
+          description: OAuth provider name (e.g., google, facebook)
+          example: google
+        authorizationCode:
+          type: string
+          description: The OAuth2 authorization code from the provider consent flow
+        redirectUri:
+          type: string
+          description: The redirect URI registered with the provider (must match exactly)
+          example: http://localhost:3000/auth/callback
+        tenantId:
+          type: integer
+          format: int64
+          description: The tenant ID
+      required:
+        - provider
+        - authorizationCode
+        - redirectUri
+        - tenantId
+paths:
+  /login/oauth:
+    post:
+      summary: Authenticate via OAuth2 social login
+      operationId: loginOAuth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OAuthLoginRequest'
+      responses:
+        '200':
+          description: User authenticated successfully via OAuth
+          content:
+            application/json:
+              schema:
+                $ref: './internal-authentication.yaml#/components/schemas/AuthTokenResponse'
+        '400':
+          description: Unsupported OAuth provider
+          content:
+            application/json:
+              schema:
+                $ref: './internal-authentication.yaml#/components/schemas/ErrorResponse'
+        '401':
+          description: OAuth provider communication failure or invalid authorization code
+          content:
+            application/json:
+              schema:
+                $ref: './internal-authentication.yaml#/components/schemas/ErrorResponse'

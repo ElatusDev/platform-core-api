@@ -9,6 +9,7 @@ import org.hibernate.event.spi.PreInsertEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -91,9 +92,21 @@ class EntityIdAssignerTest {
         assigner.assignIdIfNeeded(entity, event);
 
         // Then
-        verify(setter).invoke(entity, GENERATED_ID);
-        verify(hibernateStateUpdater).updatePropertyInState(event, ID_FIELD_NAME, GENERATED_ID);
-        verify(idGenerator).generateId(TABLE_NAME, TENANT_ID);
+        InOrder inOrder = inOrder(metadataResolver, metadata, getter, idGenerationStrategy,
+                tenantContextHolder, idGenerator, setter, hibernateStateUpdater);
+        inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
+        inOrder.verify(metadata, times(1)).isSkip();
+        inOrder.verify(metadata, times(1)).getGetter();
+        inOrder.verify(getter, times(1)).invoke(entity);
+        inOrder.verify(idGenerationStrategy, times(1)).shouldGenerateId(null);
+        inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+        inOrder.verify(idGenerator, times(1)).generateId(TABLE_NAME, TENANT_ID);
+        inOrder.verify(metadata, times(1)).getSetter();
+        inOrder.verify(setter, times(1)).invoke(entity, GENERATED_ID);
+        inOrder.verify(metadata, times(1)).getIdFieldName();
+        inOrder.verify(hibernateStateUpdater, times(1)).updatePropertyInState(event, ID_FIELD_NAME, GENERATED_ID);
+        verifyNoMoreInteractions(idGenerator, tenantContextHolder, metadataResolver,
+                idGenerationStrategy, hibernateStateUpdater, event, metadata, getter, setter);
     }
 
     @Test
@@ -113,9 +126,16 @@ class EntityIdAssignerTest {
                 .isInstanceOf(IdAssignmentException.class)
                 .hasMessageContaining(expectedMessage);
 
-        verifyNoInteractions(idGenerator);
-        verifyNoInteractions(setter);
-        verifyNoInteractions(hibernateStateUpdater);
+        InOrder inOrder = inOrder(metadataResolver, metadata, getter, idGenerationStrategy, tenantContextHolder);
+        inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
+        inOrder.verify(metadata, times(1)).isSkip();
+        inOrder.verify(metadata, times(1)).getGetter();
+        inOrder.verify(getter, times(1)).invoke(entity);
+        inOrder.verify(idGenerationStrategy, times(1)).shouldGenerateId(null);
+        inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+        verifyNoInteractions(idGenerator, setter, hibernateStateUpdater);
+        verifyNoMoreInteractions(metadataResolver, tenantContextHolder, metadataResolver,
+                idGenerationStrategy, event, metadata, getter);
     }
 
     @Test
@@ -129,7 +149,7 @@ class EntityIdAssignerTest {
         when(metadata.getTableName()).thenReturn(TABLE_NAME);
         when(metadata.getIdFieldName()).thenReturn(ID_FIELD_NAME);
         when(getter.invoke(entity)).thenReturn(preSetId);
-        when(idGenerationStrategy.shouldGenerateId(preSetId)).thenReturn(false); // ID is already set
+        when(idGenerationStrategy.shouldGenerateId(preSetId)).thenReturn(false);
         when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
         when(idGenerator.generateId(TABLE_NAME, TENANT_ID)).thenReturn(GENERATED_ID);
 
@@ -137,9 +157,21 @@ class EntityIdAssignerTest {
         assigner.assignIdIfNeeded(entity, event);
 
         // Then - should still assign new ID despite pre-set value
-        verify(setter).invoke(entity, GENERATED_ID);
-        verify(hibernateStateUpdater).updatePropertyInState(event, ID_FIELD_NAME, GENERATED_ID);
-        verify(idGenerator).generateId(TABLE_NAME, TENANT_ID);
+        InOrder inOrder = inOrder(metadataResolver, metadata, getter, idGenerationStrategy,
+                tenantContextHolder, idGenerator, setter, hibernateStateUpdater);
+        inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
+        inOrder.verify(metadata, times(1)).isSkip();
+        inOrder.verify(metadata, times(1)).getGetter();
+        inOrder.verify(getter, times(1)).invoke(entity);
+        inOrder.verify(idGenerationStrategy, times(1)).shouldGenerateId(preSetId);
+        inOrder.verify(tenantContextHolder, times(2)).getTenantId();
+        inOrder.verify(idGenerator, times(1)).generateId(TABLE_NAME, TENANT_ID);
+        inOrder.verify(metadata, times(1)).getSetter();
+        inOrder.verify(setter, times(1)).invoke(entity, GENERATED_ID);
+        inOrder.verify(metadata, times(1)).getIdFieldName();
+        inOrder.verify(hibernateStateUpdater, times(1)).updatePropertyInState(event, ID_FIELD_NAME, GENERATED_ID);
+        verifyNoMoreInteractions(idGenerator, tenantContextHolder, metadataResolver,
+                idGenerationStrategy, hibernateStateUpdater, event, metadata, getter, setter);
     }
 
     @Test
@@ -152,9 +184,12 @@ class EntityIdAssignerTest {
         assigner.assignIdIfNeeded(entity, event);
 
         // Then
-        verify(metadata, never()).getGetter();
-        verifyNoInteractions(idGenerator);
-        verifyNoInteractions(setter);
+        InOrder inOrder = inOrder(metadataResolver, metadata);
+        inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
+        inOrder.verify(metadata, times(1)).isSkip();
+        verifyNoInteractions(idGenerator, tenantContextHolder, idGenerationStrategy,
+                hibernateStateUpdater, getter, setter);
+        verifyNoMoreInteractions(metadataResolver, event, metadata);
     }
 
     @Test
@@ -180,7 +215,12 @@ class EntityIdAssignerTest {
                 .isInstanceOf(IdAssignmentException.class)
                 .hasMessageContaining(expectedMessage);
 
+        verify(metadataResolver, times(1)).resolve(TestEntity.class);
+        verify(setter, times(1)).invoke(entity, GENERATED_ID);
+        verify(idGenerator, times(1)).generateId(TABLE_NAME, TENANT_ID);
         verifyNoInteractions(hibernateStateUpdater);
+        verifyNoMoreInteractions(idGenerator, tenantContextHolder, metadataResolver,
+                idGenerationStrategy, event, metadata, getter, setter);
     }
 
     @Test
@@ -200,7 +240,11 @@ class EntityIdAssignerTest {
                 .isInstanceOf(IdAssignmentException.class)
                 .hasMessageContaining(expectedMessage);
 
-        verifyNoInteractions(idGenerator);
+        verify(metadataResolver, times(1)).resolve(TestEntity.class);
+        verify(getter, times(1)).invoke(entity);
+        verifyNoInteractions(idGenerator, tenantContextHolder, idGenerationStrategy,
+                hibernateStateUpdater, setter);
+        verifyNoMoreInteractions(metadataResolver, event, metadata, getter);
     }
 
     @Test
@@ -224,7 +268,11 @@ class EntityIdAssignerTest {
                 .hasMessageContaining(expectedMessage)
                 .hasCause(generatorException);
 
-        verifyNoInteractions(setter);
+        verify(metadataResolver, times(1)).resolve(TestEntity.class);
+        verify(idGenerator, times(1)).generateId(TABLE_NAME, TENANT_ID);
+        verifyNoInteractions(setter, hibernateStateUpdater);
+        verifyNoMoreInteractions(idGenerator, tenantContextHolder, metadataResolver,
+                idGenerationStrategy, event, metadata, getter);
     }
 
     @Test
@@ -246,8 +294,21 @@ class EntityIdAssignerTest {
         assigner.assignIdIfNeeded(entity, event);
 
         // Then
-        verify(setter).invoke(entity, GENERATED_ID);
-        verify(idGenerator).generateId(TABLE_NAME, TENANT_ID);
+        InOrder inOrder = inOrder(metadataResolver, metadata, getter, idGenerationStrategy,
+                tenantContextHolder, idGenerator, setter, hibernateStateUpdater);
+        inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
+        inOrder.verify(metadata, times(1)).isSkip();
+        inOrder.verify(metadata, times(1)).getGetter();
+        inOrder.verify(getter, times(1)).invoke(entity);
+        inOrder.verify(idGenerationStrategy, times(1)).shouldGenerateId(zeroId);
+        inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+        inOrder.verify(idGenerator, times(1)).generateId(TABLE_NAME, TENANT_ID);
+        inOrder.verify(metadata, times(1)).getSetter();
+        inOrder.verify(setter, times(1)).invoke(entity, GENERATED_ID);
+        inOrder.verify(metadata, times(1)).getIdFieldName();
+        inOrder.verify(hibernateStateUpdater, times(1)).updatePropertyInState(event, ID_FIELD_NAME, GENERATED_ID);
+        verifyNoMoreInteractions(idGenerator, tenantContextHolder, metadataResolver,
+                idGenerationStrategy, hibernateStateUpdater, event, metadata, getter, setter);
     }
 
     @Test
@@ -269,8 +330,21 @@ class EntityIdAssignerTest {
         assigner.assignIdIfNeeded(entity, event);
 
         // Then
-        verify(setter).invoke(entity, GENERATED_ID);
-        verify(idGenerator).generateId(TABLE_NAME, TENANT_ID);
+        InOrder inOrder = inOrder(metadataResolver, metadata, getter, idGenerationStrategy,
+                tenantContextHolder, idGenerator, setter, hibernateStateUpdater);
+        inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
+        inOrder.verify(metadata, times(1)).isSkip();
+        inOrder.verify(metadata, times(1)).getGetter();
+        inOrder.verify(getter, times(1)).invoke(entity);
+        inOrder.verify(idGenerationStrategy, times(1)).shouldGenerateId(emptyId);
+        inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+        inOrder.verify(idGenerator, times(1)).generateId(TABLE_NAME, TENANT_ID);
+        inOrder.verify(metadata, times(1)).getSetter();
+        inOrder.verify(setter, times(1)).invoke(entity, GENERATED_ID);
+        inOrder.verify(metadata, times(1)).getIdFieldName();
+        inOrder.verify(hibernateStateUpdater, times(1)).updatePropertyInState(event, ID_FIELD_NAME, GENERATED_ID);
+        verifyNoMoreInteractions(idGenerator, tenantContextHolder, metadataResolver,
+                idGenerationStrategy, hibernateStateUpdater, event, metadata, getter, setter);
     }
 
     /**

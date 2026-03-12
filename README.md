@@ -49,9 +49,9 @@ platform-core-api/
 ├── pos-system/             Domain — point-of-sale (placeholder)
 │
 ├── certificate-authority/  Standalone — Trust broker (JWKS registry for JWT public keys)
-├── mock-data-system/       Standalone — test data generation with DataFaker
-├── etl-system/             Standalone — ETL pipelines (placeholder)
-├── audit-system/           Standalone — audit logging (placeholder)
+├── mock-data-service/      Standalone — test data generation with DataFaker
+├── etl-service/            Standalone — ETL pipelines (placeholder)
+├── audit-service/          Standalone — audit logging (placeholder)
 │
 ├── application/            Main entry point — assembles all modules
 ├── db_init/                Database initialization scripts

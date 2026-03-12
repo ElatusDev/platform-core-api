@@ -9,6 +9,7 @@ package com.akademiaplus.payment.usecases;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -64,9 +65,9 @@ class GetPaymentTutorByIdUseCaseTest {
             GetPaymentTutorResponseDTO result = useCase.get(PAYMENT_TUTOR_ID);
             // Then
             assertThat(result).isEqualTo(expectedDto);
-            verify(tenantContextHolder).getTenantId();
-            verify(paymentTutorRepository).findById(new PaymentTutorDataModel.PaymentTutorCompositeId(TENANT_ID, PAYMENT_TUTOR_ID));
-            verify(modelMapper).map(paymentTutor, GetPaymentTutorResponseDTO.class);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(paymentTutorRepository, times(1)).findById(new PaymentTutorDataModel.PaymentTutorCompositeId(TENANT_ID, PAYMENT_TUTOR_ID));
+            verify(modelMapper, times(1)).map(paymentTutor, GetPaymentTutorResponseDTO.class);
             verifyNoMoreInteractions(tenantContextHolder, paymentTutorRepository, modelMapper);
         }
     }
@@ -86,8 +87,8 @@ class GetPaymentTutorByIdUseCaseTest {
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasFieldOrPropertyWithValue("entityType", EntityType.PAYMENT_TUTOR)
                     .hasFieldOrPropertyWithValue("entityId", String.valueOf(PAYMENT_TUTOR_ID));
-            verify(tenantContextHolder).getTenantId();
-            verify(paymentTutorRepository).findById(new PaymentTutorDataModel.PaymentTutorCompositeId(TENANT_ID, PAYMENT_TUTOR_ID));
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(paymentTutorRepository, times(1)).findById(new PaymentTutorDataModel.PaymentTutorCompositeId(TENANT_ID, PAYMENT_TUTOR_ID));
             verifyNoMoreInteractions(tenantContextHolder, paymentTutorRepository, modelMapper);
         }
     }
@@ -104,7 +105,7 @@ class GetPaymentTutorByIdUseCaseTest {
             assertThatThrownBy(() -> useCase.get(PAYMENT_TUTOR_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(GetPaymentTutorByIdUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
-            verify(tenantContextHolder).getTenantId();
+            verify(tenantContextHolder, times(1)).getTenantId();
             verifyNoMoreInteractions(tenantContextHolder, paymentTutorRepository, modelMapper);
         }
     }

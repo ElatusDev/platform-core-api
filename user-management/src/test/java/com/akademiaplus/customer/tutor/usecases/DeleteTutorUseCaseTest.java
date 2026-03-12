@@ -19,6 +19,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -27,10 +28,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link DeleteTutorUseCase}.
@@ -82,7 +80,14 @@ class DeleteTutorUseCaseTest {
             useCase.delete(TUTOR_ID);
 
             // Then
-            verify(tutorRepository).delete(tutor);
+            assertThat(tutor).isNotNull();
+
+            InOrder inOrder = inOrder(tenantContextHolder, tutorRepository, minorStudentRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(tutorRepository, times(1)).findById(COMPOSITE_ID);
+            inOrder.verify(minorStudentRepository, times(1)).countByTenantIdAndTutorId(TENANT_ID, TUTOR_ID);
+            inOrder.verify(tutorRepository, times(1)).delete(tutor);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 

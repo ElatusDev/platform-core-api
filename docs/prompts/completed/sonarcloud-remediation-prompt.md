@@ -156,7 +156,7 @@ public SecurityFilterChain securityFilterChainForMockDataService(...) throws Exc
 
 ### Step 1.2 — S2077: Dynamic SQL validation in DataCleanUp
 
-**Edit file**: `mock-data-system/src/main/java/com/akademiaplus/util/base/DataCleanUp.java`
+**Edit file**: `mock-data-service/src/main/java/com/akademiaplus/util/base/DataCleanUp.java`
 
 Add a validation regex constant at the class level:
 
@@ -210,10 +210,10 @@ public void clean() {
 
 ### Step 1.3 — S2245: Random in mock-data generators (13 instances)
 
-Search for all `java.util.Random` usages in mock-data-system:
+Search for all `java.util.Random` usages in mock-data-service:
 
 ```bash
-grep -rn "java\.util\.Random\|new Random()" mock-data-system/src/main/java/ --include="*.java"
+grep -rn "java\.util\.Random\|new Random()" mock-data-service/src/main/java/ --include="*.java"
 ```
 
 For each file found, add `@SuppressWarnings("java:S2245")` at the class level:
@@ -226,7 +226,7 @@ For each file found, add `@SuppressWarnings("java:S2245")` at the class level:
 
 ```bash
 cd /Volumes/ElatusDev/ElatusDev/AkademiaPlus/platform-core-api
-mvn compile -pl certificate-authority,security,mock-data-system -am -DskipTests
+mvn compile -pl certificate-authority,security,mock-data-service -am -DskipTests
 ```
 
 Compilation must pass.

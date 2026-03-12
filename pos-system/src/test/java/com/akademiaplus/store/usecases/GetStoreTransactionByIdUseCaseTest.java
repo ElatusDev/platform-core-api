@@ -18,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -68,11 +69,12 @@ class GetStoreTransactionByIdUseCaseTest {
 
             // Then
             assertThat(result).isEqualTo(expectedDto);
-            verify(tenantContextHolder).getTenantId();
-            verify(storeTransactionRepository).findById(
+            InOrder inOrder = inOrder(tenantContextHolder, storeTransactionRepository, modelMapper);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(storeTransactionRepository, times(1)).findById(
                     new StoreTransactionDataModel.StoreTransactionCompositeId(TENANT_ID, STORE_TRANSACTION_ID));
-            verify(modelMapper).map(transaction, GetStoreTransactionResponseDTO.class);
-            verifyNoMoreInteractions(tenantContextHolder, storeTransactionRepository, modelMapper);
+            inOrder.verify(modelMapper, times(1)).map(transaction, GetStoreTransactionResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -94,10 +96,13 @@ class GetStoreTransactionByIdUseCaseTest {
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasFieldOrPropertyWithValue("entityType", EntityType.STORE_TRANSACTION)
                     .hasFieldOrPropertyWithValue("entityId", String.valueOf(STORE_TRANSACTION_ID));
-            verify(tenantContextHolder).getTenantId();
-            verify(storeTransactionRepository).findById(
+
+            InOrder inOrder = inOrder(tenantContextHolder, storeTransactionRepository);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(storeTransactionRepository, times(1)).findById(
                     new StoreTransactionDataModel.StoreTransactionCompositeId(TENANT_ID, STORE_TRANSACTION_ID));
-            verifyNoMoreInteractions(tenantContextHolder, storeTransactionRepository, modelMapper);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(modelMapper);
         }
     }
 
@@ -115,8 +120,10 @@ class GetStoreTransactionByIdUseCaseTest {
             assertThatThrownBy(() -> useCase.get(STORE_TRANSACTION_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(GetStoreTransactionByIdUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
-            verify(tenantContextHolder).getTenantId();
-            verifyNoMoreInteractions(tenantContextHolder, storeTransactionRepository, modelMapper);
+
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoMoreInteractions(tenantContextHolder);
+            verifyNoInteractions(storeTransactionRepository, modelMapper);
         }
     }
 }

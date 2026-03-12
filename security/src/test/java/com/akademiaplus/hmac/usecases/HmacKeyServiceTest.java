@@ -23,7 +23,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link HmacKeyService}.
@@ -66,6 +66,8 @@ class HmacKeyServiceTest {
 
             // Then
             assertThat(result).isEqualTo(CUSTOM_KEY.getBytes(StandardCharsets.UTF_8));
+            verify(hmacProperties, times(1)).getKeys();
+            verifyNoMoreInteractions(hmacProperties);
         }
 
         @Test
@@ -81,6 +83,8 @@ class HmacKeyServiceTest {
 
             // Then
             assertThat(result).isEqualTo(TEST_KEY.getBytes(StandardCharsets.UTF_8));
+            verify(hmacProperties, times(2)).getKeys();
+            verifyNoMoreInteractions(hmacProperties);
         }
 
         @Test
@@ -93,6 +97,8 @@ class HmacKeyServiceTest {
             assertThatThrownBy(() -> service.resolveKey("unknown-app"))
                     .isInstanceOf(HmacSignatureException.class)
                     .hasMessageContaining("unknown-app");
+            verify(hmacProperties, times(2)).getKeys();
+            verifyNoMoreInteractions(hmacProperties);
         }
 
         @Test
@@ -108,6 +114,8 @@ class HmacKeyServiceTest {
 
             // Then
             assertThat(result).isEqualTo(TEST_KEY.getBytes(StandardCharsets.UTF_8));
+            verify(hmacProperties, times(1)).getKeys();
+            verifyNoMoreInteractions(hmacProperties);
         }
     }
 }

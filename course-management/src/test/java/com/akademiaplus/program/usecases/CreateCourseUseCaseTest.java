@@ -87,10 +87,16 @@ class CreateCourseUseCaseTest {
                     .thenReturn(List.of(collaborator));
 
             // When
-            useCase.transform(dto);
+            CourseDataModel result = useCase.transform(dto);
 
             // Then
-            verify(applicationContext).getBean(CourseDataModel.class);
+            assertThat(result).isSameAs(prototypeModel);
+            InOrder inOrder = inOrder(courseValidator, applicationContext, modelMapper);
+            inOrder.verify(courseValidator, times(1)).validateCollaboratorsExist(dto.getAvailableCollaboratorIds());
+            inOrder.verify(applicationContext, times(1)).getBean(CourseDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, CreateCourseUseCase.MAP_NAME);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(courseRepository, scheduleRepository);
         }
 
         @Test
@@ -108,8 +114,13 @@ class CreateCourseUseCaseTest {
             CourseDataModel result = useCase.transform(dto);
 
             // Then
-            verify(modelMapper).map(dto, prototypeModel, CreateCourseUseCase.MAP_NAME);
             assertThat(result).isSameAs(prototypeModel);
+            InOrder inOrder = inOrder(courseValidator, applicationContext, modelMapper);
+            inOrder.verify(courseValidator, times(1)).validateCollaboratorsExist(dto.getAvailableCollaboratorIds());
+            inOrder.verify(applicationContext, times(1)).getBean(CourseDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, CreateCourseUseCase.MAP_NAME);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(courseRepository, scheduleRepository);
         }
 
         @Test
@@ -124,10 +135,16 @@ class CreateCourseUseCaseTest {
                     .thenReturn(List.of(collaborator));
 
             // When
-            useCase.transform(dto);
+            CourseDataModel result = useCase.transform(dto);
 
             // Then
-            verify(courseValidator).validateCollaboratorsExist(dto.getAvailableCollaboratorIds());
+            assertThat(result).isSameAs(prototypeModel);
+            InOrder inOrder = inOrder(courseValidator, applicationContext, modelMapper);
+            inOrder.verify(courseValidator, times(1)).validateCollaboratorsExist(dto.getAvailableCollaboratorIds());
+            inOrder.verify(applicationContext, times(1)).getBean(CourseDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, CreateCourseUseCase.MAP_NAME);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(courseRepository, scheduleRepository);
         }
 
         @Test
@@ -147,6 +164,12 @@ class CreateCourseUseCaseTest {
 
             // Then
             assertThat(result.getAvailableCollaborators()).isSameAs(collaborators);
+            InOrder inOrder = inOrder(courseValidator, applicationContext, modelMapper);
+            inOrder.verify(courseValidator, times(1)).validateCollaboratorsExist(dto.getAvailableCollaboratorIds());
+            inOrder.verify(applicationContext, times(1)).getBean(CourseDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, CreateCourseUseCase.MAP_NAME);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(courseRepository, scheduleRepository);
         }
     }
 
@@ -182,9 +205,11 @@ class CreateCourseUseCaseTest {
             CourseCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(courseRepository).saveAndFlush(prototypeModel);
-            verify(modelMapper).map(savedModel, CourseCreationResponseDTO.class);
             assertThat(result.getCourseId()).isEqualTo(TEST_COURSE_ID);
+            verify(courseRepository, times(1)).saveAndFlush(prototypeModel);
+            verify(modelMapper, times(1)).map(savedModel, CourseCreationResponseDTO.class);
+            verifyNoMoreInteractions(applicationContext, courseRepository, scheduleRepository,
+                    courseValidator, modelMapper);
         }
 
         @Test
@@ -210,10 +235,13 @@ class CreateCourseUseCaseTest {
             when(modelMapper.map(savedModel, CourseCreationResponseDTO.class)).thenReturn(responseDto);
 
             // When
-            useCase.create(dto);
+            CourseCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(scheduleRepository).saveAll(schedules);
+            assertThat(result).isSameAs(responseDto);
+            verify(scheduleRepository, times(1)).saveAll(schedules);
+            verifyNoMoreInteractions(applicationContext, courseRepository, scheduleRepository,
+                    courseValidator, modelMapper);
         }
 
         @Test
@@ -239,17 +267,19 @@ class CreateCourseUseCaseTest {
             when(modelMapper.map(savedModel, CourseCreationResponseDTO.class)).thenReturn(responseDto);
 
             // When
-            useCase.create(dto);
+            CourseCreationResponseDTO result = useCase.create(dto);
 
             // Then — verify the exact object flow
+            assertThat(result).isSameAs(responseDto);
             InOrder inOrder = inOrder(applicationContext, modelMapper, courseRepository, scheduleRepository, courseValidator);
-            inOrder.verify(courseValidator).validateCollaboratorsExist(dto.getAvailableCollaboratorIds());
-            inOrder.verify(applicationContext).getBean(CourseDataModel.class);
-            inOrder.verify(modelMapper).map(dto, prototypeModel, CreateCourseUseCase.MAP_NAME);
-            inOrder.verify(courseRepository).saveAndFlush(prototypeModel);
-            inOrder.verify(courseValidator).validateSchedulesAvailable(dto.getTimeTableIds());
-            inOrder.verify(scheduleRepository).saveAll(schedules);
-            inOrder.verify(modelMapper).map(savedModel, CourseCreationResponseDTO.class);
+            inOrder.verify(courseValidator, times(1)).validateCollaboratorsExist(dto.getAvailableCollaboratorIds());
+            inOrder.verify(applicationContext, times(1)).getBean(CourseDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, CreateCourseUseCase.MAP_NAME);
+            inOrder.verify(courseRepository, times(1)).saveAndFlush(prototypeModel);
+            inOrder.verify(courseValidator, times(1)).validateSchedulesAvailable(dto.getTimeTableIds());
+            inOrder.verify(scheduleRepository, times(1)).saveAll(schedules);
+            inOrder.verify(modelMapper, times(1)).map(savedModel, CourseCreationResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

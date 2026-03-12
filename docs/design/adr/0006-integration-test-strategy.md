@@ -150,7 +150,7 @@ the final proof that the orchestration pipeline is correct.
 
 ### 5. Shared Test Infrastructure
 
-All component tests in the `mock-data-system` module extend `AbstractIntegrationTest`
+All component tests in the `mock-data-service` module extend `AbstractIntegrationTest`
 (or import its container configuration). The base class owns:
 
 - Testcontainers MariaDB lifecycle (singleton container strategy — one container per
@@ -231,7 +231,7 @@ cannot cross.
    `*ComponentTest` is self-documenting: it tests an assembled component, not an
    integration between systems.
 
-3. **Separate Maven modules for component tests** (e.g., `mock-data-system-tests`) —
+3. **Separate Maven modules for component tests** (e.g., `mock-data-service-tests`) —
    Used by some projects to isolate slow tests. Rejected because the project already
    has 15 modules and the additional module overhead is not justified by the current
    test count. If component tests exceed ~50 classes, revisit this decision.

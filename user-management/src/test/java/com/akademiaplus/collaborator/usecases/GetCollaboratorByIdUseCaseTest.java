@@ -19,6 +19,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -70,11 +71,13 @@ class GetCollaboratorByIdUseCaseTest {
 
             // Then
             assertThat(result).isEqualTo(expectedDto);
-            verify(tenantContextHolder).getTenantId();
-            verify(collaboratorRepository).findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, COLLABORATOR_ID));
-            verify(modelMapper).map(collaborator, GetCollaboratorResponseDTO.class);
-            verify(modelMapper).map(personPII, expectedDto);
-            verifyNoMoreInteractions(tenantContextHolder, collaboratorRepository, modelMapper);
+
+            InOrder inOrder = inOrder(tenantContextHolder, collaboratorRepository, modelMapper);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(collaboratorRepository, times(1)).findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, COLLABORATOR_ID));
+            inOrder.verify(modelMapper, times(1)).map(collaborator, GetCollaboratorResponseDTO.class);
+            inOrder.verify(modelMapper, times(1)).map(personPII, expectedDto);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -98,9 +101,12 @@ class GetCollaboratorByIdUseCaseTest {
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.COLLABORATOR);
                         assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(COLLABORATOR_ID));
                     });
-            verify(tenantContextHolder).getTenantId();
-            verify(collaboratorRepository).findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, COLLABORATOR_ID));
-            verifyNoMoreInteractions(tenantContextHolder, collaboratorRepository, modelMapper);
+
+            InOrder inOrder = inOrder(tenantContextHolder, collaboratorRepository);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(collaboratorRepository, times(1)).findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, COLLABORATOR_ID));
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(modelMapper);
         }
     }
 
@@ -118,8 +124,10 @@ class GetCollaboratorByIdUseCaseTest {
             assertThatThrownBy(() -> useCase.get(COLLABORATOR_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(GetCollaboratorByIdUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
-            verify(tenantContextHolder).getTenantId();
-            verifyNoMoreInteractions(tenantContextHolder, collaboratorRepository, modelMapper);
+
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoMoreInteractions(tenantContextHolder);
+            verifyNoInteractions(collaboratorRepository, modelMapper);
         }
     }
 }

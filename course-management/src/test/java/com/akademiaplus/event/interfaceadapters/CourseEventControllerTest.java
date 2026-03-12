@@ -22,6 +22,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
@@ -86,7 +87,9 @@ class CourseEventControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$", hasSize(0)));
 
-            verify(getAllCourseEventsUseCase).getAll(null);
+            verify(getAllCourseEventsUseCase, times(1)).getAll(null);
+            verifyNoInteractions(courseEventCreationUseCase, courseEventUpdateUseCase,
+                    deleteCourseEventUseCase, getCourseEventByIdUseCase, messageService);
             verifyNoMoreInteractions(getAllCourseEventsUseCase);
         }
 
@@ -104,7 +107,9 @@ class CourseEventControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$", hasSize(2)));
 
-            verify(getAllCourseEventsUseCase).getAll(null);
+            verify(getAllCourseEventsUseCase, times(1)).getAll(null);
+            verifyNoInteractions(courseEventCreationUseCase, courseEventUpdateUseCase,
+                    deleteCourseEventUseCase, getCourseEventByIdUseCase, messageService);
             verifyNoMoreInteractions(getAllCourseEventsUseCase);
         }
     }
@@ -126,7 +131,9 @@ class CourseEventControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-            verify(getCourseEventByIdUseCase).get(COURSE_EVENT_ID);
+            verify(getCourseEventByIdUseCase, times(1)).get(COURSE_EVENT_ID);
+            verifyNoInteractions(courseEventCreationUseCase, courseEventUpdateUseCase,
+                    deleteCourseEventUseCase, getAllCourseEventsUseCase, messageService);
             verifyNoMoreInteractions(getCourseEventByIdUseCase);
         }
 
@@ -144,9 +151,12 @@ class CourseEventControllerTest {
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound());
 
-            verify(getCourseEventByIdUseCase).get(COURSE_EVENT_ID);
-            verify(messageService).getEntityNotFound(EntityType.COURSE_EVENT, String.valueOf(COURSE_EVENT_ID));
-            verifyNoMoreInteractions(getCourseEventByIdUseCase, messageService);
+            InOrder inOrder = inOrder(getCourseEventByIdUseCase, messageService);
+            inOrder.verify(getCourseEventByIdUseCase, times(1)).get(COURSE_EVENT_ID);
+            inOrder.verify(messageService, times(1)).getEntityNotFound(EntityType.COURSE_EVENT, String.valueOf(COURSE_EVENT_ID));
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(courseEventCreationUseCase, courseEventUpdateUseCase,
+                    deleteCourseEventUseCase, getAllCourseEventsUseCase);
         }
     }
 }

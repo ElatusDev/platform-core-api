@@ -21,7 +21,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("EmailTemplatePreviewUseCase")
 @ExtendWith(MockitoExtension.class)
@@ -91,10 +95,11 @@ class EmailTemplatePreviewUseCaseTest {
             assertThat(result.getSubject()).isEqualTo(RENDERED_SUBJECT);
             assertThat(result.getBodyHtml()).isEqualTo(RENDERED_BODY_HTML);
             assertThat(result.getBodyText()).isEqualTo(RENDERED_BODY_TEXT);
-            verify(getEmailTemplateByIdUseCase).getEntity(TEMPLATE_ID);
-            verify(emailTemplateRenderingService).render(SUBJECT_TEMPLATE, variables);
-            verify(emailTemplateRenderingService).render(BODY_HTML_TEMPLATE, variables);
-            verify(emailTemplateRenderingService).render(BODY_TEXT_TEMPLATE, variables);
+            verify(getEmailTemplateByIdUseCase, times(1)).getEntity(TEMPLATE_ID);
+            verify(emailTemplateRenderingService, times(1)).render(SUBJECT_TEMPLATE, variables);
+            verify(emailTemplateRenderingService, times(1)).render(BODY_HTML_TEMPLATE, variables);
+            verify(emailTemplateRenderingService, times(1)).render(BODY_TEXT_TEMPLATE, variables);
+            verifyNoMoreInteractions(getEmailTemplateByIdUseCase, emailTemplateRenderingService);
         }
 
         @Test
@@ -118,7 +123,11 @@ class EmailTemplatePreviewUseCaseTest {
             assertThat(result.getSubject()).isEqualTo(RENDERED_SUBJECT);
             assertThat(result.getBodyHtml()).isEqualTo(RENDERED_BODY_HTML);
             assertThat(result.getBodyText()).isNull();
+            verify(getEmailTemplateByIdUseCase, times(1)).getEntity(TEMPLATE_ID);
+            verify(emailTemplateRenderingService, times(1)).render(SUBJECT_TEMPLATE, variables);
+            verify(emailTemplateRenderingService, times(1)).render(BODY_HTML_TEMPLATE, variables);
             verify(emailTemplateRenderingService, never()).render(BODY_TEXT_TEMPLATE, variables);
+            verifyNoMoreInteractions(getEmailTemplateByIdUseCase, emailTemplateRenderingService);
         }
     }
 }

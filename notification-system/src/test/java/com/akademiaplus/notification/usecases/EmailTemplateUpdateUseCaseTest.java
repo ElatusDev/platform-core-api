@@ -31,7 +31,11 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("EmailTemplateUpdateUseCase")
 @ExtendWith(MockitoExtension.class)
@@ -127,7 +131,12 @@ class EmailTemplateUpdateUseCaseTest {
             assertThat(existingTemplate.getBodyHtml()).isEqualTo(UPDATED_BODY_HTML);
             assertThat(existingTemplate.getBodyText()).isEqualTo(UPDATED_BODY_TEXT);
             assertThat(existingTemplate.isActive()).isEqualTo(UPDATED_IS_ACTIVE);
-            verify(emailTemplateRepository).save(existingTemplate);
+            verify(emailTemplateRepository, times(1)).findByTemplateId(TEMPLATE_ID);
+            verify(emailTemplateVariableRepository, times(1)).findByTemplateId(TEMPLATE_ID);
+            verify(emailTemplateRepository, times(1)).save(existingTemplate);
+            verify(modelMapper, times(1)).map(savedTemplate, EmailTemplateResponseDTO.class);
+            verifyNoMoreInteractions(applicationContext, emailTemplateRepository,
+                    emailTemplateVariableRepository, modelMapper);
         }
 
         @Test
@@ -144,6 +153,9 @@ class EmailTemplateUpdateUseCaseTest {
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasMessageContaining(EntityType.EMAIL_TEMPLATE)
                     .hasMessageContaining(String.valueOf(TEMPLATE_ID));
+            verify(emailTemplateRepository, times(1)).findByTemplateId(TEMPLATE_ID);
+            verifyNoInteractions(emailTemplateVariableRepository, modelMapper, applicationContext);
+            verifyNoMoreInteractions(emailTemplateRepository);
         }
 
         @Test
@@ -176,13 +188,20 @@ class EmailTemplateUpdateUseCaseTest {
 
             // Then
             assertThat(result).isSameAs(expectedResponse);
-            verify(emailTemplateVariableRepository).delete(existingVariable);
+            verify(emailTemplateRepository, times(1)).findByTemplateId(TEMPLATE_ID);
+            verify(emailTemplateVariableRepository, times(1)).findByTemplateId(TEMPLATE_ID);
+            verify(emailTemplateVariableRepository, times(1)).delete(existingVariable);
+            verify(applicationContext, times(1)).getBean(EmailTemplateVariableDataModel.class);
+            verify(emailTemplateRepository, times(1)).save(existingTemplate);
+            verify(modelMapper, times(1)).map(savedTemplate, EmailTemplateResponseDTO.class);
             assertThat(existingTemplate.getVariables()).hasSize(1);
             assertThat(newVariable.getName()).isEqualTo(VARIABLE_NAME);
             assertThat(newVariable.getVariableType())
                     .isEqualTo(TemplateVariableDTO.TypeEnum.STRING.getValue());
             assertThat(newVariable.getTemplateId()).isEqualTo(TEMPLATE_ID);
             assertThat(newVariable.getTemplate()).isSameAs(existingTemplate);
+            verifyNoMoreInteractions(applicationContext, emailTemplateRepository,
+                    emailTemplateVariableRepository, modelMapper);
         }
     }
 }

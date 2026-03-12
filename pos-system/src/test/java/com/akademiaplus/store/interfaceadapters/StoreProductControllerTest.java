@@ -22,6 +22,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
@@ -79,8 +80,10 @@ class StoreProductControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$", hasSize(0)));
 
-            verify(getAllStoreProductsUseCase).getAll();
-            verifyNoMoreInteractions(getAllStoreProductsUseCase);
+            verify(getAllStoreProductsUseCase, times(1)).getAll();
+            verifyNoMoreInteractions(storeProductCreationUseCase, deleteStoreProductUseCase,
+                    getAllStoreProductsUseCase, getStoreProductByIdUseCase,
+                    updateStoreProductUseCase, messageService);
         }
 
         @Test
@@ -97,8 +100,10 @@ class StoreProductControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$", hasSize(2)));
 
-            verify(getAllStoreProductsUseCase).getAll();
-            verifyNoMoreInteractions(getAllStoreProductsUseCase);
+            verify(getAllStoreProductsUseCase, times(1)).getAll();
+            verifyNoMoreInteractions(storeProductCreationUseCase, deleteStoreProductUseCase,
+                    getAllStoreProductsUseCase, getStoreProductByIdUseCase,
+                    updateStoreProductUseCase, messageService);
         }
     }
 
@@ -119,8 +124,10 @@ class StoreProductControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-            verify(getStoreProductByIdUseCase).get(STORE_PRODUCT_ID);
-            verifyNoMoreInteractions(getStoreProductByIdUseCase);
+            verify(getStoreProductByIdUseCase, times(1)).get(STORE_PRODUCT_ID);
+            verifyNoMoreInteractions(storeProductCreationUseCase, deleteStoreProductUseCase,
+                    getAllStoreProductsUseCase, getStoreProductByIdUseCase,
+                    updateStoreProductUseCase, messageService);
         }
 
         @Test
@@ -137,9 +144,12 @@ class StoreProductControllerTest {
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound());
 
-            verify(getStoreProductByIdUseCase).get(STORE_PRODUCT_ID);
-            verify(messageService).getEntityNotFound(EntityType.STORE_PRODUCT, String.valueOf(STORE_PRODUCT_ID));
-            verifyNoMoreInteractions(getStoreProductByIdUseCase, messageService);
+            InOrder inOrder = inOrder(getStoreProductByIdUseCase, messageService);
+            inOrder.verify(getStoreProductByIdUseCase, times(1)).get(STORE_PRODUCT_ID);
+            inOrder.verify(messageService, times(1)).getEntityNotFound(EntityType.STORE_PRODUCT, String.valueOf(STORE_PRODUCT_ID));
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(storeProductCreationUseCase, deleteStoreProductUseCase,
+                    getAllStoreProductsUseCase, updateStoreProductUseCase);
         }
     }
 }

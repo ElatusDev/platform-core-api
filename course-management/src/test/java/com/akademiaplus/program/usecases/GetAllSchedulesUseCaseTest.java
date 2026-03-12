@@ -15,6 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -54,7 +55,7 @@ class GetAllSchedulesUseCaseTest {
 
             // Then
             assertThat(result).isEmpty();
-            verify(scheduleRepository).findAll();
+            verify(scheduleRepository, times(1)).findAll();
             verifyNoMoreInteractions(scheduleRepository, modelMapper);
         }
 
@@ -76,10 +77,11 @@ class GetAllSchedulesUseCaseTest {
 
             // Then
             assertThat(result).containsExactly(dto1, dto2);
-            verify(scheduleRepository).findAll();
-            verify(modelMapper).map(schedule1, GetScheduleResponseDTO.class);
-            verify(modelMapper).map(schedule2, GetScheduleResponseDTO.class);
-            verifyNoMoreInteractions(scheduleRepository, modelMapper);
+            InOrder inOrder = inOrder(scheduleRepository, modelMapper);
+            inOrder.verify(scheduleRepository, times(1)).findAll();
+            inOrder.verify(modelMapper, times(1)).map(schedule1, GetScheduleResponseDTO.class);
+            inOrder.verify(modelMapper, times(1)).map(schedule2, GetScheduleResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

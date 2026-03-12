@@ -23,7 +23,11 @@ import org.modelmapper.ModelMapper;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("ListEmailTemplatesUseCase")
 @ExtendWith(MockitoExtension.class)
@@ -67,8 +71,11 @@ class ListEmailTemplatesUseCaseTest {
             // Then
             assertThat(result.getTemplates()).hasSize(2);
             assertThat(result.getTemplates()).containsExactly(responseDTO1, responseDTO2);
-            verify(emailTemplateRepository).findAll();
+            verify(emailTemplateRepository, times(1)).findAll();
             verify(emailTemplateRepository, never()).findByCategory(CATEGORY_WELCOME);
+            verify(modelMapper, times(1)).map(template1, EmailTemplateResponseDTO.class);
+            verify(modelMapper, times(1)).map(template2, EmailTemplateResponseDTO.class);
+            verifyNoMoreInteractions(emailTemplateRepository, modelMapper);
         }
 
         @Test
@@ -88,8 +95,10 @@ class ListEmailTemplatesUseCaseTest {
             // Then
             assertThat(result.getTemplates()).hasSize(1);
             assertThat(result.getTemplates()).containsExactly(responseDTO);
-            verify(emailTemplateRepository).findByCategory(CATEGORY_WELCOME);
+            verify(emailTemplateRepository, times(1)).findByCategory(CATEGORY_WELCOME);
             verify(emailTemplateRepository, never()).findAll();
+            verify(modelMapper, times(1)).map(template, EmailTemplateResponseDTO.class);
+            verifyNoMoreInteractions(emailTemplateRepository, modelMapper);
         }
 
         @Test
@@ -103,7 +112,8 @@ class ListEmailTemplatesUseCaseTest {
 
             // Then
             assertThat(result.getTemplates()).isEmpty();
-            verify(emailTemplateRepository).findAll();
+            verify(emailTemplateRepository, times(1)).findAll();
+            verifyNoMoreInteractions(emailTemplateRepository, modelMapper);
         }
     }
 }

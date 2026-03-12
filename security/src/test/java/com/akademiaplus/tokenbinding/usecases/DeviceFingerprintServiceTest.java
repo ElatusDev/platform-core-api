@@ -19,8 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link DeviceFingerprintService}.
@@ -77,6 +76,7 @@ class DeviceFingerprintServiceTest {
             assertThat(result.fullHash()).isEqualTo(FULL_HASH);
             assertThat(result.deviceOnlyHash()).isEqualTo(DEVICE_ONLY_HASH);
             assertThat(result.clientIp()).isEqualTo(CLIENT_IP);
+            verifyNoMoreInteractions(hashingService);
         }
 
         @Test
@@ -99,8 +99,9 @@ class DeviceFingerprintServiceTest {
             // Then
             assertThat(result.fullHash()).isEqualTo(FULL_HASH);
             assertThat(result.deviceOnlyHash()).isEqualTo(DEVICE_ONLY_HASH);
-            verify(hashingService).generateHash(fullComponents);
-            verify(hashingService).generateHash(deviceComponents);
+            verify(hashingService, times(1)).generateHash(fullComponents);
+            verify(hashingService, times(1)).generateHash(deviceComponents);
+            verifyNoMoreInteractions(hashingService);
         }
 
         @Test
@@ -124,6 +125,7 @@ class DeviceFingerprintServiceTest {
 
             // Then
             assertThat(result.fullHash()).isEqualTo(FULL_HASH);
+            verifyNoMoreInteractions(hashingService);
         }
 
         @Test
@@ -149,7 +151,9 @@ class DeviceFingerprintServiceTest {
 
             // Then
             assertThat(result.clientIp()).isEqualTo(proxyIp);
-            verify(hashingService).generateHash(fullComponents);
+            verify(hashingService, times(1)).generateHash(fullComponents);
+            verify(hashingService, times(1)).generateHash(deviceComponents);
+            verifyNoMoreInteractions(hashingService);
         }
 
         @Test
@@ -173,6 +177,7 @@ class DeviceFingerprintServiceTest {
 
             // Then
             assertThat(result.clientIp()).isEqualTo(CLIENT_IP);
+            verifyNoMoreInteractions(hashingService);
         }
 
         @Test
@@ -208,6 +213,7 @@ class DeviceFingerprintServiceTest {
             // Then
             assertThat(result1.fullHash()).isNotEqualTo(result2.fullHash());
             assertThat(result1.deviceOnlyHash()).isEqualTo(result2.deviceOnlyHash());
+            verifyNoMoreInteractions(hashingService);
         }
     }
 }

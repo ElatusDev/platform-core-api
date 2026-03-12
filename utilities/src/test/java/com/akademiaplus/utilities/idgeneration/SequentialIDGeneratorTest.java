@@ -113,8 +113,10 @@ class SequentialIDGeneratorTest {
             assertThat(generatedId).isEqualTo(SEQUENCE_VALUE_5);
 
             ArgumentCaptor<TenantSequence> sequenceCaptor = ArgumentCaptor.forClass(TenantSequence.class);
-            verify(repository).save(sequenceCaptor.capture());
+            verify(repository, times(1)).findById(sequenceId);
+            verify(repository, times(1)).save(sequenceCaptor.capture());
             assertThat(sequenceCaptor.getValue().getNextValue()).isEqualTo(SEQUENCE_VALUE_6);
+            verifyNoMoreInteractions(repository);
         }
 
         @Test
@@ -139,8 +141,10 @@ class SequentialIDGeneratorTest {
 
             // Then
             assertThat(generatedId).isEqualTo(INITIAL_SEQUENCE_VALUE);
-            verify(repository).saveAndFlush(any(TenantSequence.class));
-            verify(repository).save(any(TenantSequence.class));
+            verify(repository, times(1)).findById(sequenceId);
+            verify(repository, times(1)).saveAndFlush(any(TenantSequence.class));
+            verify(repository, times(1)).save(any(TenantSequence.class));
+            verifyNoMoreInteractions(repository);
         }
 
         @Test
@@ -170,8 +174,10 @@ class SequentialIDGeneratorTest {
 
             // Then
             assertThat(generatedId).isEqualTo(INITIAL_SEQUENCE_VALUE);
-            verify(repository).saveAndFlush(any(TenantSequence.class));
+            verify(repository, times(1)).saveAndFlush(any(TenantSequence.class));
             verify(repository, times(TIMES_TWO)).findById(sequenceId);
+            verify(repository, times(1)).save(any(TenantSequence.class));
+            verifyNoMoreInteractions(repository);
         }
 
         @Test
@@ -194,6 +200,10 @@ class SequentialIDGeneratorTest {
             assertThatThrownBy(() -> idGenerator.generateId(ENTITY_NAME, TENANT_ID))
                     .isInstanceOf(IDGenerationException.class)
                     .hasMessageContaining(SequentialIDGenerator.ERROR_FAILED_TO_INITIALIZE_SEQUENCE.substring(0, substringLength));
+
+            verify(repository, times(TIMES_TWO)).findById(sequenceId);
+            verify(repository, times(1)).saveAndFlush(any(TenantSequence.class));
+            verifyNoMoreInteractions(repository);
         }
 
         @Test
@@ -218,7 +228,9 @@ class SequentialIDGeneratorTest {
                     .isInstanceOf(OptimisticLockException.class)
                     .hasMessage(ERROR_VERSION_MISMATCH);
 
+            verify(repository, times(1)).findById(sequenceId);
             verify(repository, times(TIMES_ONE)).save(any(TenantSequence.class));
+            verifyNoMoreInteractions(repository);
         }
     }
 
@@ -251,8 +263,10 @@ class SequentialIDGeneratorTest {
             assertThat(ids).containsExactly(expectedIds);
 
             ArgumentCaptor<TenantSequence> captor = ArgumentCaptor.forClass(TenantSequence.class);
-            verify(repository).save(captor.capture());
+            verify(repository, times(1)).findById(sequenceId);
+            verify(repository, times(1)).save(captor.capture());
             assertThat(captor.getValue().getNextValue()).isEqualTo(SEQUENCE_VALUE_15);
+            verifyNoMoreInteractions(repository);
         }
 
         @Test
@@ -280,6 +294,10 @@ class SequentialIDGeneratorTest {
             assertThat(ids).hasSize(EXPECTED_SIZE_50);
             assertThat(ids).first().isEqualTo(SEQUENCE_VALUE_100);
             assertThat(ids).last().isEqualTo(expectedLastId);
+
+            verify(repository, times(1)).findById(sequenceId);
+            verify(repository, times(1)).save(any(TenantSequence.class));
+            verifyNoMoreInteractions(repository);
         }
 
         @Test
@@ -306,7 +324,10 @@ class SequentialIDGeneratorTest {
 
             // Then
             assertThat(ids).containsExactly(expectedIds);
-            verify(repository).saveAndFlush(any(TenantSequence.class));
+            verify(repository, times(1)).findById(sequenceId);
+            verify(repository, times(1)).saveAndFlush(any(TenantSequence.class));
+            verify(repository, times(1)).save(any(TenantSequence.class));
+            verifyNoMoreInteractions(repository);
         }
 
         @Test
@@ -328,6 +349,9 @@ class SequentialIDGeneratorTest {
             assertThatThrownBy(() -> idGenerator.generateIds(ENTITY_NAME, TENANT_ID, COUNT_1000))
                     .isInstanceOf(IDGenerationException.class)
                     .hasMessageContaining(ERROR_ID_RANGE_OVERFLOW);
+
+            verify(repository, times(1)).findById(sequenceId);
+            verifyNoMoreInteractions(repository);
         }
 
         @ParameterizedTest
@@ -340,6 +364,8 @@ class SequentialIDGeneratorTest {
             assertThatThrownBy(() -> idGenerator.generateIds(ENTITY_NAME, TENANT_ID, invalidCount))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining(SequentialIDGenerator.ERROR_COUNT_NOT_POSITIVE);
+
+            verifyNoInteractions(repository);
         }
 
         @Test
@@ -352,6 +378,8 @@ class SequentialIDGeneratorTest {
             assertThatThrownBy(() -> idGenerator.generateIds(ENTITY_NAME, TENANT_ID, COUNT_EXCEEDS_LIMIT))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining(expectedMessageFragment);
+
+            verifyNoInteractions(repository);
         }
     }
 
@@ -382,8 +410,10 @@ class SequentialIDGeneratorTest {
             assertThat(startId).isEqualTo(SEQUENCE_VALUE_100);
 
             ArgumentCaptor<TenantSequence> captor = ArgumentCaptor.forClass(TenantSequence.class);
-            verify(repository).save(captor.capture());
+            verify(repository, times(1)).findById(sequenceId);
+            verify(repository, times(1)).save(captor.capture());
             assertThat(captor.getValue().getNextValue()).isEqualTo(SEQUENCE_VALUE_150);
+            verifyNoMoreInteractions(repository);
         }
 
         @Test
@@ -408,7 +438,10 @@ class SequentialIDGeneratorTest {
 
             // Then
             assertThat(startId).isEqualTo(INITIAL_SEQUENCE_VALUE);
-            verify(repository).saveAndFlush(any(TenantSequence.class));
+            verify(repository, times(1)).findById(sequenceId);
+            verify(repository, times(1)).saveAndFlush(any(TenantSequence.class));
+            verify(repository, times(1)).save(any(TenantSequence.class));
+            verifyNoMoreInteractions(repository);
         }
 
         @Test
@@ -430,6 +463,9 @@ class SequentialIDGeneratorTest {
             assertThatThrownBy(() -> idGenerator.reserveRange(ENTITY_NAME, TENANT_ID, COUNT_1000))
                     .isInstanceOf(IDGenerationException.class)
                     .hasMessageContaining(ERROR_ID_RANGE_OVERFLOW);
+
+            verify(repository, times(1)).findById(sequenceId);
+            verifyNoMoreInteractions(repository);
         }
     }
 
@@ -444,6 +480,8 @@ class SequentialIDGeneratorTest {
             assertThatThrownBy(() -> idGenerator.generateId(null, TENANT_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining(SequentialIDGenerator.ERROR_ENTITY_NAME_EMPTY);
+
+            verifyNoInteractions(repository);
         }
 
         @Test
@@ -453,6 +491,8 @@ class SequentialIDGeneratorTest {
             assertThatThrownBy(() -> idGenerator.generateId(EMPTY_STRING, TENANT_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining(SequentialIDGenerator.ERROR_ENTITY_NAME_EMPTY);
+
+            verifyNoInteractions(repository);
         }
 
         @Test
@@ -462,6 +502,8 @@ class SequentialIDGeneratorTest {
             assertThatThrownBy(() -> idGenerator.generateId(WHITESPACE_STRING, TENANT_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining(SequentialIDGenerator.ERROR_ENTITY_NAME_EMPTY);
+
+            verifyNoInteractions(repository);
         }
 
         @Test
@@ -471,6 +513,8 @@ class SequentialIDGeneratorTest {
             assertThatThrownBy(() -> idGenerator.generateId(ENTITY_NAME, null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining(SequentialIDGenerator.ERROR_TENANT_ID_NULL);
+
+            verifyNoInteractions(repository);
         }
 
         @ParameterizedTest
@@ -481,6 +525,8 @@ class SequentialIDGeneratorTest {
             assertThatThrownBy(() -> idGenerator.generateId(ENTITY_NAME, invalidTenantId))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining(SequentialIDGenerator.ERROR_TENANT_ID_NOT_POSITIVE);
+
+            verifyNoInteractions(repository);
         }
     }
 
@@ -511,8 +557,10 @@ class SequentialIDGeneratorTest {
             assertThat(generatedId).isEqualTo(MAX_VALUE_MINUS_ONE);
 
             ArgumentCaptor<TenantSequence> captor = ArgumentCaptor.forClass(TenantSequence.class);
-            verify(repository).save(captor.capture());
+            verify(repository, times(1)).findById(sequenceId);
+            verify(repository, times(1)).save(captor.capture());
             assertThat(captor.getValue().getNextValue()).isEqualTo(Long.MAX_VALUE);
+            verifyNoMoreInteractions(repository);
         }
 
         @Test
@@ -538,6 +586,10 @@ class SequentialIDGeneratorTest {
             assertThat(ids)
                     .hasSize(COUNT_1)
                     .first().isEqualTo(SEQUENCE_VALUE_42);
+
+            verify(repository, times(1)).findById(sequenceId);
+            verify(repository, times(1)).save(any(TenantSequence.class));
+            verifyNoMoreInteractions(repository);
         }
 
         @Test
@@ -563,8 +615,10 @@ class SequentialIDGeneratorTest {
             assertThat(startId).isEqualTo(SEQUENCE_VALUE_1000);
 
             ArgumentCaptor<TenantSequence> captor = ArgumentCaptor.forClass(TenantSequence.class);
-            verify(repository).save(captor.capture());
+            verify(repository, times(1)).findById(sequenceId);
+            verify(repository, times(1)).save(captor.capture());
             assertThat(captor.getValue().getNextValue()).isEqualTo(SEQUENCE_VALUE_1001);
+            verifyNoMoreInteractions(repository);
         }
     }
 }

@@ -69,7 +69,9 @@ class MembershipCreationUseCaseTest {
             useCase.transform(dto);
 
             // Then
-            verify(applicationContext).getBean(MembershipDataModel.class);
+            verify(applicationContext, times(1)).getBean(MembershipDataModel.class);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, MembershipCreationUseCase.MAP_NAME);
+            verifyNoMoreInteractions(applicationContext, membershipRepository, modelMapper);
         }
 
         @Test
@@ -84,8 +86,10 @@ class MembershipCreationUseCaseTest {
             MembershipDataModel result = useCase.transform(dto);
 
             // Then
-            verify(modelMapper).map(dto, prototypeModel, MembershipCreationUseCase.MAP_NAME);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, MembershipCreationUseCase.MAP_NAME);
             assertThat(result).isSameAs(prototypeModel);
+            verify(applicationContext, times(1)).getBean(MembershipDataModel.class);
+            verifyNoMoreInteractions(applicationContext, membershipRepository, modelMapper);
         }
     }
 
@@ -113,9 +117,10 @@ class MembershipCreationUseCaseTest {
             MembershipCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(membershipRepository).saveAndFlush(prototypeModel);
-            verify(modelMapper).map(savedModel, MembershipCreationResponseDTO.class);
+            verify(membershipRepository, times(1)).saveAndFlush(prototypeModel);
+            verify(modelMapper, times(1)).map(savedModel, MembershipCreationResponseDTO.class);
             assertThat(result.getMembershipId()).isEqualTo(SAVED_ID);
+            verifyNoMoreInteractions(applicationContext, membershipRepository, modelMapper);
         }
 
         @Test
@@ -137,10 +142,11 @@ class MembershipCreationUseCaseTest {
 
             // Then
             InOrder inOrder = inOrder(applicationContext, modelMapper, membershipRepository);
-            inOrder.verify(applicationContext).getBean(MembershipDataModel.class);
-            inOrder.verify(modelMapper).map(dto, prototypeModel, MembershipCreationUseCase.MAP_NAME);
-            inOrder.verify(membershipRepository).saveAndFlush(prototypeModel);
-            inOrder.verify(modelMapper).map(savedModel, MembershipCreationResponseDTO.class);
+            inOrder.verify(applicationContext, times(1)).getBean(MembershipDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, MembershipCreationUseCase.MAP_NAME);
+            inOrder.verify(membershipRepository, times(1)).saveAndFlush(prototypeModel);
+            inOrder.verify(modelMapper, times(1)).map(savedModel, MembershipCreationResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

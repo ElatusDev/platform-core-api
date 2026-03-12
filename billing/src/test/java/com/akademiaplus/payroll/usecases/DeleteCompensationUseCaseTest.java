@@ -27,8 +27,13 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+
+import org.mockito.InOrder;
 
 /**
  * Unit tests for {@link DeleteCompensationUseCase}.
@@ -74,7 +79,12 @@ class DeleteCompensationUseCaseTest {
             useCase.delete(COMPENSATION_ID);
 
             // Then
-            verify(repository).delete(entity);
+            assertThat(entity).isNotNull();
+            InOrder inOrder = inOrder(tenantContextHolder, repository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(repository, times(1)).findById(compositeId);
+            inOrder.verify(repository, times(1)).delete(entity);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -99,6 +109,10 @@ class DeleteCompensationUseCaseTest {
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.COMPENSATION);
                         assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(COMPENSATION_ID));
                     });
+
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(repository, times(1)).findById(compositeId);
+            verifyNoMoreInteractions(tenantContextHolder, repository);
         }
     }
 
@@ -128,6 +142,12 @@ class DeleteCompensationUseCaseTest {
                         assertThat(edna.getEntityId()).isEqualTo(String.valueOf(COMPENSATION_ID));
                         assertThat(edna.getReason()).isNull();
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, repository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(repository, times(1)).findById(compositeId);
+            inOrder.verify(repository, times(1)).delete(entity);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

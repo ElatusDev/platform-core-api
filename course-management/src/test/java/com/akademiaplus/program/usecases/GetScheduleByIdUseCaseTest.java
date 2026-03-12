@@ -18,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -67,10 +68,11 @@ class GetScheduleByIdUseCaseTest {
 
             // Then
             assertThat(result).isEqualTo(expectedDto);
-            verify(tenantContextHolder).getTenantId();
-            verify(scheduleRepository).findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID));
-            verify(modelMapper).map(schedule, GetScheduleResponseDTO.class);
-            verifyNoMoreInteractions(tenantContextHolder, scheduleRepository, modelMapper);
+            InOrder inOrder = inOrder(tenantContextHolder, scheduleRepository, modelMapper);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(scheduleRepository, times(1)).findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID));
+            inOrder.verify(modelMapper, times(1)).map(schedule, GetScheduleResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -94,9 +96,11 @@ class GetScheduleByIdUseCaseTest {
                         assertThat(ex.getEntityType()).isEqualTo(EntityType.SCHEDULE);
                         assertThat(ex.getEntityId()).isEqualTo(String.valueOf(SCHEDULE_ID));
                     });
-            verify(tenantContextHolder).getTenantId();
-            verify(scheduleRepository).findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID));
-            verifyNoMoreInteractions(tenantContextHolder, scheduleRepository, modelMapper);
+
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(scheduleRepository, times(1)).findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID));
+            verifyNoInteractions(modelMapper);
+            verifyNoMoreInteractions(tenantContextHolder, scheduleRepository);
         }
     }
 
@@ -114,8 +118,10 @@ class GetScheduleByIdUseCaseTest {
             assertThatThrownBy(() -> useCase.get(SCHEDULE_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(GetScheduleByIdUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
-            verify(tenantContextHolder).getTenantId();
-            verifyNoMoreInteractions(tenantContextHolder, scheduleRepository, modelMapper);
+
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoInteractions(scheduleRepository, modelMapper);
+            verifyNoMoreInteractions(tenantContextHolder);
         }
     }
 }

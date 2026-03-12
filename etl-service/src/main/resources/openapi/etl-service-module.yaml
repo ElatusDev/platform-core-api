@@ -1,0 +1,591 @@
+openapi: 3.0.3
+info:
+  title: Platform Core API - ETL System Module
+  description: |
+    ETL migration API for bulk data import into the Akademia Plus platform.
+    Supports Excel (.xlsx) and Word (.docx) file parsing, Claude-powered column analysis,
+    user-confirmed mappings, validation, and MariaDB load with rollback.
+  version: 1.0.0
+  contact:
+    name: ElatusDev
+    email: dev@elatusdev.com
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.akademiaplus.com
+    description: Production server
+  - url: https://staging-api.akademiaplus.com
+    description: Staging server
+
+security:
+  - BearerAuth: []
+
+paths:
+  /v1/etl/migrations/upload:
+    post:
+      tags:
+        - ETL Migrations
+      summary: Upload a file to start a new migration job
+      operationId: uploadFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - tenantId
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Excel (.xlsx) or Word (.docx) file to import
+                entityType:
+                  $ref: '#/components/schemas/MigrationEntityType'
+                tenantId:
+                  type: integer
+                  format: int64
+                  description: Tenant identifier
+      responses:
+        '201':
+          description: Migration job created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationJob'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/etl/migrations:
+    get:
+      tags:
+        - ETL Migrations
+      summary: List migration jobs for a tenant
+      operationId: listJobs
+      parameters:
+        - name: tenantId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: Page of migration jobs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationJobPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/etl/migrations/{jobId}:
+    get:
+      tags:
+        - ETL Migrations
+      summary: Get migration job details
+      operationId: getJob
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: Migration job details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationJob'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/etl/migrations/{jobId}/analyze:
+    post:
+      tags:
+        - ETL Migrations
+      summary: Trigger Claude API analysis for column mapping suggestions
+      operationId: analyzeJob
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: Analysis complete with suggested mappings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationJob'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /v1/etl/migrations/entity-types:
+    get:
+      tags:
+        - ETL Migrations
+      summary: List supported entity types with field definitions
+      operationId: getEntityTypes
+      responses:
+        '200':
+          description: Map of entity types to field definitions
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/EntityFieldDefinition'
+
+  /v1/etl/migrations/{jobId}/mappings:
+    put:
+      tags:
+        - ETL Migrations
+      summary: Confirm column mappings and trigger batch mapping
+      operationId: confirmMappings
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ColumnMapping'
+      responses:
+        '200':
+          description: Mappings confirmed and applied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationJob'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /v1/etl/migrations/{jobId}/validate:
+    post:
+      tags:
+        - ETL Migrations
+      summary: Validate mapped rows against entity schema
+      operationId: validateJob
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: Validation complete with row-level results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationJob'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /v1/etl/migrations/{jobId}/rows:
+    get:
+      tags:
+        - ETL Migrations
+      summary: List rows for a migration job with optional status filter
+      operationId: getJobRows
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/RowStatus'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: Page of migration rows
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationRowPage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/etl/migrations/{jobId}/load:
+    post:
+      tags:
+        - ETL Migrations
+      summary: Load validated rows into MariaDB
+      operationId: loadJob
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '202':
+          description: Load accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MigrationJob'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /v1/etl/migrations/{jobId}/rollback:
+    delete:
+      tags:
+        - ETL Migrations
+      summary: Rollback loaded entities and reset row statuses
+      operationId: rollbackJob
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: Rollback complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RollbackResult'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for API authentication
+
+  parameters:
+    JobId:
+      name: jobId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Migration job identifier
+    PageParam:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 0
+      description: Page number (zero-based)
+    SizeParam:
+      name: size
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 20
+      description: Page size
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict:
+      description: Invalid state transition
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    MigrationEntityType:
+      type: string
+      enum:
+        - ADULT_STUDENT
+        - MINOR_STUDENT
+        - EMPLOYEE
+        - COLLABORATOR
+        - TUTOR
+        - COURSE
+        - SCHEDULE
+        - MEMBERSHIP
+        - MEMBERSHIP_ADULT_STUDENT
+        - STORE_PRODUCT
+
+    MigrationStatus:
+      type: string
+      enum:
+        - UPLOADED
+        - PARSED
+        - ANALYZING
+        - ANALYZED
+        - MAPPING
+        - VALIDATED
+        - LOADING
+        - COMPLETED
+        - FAILED
+
+    RowStatus:
+      type: string
+      enum:
+        - RAW
+        - MAPPED
+        - VALID
+        - INVALID
+        - LOADED
+        - LOAD_FAILED
+
+    TransformType:
+      type: string
+      enum:
+        - NONE
+        - SPLIT_NAME
+        - NORMALIZE_PHONE
+        - DATE_FROM_AGE
+        - UPPERCASE
+        - LOWERCASE
+        - TRIM
+
+    ColumnMapping:
+      type: object
+      required:
+        - source
+        - target
+      properties:
+        source:
+          type: string
+          description: Source column name from the uploaded file
+        target:
+          type: string
+          description: Target entity field name
+        transform:
+          $ref: '#/components/schemas/TransformType'
+
+    ValidationError:
+      type: object
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+        severity:
+          type: string
+
+    SheetAnalysis:
+      type: object
+      properties:
+        sheetName:
+          type: string
+        detectedEntityType:
+          $ref: '#/components/schemas/MigrationEntityType'
+        confidence:
+          type: number
+          format: double
+        columnMappings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ColumnMapping'
+        warnings:
+          type: array
+          items:
+            type: string
+        unmappedSourceColumns:
+          type: array
+          items:
+            type: string
+        missingRequiredFields:
+          type: array
+          items:
+            type: string
+
+    MigrationJob:
+      type: object
+      properties:
+        id:
+          type: string
+        tenantId:
+          type: integer
+          format: int64
+        entityType:
+          $ref: '#/components/schemas/MigrationEntityType'
+        sourceFileName:
+          type: string
+        sourceFileSize:
+          type: integer
+          format: int64
+        status:
+          $ref: '#/components/schemas/MigrationStatus'
+        totalRows:
+          type: integer
+        validRows:
+          type: integer
+        errorRows:
+          type: integer
+        loadedRows:
+          type: integer
+        documentAnalysis:
+          type: array
+          items:
+            $ref: '#/components/schemas/SheetAnalysis'
+        analysisModel:
+          type: string
+        analyzedAt:
+          type: string
+          format: date-time
+        confirmedMappings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ColumnMapping'
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        errorMessage:
+          type: string
+
+    MigrationRow:
+      type: object
+      properties:
+        id:
+          type: string
+        jobId:
+          type: string
+        sheetName:
+          type: string
+        rowNumber:
+          type: integer
+        status:
+          $ref: '#/components/schemas/RowStatus'
+        rawData:
+          type: object
+          additionalProperties:
+            type: string
+        mappedData:
+          type: object
+          additionalProperties:
+            type: string
+        validationErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+        targetEntityId:
+          type: integer
+          format: int64
+        loadedAt:
+          type: string
+          format: date-time
+
+    RollbackResult:
+      type: object
+      properties:
+        jobId:
+          type: string
+        rolledBack:
+          type: integer
+        skipped:
+          type: integer
+
+    EntityFieldDefinition:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        required:
+          type: boolean
+        description:
+          type: string
+
+    MigrationJobPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/MigrationJob'
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+        number:
+          type: integer
+        size:
+          type: integer
+
+    MigrationRowPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/MigrationRow'
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+        number:
+          type: integer
+        size:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      required:
+        - message
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        message:
+          type: string
+        path:
+          type: string
+        traceId:
+          type: string
+        code:
+          type: string
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+
+    ErrorDetail:
+      type: object
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+        rejectedValue:
+          type: object
+        code:
+          type: string
+
+tags:
+  - name: ETL Migrations
+    description: Bulk data migration operations

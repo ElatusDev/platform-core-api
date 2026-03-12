@@ -25,7 +25,10 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("GetAllNotificationsUseCase")
 @ExtendWith(MockitoExtension.class)
@@ -57,8 +60,8 @@ class GetAllNotificationsUseCaseTest {
 
             // Then
             assertThat(result).isEmpty();
-            verify(notificationRepository).findAll();
-            verifyNoMoreInteractions(notificationRepository, modelMapper);
+            verify(notificationRepository, times(1)).findAll();
+            verifyNoMoreInteractions(notificationRepository, notificationReadStatusRepository, modelMapper);
         }
 
         @Test
@@ -79,10 +82,10 @@ class GetAllNotificationsUseCaseTest {
 
             // Then
             assertThat(result).containsExactly(dto1, dto2);
-            verify(notificationRepository).findAll();
-            verify(modelMapper).map(notification1, GetNotificationResponseDTO.class);
-            verify(modelMapper).map(notification2, GetNotificationResponseDTO.class);
-            verifyNoMoreInteractions(notificationRepository, modelMapper);
+            verify(notificationRepository, times(1)).findAll();
+            verify(modelMapper, times(1)).map(notification1, GetNotificationResponseDTO.class);
+            verify(modelMapper, times(1)).map(notification2, GetNotificationResponseDTO.class);
+            verifyNoMoreInteractions(notificationRepository, notificationReadStatusRepository, modelMapper);
         }
     }
 
@@ -114,8 +117,11 @@ class GetAllNotificationsUseCaseTest {
             assertThat(result).hasSize(2);
             assertThat(result.get(0).getIsRead()).isTrue();
             assertThat(result.get(1).getIsRead()).isFalse();
-            verify(notificationRepository).findByTargetUserId(targetUserId);
-            verify(notificationReadStatusRepository).findReadNotificationIdsByUserId(targetUserId);
+            verify(notificationRepository, times(1)).findByTargetUserId(targetUserId);
+            verify(notificationReadStatusRepository, times(1)).findReadNotificationIdsByUserId(targetUserId);
+            verify(modelMapper, times(1)).map(notification1, GetNotificationResponseDTO.class);
+            verify(modelMapper, times(1)).map(notification2, GetNotificationResponseDTO.class);
+            verifyNoMoreInteractions(notificationRepository, notificationReadStatusRepository, modelMapper);
         }
     }
 }

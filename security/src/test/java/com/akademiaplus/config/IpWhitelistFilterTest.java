@@ -29,6 +29,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+import org.mockito.InOrder;
+
 /**
  * Unit tests for {@link IpWhitelistFilter}.
  *
@@ -77,7 +79,11 @@ class IpWhitelistFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
+            assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_OK);
+            InOrder inOrder = inOrder(properties, filterChain);
+            inOrder.verify(properties, times(1)).getAllowedCidrs();
+            inOrder.verify(filterChain, times(1)).doFilter(request, response);
+            verifyNoMoreInteractions(properties, filterChain);
         }
 
         @Test
@@ -93,7 +99,11 @@ class IpWhitelistFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
+            assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_OK);
+            InOrder inOrder = inOrder(properties, filterChain);
+            inOrder.verify(properties, times(1)).getAllowedCidrs();
+            inOrder.verify(filterChain, times(1)).doFilter(request, response);
+            verifyNoMoreInteractions(properties, filterChain);
         }
 
         @Test
@@ -108,7 +118,11 @@ class IpWhitelistFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
+            assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_OK);
+            InOrder inOrder = inOrder(properties, filterChain);
+            inOrder.verify(properties, times(1)).getAllowedCidrs();
+            inOrder.verify(filterChain, times(1)).doFilter(request, response);
+            verifyNoMoreInteractions(properties, filterChain);
         }
     }
 
@@ -129,7 +143,8 @@ class IpWhitelistFilterTest {
 
             // Then
             assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_FORBIDDEN);
-            verifyNoInteractions(filterChain);
+            verify(properties, times(1)).getAllowedCidrs();
+            verifyNoMoreInteractions(properties, filterChain);
         }
 
         @Test
@@ -147,6 +162,8 @@ class IpWhitelistFilterTest {
             String body = response.getContentAsString();
             assertThat(body).contains(IpWhitelistFilter.CODE_IP_REJECTED);
             assertThat(body).contains(IpWhitelistFilter.ERROR_IP_NOT_ALLOWED);
+            verify(properties, times(1)).getAllowedCidrs();
+            verifyNoMoreInteractions(properties, filterChain);
         }
 
         @Test
@@ -161,7 +178,9 @@ class IpWhitelistFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verifyNoInteractions(filterChain);
+            assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_FORBIDDEN);
+            verify(properties, times(1)).getAllowedCidrs();
+            verifyNoMoreInteractions(properties, filterChain);
         }
 
         @Test
@@ -177,7 +196,8 @@ class IpWhitelistFilterTest {
 
             // Then
             assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_FORBIDDEN);
-            verifyNoInteractions(filterChain);
+            verify(properties, times(1)).getAllowedCidrs();
+            verifyNoMoreInteractions(properties, filterChain);
         }
     }
 
@@ -198,7 +218,10 @@ class IpWhitelistFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
+            assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_OK);
+            verify(filterChain, times(1)).doFilter(request, response);
+            verifyNoInteractions(properties);
+            verifyNoMoreInteractions(properties, filterChain);
         }
 
         @Test
@@ -213,7 +236,10 @@ class IpWhitelistFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
+            assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_OK);
+            verify(filterChain, times(1)).doFilter(request, response);
+            verifyNoInteractions(properties);
+            verifyNoMoreInteractions(properties, filterChain);
         }
     }
 

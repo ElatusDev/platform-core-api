@@ -21,6 +21,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -29,9 +30,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link ScheduleUpdateUseCase}.
@@ -114,6 +113,12 @@ class ScheduleUpdateUseCaseTest {
             assertThatThrownBy(() -> useCase.update(SCHEDULE_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasMessageContaining(String.valueOf(SCHEDULE_ID));
+
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(scheduleRepository, times(1)).findById(
+                    new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID));
+            verifyNoInteractions(courseRepository, modelMapper);
+            verifyNoMoreInteractions(tenantContextHolder, scheduleRepository);
         }
     }
 
@@ -138,6 +143,14 @@ class ScheduleUpdateUseCaseTest {
             assertThatThrownBy(() -> useCase.update(SCHEDULE_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasMessageContaining(String.valueOf(COURSE_ID));
+
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(scheduleRepository, times(1)).findById(
+                    new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID));
+            verify(modelMapper, times(1)).map(dto, existing, ScheduleUpdateUseCase.MAP_NAME);
+            verify(courseRepository, times(1)).findById(
+                    new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            verifyNoMoreInteractions(tenantContextHolder, scheduleRepository, courseRepository, modelMapper);
         }
     }
 
@@ -161,9 +174,18 @@ class ScheduleUpdateUseCaseTest {
             ScheduleUpdateResponseDTO response = useCase.update(SCHEDULE_ID, dto);
 
             // Then
-            verify(scheduleRepository).saveAndFlush(existing);
             assertThat(response.getScheduleId()).isEqualTo(SCHEDULE_ID);
             assertThat(response.getMessage()).isEqualTo(ScheduleUpdateUseCase.UPDATE_SUCCESS_MESSAGE);
+
+            InOrder inOrder = inOrder(tenantContextHolder, scheduleRepository, modelMapper, courseRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(scheduleRepository, times(1)).findById(
+                    new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID));
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, ScheduleUpdateUseCase.MAP_NAME);
+            inOrder.verify(courseRepository, times(1)).findById(
+                    new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            inOrder.verify(scheduleRepository, times(1)).saveAndFlush(existing);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

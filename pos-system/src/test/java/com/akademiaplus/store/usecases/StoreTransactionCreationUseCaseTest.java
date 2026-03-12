@@ -139,6 +139,9 @@ class StoreTransactionCreationUseCaseTest {
             assertThatThrownBy(() -> useCase.create(dto))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(StoreTransactionCreationUseCase.ERROR_EMPTY_SALE_ITEMS);
+
+            verifyNoInteractions(applicationContext, storeTransactionRepository,
+                    storeProductRepository, modelMapper);
         }
 
         @Test
@@ -154,6 +157,9 @@ class StoreTransactionCreationUseCaseTest {
             assertThatThrownBy(() -> useCase.create(dto))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(StoreTransactionCreationUseCase.ERROR_EMPTY_SALE_ITEMS);
+
+            verifyNoInteractions(applicationContext, storeTransactionRepository,
+                    storeProductRepository, modelMapper);
         }
     }
 
@@ -182,6 +188,13 @@ class StoreTransactionCreationUseCaseTest {
                         assertThat(enfe.getEntityId())
                                 .isEqualTo(String.valueOf(PRODUCT_ID_1));
                     });
+
+            verify(applicationContext, times(1)).getBean(StoreTransactionDataModel.class);
+            verify(modelMapper, times(1)).map(dto, transaction,
+                    StoreTransactionCreationUseCase.MAP_NAME);
+            verify(storeProductRepository, times(1)).findById(compositeId(PRODUCT_ID_1));
+            verifyNoMoreInteractions(applicationContext, storeTransactionRepository,
+                    storeProductRepository, modelMapper);
         }
     }
 
@@ -210,6 +223,13 @@ class StoreTransactionCreationUseCaseTest {
                     .hasMessage(String.format(
                             StoreTransactionCreationUseCase.ERROR_INSUFFICIENT_STOCK,
                             PRODUCT_NAME_1, PRODUCT_ID_1, QUANTITY_1, insufficientStock));
+
+            verify(applicationContext, times(1)).getBean(StoreTransactionDataModel.class);
+            verify(modelMapper, times(1)).map(dto, transaction,
+                    StoreTransactionCreationUseCase.MAP_NAME);
+            verify(storeProductRepository, times(1)).findById(compositeId(PRODUCT_ID_1));
+            verifyNoMoreInteractions(applicationContext, storeTransactionRepository,
+                    storeProductRepository, modelMapper);
         }
 
         @Test
@@ -250,6 +270,16 @@ class StoreTransactionCreationUseCaseTest {
 
             // Then — no exception thrown, stock validation was skipped
             assertThat(result.getStoreTransactionId()).isEqualTo(SAVED_TRANSACTION_ID);
+            verify(applicationContext, times(1)).getBean(StoreTransactionDataModel.class);
+            verify(applicationContext, times(1)).getBean(StoreSaleItemDataModel.class);
+            verify(modelMapper, times(1)).map(dto, transaction,
+                    StoreTransactionCreationUseCase.MAP_NAME);
+            verify(storeProductRepository, times(2)).findById(compositeId(PRODUCT_ID_1));
+            verify(storeTransactionRepository, times(1)).saveAndFlush(transaction);
+            verify(storeProductRepository, times(1)).saveAndFlush(product);
+            verify(modelMapper, times(1)).map(savedTransaction, StoreTransactionCreationResponseDTO.class);
+            verifyNoMoreInteractions(applicationContext, storeTransactionRepository,
+                    storeProductRepository, modelMapper);
         }
     }
 
@@ -289,6 +319,16 @@ class StoreTransactionCreationUseCaseTest {
 
             // Then
             assertThat(saleItem.getUnitPriceAtSale()).isEqualByComparingTo(PRODUCT_PRICE_1);
+            verify(applicationContext, times(1)).getBean(StoreTransactionDataModel.class);
+            verify(applicationContext, times(1)).getBean(StoreSaleItemDataModel.class);
+            verify(modelMapper, times(1)).map(dto, transaction,
+                    StoreTransactionCreationUseCase.MAP_NAME);
+            verify(storeProductRepository, times(2)).findById(compositeId(PRODUCT_ID_1));
+            verify(storeTransactionRepository, times(1)).saveAndFlush(transaction);
+            verify(storeProductRepository, times(1)).saveAndFlush(product);
+            verify(modelMapper, times(1)).map(savedTransaction, StoreTransactionCreationResponseDTO.class);
+            verifyNoMoreInteractions(applicationContext, storeTransactionRepository,
+                    storeProductRepository, modelMapper);
         }
 
         @Test
@@ -320,10 +360,20 @@ class StoreTransactionCreationUseCaseTest {
             // When
             useCase.create(dto);
 
-            // Then — 5.00 × 3 = 15.00
+            // Then — 5.00 x 3 = 15.00
             BigDecimal expectedItemTotal = PRODUCT_PRICE_1
                     .multiply(BigDecimal.valueOf(QUANTITY_1));
             assertThat(saleItem.getItemTotal()).isEqualByComparingTo(expectedItemTotal);
+            verify(applicationContext, times(1)).getBean(StoreTransactionDataModel.class);
+            verify(applicationContext, times(1)).getBean(StoreSaleItemDataModel.class);
+            verify(modelMapper, times(1)).map(dto, transaction,
+                    StoreTransactionCreationUseCase.MAP_NAME);
+            verify(storeProductRepository, times(2)).findById(compositeId(PRODUCT_ID_1));
+            verify(storeTransactionRepository, times(1)).saveAndFlush(transaction);
+            verify(storeProductRepository, times(1)).saveAndFlush(product);
+            verify(modelMapper, times(1)).map(savedTransaction, StoreTransactionCreationResponseDTO.class);
+            verifyNoMoreInteractions(applicationContext, storeTransactionRepository,
+                    storeProductRepository, modelMapper);
         }
 
         @Test
@@ -368,10 +418,22 @@ class StoreTransactionCreationUseCaseTest {
             // When
             useCase.create(dto);
 
-            // Then — (5.00 × 3) + (2.50 × 5) = 15.00 + 12.50 = 27.50
+            // Then — (5.00 x 3) + (2.50 x 5) = 15.00 + 12.50 = 27.50
             BigDecimal expectedTotal = PRODUCT_PRICE_1.multiply(BigDecimal.valueOf(QUANTITY_1))
                     .add(PRODUCT_PRICE_2.multiply(BigDecimal.valueOf(QUANTITY_2)));
             assertThat(transaction.getTotalAmount()).isEqualByComparingTo(expectedTotal);
+            verify(applicationContext, times(1)).getBean(StoreTransactionDataModel.class);
+            verify(applicationContext, times(2)).getBean(StoreSaleItemDataModel.class);
+            verify(modelMapper, times(1)).map(dto, transaction,
+                    StoreTransactionCreationUseCase.MAP_NAME);
+            verify(storeProductRepository, times(2)).findById(compositeId(PRODUCT_ID_1));
+            verify(storeProductRepository, times(2)).findById(compositeId(PRODUCT_ID_2));
+            verify(storeTransactionRepository, times(1)).saveAndFlush(transaction);
+            verify(storeProductRepository, times(1)).saveAndFlush(product1);
+            verify(storeProductRepository, times(1)).saveAndFlush(product2);
+            verify(modelMapper, times(1)).map(savedTransaction, StoreTransactionCreationResponseDTO.class);
+            verifyNoMoreInteractions(applicationContext, storeTransactionRepository,
+                    storeProductRepository, modelMapper);
         }
     }
 
@@ -411,6 +473,16 @@ class StoreTransactionCreationUseCaseTest {
 
             // Then — stock should be 100 - 3 = 97
             assertThat(product.getStockQuantity()).isEqualTo(STOCK_1 - QUANTITY_1);
+            verify(applicationContext, times(1)).getBean(StoreTransactionDataModel.class);
+            verify(applicationContext, times(1)).getBean(StoreSaleItemDataModel.class);
+            verify(modelMapper, times(1)).map(dto, transaction,
+                    StoreTransactionCreationUseCase.MAP_NAME);
+            verify(storeProductRepository, times(2)).findById(compositeId(PRODUCT_ID_1));
+            verify(storeTransactionRepository, times(1)).saveAndFlush(transaction);
+            verify(storeProductRepository, times(1)).saveAndFlush(product);
+            verify(modelMapper, times(1)).map(savedTransaction, StoreTransactionCreationResponseDTO.class);
+            verifyNoMoreInteractions(applicationContext, storeTransactionRepository,
+                    storeProductRepository, modelMapper);
         }
 
         @Test
@@ -445,6 +517,16 @@ class StoreTransactionCreationUseCaseTest {
 
             // Then — stock should be 100 + 3 = 103
             assertThat(product.getStockQuantity()).isEqualTo(STOCK_1 + QUANTITY_1);
+            verify(applicationContext, times(1)).getBean(StoreTransactionDataModel.class);
+            verify(applicationContext, times(1)).getBean(StoreSaleItemDataModel.class);
+            verify(modelMapper, times(1)).map(dto, transaction,
+                    StoreTransactionCreationUseCase.MAP_NAME);
+            verify(storeProductRepository, times(2)).findById(compositeId(PRODUCT_ID_1));
+            verify(storeTransactionRepository, times(1)).saveAndFlush(transaction);
+            verify(storeProductRepository, times(1)).saveAndFlush(product);
+            verify(modelMapper, times(1)).map(savedTransaction, StoreTransactionCreationResponseDTO.class);
+            verifyNoMoreInteractions(applicationContext, storeTransactionRepository,
+                    storeProductRepository, modelMapper);
         }
     }
 
@@ -482,9 +564,18 @@ class StoreTransactionCreationUseCaseTest {
             useCase.create(dto);
 
             // Then
-            verify(storeTransactionRepository).saveAndFlush(transaction);
             assertThat(transaction.getSaleItems()).hasSize(1);
             assertThat(transaction.getSaleItems().get(0)).isSameAs(saleItem);
+            verify(applicationContext, times(1)).getBean(StoreTransactionDataModel.class);
+            verify(applicationContext, times(1)).getBean(StoreSaleItemDataModel.class);
+            verify(modelMapper, times(1)).map(dto, transaction,
+                    StoreTransactionCreationUseCase.MAP_NAME);
+            verify(storeProductRepository, times(2)).findById(compositeId(PRODUCT_ID_1));
+            verify(storeTransactionRepository, times(1)).saveAndFlush(transaction);
+            verify(storeProductRepository, times(1)).saveAndFlush(product);
+            verify(modelMapper, times(1)).map(savedTransaction, StoreTransactionCreationResponseDTO.class);
+            verifyNoMoreInteractions(applicationContext, storeTransactionRepository,
+                    storeProductRepository, modelMapper);
         }
 
         @Test
@@ -523,6 +614,16 @@ class StoreTransactionCreationUseCaseTest {
 
             // Then
             assertThat(result.getStoreTransactionId()).isEqualTo(SAVED_TRANSACTION_ID);
+            verify(applicationContext, times(1)).getBean(StoreTransactionDataModel.class);
+            verify(applicationContext, times(1)).getBean(StoreSaleItemDataModel.class);
+            verify(modelMapper, times(1)).map(dto, transaction,
+                    StoreTransactionCreationUseCase.MAP_NAME);
+            verify(storeProductRepository, times(2)).findById(compositeId(PRODUCT_ID_1));
+            verify(storeTransactionRepository, times(1)).saveAndFlush(transaction);
+            verify(storeProductRepository, times(1)).saveAndFlush(product);
+            verify(modelMapper, times(1)).map(savedTransaction, StoreTransactionCreationResponseDTO.class);
+            verifyNoMoreInteractions(applicationContext, storeTransactionRepository,
+                    storeProductRepository, modelMapper);
         }
     }
 
@@ -551,6 +652,10 @@ class StoreTransactionCreationUseCaseTest {
 
             // Then
             assertThat(result).isEqualTo(EMPLOYEE_ID);
+            verify(securityContext, times(1)).getAuthentication();
+            verifyNoMoreInteractions(securityContext);
+            verifyNoInteractions(applicationContext, storeTransactionRepository,
+                    storeProductRepository, modelMapper);
 
             SecurityContextHolder.clearContext();
         }
@@ -568,6 +673,10 @@ class StoreTransactionCreationUseCaseTest {
 
             // Then
             assertThat(result).isNull();
+            verify(securityContext, times(1)).getAuthentication();
+            verifyNoMoreInteractions(securityContext);
+            verifyNoInteractions(applicationContext, storeTransactionRepository,
+                    storeProductRepository, modelMapper);
 
             SecurityContextHolder.clearContext();
         }
@@ -590,6 +699,10 @@ class StoreTransactionCreationUseCaseTest {
 
             // Then
             assertThat(result).isNull();
+            verify(securityContext, times(1)).getAuthentication();
+            verifyNoMoreInteractions(securityContext);
+            verifyNoInteractions(applicationContext, storeTransactionRepository,
+                    storeProductRepository, modelMapper);
 
             SecurityContextHolder.clearContext();
         }

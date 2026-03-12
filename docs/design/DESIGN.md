@@ -69,8 +69,8 @@ AkademiaPlus is a multi-tenant SaaS platform for educational institutions. The `
 | Module | Purpose | Runs As |
 |--------|---------|---------|
 | `certificate-authority` | Trust broker with dual role: (1) JWKS registry for JWT public key distribution, (2) internal PKI for certificate signing/enrollment. Docker service name: `trust-broker`. | Separate Spring Boot app (port 8082, internal only) |
-| `mock-data-system` | Generates realistic test data using DataFaker | Separate Spring Boot app (port 8180) |
-| `audit-system` | Audit event logging | Stub (501 Not Implemented — placeholder controller) |
+| `mock-data-service` | Generates realistic test data using DataFaker | Separate Spring Boot app (port 8180) |
+| `audit-service` | Audit event logging | Stub (501 Not Implemented — placeholder controller) |
 | `application` | Main entry point — assembles all platform modules | Spring Boot main class (port 8080) |
 
 ---
@@ -160,7 +160,7 @@ Modules that need custom URL-level access rules register a `{Module}ModuleSecuri
 - `user-management` → `PeopleModuleSecurityConfiguration`
 - `billing` → `TreasuryModuleSecurityConfiguration`
 - `course-management` → `CoordinationModuleSecurityConfiguration`
-- `mock-data-system` → `MockDataServiceModuleSecurityConfiguration`
+- `mock-data-service` → `MockDataServiceModuleSecurityConfiguration`
 
 Modules without explicit security configurations (`notification-system`, `pos-system`, `tenant-management`) inherit the default deny-all policy from `SecurityConfig` and rely on the global authenticated-user requirement.
 
@@ -223,7 +223,7 @@ public class EmployeeCreationUseCase {
 ```
 
 **Key design decisions:**
-- `transform()` is `public` (not private) — the mock-data-system calls it directly via method reference as the `DataLoader` transformer function
+- `transform()` is `public` (not private) — the mock-data-service calls it directly via method reference as the `DataLoader` transformer function
 - `create()` owns the `@Transactional` boundary — `transform()` is deliberately non-transactional
 - Return type of `create()` is the OpenAPI response DTO, not the data model
 - Tenant entity is simpler (no PII, no auth, no sequential ID):
@@ -414,7 +414,7 @@ TenantContextHolder holder = tenantContextHolderProvider.getObject();
 **Dependency rules:**
 - All domain modules depend on `security`, `multi-tenant-data`, `infra-common`, and `utilities`
 - **Cross-domain exceptions**: `billing` depends on `user-management` and `course-management`; `course-management` depends on `user-management`; `pos-system` depends on `user-management` — these are for FK-related operations
-- `mock-data-system` depends on all domain modules for `CreationUseCase::transform` references
+- `mock-data-service` depends on all domain modules for `CreationUseCase::transform` references
 - `notification-system` is the leanest domain module — depends only on `multi-tenant-data` and `infra-common`
 - `utilities` has ZERO internal project dependencies — it is the leaf of the dependency tree
 - `infra-common` depends on `utilities` (for `SequentialIDGenerator` used by `EntityIdAssigner`)
@@ -632,7 +632,7 @@ orchestrator (reverse proxy for edge in Docker, cert-manager/Istio in K8s).
 │  multi_tenant_db    ──→ :3306/:3307 (MariaDB, host-mapped)      │
 │  platform-core-redis──→ :6379 (Redis 7, host-mapped)            │
 │  platform-core-api  ──→ :8080 (Spring Boot, HTTP)               │
-│  mock-data-system   ──→ :8180 (data seeder, HTTP)               │
+│  mock-data-service  ──→ :8180 (data seeder, HTTP)               │
 │  e2e-runner         ──→ Newman (profile: e2e, runs then exits)  │
 │                                                                  │
 │  Networks: akademia-internal (bridge, internal)                  │
@@ -646,14 +646,14 @@ orchestrator (reverse proxy for edge in Docker, cert-manager/Istio in K8s).
 ```
 trust-broker + multi_tenant_db + platform-core-redis
   └─► platform-core-api    (waits for all three healthy)
-        └─► mock-data-system  (waits for API healthy, seeds DB)
+        └─► mock-data-service (waits for API healthy, seeds DB)
               └─► e2e-runner   (profile-gated, waits for seeder healthy)
 ```
 
 ### 6.2 E2E Test Runner
 
 The `e2e-runner` service is gated behind the `e2e` Docker Compose profile.
-It mounts the Postman collection from the sibling `platform-api-e2e/` repo
+It mounts the Postman collection from the sibling `core-api-e2e/` repo
 and runs Newman against the Docker-internal network.
 
 ```bash
@@ -694,7 +694,7 @@ GitHub Actions → SonarQube analysis → Docker build → AWS deployment
 | 2026-02 | Spring Boot 4.0.3 + Java 24 | Upgraded from 4.0.0-M3/Java 21; Jackson 3, Hibernate 7.2.5 |
 | 2026-02 | ECS structured logging | JSON format for prod/QA; human-readable for dev/local |
 | 2026-02 | Correlation ID propagation | `X-Correlation-Id` header echoed and stored in MDC for tracing |
-| 2026-02 | etl-system removed | Module removed from build — no current ETL requirements |
+| 2026-02 | etl-service removed | Module removed from build — no current ETL requirements |
 | 2026-02 | BaseControllerAdvice consolidation | Generic exception handlers extracted to `utilities`; per-module ControllerAdvice extends base |
 | 2026-02 | DeleteUseCaseSupport composition | Shared find-or-throw → try-delete → catch-constraint pattern composed into all 20+ delete use cases |
 | 2026-02 | Documentation reorganization | Canonical `docs/` structure: directives/, design/, prompts/, workflows/ with naming conventions |

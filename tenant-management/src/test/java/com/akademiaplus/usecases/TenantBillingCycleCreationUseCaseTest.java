@@ -25,7 +25,11 @@ import org.springframework.context.ApplicationContext;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("TenantBillingCycleCreationUseCase")
 @ExtendWith(MockitoExtension.class)
@@ -69,10 +73,15 @@ class TenantBillingCycleCreationUseCaseTest {
             when(applicationContext.getBean(TenantBillingCycleDataModel.class)).thenReturn(prototypeModel);
 
             // When
-            useCase.transform(dto);
+            TenantBillingCycleDataModel result = useCase.transform(dto);
 
             // Then
-            verify(applicationContext).getBean(TenantBillingCycleDataModel.class);
+            assertThat(result).isSameAs(prototypeModel);
+            InOrder inOrder = inOrder(applicationContext, modelMapper);
+            inOrder.verify(applicationContext, times(1)).getBean(TenantBillingCycleDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, TenantBillingCycleCreationUseCase.MAP_NAME);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoMoreInteractions(applicationContext, modelMapper, repository);
         }
 
         @Test
@@ -87,8 +96,12 @@ class TenantBillingCycleCreationUseCaseTest {
             TenantBillingCycleDataModel result = useCase.transform(dto);
 
             // Then
-            verify(modelMapper).map(dto, prototypeModel, TenantBillingCycleCreationUseCase.MAP_NAME);
             assertThat(result).isSameAs(prototypeModel);
+            InOrder inOrder = inOrder(applicationContext, modelMapper);
+            inOrder.verify(applicationContext, times(1)).getBean(TenantBillingCycleDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, TenantBillingCycleCreationUseCase.MAP_NAME);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoMoreInteractions(applicationContext, modelMapper, repository);
         }
 
         @Test
@@ -102,8 +115,13 @@ class TenantBillingCycleCreationUseCaseTest {
             // When
             TenantBillingCycleDataModel result = useCase.transform(dto);
 
-            // Then — "2026-03" → LocalDate(2026, 3, 1)
+            // Then — "2026-03" -> LocalDate(2026, 3, 1)
             assertThat(result.getBillingMonth()).isEqualTo(LocalDate.of(2026, 3, 1));
+            InOrder inOrder = inOrder(applicationContext, modelMapper);
+            inOrder.verify(applicationContext, times(1)).getBean(TenantBillingCycleDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, TenantBillingCycleCreationUseCase.MAP_NAME);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoMoreInteractions(applicationContext, modelMapper, repository);
         }
 
         @Test
@@ -120,6 +138,11 @@ class TenantBillingCycleCreationUseCaseTest {
 
             // Then
             assertThat(result.getBillingMonth()).isNull();
+            InOrder inOrder = inOrder(applicationContext, modelMapper);
+            inOrder.verify(applicationContext, times(1)).getBean(TenantBillingCycleDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, TenantBillingCycleCreationUseCase.MAP_NAME);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoMoreInteractions(applicationContext, modelMapper, repository);
         }
     }
 
@@ -147,9 +170,13 @@ class TenantBillingCycleCreationUseCaseTest {
             BillingCycleDTO result = useCase.create(dto);
 
             // Then
-            verify(repository).saveAndFlush(prototypeModel);
-            verify(modelMapper).map(savedModel, BillingCycleDTO.class);
             assertThat(result.getTenantBillingCycleId()).isEqualTo(SAVED_ID);
+            InOrder inOrder = inOrder(applicationContext, modelMapper, repository);
+            inOrder.verify(applicationContext, times(1)).getBean(TenantBillingCycleDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, TenantBillingCycleCreationUseCase.MAP_NAME);
+            inOrder.verify(repository, times(1)).saveAndFlush(prototypeModel);
+            inOrder.verify(modelMapper, times(1)).map(savedModel, BillingCycleDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -167,14 +194,16 @@ class TenantBillingCycleCreationUseCaseTest {
             when(modelMapper.map(savedModel, BillingCycleDTO.class)).thenReturn(responseDto);
 
             // When
-            useCase.create(dto);
+            BillingCycleDTO result = useCase.create(dto);
 
             // Then — verify the exact object from transform() is what gets saved
+            assertThat(result).isSameAs(responseDto);
             InOrder inOrder = inOrder(applicationContext, modelMapper, repository);
-            inOrder.verify(applicationContext).getBean(TenantBillingCycleDataModel.class);
-            inOrder.verify(modelMapper).map(dto, prototypeModel, TenantBillingCycleCreationUseCase.MAP_NAME);
-            inOrder.verify(repository).saveAndFlush(prototypeModel);
-            inOrder.verify(modelMapper).map(savedModel, BillingCycleDTO.class);
+            inOrder.verify(applicationContext, times(1)).getBean(TenantBillingCycleDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, TenantBillingCycleCreationUseCase.MAP_NAME);
+            inOrder.verify(repository, times(1)).saveAndFlush(prototypeModel);
+            inOrder.verify(modelMapper, times(1)).map(savedModel, BillingCycleDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

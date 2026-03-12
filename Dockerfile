@@ -27,11 +27,11 @@ COPY tenant-management/pom.xml     tenant-management/
 COPY user-management/pom.xml       user-management/
 COPY utilities/pom.xml             utilities/
 # Placeholder POMs for reactor completeness (no src needed)
-COPY audit-system/pom.xml          audit-system/
+COPY audit-service/pom.xml          audit-service/
 COPY certificate-authority/pom.xml certificate-authority/
-COPY etl-system/pom.xml            etl-system/
+COPY etl-service/pom.xml            etl-service/
 COPY lead-management/pom.xml       lead-management/
-COPY mock-data-system/pom.xml      mock-data-system/
+COPY mock-data-service/pom.xml      mock-data-service/
 COPY pos-system/pom.xml            pos-system/
 
 RUN apk add --no-cache maven

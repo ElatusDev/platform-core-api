@@ -22,8 +22,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import org.mockito.InOrder;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("RegisterPushDeviceUseCase")
 @ExtendWith(MockitoExtension.class)
@@ -60,7 +66,9 @@ class RegisterPushDeviceUseCaseTest {
             savedDevice.setPlatform("ANDROID");
 
             when(pushDeviceRepository.findByDeviceToken(DEVICE_TOKEN)).thenReturn(Optional.empty());
-            when(pushDeviceRepository.save(any(PushDeviceDataModel.class))).thenReturn(savedDevice);
+
+            ArgumentCaptor<PushDeviceDataModel> captor = ArgumentCaptor.forClass(PushDeviceDataModel.class);
+            when(pushDeviceRepository.save(captor.capture())).thenReturn(savedDevice);
 
             // When
             RegisterPushDeviceResponseDTO result = useCase.register(request);
@@ -70,13 +78,15 @@ class RegisterPushDeviceUseCaseTest {
             assertThat(result.getDeviceToken()).isEqualTo(DEVICE_TOKEN);
             assertThat(result.getPlatform()).isEqualTo("ANDROID");
 
-            ArgumentCaptor<PushDeviceDataModel> captor = ArgumentCaptor.forClass(PushDeviceDataModel.class);
-            verify(pushDeviceRepository).save(captor.capture());
             PushDeviceDataModel captured = captor.getValue();
             assertThat(captured.getUserId()).isEqualTo(USER_ID);
             assertThat(captured.getDeviceToken()).isEqualTo(DEVICE_TOKEN);
             assertThat(captured.getPlatform()).isEqualTo("ANDROID");
             assertThat(captured.getAppVersion()).isEqualTo(APP_VERSION);
+            InOrder inOrder = inOrder(pushDeviceRepository);
+            inOrder.verify(pushDeviceRepository, times(1)).findByDeviceToken(DEVICE_TOKEN);
+            inOrder.verify(pushDeviceRepository, times(1)).save(captured);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test

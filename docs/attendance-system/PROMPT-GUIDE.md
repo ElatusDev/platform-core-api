@@ -77,7 +77,7 @@ I need the attendance system to auto-close sessions after a configurable duratio
 Reference files:
 - AttendanceSessionScheduler (scheduler pattern)
 - ScheduledNotificationDispatcher (cross-tenant scheduler reference)
-- db_init/00-schema-qa.sql (schema change pattern)
+- db_init_dev/00-schema.sql and db_init_qa/00-schema.sql (schema change pattern)
 ```
 
 ### Adding Geolocation Validation

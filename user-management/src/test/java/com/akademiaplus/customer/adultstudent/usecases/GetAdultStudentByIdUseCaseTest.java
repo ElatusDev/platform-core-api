@@ -19,6 +19,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -70,11 +71,13 @@ class GetAdultStudentByIdUseCaseTest {
 
             // Then
             assertThat(result).isEqualTo(expectedDto);
-            verify(tenantContextHolder).getTenantId();
-            verify(adultStudentRepository).findById(new AdultStudentDataModel.AdultStudentCompositeId(TENANT_ID, ADULT_STUDENT_ID));
-            verify(modelMapper).map(adultStudent, GetAdultStudentResponseDTO.class);
-            verify(modelMapper).map(personPII, expectedDto);
-            verifyNoMoreInteractions(tenantContextHolder, adultStudentRepository, modelMapper);
+
+            InOrder inOrder = inOrder(tenantContextHolder, adultStudentRepository, modelMapper);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(adultStudentRepository, times(1)).findById(new AdultStudentDataModel.AdultStudentCompositeId(TENANT_ID, ADULT_STUDENT_ID));
+            inOrder.verify(modelMapper, times(1)).map(adultStudent, GetAdultStudentResponseDTO.class);
+            inOrder.verify(modelMapper, times(1)).map(personPII, expectedDto);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -98,9 +101,12 @@ class GetAdultStudentByIdUseCaseTest {
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.ADULT_STUDENT);
                         assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(ADULT_STUDENT_ID));
                     });
-            verify(tenantContextHolder).getTenantId();
-            verify(adultStudentRepository).findById(new AdultStudentDataModel.AdultStudentCompositeId(TENANT_ID, ADULT_STUDENT_ID));
-            verifyNoMoreInteractions(tenantContextHolder, adultStudentRepository, modelMapper);
+
+            InOrder inOrder = inOrder(tenantContextHolder, adultStudentRepository);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(adultStudentRepository, times(1)).findById(new AdultStudentDataModel.AdultStudentCompositeId(TENANT_ID, ADULT_STUDENT_ID));
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(modelMapper);
         }
     }
 
@@ -118,8 +124,10 @@ class GetAdultStudentByIdUseCaseTest {
             assertThatThrownBy(() -> useCase.get(ADULT_STUDENT_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(GetAdultStudentByIdUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
-            verify(tenantContextHolder).getTenantId();
-            verifyNoMoreInteractions(tenantContextHolder, adultStudentRepository, modelMapper);
+
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoMoreInteractions(tenantContextHolder);
+            verifyNoInteractions(adultStudentRepository, modelMapper);
         }
     }
 }

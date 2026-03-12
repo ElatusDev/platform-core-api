@@ -1,8 +1,8 @@
 # AI-CODE-REF.md — AI Coding Standards & Review Reference
 
-**Version**: 4.1  
-**Last Updated**: February 17, 2026  
-**Purpose**: Quick reference for AI code analysis, review, refactoring, and test creation  
+**Version**: 4.3
+**Last Updated**: March 11, 2026
+**Purpose**: Quick reference for AI code analysis, review, refactoring, and test creation
 **See also**: [DESIGN.md](../design/DESIGN.md) for architecture and system design
 
 ---
@@ -439,39 +439,264 @@ User savedUser = captor.getValue();
 assertThat(savedUser.getName()).isEqualTo("John");
 ```
 
-### 4.4 Verification Best Practices
+### 4.4 Unit Test Assertion Rules
 
-**Rule 1: Don't over-verify**
+> **Principle**: If the implementation's structure changes, at least one test MUST fail.
+> These rules ensure every unit test is sensitive to structural changes in the code under test.
+
+#### Rule 1: Every test MUST have both state AND interaction assertions
+
 ```java
-// ❌ Redundant verification
-assertThatThrownBy(() -> service.process(null))
-    .isInstanceOf(IllegalArgumentException.class);
-verify(mock, never()).someMethod(any()); // Redundant!
+// Then — state: what came back
+assertThat(result).isEqualTo(EXPECTED_USER);
 
-// ✅ Exception proves control flow
-assertThatThrownBy(() -> service.process(null))
-    .isInstanceOf(IllegalArgumentException.class);
-// No mock verification needed - exception proves early validation
+// Then — interactions: what was called, in what order, and nothing else
+InOrder inOrder = inOrder(validator, repository);
+inOrder.verify(validator, times(1)).validate(VALID_EMAIL);
+inOrder.verify(repository, times(1)).save(USER_ENTITY);
+inOrder.verifyNoMoreInteractions();
 ```
 
-**Rule 2: Use verifyNoMoreInteractions for comprehensive checks**
-```java
-// ❌ Multiple never() checks
-verify(service).initialize();
-verify(service, never()).process(any());
-verify(service, never()).cleanup(any());
+State-only tests miss added/removed collaborator calls. Interaction-only tests miss wrong return values.
 
-// ✅ Single comprehensive check
-verify(service).initialize();
-verifyNoMoreInteractions(service); // Verifies nothing else called
+#### Rule 2: `verifyNoMoreInteractions()` on ALL mocks — mandatory
+
+Every `@Test` method MUST end with this. If someone adds a new dependency call, the test fails immediately.
+
+```java
+verifyNoMoreInteractions(repository, validator, publisher);
 ```
 
-**Rule 3: Verify what matters**
+#### Rule 3: `verifyNoInteractions()` for short-circuit paths
+
+When validation fails early, explicitly assert that downstream mocks were never touched.
+
 ```java
-// ✅ Good verification
-verify(repository).save(expectedEntity);
-verify(eventPublisher).publish(expectedEvent);
-verifyNoMoreInteractions(repository, eventPublisher);
+@Test
+void shouldThrowValidationException_whenInputIsNull() {
+    assertThatThrownBy(() -> useCase.execute(null))
+        .isInstanceOf(ValidationException.class)
+        .hasMessage(INPUT_REQUIRED);
+
+    verifyNoInteractions(repository, mapper, publisher);
+}
+```
+
+#### Rule 4: Explicit `times(1)` — no implicit defaults
+
+```java
+verify(repository, times(1)).save(entity);  // ✅ intent is clear
+verify(repository).save(entity);            // ❌ implicit times(1) hides intent
+```
+
+If a refactor changes a single call to a loop, `times(1)` catches it.
+
+#### Rule 5: `InOrder` when sequence matters
+
+If business logic requires validation before persistence, or persistence before event publishing — enforce it.
+
+```java
+InOrder inOrder = inOrder(validator, repository, publisher);
+inOrder.verify(validator, times(1)).validate(input);
+inOrder.verify(repository, times(1)).save(entity);
+inOrder.verify(publisher, times(1)).publish(event);
+inOrder.verifyNoMoreInteractions();
+```
+
+#### Rule 6: Exception assertions MUST verify type AND message
+
+```java
+assertThatThrownBy(() -> useCase.execute(input))
+    .isInstanceOf(EntityNotFoundException.class)
+    .hasMessage(ENTITY_NOT_FOUND_MESSAGE);  // shared constant
+```
+
+If someone changes the exception type or message, the test fails.
+
+#### Rule 7: Every parameter MUST be tested for every invalid state
+
+One test per invalid state — never combine multiple invalid inputs in one test.
+
+| Type | Invalid states to test |
+|------|----------------------|
+| Object / Record | `null` |
+| String | `null`, `""` (empty), `"   "` (blank), invalid format |
+| Number (Long/Integer) | `null`, `0`, negative, boundary (`MAX_VALUE`) |
+| Collection | `null`, empty `List.of()` |
+| Enum | `null`, each value that triggers a different path |
+
+Group all input validation tests in a dedicated `@Nested` class:
+
+```java
+@Nested
+@DisplayName("Input validation")
+class InputValidation {
+
+    @Test
+    @DisplayName("Should throw when input is null")
+    void shouldThrowValidationException_whenInputIsNull() {
+        assertThatThrownBy(() -> useCase.execute(null))
+            .isInstanceOf(ValidationException.class)
+            .hasMessage(INPUT_REQUIRED);
+
+        verifyNoInteractions(repository, mapper);
+    }
+
+    @Test
+    @DisplayName("Should throw when email is null")
+    void shouldThrowValidationException_whenEmailIsNull() {
+        assertThatThrownBy(() -> useCase.execute(inputWithEmail(null)))
+            .isInstanceOf(ValidationException.class)
+            .hasMessage(EMAIL_REQUIRED);
+
+        verifyNoInteractions(repository, mapper);
+    }
+
+    @Test
+    @DisplayName("Should throw when email is empty")
+    void shouldThrowValidationException_whenEmailIsEmpty() {
+        assertThatThrownBy(() -> useCase.execute(inputWithEmail("")))
+            .isInstanceOf(ValidationException.class)
+            .hasMessage(EMAIL_REQUIRED);
+
+        verifyNoInteractions(repository, mapper);
+    }
+
+    @Test
+    @DisplayName("Should throw when email is blank")
+    void shouldThrowValidationException_whenEmailIsBlank() {
+        assertThatThrownBy(() -> useCase.execute(inputWithEmail("   ")))
+            .isInstanceOf(ValidationException.class)
+            .hasMessage(EMAIL_REQUIRED);
+
+        verifyNoInteractions(repository, mapper);
+    }
+}
+```
+
+#### Rule 8: Every line that throws MUST have a dedicated test
+
+Read the implementation. For every `if`/`throw`, `switch` branch, guard clause, or early return — write a test that triggers it.
+
+Given this implementation:
+```java
+public User execute(CreateUserInput input) {
+    if (input == null) throw new ValidationException(INPUT_REQUIRED);           // line 1
+    if (input.email() == null || input.email().isBlank())                       // line 2
+        throw new ValidationException(EMAIL_REQUIRED);
+    if (!emailValidator.isValid(input.email()))                                 // line 3
+        throw new ValidationException(EMAIL_INVALID_FORMAT);
+    if (repository.existsByEmail(input.email()))                                // line 4
+        throw new EntityAlreadyExistsException(EMAIL_ALREADY_EXISTS);
+
+    User user = mapper.toEntity(input);                                        // line 5
+    return repository.save(user);                                              // line 6
+}
+```
+
+Required test map — one per throwing line, plus happy path:
+```
+InputValidation/
+  ├── shouldThrowValidationException_whenInputIsNull            → line 1
+  ├── shouldThrowValidationException_whenEmailIsNull            → line 2 (null)
+  ├── shouldThrowValidationException_whenEmailIsEmpty           → line 2 (empty)
+  ├── shouldThrowValidationException_whenEmailIsBlank           → line 2 (blank)
+  ├── shouldThrowValidationException_whenEmailFormatInvalid     → line 3
+  └── shouldThrowAlreadyExistsException_whenEmailAlreadyExists  → line 4
+
+HappyPath/
+  └── shouldSaveAndReturnUser_whenValidInput                    → lines 5-6
+```
+
+#### Rule 9: Exception tests MUST verify the cutoff point
+
+Each exception test asserts **two things**: the exact exception AND that nothing after the throwing line was called.
+
+```java
+@Test
+void shouldThrowValidationException_whenEmailFormatInvalid() {
+    // Given
+    when(emailValidator.isValid(INVALID_EMAIL)).thenReturn(false);
+
+    // When / Then
+    assertThatThrownBy(() -> useCase.execute(inputWithEmail(INVALID_EMAIL)))
+        .isInstanceOf(ValidationException.class)
+        .hasMessage(EMAIL_INVALID_FORMAT);
+
+    // Verify cutoff: validator was called, but nothing after
+    verify(emailValidator, times(1)).isValid(INVALID_EMAIL);
+    verifyNoInteractions(repository, mapper);
+}
+```
+
+This proves the method stopped exactly where expected. If someone reorders the guards, the test breaks.
+
+#### Rule 10: Collaborator exceptions MUST be tested for propagation
+
+If a collaborator can throw, test what the method under test does with that exception.
+
+```java
+@Test
+void shouldPropagateRepositoryException_whenSaveFails() {
+    // Given
+    when(emailValidator.isValid(VALID_EMAIL)).thenReturn(true);
+    when(repository.existsByEmail(VALID_EMAIL)).thenReturn(false);
+    when(mapper.toEntity(VALID_INPUT)).thenReturn(USER_ENTITY);
+    when(repository.save(USER_ENTITY)).thenThrow(new DataAccessException(DB_ERROR));
+
+    // When / Then
+    assertThatThrownBy(() -> useCase.execute(VALID_INPUT))
+        .isInstanceOf(DataAccessException.class)
+        .hasMessage(DB_ERROR);
+
+    InOrder inOrder = inOrder(emailValidator, repository, mapper);
+    inOrder.verify(emailValidator, times(1)).isValid(VALID_EMAIL);
+    inOrder.verify(repository, times(1)).existsByEmail(VALID_EMAIL);
+    inOrder.verify(mapper, times(1)).toEntity(VALID_INPUT);
+    inOrder.verify(repository, times(1)).save(USER_ENTITY);
+    inOrder.verifyNoMoreInteractions();
+}
+```
+
+#### What These Rules Catch
+
+| Code Change | Catching Rule |
+|-------------|---------------|
+| Add a new dependency call | Rule 2: `verifyNoMoreInteractions` |
+| Remove an existing call | Rule 4: `times(1)` |
+| Change call parameters | §4.3: zero `any()` rule |
+| Change call order | Rule 5: `InOrder` |
+| Change call count (1→N) | Rule 4: `times(1)` |
+| Change exception type | Rule 6: `isInstanceOf` |
+| Change error message | Rule 6: `hasMessage` |
+| Skip validation on error path | Rule 3: `verifyNoInteractions` |
+| Add new guard clause without test | Rule 8: every throwing line tested |
+| Reorder guard clauses | Rule 9: cutoff verification |
+| Remove input validation | Rule 7: input coverage |
+| Unhandled collaborator exception | Rule 10: propagation test |
+
+#### Complete Unit Test Anatomy
+
+```java
+@Test
+@DisplayName("Should save normalized user when valid input")
+void shouldSaveNormalizedUser_whenValidInput() {
+    // Given
+    when(validator.validate(INPUT_EMAIL)).thenReturn(valid());
+    when(repository.save(NORMALIZED_USER)).thenReturn(SAVED_USER);
+
+    // When
+    User result = useCase.execute(INPUT_EMAIL);
+
+    // Then — state
+    assertThat(result).isEqualTo(SAVED_USER);
+
+    // Then — interactions (ordered)
+    InOrder inOrder = inOrder(validator, repository);
+    inOrder.verify(validator, times(1)).validate(INPUT_EMAIL);
+    inOrder.verify(repository, times(1)).save(NORMALIZED_USER);
+    inOrder.verifyNoMoreInteractions();
+}
 ```
 
 ### 4.5 Variable Extraction Rules
@@ -567,25 +792,26 @@ void normalizeEmail_uppercase()
 
 ### 4.8 Exception Testing Patterns
 
+> See §4.4 Rules 6, 8, 9, 10 for the full assertion requirements.
+
 ```java
-// ✅ Comprehensive exception testing
+// ✅ Comprehensive exception testing — verifies type, message, cause, and cutoff
 @Test
-@DisplayName("Should throw exception with context when parsing fails")
-void shouldThrowExceptionWithContext_whenParsingFails() throws Exception {
+@DisplayName("Should throw processing exception with context when parsing fails")
+void shouldThrowProcessingException_whenParsingFails() throws Exception {
     // Given
-    String invalidInput = "not-a-number";
-    when(parser.parse(invalidInput))
-        .thenThrow(new ParseException("Invalid format"));
-    
-    // When & Then
-    assertThatThrownBy(() -> service.process(invalidInput))
+    when(parser.parse(INVALID_INPUT))
+        .thenThrow(new ParseException(PARSE_ERROR_MESSAGE));
+
+    // When / Then — state: exception type + message + cause (Rule 6)
+    assertThatThrownBy(() -> service.process(INVALID_INPUT))
         .isInstanceOf(ProcessingException.class)
-        .hasMessageContaining("Failed to process")
-        .hasMessageContaining(invalidInput)
+        .hasMessage(PROCESSING_FAILED_MESSAGE)
         .hasCauseInstanceOf(ParseException.class);
-    
-    // Verify parse was called, nothing else
-    verify(parser).parse(invalidInput);
+
+    // Then — interactions: verify cutoff point (Rule 9)
+    verify(parser, times(1)).parse(INVALID_INPUT);
+    verifyNoInteractions(repository, publisher);  // nothing after parser was called
     verifyNoMoreInteractions(parser);
 }
 ```
@@ -637,23 +863,256 @@ when(modelMapper.map(savedModel, TenantDTO.class)).thenReturn(expectedDto); // r
 **Rule**: When a method under test calls the same mock through multiple overloads,
 stub every overload that will be invoked. Use `doNothing().when(mock).method(args)` for void methods.
 
-### 4.10 Testing Checklist
+### 4.11 E2E Test Assertion Rules
+
+> **Principle**: If the API contract or user experience changes, at least one E2E test MUST fail.
+
+#### 4.11.1 Backend E2E Rules (Newman)
+
+##### Per-Request Assertions (every request, no exceptions)
+
+| # | Rule | What It Catches |
+|---|------|-----------------|
+| E1 | **Exact HTTP status code** | Status code regressions (201→200, 404→500) |
+| E2 | **Content-Type `application/json`** on every non-204 response | Serialization config changes |
+| E3 | **Response time < 200ms** | Performance regressions |
+
+```javascript
+// ✅ Every request MUST have these three
+pm.test("Status code is 201", () => {
+    pm.response.to.have.status(201);
+});
+
+pm.test("Response time is less than 200ms", () => {
+    pm.expect(pm.response.responseTime).to.be.below(200);
+});
+
+pm.test("Content-Type is application/json", () => {
+    pm.response.to.have.header("Content-Type", /application\/json/);
+});
+```
+
+##### Success Response Assertions (2xx)
+
+| # | Rule | What It Catches |
+|---|------|-----------------|
+| E4 | **All fields present with correct types** — every DTO field asserted: numbers are numbers, strings non-empty, dates valid ISO, arrays are arrays | Schema drift, null fields, type coercion |
+| E5 | **Entity IDs are positive numbers** — `pm.expect(json.entityId).to.be.above(0)` | ID generation failures |
+| E6 | **Nested objects validated** — nested DTOs assert their fields too | Incomplete serialization |
+
+```javascript
+// ✅ Schema validation — assert every field
+pm.test("Response has correct schema", () => {
+    const json = pm.response.json();
+    pm.expect(json.employeeId).to.be.a("number").and.to.be.above(0);
+    pm.expect(json.firstName).to.be.a("string").and.to.not.be.empty;
+    pm.expect(json.lastName).to.be.a("string").and.to.not.be.empty;
+    pm.expect(json.email).to.be.a("string").and.to.include("@");
+    pm.expect(json.createdAt).to.match(/^\d{4}-\d{2}-\d{2}/);
+});
+```
+
+##### Error Response Assertions (4xx)
+
+| # | Rule | What It Catches |
+|---|------|-----------------|
+| E7 | **`code` field matches exact error code** (`ENTITY_NOT_FOUND`, `DUPLICATE_ENTITY`, `VALIDATION_ERROR`, etc.) | Exception handler changes, wrong exception thrown |
+| E8 | **`message` field is present and non-empty** | Missing error context |
+| E9 | **400 `VALIDATION_ERROR` responses assert `details[]`** with field-level errors | Validation framework changes |
+
+```javascript
+// ✅ Error response validation
+pm.test("Error code is ENTITY_NOT_FOUND", () => {
+    const json = pm.response.json();
+    pm.expect(json.code).to.eql("ENTITY_NOT_FOUND");
+    pm.expect(json.message).to.be.a("string").and.to.not.be.empty;
+});
+
+// ✅ Validation error with field-level details
+pm.test("Validation error has field details", () => {
+    const json = pm.response.json();
+    pm.expect(json.code).to.eql("VALIDATION_ERROR");
+    pm.expect(json.details).to.be.an("array").and.to.not.be.empty;
+});
+```
+
+##### CRUD Lifecycle Assertions (per entity)
+
+| # | Rule | What It Catches |
+|---|------|-----------------|
+| E10 | **Create → GetById chain** — ID from Create used in GetById, response data matches | Data persistence failures |
+| E11 | **GetAll includes created entity** — assert array contains the entity | Query/filter regressions |
+| E12 | **Delete → GetById 404** — after 204, GetById returns 404 `ENTITY_NOT_FOUND` | Soft delete `@SQLRestriction` broken |
+| E13 | **Duplicate creation → 409** — same unique field returns `DUPLICATE_ENTITY` | Unique constraint dropped |
+| E14 | **Delete with dependents → 409** — returns `DELETION_CONSTRAINT_VIOLATION` or `DELETION_BUSINESS_RULE` | FK/business rule enforcement broken |
+
+##### Cross-Cutting Assertions
+
+| # | Rule | What It Catches |
+|---|------|-----------------|
+| E15 | **Auth enforcement** — requests without valid JWT return 401 | Security filter misconfiguration |
+| E16 | **Tenant isolation** — requests without `X-Tenant-Id` are rejected | Tenant filter bypass |
+
+##### Mandatory Test Scenarios Per Entity
+
+Every entity MUST have these 9 requests minimum:
+
+```
+1. Create              → 201 + full schema + field types + ID > 0
+2. Create duplicate    → 409 + DUPLICATE_ENTITY (per unique constraint)
+3. GetById             → 200 + full schema + matches created data
+4. GetById not found   → 404 + ENTITY_NOT_FOUND
+5. GetAll              → 200 + array + contains created entity
+6. Delete              → 204
+7. Delete not found    → 404 + ENTITY_NOT_FOUND
+8. Delete constrained  → 409 + DELETION_CONSTRAINT_VIOLATION or DELETION_BUSINESS_RULE
+9. GetById post-delete → 404 + ENTITY_NOT_FOUND (proves soft delete)
+```
+
+#### 4.11.2 Frontend E2E Rules (Playwright)
+
+##### Per-Page Assertions
+
+| # | Rule | What It Catches |
+|---|------|-----------------|
+| P1 | **Content over URL** — every navigation asserts visible content (`getByRole`, `getByText`), never URL alone (AP16) | Page renders blank but URL correct |
+| P2 | **Page heading visible** — every page asserts its primary heading renders | Component mount failure, i18n key missing |
+| P3 | **Accessibility audit** — every new page runs axe-core, zero WCAG 2.1 AA violations | Accessibility regressions |
+
+```typescript
+// ✅ Content over URL — always assert visible content after navigation
+await page.getByRole('link', { name: /panel/i }).click();
+await expect(page).toHaveURL('/dashboard');
+await expect(page.getByRole('heading', { name: /panel de control/i })).toBeVisible();
+
+// ❌ URL-only assertion (AP16)
+await page.getByRole('link', { name: /panel/i }).click();
+await expect(page).toHaveURL('/dashboard');  // page could be blank
+```
+
+##### Form Validation Assertions
+
+| # | Rule | What It Catches |
+|---|------|-----------------|
+| P4 | **Every required field tested empty** — submit with field empty, assert specific error message | Missing validation rules |
+| P5 | **Invalid format tested** — email, phone, dates with bad format, assert specific error | Regex/validation changes |
+| P6 | **Valid submission renders success state** — assert success message, redirect, or updated data | Form handler broken |
+
+##### API-Driven Rendering Assertions
+
+| # | Rule | What It Catches |
+|---|------|-----------------|
+| P7 | **Mock API → verify data renders** — mock with `page.route()`, assert specific values visible on screen | Data binding broken, wrong field |
+| P8 | **Error state rendering** — mock 4xx/5xx, assert user-facing error message visible | Silent failures, missing error handling |
+| P9 | **Loading state** — assert loading indicator before data resolves | Missing loading feedback |
+| P10 | **Empty state** — mock empty array, assert empty state message visible | Missing empty state handling |
+
+```typescript
+// ✅ Mock API and verify data renders on screen
+await page.route('**/api/v1/employees', async (route) => {
+    await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([{ employeeId: 1, firstName: 'Ana', lastName: 'García' }]),
+    });
+});
+await page.goto('/employees');
+await expect(page.getByText('Ana García')).toBeVisible();
+
+// ✅ Error state — mock failure and verify user-facing message
+await page.route('**/api/v1/employees', async (route) => {
+    await route.fulfill({ status: 500, body: JSON.stringify({ code: 'INTERNAL_ERROR' }) });
+});
+await page.goto('/employees');
+await expect(page.getByText(/error al cargar/i)).toBeVisible();
+```
+
+##### Auth & Navigation Assertions
+
+| # | Rule | What It Catches |
+|---|------|-----------------|
+| P11 | **Auth guard enforcement** — navigate to protected route without auth, assert redirect to login | Auth guard disabled |
+| P12 | **Post-auth navigation** — after auth injection, protected routes render content (no redirect flash) | Auth race condition (D17) |
+
+##### Multi-Step Flow Assertions
+
+| # | Rule | What It Catches |
+|---|------|-----------------|
+| P13 | **Step indicator state** — at each step, assert active step highlighted, previous completed | Stepper state broken |
+| P14 | **Step data persistence** — advance, go back, assert previous step data preserved | State lost on navigation |
+| P15 | **Final submission** — complete all steps, submit, assert success state | End-to-end flow broken |
+
+#### What These Rules Catch
+
+| Contract Change | Catching Rule |
+|----------------|---------------|
+| Status code changed | E1 |
+| Response field removed/renamed | E4 |
+| Error code changed | E7 |
+| Performance regression | E3 |
+| Soft delete broken | E12 |
+| Unique constraint dropped | E13 |
+| Security filter removed | E15 |
+| Tenant filter bypassed | E16 |
+| Page renders blank | P1 (AP16) |
+| Form validation removed | P4, P5 |
+| API error not shown to user | P8 |
+| Auth guard disabled | P11 |
+| Wizard loses data | P14 |
+| Accessibility regression | P3 |
+
+### 4.12 Testing Checklist
 
 **Before committing tests:**
 - [ ] Uses Given-When-Then pattern (NOT AAA)
 - [ ] Test names: `shouldDoX_whenGivenY()`
 - [ ] DisplayNames in natural language
 - [ ] Zero `any()` matchers
-- [ ] Mock stubbing matches implementation
-- [ ] Verifications are precise and necessary
+- [ ] Mock stubbing matches implementation (exact parameters)
+- [ ] Every test has both state AND interaction assertions (§4.4 Rule 1)
+- [ ] `verifyNoMoreInteractions()` on ALL mocks at end of every test (§4.4 Rule 2)
+- [ ] `verifyNoInteractions()` on downstream mocks for short-circuit paths (§4.4 Rule 3)
+- [ ] Explicit `times(1)` on every `verify()` call (§4.4 Rule 4)
+- [ ] `InOrder` used when execution sequence matters (§4.4 Rule 5)
+- [ ] Exception assertions verify type AND message with shared constants (§4.4 Rule 6)
+- [ ] Every parameter tested for every invalid state — one test per state (§4.4 Rule 7)
+- [ ] Every `if`/`throw` line in the implementation has a dedicated test (§4.4 Rule 8)
+- [ ] Exception tests verify cutoff point — downstream mocks untouched (§4.4 Rule 9)
+- [ ] Collaborator exceptions tested for propagation (§4.4 Rule 10)
+- [ ] Input validation tests grouped in `@Nested` `InputValidation` class
 - [ ] Local vars for test-specific values
 - [ ] Class constants for shared values
 - [ ] Helper methods for complex setup
-- [ ] All edge cases covered
-- [ ] Exception messages verified
 - [ ] No commented-out tests
 
-### 4.11 TEST-SPECIFIC DETECTION KEYWORDS FOR AI
+**E2E Tests — Backend (Newman):**
+- [ ] Every request asserts exact HTTP status code (§4.11 E1)
+- [ ] Every non-204 response asserts Content-Type `application/json` (§4.11 E2)
+- [ ] Every request asserts response time < 200ms (§4.11 E3)
+- [ ] Success responses assert all DTO fields with correct types (§4.11 E4)
+- [ ] Entity IDs asserted as positive numbers (§4.11 E5)
+- [ ] Error responses assert exact error code (§4.11 E7)
+- [ ] Error responses assert non-empty message (§4.11 E8)
+- [ ] 400 responses assert `details[]` array (§4.11 E9)
+- [ ] Every entity has 9 mandatory scenarios (§4.11)
+- [ ] Auth enforcement tested — 401 without JWT (§4.11 E15)
+- [ ] Tenant isolation tested — rejected without X-Tenant-Id (§4.11 E16)
+
+**E2E Tests — Frontend (Playwright):**
+- [ ] Every navigation asserts visible content, never URL alone (§4.11 P1, AP16)
+- [ ] Every page asserts primary heading visible (§4.11 P2)
+- [ ] Every new page passes axe-core WCAG 2.1 AA audit (§4.11 P3)
+- [ ] Every required form field tested empty (§4.11 P4)
+- [ ] Invalid format tested for formatted fields (§4.11 P5)
+- [ ] Valid submission asserts success state (§4.11 P6)
+- [ ] API-dependent pages mock responses and assert data visible (§4.11 P7)
+- [ ] API error responses render user-facing error message (§4.11 P8)
+- [ ] Loading state asserted before data resolves (§4.11 P9)
+- [ ] Empty state asserted for empty data (§4.11 P10)
+- [ ] Auth guard redirects unauthenticated users (§4.11 P11)
+- [ ] Multi-step flows verify step state, data persistence, final submission (§4.11 P13-P15)
+
+### 4.13 TEST-SPECIFIC DETECTION KEYWORDS FOR AI
 
 #### Critical Test Violations (Priority: CRITICAL)
 **Detection Keywords:**
@@ -672,9 +1131,38 @@ stub every overload that will be invoked. Use `doNothing().when(mock).method(arg
 - Mock stubbing with transformed parameters (e.g., `.trim()`, `.toLowerCase()`)
 - Missing `@DisplayName` annotations
 - Test methods without `void shouldX_whenY()` pattern
-- `verify(..., never()).method(any())` - Should use `verifyNoMoreInteractions()`
+- `verify(..., never()).method(any())` — should use `verifyNoMoreInteractions()`
 - Multiple redundant `verify(mock, never())` calls
 - Exception assertions without message verification
+- `verify(mock).method(` without explicit `times(1)` — must use `verify(mock, times(1))`
+- Tests with state assertions only — missing `verify()`/`verifyNoMoreInteractions()`
+- Tests with interaction assertions only — missing `assertThat()`/`assertThatThrownBy()`
+- Exception tests without cutoff verification (`verifyNoInteractions` on downstream mocks)
+- Missing `verifyNoMoreInteractions()` at end of test method
+- Guard clause / `if`/`throw` in implementation without corresponding test
+- Multiple invalid inputs combined in a single test method
+
+#### E2E Test Violations (Priority: HIGH)
+**Detection Patterns (Newman):**
+- Newman test without status code assertion
+- Newman test without response time assertion (`pm.response.responseTime`)
+- Newman test without Content-Type assertion (non-204)
+- Newman success response without field type assertions (`to.be.a("number")`, `to.be.a("string")`)
+- Newman error response without `code` field assertion (`json.code`)
+- Newman error response without `message` field assertion
+- Newman 400 response without `details[]` assertion
+- Entity missing any of the 9 mandatory test scenarios
+- Newman test asserting only status code — must also validate response body
+
+**Detection Patterns (Playwright):**
+- `toHaveURL` without subsequent content assertion (`getByRole`, `getByText`) — AP16 violation
+- `waitForTimeout` usage — rely on auto-wait + `expect()` instead
+- CSS selectors (`page.$('.class')`, `page.$('#id')`) — use semantic locators
+- English text in locators — must use Spanish with `/i` regex
+- Missing `page.route()` — frontend E2E must mock API, not hit live backend
+- Protected route test without auth guard assertion
+- Form test without empty field validation
+- Page test without accessibility audit (`AxeBuilder`)
 
 #### Test Code Smells
 **Detection Patterns:**
@@ -682,7 +1170,8 @@ stub every overload that will be invoked. Use `doNothing().when(mock).method(arg
 - Test classes without `@Nested` organization
 - Helper methods that could be extracted
 - Tests without clear Given-When-Then sections
-- Over-verification (checking mocks that can't be called)
+- Input validation tests not grouped in `@Nested InputValidation` class
+- Collaborator exception propagation not tested
 
 **Fix Actions:**
 ```java
@@ -1022,6 +1511,6 @@ Required sections:
 
 ---
 
-**End of AI-CODE-REF.md v4.1**
+**End of AI-CODE-REF.md v4.3**
 
 *This document is structured for programmatic analysis and quick pattern matching during code reviews, refactoring sessions, and test creation. Formerly AI-code-ref.md v3.0. Renamed to AI-CODE-REF.md to avoid collision with the Claude Code CLAUDE.md convention.*

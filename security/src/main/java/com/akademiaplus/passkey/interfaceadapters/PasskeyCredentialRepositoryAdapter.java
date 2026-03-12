@@ -15,6 +15,7 @@ import com.yubico.webauthn.CredentialRepository;
 import com.yubico.webauthn.RegisteredCredential;
 import com.yubico.webauthn.data.ByteArray;
 import com.yubico.webauthn.data.PublicKeyCredentialDescriptor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
  * @since 1.0
  */
 @Component
+@ConditionalOnProperty(prefix = "security.passkey", name = "rp-id")
 public class PasskeyCredentialRepositoryAdapter implements CredentialRepository {
 
     /** Separator for transport values stored in the database. */

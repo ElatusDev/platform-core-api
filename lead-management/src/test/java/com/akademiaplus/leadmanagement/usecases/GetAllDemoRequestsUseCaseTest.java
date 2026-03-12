@@ -15,6 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -22,6 +23,11 @@ import org.modelmapper.ModelMapper;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -76,6 +82,12 @@ class GetAllDemoRequestsUseCaseTest {
             assertThat(result).hasSize(2);
             assertThat(result.get(0).getDemoRequestId()).isEqualTo(1L);
             assertThat(result.get(1).getDemoRequestId()).isEqualTo(2L);
+
+            InOrder inOrder = inOrder(demoRequestRepository, modelMapper);
+            inOrder.verify(demoRequestRepository, times(1)).findAll();
+            inOrder.verify(modelMapper, times(1)).map(model1, GetDemoRequestResponseDTO.class);
+            inOrder.verify(modelMapper, times(1)).map(model2, GetDemoRequestResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -89,6 +101,10 @@ class GetAllDemoRequestsUseCaseTest {
 
             // Then
             assertThat(result).isEmpty();
+
+            verify(demoRequestRepository, times(1)).findAll();
+            verifyNoMoreInteractions(demoRequestRepository);
+            verifyNoInteractions(modelMapper);
         }
     }
 }

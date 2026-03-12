@@ -10,7 +10,7 @@ package com.akademiaplus.passkey.usecases;
 import com.akademiaplus.internal.interfaceadapters.InternalAuthRepository;
 import com.akademiaplus.internal.interfaceadapters.RefreshTokenRepository;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
-import com.akademiaplus.internal.interfaceadapters.session.RedisSessionStore;
+import com.akademiaplus.internal.interfaceadapters.session.AkademiaPlusRedisSessionStore;
 import com.akademiaplus.internal.usecases.domain.LoginResult;
 import com.akademiaplus.passkey.exceptions.PasskeyAuthenticationException;
 import com.akademiaplus.passkey.interfaceadapters.PasskeyCredentialJpaRepository;
@@ -93,7 +93,7 @@ public class PasskeyAuthenticationUseCase {
     private final JwtTokenProvider jwtTokenProvider;
     private final InternalAuthRepository internalAuthRepository;
     private final HashingService hashingService;
-    private final RedisSessionStore redisSessionStore;
+    private final AkademiaPlusRedisSessionStore akademiaPlusRedisSessionStore;
     private final RefreshTokenRepository refreshTokenRepository;
     private final ApplicationContext applicationContext;
 
@@ -107,7 +107,7 @@ public class PasskeyAuthenticationUseCase {
      * @param jwtTokenProvider       the JWT token provider
      * @param internalAuthRepository the internal auth repository for user lookup
      * @param hashingService         the hashing service for username hash lookup
-     * @param redisSessionStore      the Redis session store
+     * @param akademiaPlusRedisSessionStore      the Redis session store
      * @param refreshTokenRepository the refresh token repository
      * @param applicationContext     the Spring application context for prototype beans
      */
@@ -118,7 +118,7 @@ public class PasskeyAuthenticationUseCase {
                                          JwtTokenProvider jwtTokenProvider,
                                          InternalAuthRepository internalAuthRepository,
                                          HashingService hashingService,
-                                         RedisSessionStore redisSessionStore,
+                                         AkademiaPlusRedisSessionStore akademiaPlusRedisSessionStore,
                                          RefreshTokenRepository refreshTokenRepository,
                                          ApplicationContext applicationContext) {
         this.relyingParty = relyingParty;
@@ -128,7 +128,7 @@ public class PasskeyAuthenticationUseCase {
         this.jwtTokenProvider = jwtTokenProvider;
         this.internalAuthRepository = internalAuthRepository;
         this.hashingService = hashingService;
-        this.redisSessionStore = redisSessionStore;
+        this.akademiaPlusRedisSessionStore = akademiaPlusRedisSessionStore;
         this.refreshTokenRepository = refreshTokenRepository;
         this.applicationContext = applicationContext;
     }
@@ -304,7 +304,7 @@ public class PasskeyAuthenticationUseCase {
         String accessToken = jwtTokenProvider.createAccessToken(auth.getUsername(), tenantId, claims);
         String jti = jwtTokenProvider.getJti(accessToken);
 
-        redisSessionStore.storeSession(
+        akademiaPlusRedisSessionStore.storeSession(
                 jti,
                 auth.getUsername(),
                 tenantId,

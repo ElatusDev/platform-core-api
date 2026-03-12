@@ -18,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -26,7 +27,10 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
@@ -81,10 +85,11 @@ class GetTenantSubscriptionByIdUseCaseTest {
 
             // Then
             assertThat(result).isSameAs(expectedDto);
-            verify(tenantContextHolder).getTenantId();
-            verify(tenantSubscriptionRepository).findById(compositeId);
-            verify(modelMapper).map(entity, TenantSubscriptionDTO.class);
-            verifyNoMoreInteractions(tenantSubscriptionRepository, tenantContextHolder, modelMapper);
+            InOrder inOrder = inOrder(tenantContextHolder, tenantSubscriptionRepository, modelMapper);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(tenantSubscriptionRepository, times(1)).findById(compositeId);
+            inOrder.verify(modelMapper, times(1)).map(entity, TenantSubscriptionDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -109,7 +114,10 @@ class GetTenantSubscriptionByIdUseCaseTest {
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.TENANT_SUBSCRIPTION);
                         assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(SUBSCRIPTION_ID));
                     });
-            verifyNoMoreInteractions(modelMapper);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(tenantSubscriptionRepository, times(1)).findById(compositeId);
+            verifyNoInteractions(modelMapper);
+            verifyNoMoreInteractions(tenantContextHolder, tenantSubscriptionRepository);
         }
     }
 
@@ -127,7 +135,9 @@ class GetTenantSubscriptionByIdUseCaseTest {
             assertThatThrownBy(() -> useCase.get(SUBSCRIPTION_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(GetTenantSubscriptionByIdUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
-            verifyNoMoreInteractions(tenantSubscriptionRepository, modelMapper);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoInteractions(tenantSubscriptionRepository, modelMapper);
+            verifyNoMoreInteractions(tenantContextHolder);
         }
     }
 }

@@ -95,7 +95,8 @@ class MembershipAdultStudentCreationUseCaseTest {
             useCase.transform(dto);
 
             // Then
-            verify(applicationContext).getBean(MembershipAdultStudentDataModel.class);
+            verify(applicationContext, times(1)).getBean(MembershipAdultStudentDataModel.class);
+            verifyNoMoreInteractions(applicationContext, repository);
         }
 
         @Test
@@ -113,8 +114,9 @@ class MembershipAdultStudentCreationUseCaseTest {
             MembershipAdultStudentDataModel result = useCase.transform(dto);
 
             // Then
-            verify(modelMapper).map(dto, prototypeModel, MembershipAdultStudentCreationUseCase.MAP_NAME);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, MembershipAdultStudentCreationUseCase.MAP_NAME);
             assertThat(result).isSameAs(prototypeModel);
+            verifyNoMoreInteractions(applicationContext, repository);
         }
 
         @Test
@@ -138,6 +140,7 @@ class MembershipAdultStudentCreationUseCaseTest {
             assertThat(result.getMembership()).isSameAs(membership);
             assertThat(result.getCourse()).isSameAs(course);
             assertThat(result.getAdultStudent()).isSameAs(adultStudent);
+            verifyNoMoreInteractions(applicationContext, repository);
         }
 
         @Test
@@ -153,6 +156,10 @@ class MembershipAdultStudentCreationUseCaseTest {
             assertThatThrownBy(() -> useCase.transform(dto))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining(String.valueOf(MEMBERSHIP_ID));
+
+            verify(applicationContext, times(1)).getBean(MembershipAdultStudentDataModel.class);
+            verify(membershipRepository, times(1)).findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID));
+            verifyNoMoreInteractions(applicationContext, repository, courseRepository, adultStudentRepository);
         }
     }
 
@@ -183,7 +190,7 @@ class MembershipAdultStudentCreationUseCaseTest {
             MembershipAdultStudentCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(repository).saveAndFlush(prototypeModel);
+            verify(repository, times(1)).saveAndFlush(prototypeModel);
             assertThat(result.getMembershipAdultStudentId()).isEqualTo(SAVED_ID);
         }
 
@@ -209,13 +216,14 @@ class MembershipAdultStudentCreationUseCaseTest {
 
             // Then
             InOrder inOrder = inOrder(applicationContext, modelMapper, membershipRepository, courseRepository, adultStudentRepository, repository);
-            inOrder.verify(applicationContext).getBean(MembershipAdultStudentDataModel.class);
-            inOrder.verify(modelMapper).map(dto, prototypeModel, MembershipAdultStudentCreationUseCase.MAP_NAME);
-            inOrder.verify(membershipRepository).findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID));
-            inOrder.verify(courseRepository).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
-            inOrder.verify(adultStudentRepository).findById(new AdultStudentDataModel.AdultStudentCompositeId(TENANT_ID, ADULT_STUDENT_ID));
-            inOrder.verify(repository).saveAndFlush(prototypeModel);
-            inOrder.verify(modelMapper).map(savedModel, MembershipAdultStudentCreationResponseDTO.class);
+            inOrder.verify(applicationContext, times(1)).getBean(MembershipAdultStudentDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, MembershipAdultStudentCreationUseCase.MAP_NAME);
+            inOrder.verify(membershipRepository, times(1)).findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID));
+            inOrder.verify(courseRepository, times(1)).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            inOrder.verify(adultStudentRepository, times(1)).findById(new AdultStudentDataModel.AdultStudentCompositeId(TENANT_ID, ADULT_STUDENT_ID));
+            inOrder.verify(repository, times(1)).saveAndFlush(prototypeModel);
+            inOrder.verify(modelMapper, times(1)).map(savedModel, MembershipAdultStudentCreationResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

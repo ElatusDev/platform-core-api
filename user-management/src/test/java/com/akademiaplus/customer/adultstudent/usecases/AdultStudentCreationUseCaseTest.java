@@ -24,6 +24,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -122,8 +123,24 @@ class AdultStudentCreationUseCaseTest {
             AdultStudentCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(adultStudentRepository).saveAndFlush(model);
             assertThat(result).isEqualTo(expectedResponse);
+
+            InOrder inOrder = inOrder(applicationContext, modelMapper, piiNormalizer, hashingService,
+                    personPIIRepository, adultStudentRepository);
+            inOrder.verify(applicationContext, times(1)).getBean(PersonPIIDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, personPII);
+            inOrder.verify(applicationContext, times(1)).getBean(AdultStudentDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, model, AdultStudentCreationUseCase.MAP_NAME);
+            inOrder.verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            inOrder.verify(piiNormalizer, times(1)).normalizePhoneNumber(TEST_PHONE);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_PHONE);
+            inOrder.verify(applicationContext, times(1)).getBean(CustomerAuthDataModel.class);
+            inOrder.verify(personPIIRepository, times(1)).existsByEmailHash(EMAIL_HASH);
+            inOrder.verify(personPIIRepository, times(1)).existsByPhoneHash(PHONE_HASH);
+            inOrder.verify(adultStudentRepository, times(1)).saveAndFlush(model);
+            inOrder.verify(modelMapper, times(1)).map(savedModel, AdultStudentCreationResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -150,6 +167,9 @@ class AdultStudentCreationUseCaseTest {
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.ADULT_STUDENT);
                         assertThat(dee.getField()).isEqualTo(PiiField.EMAIL);
                     });
+
+            verify(personPIIRepository, times(1)).existsByEmailHash(EMAIL_HASH);
+            verifyNoInteractions(adultStudentRepository);
         }
 
         @Test
@@ -172,6 +192,10 @@ class AdultStudentCreationUseCaseTest {
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.ADULT_STUDENT);
                         assertThat(dee.getField()).isEqualTo(PiiField.PHONE_NUMBER);
                     });
+
+            verify(personPIIRepository, times(1)).existsByEmailHash(EMAIL_HASH);
+            verify(personPIIRepository, times(1)).existsByPhoneHash(PHONE_HASH);
+            verifyNoInteractions(adultStudentRepository);
         }
     }
 }

@@ -36,7 +36,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Collections;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -112,8 +115,11 @@ class EmailControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.message").value(ImmediateSendUseCase.MESSAGE_SENT));
 
-            verify(immediateSendUseCase).send(requestDTO);
-            verifyNoMoreInteractions(immediateSendUseCase);
+            verify(immediateSendUseCase, times(1)).send(requestDTO);
+            verifyNoMoreInteractions(immediateSendUseCase, emailDeliveryManagementUseCase,
+                    emailTemplateCreationUseCase, emailTemplateUpdateUseCase,
+                    getEmailTemplateByIdUseCase, listEmailTemplatesUseCase,
+                    emailTemplatePreviewUseCase, getNotificationByIdUseCase);
         }
     }
 
@@ -147,8 +153,11 @@ class EmailControllerTest {
                     .andExpect(jsonPath("$.name").value(TEMPLATE_NAME))
                     .andExpect(jsonPath("$.category").value(TEMPLATE_CATEGORY));
 
-            verify(emailTemplateCreationUseCase).create(requestDTO);
-            verifyNoMoreInteractions(emailTemplateCreationUseCase);
+            verify(emailTemplateCreationUseCase, times(1)).create(requestDTO);
+            verifyNoMoreInteractions(emailDeliveryManagementUseCase, immediateSendUseCase,
+                    emailTemplateCreationUseCase, emailTemplateUpdateUseCase,
+                    getEmailTemplateByIdUseCase, listEmailTemplatesUseCase,
+                    emailTemplatePreviewUseCase, getNotificationByIdUseCase);
         }
 
         @Test
@@ -168,8 +177,11 @@ class EmailControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.templates").isArray());
 
-            verify(listEmailTemplatesUseCase).list(null);
-            verifyNoMoreInteractions(listEmailTemplatesUseCase);
+            verify(listEmailTemplatesUseCase, times(1)).list(null);
+            verifyNoMoreInteractions(emailDeliveryManagementUseCase, immediateSendUseCase,
+                    emailTemplateCreationUseCase, emailTemplateUpdateUseCase,
+                    getEmailTemplateByIdUseCase, listEmailTemplatesUseCase,
+                    emailTemplatePreviewUseCase, getNotificationByIdUseCase);
         }
     }
 
@@ -194,8 +206,11 @@ class EmailControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.notificationId").value(NOTIFICATION_ID));
 
-            verify(emailDeliveryManagementUseCase).getDeliveryById(DELIVERY_ID);
-            verifyNoMoreInteractions(emailDeliveryManagementUseCase);
+            verify(emailDeliveryManagementUseCase, times(1)).getDeliveryById(DELIVERY_ID);
+            verifyNoMoreInteractions(emailDeliveryManagementUseCase, immediateSendUseCase,
+                    emailTemplateCreationUseCase, emailTemplateUpdateUseCase,
+                    getEmailTemplateByIdUseCase, listEmailTemplatesUseCase,
+                    emailTemplatePreviewUseCase, getNotificationByIdUseCase);
         }
     }
 }

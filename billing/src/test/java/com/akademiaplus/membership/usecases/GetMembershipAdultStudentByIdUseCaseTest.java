@@ -9,6 +9,7 @@ package com.akademiaplus.membership.usecases;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -64,9 +65,9 @@ class GetMembershipAdultStudentByIdUseCaseTest {
             GetMembershipAdultStudentResponseDTO result = useCase.get(MEMBERSHIP_ADULT_STUDENT_ID);
             // Then
             assertThat(result).isEqualTo(expectedDto);
-            verify(tenantContextHolder).getTenantId();
-            verify(membershipAdultStudentRepository).findById(new MembershipAdultStudentDataModel.MembershipAdultStudentCompositeId(TENANT_ID, MEMBERSHIP_ADULT_STUDENT_ID));
-            verify(modelMapper).map(membershipAdultStudent, GetMembershipAdultStudentResponseDTO.class);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(membershipAdultStudentRepository, times(1)).findById(new MembershipAdultStudentDataModel.MembershipAdultStudentCompositeId(TENANT_ID, MEMBERSHIP_ADULT_STUDENT_ID));
+            verify(modelMapper, times(1)).map(membershipAdultStudent, GetMembershipAdultStudentResponseDTO.class);
             verifyNoMoreInteractions(tenantContextHolder, membershipAdultStudentRepository, modelMapper);
         }
     }
@@ -86,8 +87,8 @@ class GetMembershipAdultStudentByIdUseCaseTest {
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasFieldOrPropertyWithValue("entityType", EntityType.MEMBERSHIP_ADULT_STUDENT)
                     .hasFieldOrPropertyWithValue("entityId", String.valueOf(MEMBERSHIP_ADULT_STUDENT_ID));
-            verify(tenantContextHolder).getTenantId();
-            verify(membershipAdultStudentRepository).findById(new MembershipAdultStudentDataModel.MembershipAdultStudentCompositeId(TENANT_ID, MEMBERSHIP_ADULT_STUDENT_ID));
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(membershipAdultStudentRepository, times(1)).findById(new MembershipAdultStudentDataModel.MembershipAdultStudentCompositeId(TENANT_ID, MEMBERSHIP_ADULT_STUDENT_ID));
             verifyNoMoreInteractions(tenantContextHolder, membershipAdultStudentRepository, modelMapper);
         }
     }
@@ -104,7 +105,7 @@ class GetMembershipAdultStudentByIdUseCaseTest {
             assertThatThrownBy(() -> useCase.get(MEMBERSHIP_ADULT_STUDENT_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(GetMembershipAdultStudentByIdUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
-            verify(tenantContextHolder).getTenantId();
+            verify(tenantContextHolder, times(1)).getTenantId();
             verifyNoMoreInteractions(tenantContextHolder, membershipAdultStudentRepository, modelMapper);
         }
     }

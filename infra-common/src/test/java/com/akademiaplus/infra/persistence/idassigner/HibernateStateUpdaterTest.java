@@ -5,11 +5,12 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for HibernateStateUpdater
@@ -63,6 +64,13 @@ class HibernateStateUpdaterTest {
         // Then
         assertThat(state[FIRST_INDEX]).isEqualTo(GENERATED_ID);
         assertThat(state[SECOND_INDEX]).isEqualTo(USER_NAME); // Other properties unchanged
+
+        InOrder inOrder = inOrder(event, persister);
+        inOrder.verify(event, times(1)).getPersister();
+        inOrder.verify(persister, times(1)).getPropertyNames();
+        inOrder.verify(event, times(1)).getState();
+        inOrder.verify(event, times(1)).getEntity();
+        verifyNoMoreInteractions(event, persister, entity);
     }
 
     @Test
@@ -83,6 +91,13 @@ class HibernateStateUpdaterTest {
         assertThat(state[FIRST_INDEX]).isEqualTo(USER_NAME); // First property unchanged
         assertThat(state[SECOND_INDEX]).isEqualTo(GENERATED_ID); // ID updated
         assertThat(state[THIRD_INDEX]).isEqualTo(USER_EMAIL); // Third property unchanged
+
+        InOrder inOrder = inOrder(event, persister);
+        inOrder.verify(event, times(1)).getPersister();
+        inOrder.verify(persister, times(1)).getPropertyNames();
+        inOrder.verify(event, times(1)).getState();
+        inOrder.verify(event, times(1)).getEntity();
+        verifyNoMoreInteractions(event, persister, entity);
     }
 
     @Test
@@ -103,6 +118,14 @@ class HibernateStateUpdaterTest {
         // Then - state should remain unchanged
         assertThat(state[FIRST_INDEX]).isEqualTo(USER_NAME);
         assertThat(state[SECOND_INDEX]).isNull();
+
+        InOrder inOrder = inOrder(event, persister);
+        inOrder.verify(event, times(1)).getPersister();
+        inOrder.verify(persister, times(1)).getPropertyNames();
+        inOrder.verify(event, times(1)).getState();
+        inOrder.verify(event, times(1)).getId();
+        inOrder.verify(event, times(1)).getEntity();
+        verifyNoMoreInteractions(event, persister, entity);
     }
 
     @Test
@@ -122,6 +145,13 @@ class HibernateStateUpdaterTest {
 
         // Then
         assertThat(state[FIRST_INDEX]).isNull();
+
+        InOrder inOrder = inOrder(event, persister);
+        inOrder.verify(event, times(1)).getPersister();
+        inOrder.verify(persister, times(1)).getPropertyNames();
+        inOrder.verify(event, times(1)).getState();
+        inOrder.verify(event, times(1)).getEntity();
+        verifyNoMoreInteractions(event, persister, entity);
     }
 
     @Test
@@ -140,5 +170,12 @@ class HibernateStateUpdaterTest {
 
         // Then
         assertThat(state[FIRST_INDEX]).isEqualTo(STRING_ID);
+
+        InOrder inOrder = inOrder(event, persister);
+        inOrder.verify(event, times(1)).getPersister();
+        inOrder.verify(persister, times(1)).getPropertyNames();
+        inOrder.verify(event, times(1)).getState();
+        inOrder.verify(event, times(1)).getEntity();
+        verifyNoMoreInteractions(event, persister, entity);
     }
 }

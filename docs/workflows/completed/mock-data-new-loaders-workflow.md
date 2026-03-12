@@ -1,15 +1,15 @@
 # Mock-Data New Loaders Workflow
 
 > **Scope**: Add mock-data loaders for 5 unseeded entities
-> **Trigger**: 9 entities missing from mock-data-system; 5 need seeding for E2E test coverage
-> **Project**: core-api (mock-data-system module)
+> **Trigger**: 9 entities missing from mock-data-service; 5 need seeding for E2E test coverage
+> **Project**: core-api (mock-data-service module)
 > **Depends on**: None (existing mock-data infrastructure is solid)
 
 ---
 
 ## 1. Problem Statement
 
-The mock-data-system covers 30/39 JPA entities (77%). Five entities added in recent
+The mock-data-service covers 30/39 JPA entities (77%). Five entities added in recent
 features have no loader, factory, or MockEntityType entry. Without seed data for
 these entities, E2E tests cannot cover attendance, lead management, push device
 registration, or notification read status flows.
@@ -34,7 +34,7 @@ registration, or notification read status flows.
 
 ### 2.1 Register in MockEntityType enum
 
-**File**: `mock-data-system/src/main/java/com/akademiaplus/config/MockEntityType.java`
+**File**: `mock-data-service/src/main/java/com/akademiaplus/config/MockEntityType.java`
 
 Add 5 new entries with correct dependency declarations:
 
@@ -48,7 +48,7 @@ PUSH_DEVICE(true, true)                             // Level 0 (no FK, platform-
 
 ### 2.2 Create factories (5 files)
 
-**Directory**: `mock-data-system/src/main/java/com/akademiaplus/util/mock/`
+**Directory**: `mock-data-service/src/main/java/com/akademiaplus/util/mock/`
 
 | Factory | Location | Injected FK Lists |
 |---------|----------|-------------------|
@@ -92,7 +92,7 @@ Each factory implements `DataFactory<DTO>` and generates realistic test data.
 
 ### 2.3 Create use cases (5 files)
 
-**Directory**: `mock-data-system/src/main/java/com/akademiaplus/usecases/`
+**Directory**: `mock-data-service/src/main/java/com/akademiaplus/usecases/`
 
 Each extends `AbstractMockDataUseCase<DTO, DataModel, IdClass>`:
 - `LoadAttendanceSessionMockDataUseCase` in `usecases/attendance/`
@@ -115,7 +115,7 @@ For platform-level entities (DemoRequest, NotificationReadStatus, PushDevice):
 
 ### 2.5 Register in MockDataRegistry
 
-**File**: `mock-data-system/src/main/java/com/akademiaplus/config/MockDataRegistry.java`
+**File**: `mock-data-service/src/main/java/com/akademiaplus/config/MockDataRegistry.java`
 
 - Add 5 entries to `mockDataLoaders` map
 - Add 5 entries to `mockDataCleaners` map
@@ -127,7 +127,7 @@ For platform-level entities (DemoRequest, NotificationReadStatus, PushDevice):
 
 ### 2.6 Handle platform-level entities in orchestrator
 
-**File**: `mock-data-system/src/main/java/com/akademiaplus/config/MockDataOrchestrator.java`
+**File**: `mock-data-service/src/main/java/com/akademiaplus/config/MockDataOrchestrator.java`
 
 DemoRequest, NotificationReadStatus, and PushDevice are NOT tenant-scoped.
 Verify the orchestrator handles them correctly:
@@ -144,7 +144,7 @@ Verify the orchestrator handles them correctly:
 - [ ] 5 factories generate valid DTOs with realistic test data
 - [ ] 5 use cases extend AbstractMockDataUseCase correctly
 - [ ] MockDataRegistry wires all loaders, cleaners, and post-load hooks
-- [ ] `mvn compile -pl mock-data-system -am` succeeds
+- [ ] `mvn compile -pl mock-data-service -am` succeeds
 - [ ] Full mock-data generation works: `POST /v1/infra/mock-data/generate/tenant/{id}?count=5` seeds all entities including new ones
 - [ ] Platform-level entities (DemoRequest, PushDevice, NotificationReadStatus) seed without tenant context issues
 

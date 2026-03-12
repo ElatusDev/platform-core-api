@@ -91,14 +91,14 @@ jobs:
           docker push "$IMAGE:${{ github.sha }}"
           docker push "$IMAGE:${ENV}-latest"
 
-      - name: Build and push mock-data-system image
+      - name: Build and push mock-data-service image
         if: needs.set-env.outputs.environment == 'nonprod'
         env:
           REGISTRY: ${{ steps.ecr-login.outputs.registry }}
           ENV: ${{ needs.set-env.outputs.environment }}
         run: |
-          IMAGE="$REGISTRY/akademiaplus/mock-data-system"
-          docker build -f mock-data-system/Dockerfile \
+          IMAGE="$REGISTRY/akademiaplus/mock-data-service"
+          docker build -f mock-data-service/Dockerfile \
             -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:${ENV}-latest" .
           docker push "$IMAGE:${{ github.sha }}"
           docker push "$IMAGE:${ENV}-latest"
@@ -159,7 +159,7 @@ jobs:
           fetch_task_def trust-broker
 
           if [ "$ENV" = "nonprod" ]; then
-            fetch_task_def mock-data-system
+            fetch_task_def mock-data-service
           fi
 
       - name: Login to Amazon ECR
@@ -200,21 +200,21 @@ jobs:
           wait-for-service-stability: true
           wait-for-minutes: 10
 
-      - name: Render mock-data-system task definition
+      - name: Render mock-data-service task definition
         if: needs.set-env.outputs.environment == 'nonprod'
         id: render-mock
         uses: aws-actions/amazon-ecs-render-task-definition@6b89923a897d41e9ad789181d8865b532ecf973c # v1
         with:
-          task-definition: mock-data-system-task-def.json
-          container-name: mock-data-system
-          image: ${{ steps.ecr-login.outputs.registry }}/akademiaplus/mock-data-system:${{ github.sha }}
+          task-definition: mock-data-service-task-def.json
+          container-name: mock-data-service
+          image: ${{ steps.ecr-login.outputs.registry }}/akademiaplus/mock-data-service:${{ github.sha }}
 
-      - name: Deploy mock-data-system
+      - name: Deploy mock-data-service
         if: needs.set-env.outputs.environment == 'nonprod'
         uses: aws-actions/amazon-ecs-deploy-task-definition@cbf54ec46642b86ff78c2f5793da6746954cf8ff # v2
         with:
           task-definition: ${{ steps.render-mock.outputs.task-definition }}
-          service: akademiaplus-${{ needs.set-env.outputs.environment }}-mock-data-system
+          service: akademiaplus-${{ needs.set-env.outputs.environment }}-mock-data-service
           cluster: akademiaplus-${{ needs.set-env.outputs.environment }}-cluster
           wait-for-service-stability: true
           wait-for-minutes: 10

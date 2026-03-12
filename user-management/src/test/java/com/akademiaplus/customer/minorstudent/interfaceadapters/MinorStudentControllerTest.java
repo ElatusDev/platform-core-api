@@ -31,9 +31,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -97,7 +95,7 @@ class MinorStudentControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.data", hasSize(0)));
 
-            verify(getAllMinorStudentsUseCase).getAll();
+            verify(getAllMinorStudentsUseCase, times(1)).getAll();
             verifyNoMoreInteractions(getAllMinorStudentsUseCase);
         }
 
@@ -115,7 +113,7 @@ class MinorStudentControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.data", hasSize(2)));
 
-            verify(getAllMinorStudentsUseCase).getAll();
+            verify(getAllMinorStudentsUseCase, times(1)).getAll();
             verifyNoMoreInteractions(getAllMinorStudentsUseCase);
         }
     }
@@ -137,7 +135,7 @@ class MinorStudentControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-            verify(getMinorStudentByIdUseCase).get(MINOR_STUDENT_ID);
+            verify(getMinorStudentByIdUseCase, times(1)).get(MINOR_STUDENT_ID);
             verifyNoMoreInteractions(getMinorStudentByIdUseCase);
         }
 
@@ -156,7 +154,7 @@ class MinorStudentControllerTest {
                     .andExpect(status().isNotFound())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-            verify(getMinorStudentByIdUseCase).get(MINOR_STUDENT_ID);
+            verify(getMinorStudentByIdUseCase, times(1)).get(MINOR_STUDENT_ID);
             verifyNoMoreInteractions(getMinorStudentByIdUseCase);
         }
     }

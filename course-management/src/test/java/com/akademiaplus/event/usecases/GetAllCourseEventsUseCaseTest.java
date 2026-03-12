@@ -15,6 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -54,7 +55,7 @@ class GetAllCourseEventsUseCaseTest {
 
             // Then
             assertThat(result).isEmpty();
-            verify(courseEventRepository).findAll();
+            verify(courseEventRepository, times(1)).findAll();
             verifyNoMoreInteractions(courseEventRepository, modelMapper);
         }
 
@@ -76,10 +77,11 @@ class GetAllCourseEventsUseCaseTest {
 
             // Then
             assertThat(result).containsExactly(dto1, dto2);
-            verify(courseEventRepository).findAll();
-            verify(modelMapper).map(courseEvent1, GetCourseEventResponseDTO.class);
-            verify(modelMapper).map(courseEvent2, GetCourseEventResponseDTO.class);
-            verifyNoMoreInteractions(courseEventRepository, modelMapper);
+            InOrder inOrder = inOrder(courseEventRepository, modelMapper);
+            inOrder.verify(courseEventRepository, times(1)).findAll();
+            inOrder.verify(modelMapper, times(1)).map(courseEvent1, GetCourseEventResponseDTO.class);
+            inOrder.verify(modelMapper, times(1)).map(courseEvent2, GetCourseEventResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -103,8 +105,10 @@ class GetAllCourseEventsUseCaseTest {
 
             // Then
             assertThat(result).containsExactly(dto);
-            verify(courseEventRepository).findByAttendeeId(attendeeId);
-            verifyNoMoreInteractions(courseEventRepository);
+            InOrder inOrder = inOrder(courseEventRepository, modelMapper);
+            inOrder.verify(courseEventRepository, times(1)).findByAttendeeId(attendeeId);
+            inOrder.verify(modelMapper, times(1)).map(courseEvent, GetCourseEventResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

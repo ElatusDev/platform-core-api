@@ -23,9 +23,7 @@ import java.lang.reflect.Field;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link CookieService}.
@@ -98,6 +96,7 @@ class CookieServiceTest {
             String refreshCookieHeader = headerCaptor.getAllValues().get(1);
             assertThat(refreshCookieHeader).contains(REFRESH_TOKEN_NAME + "=" + REFRESH_TOKEN);
             assertThat(refreshCookieHeader).contains("Path=" + CookieService.REFRESH_TOKEN_PATH);
+            verifyNoMoreInteractions(response, request);
         }
     }
 
@@ -122,6 +121,7 @@ class CookieServiceTest {
             for (String header : headerCaptor.getAllValues()) {
                 assertThat(header).contains("Max-Age=0");
             }
+            verifyNoMoreInteractions(response, request);
         }
     }
 
@@ -141,6 +141,8 @@ class CookieServiceTest {
 
             // Then
             assertThat(result).isPresent().contains(ACCESS_TOKEN);
+            verify(request, times(1)).getCookies();
+            verifyNoMoreInteractions(response, request);
         }
 
         @Test
@@ -155,6 +157,8 @@ class CookieServiceTest {
 
             // Then
             assertThat(result).isPresent().contains(REFRESH_TOKEN);
+            verify(request, times(1)).getCookies();
+            verifyNoMoreInteractions(response, request);
         }
 
         @Test
@@ -168,6 +172,8 @@ class CookieServiceTest {
 
             // Then
             assertThat(result).isEmpty();
+            verify(request, times(1)).getCookies();
+            verifyNoMoreInteractions(response, request);
         }
     }
 }

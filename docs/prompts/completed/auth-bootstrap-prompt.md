@@ -341,7 +341,7 @@ New module dependencies: security → tenant-management, user-management."
 
 ### Step 2.1: SeedCredentialHolder
 
-**Create file:** `mock-data-system/src/main/java/com/akademiaplus/config/SeedCredentialHolder.java`
+**Create file:** `mock-data-service/src/main/java/com/akademiaplus/config/SeedCredentialHolder.java`
 
 ```java
 package com.akademiaplus.config;
@@ -376,7 +376,7 @@ public class SeedCredentialHolder {
 
 ### Step 2.2: OpenAPI — seed-credentials endpoint
 
-**Edit file:** `mock-data-system/src/main/resources/openapi/mock-data-system-module.yaml`
+**Edit file:** `mock-data-service/src/main/resources/openapi/mock-data-service-module.yaml`
 
 Add a new path under `paths:`:
 
@@ -438,17 +438,17 @@ Add under `components.schemas:`:
 ### Step 2.3: Regenerate DTOs
 
 ```bash
-mvn generate-sources -pl mock-data-system -am
+mvn generate-sources -pl mock-data-service -am
 ```
 
 Verify `SeedCredentialsDTO` and that `MockDataApi` now includes `getSeedCredentials()`.
 
 ### Step 2.4: MockDataOrchestrator — create seed admin
 
-**Edit file:** `mock-data-system/src/main/java/com/akademiaplus/config/MockDataOrchestrator.java`
+**Edit file:** `mock-data-service/src/main/java/com/akademiaplus/config/MockDataOrchestrator.java`
 
 **Add constructor dependencies:**
-- `EmployeeCreationUseCase` (already available — mock-data-system depends on user-management)
+- `EmployeeCreationUseCase` (already available — mock-data-service depends on user-management)
 - `SeedCredentialHolder`
 
 **Modify** `generateAll(int tenantCount, int entitiesPerTenant)`:
@@ -523,7 +523,7 @@ if needed — check whether the orchestrator method itself is transactional.
 
 ### Step 2.5: MockDataController — expose seed credentials
 
-**Edit file:** `mock-data-system/src/main/java/com/akademiaplus/interfaceadapters/MockDataController.java`
+**Edit file:** `mock-data-service/src/main/java/com/akademiaplus/interfaceadapters/MockDataController.java`
 
 Add `SeedCredentialHolder` as a constructor dependency.
 
@@ -549,20 +549,20 @@ public ResponseEntity<SeedCredentialsDTO> getSeedCredentials() {
 
 ### Step 2.6: Audit URL routing
 
-**CRITICAL**: The mock-data-system has `server.servlet.context-path=/infra` in its
+**CRITICAL**: The mock-data-service has `server.servlet.context-path=/infra` in its
 properties AND the controller uses `@RequestMapping("/v1/infra")`. This means all URLs
 are prefixed `/infra/v1/infra/...` which is double-nested.
 
 Check the actual URL for the existing generate-all endpoint:
 ```bash
-# Start mock-data-system locally or check the docker logs for:
+# Start mock-data-service locally or check the docker logs for:
 #   "Mapped \"{[POST /v1/infra/mock-data/generate/all]}\""
-grep -rn "RequestMapping\|context-path" mock-data-system/src/main/
+grep -rn "RequestMapping\|context-path" mock-data-service/src/main/
 ```
 
 The correct full URL for seed-credentials will be:
 ```
-http://mock-data-system:8180/infra/v1/infra/mock-data/seed-credentials
+http://mock-data-service:8180/infra/v1/infra/mock-data/seed-credentials
 ```
 
 Confirm this by looking at how the e2e-runner currently calls `generate/all`. If the
@@ -573,8 +573,8 @@ adjust accordingly.
 ### Step 2.7: Compile and verify
 
 ```bash
-mvn compile -pl mock-data-system -am
-mvn package -pl mock-data-system -am -DskipTests
+mvn compile -pl mock-data-service -am
+mvn package -pl mock-data-service -am -DskipTests
 ```
 
 ### Step 2.8: Commit
@@ -601,7 +601,7 @@ Add a new entry to the `values` array:
 ```json
 {
   "key": "mockDataBaseUrl",
-  "value": "http://mock-data-system:8180/infra",
+  "value": "http://mock-data-service:8180/infra",
   "type": "default",
   "enabled": true
 }
@@ -730,7 +730,7 @@ mock data generation before Newman runs:
     profiles:
       - e2e
     depends_on:
-      mock-data-system:
+      mock-data-service:
         condition: service_healthy
     networks:
       - akademia-internal
@@ -742,9 +742,9 @@ mock data generation before Newman runs:
       - -c
       - |
         echo "Triggering mock data generation..."
-        MOCK_URL="http://mock-data-system:8180/infra/v1/infra/mock-data/generate/all?count=5"
+        MOCK_URL="http://mock-data-service:8180/infra/v1/infra/mock-data/generate/all?count=5"
         until wget -qO- --post-data '' "$$MOCK_URL" 2>/dev/null; do
-          echo "Waiting for mock-data-system..."
+          echo "Waiting for mock-data-service..."
           sleep 2
         done
         echo "Mock data ready. Running E2E tests..."
@@ -791,7 +791,7 @@ cd /Volumes/ElatusDev/ElatusDev/AkademiaPlus/platform-core-api
 mvn clean package -DskipTests
 ```
 
-Both `application` and `mock-data-system` must produce JARs successfully.
+Both `application` and `mock-data-service` must produce JARs successfully.
 
 ### Step 4.2: Docker stack
 
@@ -808,7 +808,7 @@ docker compose -f docker-compose.dev.yml --profile e2e up --build \
 2. `multi_tenant_db` → MariaDB schema initialized
 3. `platform-core-redis` → ready
 4. `platform-core-api` → started, `/v1/security/register` + `/v1/security/login/internal` available
-5. `mock-data-system` → started, health check passes
+5. `mock-data-service` → started, health check passes
 6. `e2e-runner` → `wget` POST to `/generate/all?count=5` → waits for 201
 7. Mock-data generates: tenant → seed admin → all entity types
 8. Newman starts:
@@ -825,10 +825,10 @@ docker compose -f docker-compose.dev.yml --profile e2e up --build \
 | 500 on register — "No bean of type TenantCreationUseCase" | Missing dependency in security/pom.xml | Add tenant-management dependency |
 | 500 on register — "No tenant context set" | Forgot `tenantContextHolder.setTenantId()` after tenant creation | Add the call between tenant and employee creation |
 | 500 on register — EntityIdAssigner fails | TenantContextHolder not set before employee creation | Same as above |
-| 404 on GET `/seed-credentials` | Wrong URL (double context-path nesting) | Audit mock-data-system routing per Step 2.6 |
-| 401 on SetupLogin after FetchSeedCredentials succeeds | Encryption key mismatch | Ensure `ENCRYPTION_KEY` env var is identical for platform-core-api and mock-data-system in docker-compose |
+| 404 on GET `/seed-credentials` | Wrong URL (double context-path nesting) | Audit mock-data-service routing per Step 2.6 |
+| 401 on SetupLogin after FetchSeedCredentials succeeds | Encryption key mismatch | Ensure `ENCRYPTION_KEY` env var is identical for platform-core-api and mock-data-service in docker-compose |
 | 401 on SetupLogin — password mismatch | `InternalAuthenticationUseCase.login()` compares plaintext → decrypted | Both services must use same AES key. The `@Convert(converter = StringEncryptor.class)` on InternalAuthDataModel decrypts on read |
-| e2e-runner wget hangs | mock-data-system not reachable on network | Both containers must be on `akademia-internal` network |
+| e2e-runner wget hangs | mock-data-service not reachable on network | Both containers must be on `akademia-internal` network |
 | generate/all returns 500 | EmployeeCreationRequestDTO constructor args wrong | Read the generated constructor and match argument order |
 
 ---

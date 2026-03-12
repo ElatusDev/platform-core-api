@@ -26,7 +26,10 @@ import org.springframework.context.ApplicationContext;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("EmailTemplateCreationUseCase")
 @ExtendWith(MockitoExtension.class)
@@ -105,8 +108,10 @@ class EmailTemplateCreationUseCaseTest {
 
             // Then
             assertThat(result).isSameAs(expectedResponse);
-            verify(emailTemplateRepository).saveAndFlush(template);
-            verify(modelMapper).map(savedTemplate, EmailTemplateResponseDTO.class);
+            verify(applicationContext, times(1)).getBean(EmailTemplateDataModel.class);
+            verify(emailTemplateRepository, times(1)).saveAndFlush(template);
+            verify(modelMapper, times(1)).map(savedTemplate, EmailTemplateResponseDTO.class);
+            verifyNoMoreInteractions(applicationContext, emailTemplateRepository, modelMapper);
         }
     }
 
@@ -134,6 +139,8 @@ class EmailTemplateCreationUseCaseTest {
             assertThat(result.getBodyHtml()).isEqualTo(TEMPLATE_BODY_HTML);
             assertThat(result.getBodyText()).isEqualTo(TEMPLATE_BODY_TEXT);
             assertThat(result.isActive()).isEqualTo(TEMPLATE_IS_ACTIVE);
+            verify(applicationContext, times(1)).getBean(EmailTemplateDataModel.class);
+            verifyNoMoreInteractions(applicationContext, emailTemplateRepository, modelMapper);
         }
 
         @Test
@@ -162,6 +169,9 @@ class EmailTemplateCreationUseCaseTest {
             assertThat(resultVariable.isRequired()).isTrue();
             assertThat(resultVariable.getDefaultValue()).isEqualTo(VARIABLE_DEFAULT_VALUE);
             assertThat(resultVariable.getTemplate()).isSameAs(template);
+            verify(applicationContext, times(1)).getBean(EmailTemplateDataModel.class);
+            verify(applicationContext, times(1)).getBean(EmailTemplateVariableDataModel.class);
+            verifyNoMoreInteractions(applicationContext, emailTemplateRepository, modelMapper);
         }
     }
 }

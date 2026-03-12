@@ -25,7 +25,7 @@ import org.springframework.context.ApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
@@ -89,11 +89,14 @@ class PasskeyRegistrationUseCaseTest {
             // Then
             ArgumentCaptor<PasskeyChallengeStore.ChallengeMetadata> metadataCaptor =
                     ArgumentCaptor.forClass(PasskeyChallengeStore.ChallengeMetadata.class);
-            verify(challengeStore).store(eq(challenge.getBase64Url()), metadataCaptor.capture());
+            verify(challengeStore, times(1)).store(eq(challenge.getBase64Url()), metadataCaptor.capture());
             PasskeyChallengeStore.ChallengeMetadata captured = metadataCaptor.getValue();
             assertThat(captured.userId()).isEqualTo(USER_ID);
             assertThat(captured.tenantId()).isEqualTo(TENANT_ID);
             assertThat(captured.operation()).isEqualTo(PasskeyChallengeStore.OPERATION_REGISTER);
+            verify(challengeStore, times(1)).storeOptions(challenge.getBase64Url(), OPTIONS_JSON);
+            verifyNoInteractions(credentialRepository, applicationContext);
+            verifyNoMoreInteractions(relyingParty, challengeStore, credentialRepository, applicationContext);
         }
 
         @Test
@@ -112,7 +115,10 @@ class PasskeyRegistrationUseCaseTest {
             registrationUseCase.generateRegistrationOptions(USER_ID, USERNAME, USER_HANDLE, TENANT_ID);
 
             // Then
-            verify(challengeStore).storeOptions(challenge.getBase64Url(), OPTIONS_JSON);
+            verify(challengeStore, times(1)).storeOptions(challenge.getBase64Url(), OPTIONS_JSON);
+            verify(challengeStore, times(1)).store(eq(challenge.getBase64Url()), any(PasskeyChallengeStore.ChallengeMetadata.class));
+            verifyNoInteractions(credentialRepository, applicationContext);
+            verifyNoMoreInteractions(relyingParty, challengeStore, credentialRepository, applicationContext);
         }
 
         @Test
@@ -133,6 +139,10 @@ class PasskeyRegistrationUseCaseTest {
 
             // Then
             assertThat(result).isEqualTo(CREDENTIALS_CREATE_JSON);
+            verify(challengeStore, times(1)).store(eq(challenge.getBase64Url()), any(PasskeyChallengeStore.ChallengeMetadata.class));
+            verify(challengeStore, times(1)).storeOptions(challenge.getBase64Url(), OPTIONS_JSON);
+            verifyNoInteractions(credentialRepository, applicationContext);
+            verifyNoMoreInteractions(relyingParty, challengeStore, credentialRepository, applicationContext);
         }
 
         @Test
@@ -157,6 +167,10 @@ class PasskeyRegistrationUseCaseTest {
             assertThat(captured.getUser().getName()).isEqualTo(USERNAME);
             assertThat(captured.getUser().getDisplayName()).isEqualTo(USERNAME);
             assertThat(captured.getUser().getId().getBytes()).isEqualTo(USER_HANDLE);
+            verify(challengeStore, times(1)).store(eq(challenge.getBase64Url()), any(PasskeyChallengeStore.ChallengeMetadata.class));
+            verify(challengeStore, times(1)).storeOptions(challenge.getBase64Url(), OPTIONS_JSON);
+            verifyNoInteractions(credentialRepository, applicationContext);
+            verifyNoMoreInteractions(relyingParty, challengeStore, credentialRepository, applicationContext);
         }
     }
 
@@ -175,6 +189,8 @@ class PasskeyRegistrationUseCaseTest {
                     invalidJson, TENANT_ID, DISPLAY_NAME))
                     .isInstanceOf(PasskeyRegistrationException.class)
                     .hasMessageContaining(PasskeyRegistrationUseCase.ERROR_INVALID_RESPONSE);
+            verifyNoInteractions(relyingParty, challengeStore, credentialRepository, applicationContext);
+            verifyNoMoreInteractions(relyingParty, challengeStore, credentialRepository, applicationContext);
         }
     }
 
@@ -199,6 +215,9 @@ class PasskeyRegistrationUseCaseTest {
                     USER_ID, USERNAME, USER_HANDLE, TENANT_ID))
                     .isInstanceOf(PasskeyRegistrationException.class)
                     .hasMessageContaining(PasskeyRegistrationUseCase.ERROR_OPTIONS_SERIALIZATION_FAILED);
+            verify(challengeStore, times(1)).store(eq(challenge.getBase64Url()), any(PasskeyChallengeStore.ChallengeMetadata.class));
+            verifyNoInteractions(credentialRepository, applicationContext);
+            verifyNoMoreInteractions(relyingParty, challengeStore, credentialRepository, applicationContext);
         }
     }
 }

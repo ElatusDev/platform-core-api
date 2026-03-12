@@ -8,6 +8,7 @@
 package com.akademiaplus.payroll.interfaceadapters;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -91,8 +92,8 @@ class CompensationControllerTest {
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.compensationId").value(COMPENSATION_ID));
 
-            verify(creationUseCase).create(request);
-            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase);
+            verify(creationUseCase, times(1)).create(request);
+            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, deleteCompensationUseCase, messageService);
         }
     }
 
@@ -110,8 +111,8 @@ class CompensationControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$", hasSize(0)));
 
-            verify(getAllUseCase).getAll();
-            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase);
+            verify(getAllUseCase, times(1)).getAll();
+            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, deleteCompensationUseCase, messageService);
         }
 
         @Test
@@ -133,8 +134,8 @@ class CompensationControllerTest {
                     .andExpect(jsonPath("$[0].compensationId").value(100L))
                     .andExpect(jsonPath("$[1].compensationId").value(101L));
 
-            verify(getAllUseCase).getAll();
-            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase);
+            verify(getAllUseCase, times(1)).getAll();
+            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, deleteCompensationUseCase, messageService);
         }
     }
 
@@ -155,8 +156,8 @@ class CompensationControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.compensationId").value(COMPENSATION_ID));
 
-            verify(getByIdUseCase).get(COMPENSATION_ID);
-            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase);
+            verify(getByIdUseCase, times(1)).get(COMPENSATION_ID);
+            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, deleteCompensationUseCase, messageService);
         }
 
         @Test
@@ -172,9 +173,9 @@ class CompensationControllerTest {
             mockMvc.perform(get(BASE_PATH + "/" + COMPENSATION_ID))
                     .andExpect(status().isNotFound());
 
-            verify(getByIdUseCase).get(COMPENSATION_ID);
-            verify(messageService).getEntityNotFound(EntityType.COMPENSATION, String.valueOf(COMPENSATION_ID));
-            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, messageService);
+            verify(getByIdUseCase, times(1)).get(COMPENSATION_ID);
+            verify(messageService, times(1)).getEntityNotFound(EntityType.COMPENSATION, String.valueOf(COMPENSATION_ID));
+            verifyNoMoreInteractions(creationUseCase, getAllUseCase, getByIdUseCase, deleteCompensationUseCase, messageService);
         }
     }
 }

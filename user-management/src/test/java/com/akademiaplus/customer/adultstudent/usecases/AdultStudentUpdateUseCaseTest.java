@@ -25,6 +25,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -127,6 +128,12 @@ class AdultStudentUpdateUseCaseTest {
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.ADULT_STUDENT);
                         assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(ADULT_STUDENT_ID));
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, adultStudentRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(adultStudentRepository, times(1)).findById(compositeId);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(personPIIRepository, modelMapper, piiNormalizer, hashingService);
         }
     }
 
@@ -161,9 +168,23 @@ class AdultStudentUpdateUseCaseTest {
             AdultStudentUpdateResponseDTO result = useCase.update(ADULT_STUDENT_ID, dto);
 
             // Then
-            verify(adultStudentRepository).saveAndFlush(existing);
             assertThat(result.getAdultStudentId()).isEqualTo(ADULT_STUDENT_ID);
             assertThat(result.getMessage()).isEqualTo(AdultStudentUpdateUseCase.UPDATE_SUCCESS_MESSAGE);
+
+            InOrder inOrder = inOrder(tenantContextHolder, adultStudentRepository, modelMapper,
+                    piiNormalizer, hashingService, personPIIRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(adultStudentRepository, times(1)).findById(compositeId);
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, AdultStudentUpdateUseCase.MAP_NAME);
+            inOrder.verify(modelMapper, times(1)).map(dto, pii);
+            inOrder.verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            inOrder.verify(personPIIRepository, times(1)).existsByEmailHashAndPersonPiiIdNot(EMAIL_HASH, PERSON_PII_ID);
+            inOrder.verify(piiNormalizer, times(1)).normalizePhoneNumber(TEST_PHONE);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_PHONE);
+            inOrder.verify(personPIIRepository, times(1)).existsByPhoneHashAndPersonPiiIdNot(PHONE_HASH, PERSON_PII_ID);
+            inOrder.verify(adultStudentRepository, times(1)).saveAndFlush(existing);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -198,10 +219,23 @@ class AdultStudentUpdateUseCaseTest {
             useCase.update(ADULT_STUDENT_ID, dto);
 
             // Then
-            verify(piiNormalizer).normalizeEmail(TEST_EMAIL);
-            verify(piiNormalizer).normalizePhoneNumber(TEST_PHONE);
-            verify(hashingService).generateHash(NORMALIZED_EMAIL);
-            verify(hashingService).generateHash(NORMALIZED_PHONE);
+            assertThat(pii.getEmailHash()).isEqualTo(EMAIL_HASH);
+            assertThat(pii.getPhoneHash()).isEqualTo(PHONE_HASH);
+
+            InOrder inOrder = inOrder(tenantContextHolder, adultStudentRepository, modelMapper,
+                    piiNormalizer, hashingService, personPIIRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(adultStudentRepository, times(1)).findById(compositeId);
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, AdultStudentUpdateUseCase.MAP_NAME);
+            inOrder.verify(modelMapper, times(1)).map(dto, pii);
+            inOrder.verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            inOrder.verify(personPIIRepository, times(1)).existsByEmailHashAndPersonPiiIdNot(EMAIL_HASH, PERSON_PII_ID);
+            inOrder.verify(piiNormalizer, times(1)).normalizePhoneNumber(TEST_PHONE);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_PHONE);
+            inOrder.verify(personPIIRepository, times(1)).existsByPhoneHashAndPersonPiiIdNot(PHONE_HASH, PERSON_PII_ID);
+            inOrder.verify(adultStudentRepository, times(1)).saveAndFlush(existing);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -237,6 +271,17 @@ class AdultStudentUpdateUseCaseTest {
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.ADULT_STUDENT);
                         assertThat(dee.getField()).isEqualTo(PiiField.EMAIL);
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, adultStudentRepository, modelMapper,
+                    piiNormalizer, hashingService, personPIIRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(adultStudentRepository, times(1)).findById(compositeId);
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, AdultStudentUpdateUseCase.MAP_NAME);
+            inOrder.verify(modelMapper, times(1)).map(dto, pii);
+            inOrder.verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            inOrder.verify(personPIIRepository, times(1)).existsByEmailHashAndPersonPiiIdNot(EMAIL_HASH, PERSON_PII_ID);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -268,6 +313,20 @@ class AdultStudentUpdateUseCaseTest {
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.ADULT_STUDENT);
                         assertThat(dee.getField()).isEqualTo(PiiField.PHONE_NUMBER);
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, adultStudentRepository, modelMapper,
+                    piiNormalizer, hashingService, personPIIRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(adultStudentRepository, times(1)).findById(compositeId);
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, AdultStudentUpdateUseCase.MAP_NAME);
+            inOrder.verify(modelMapper, times(1)).map(dto, pii);
+            inOrder.verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            inOrder.verify(personPIIRepository, times(1)).existsByEmailHashAndPersonPiiIdNot(EMAIL_HASH, PERSON_PII_ID);
+            inOrder.verify(piiNormalizer, times(1)).normalizePhoneNumber(TEST_PHONE);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_PHONE);
+            inOrder.verify(personPIIRepository, times(1)).existsByPhoneHashAndPersonPiiIdNot(PHONE_HASH, PERSON_PII_ID);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

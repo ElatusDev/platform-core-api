@@ -320,7 +320,7 @@ Level 3 (task):   Execution prompt → referenced spec docs → existing tests
 | `billing` | 6 aggregates: membership, compensation, payment×2, membership-assoc×2 |
 | `course-management` | 3 aggregates: course, schedule, course-event |
 | `tenant-management` | 3 entities: tenant, subscription, billing-cycle |
-| `mock-data-system` | `MockDataOrchestrator.java`, DAG-based entity dependency ordering |
+| `mock-data-service` | `MockDataOrchestrator.java`, DAG-based entity dependency ordering |
 
 ---
 

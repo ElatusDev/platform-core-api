@@ -410,9 +410,9 @@ public interface NonceStore {
 }
 ```
 
-### Step 3.2: Create RedisNonceStore
+### Step 3.2: Create AkademiaPlusRedisNonceStore
 
-**File**: `security/src/main/java/com/akademiaplus/hmac/interfaceadapters/RedisNonceStore.java`
+**File**: `security/src/main/java/com/akademiaplus/hmac/interfaceadapters/AkademiaPlusRedisNonceStore.java`
 
 - `@Service`, `@ConditionalOnBean(StringRedisTemplate.class)`
 - Constructor-injected `StringRedisTemplate`
@@ -426,7 +426,7 @@ public interface NonceStore {
 
 **File**: `security/src/main/java/com/akademiaplus/hmac/interfaceadapters/InMemoryNonceStore.java`
 
-- `@Service`, `@ConditionalOnMissingBean(RedisNonceStore.class)`
+- `@Service`, `@ConditionalOnMissingBean(AkademiaPlusRedisNonceStore.class)`
 - Uses `ConcurrentHashMap<String, Long>` — key is nonce, value is expiry timestamp (epoch millis)
 - `exists(String nonce)`: Check map, return false if null or expired (remove expired entry)
 - `store(String nonce, long ttlSeconds)`: Put `nonce -> System.currentTimeMillis() + (ttlSeconds * 1000L)`
@@ -447,7 +447,7 @@ git add security/src/main/java/com/akademiaplus/hmac/
 git commit -m "feat(security): add NonceStore interface with Redis and in-memory implementations
 
 Add NonceStore interface for replay attack prevention. Add
-RedisNonceStore (production, TTL-based) and InMemoryNonceStore
+AkademiaPlusRedisNonceStore (production, TTL-based) and InMemoryNonceStore
 (testing/local, ConcurrentHashMap with scheduled cleanup)."
 ```
 

@@ -8,6 +8,7 @@
 package com.akademiaplus.payroll.usecases;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -53,7 +54,7 @@ class GetAllCompensationsUseCaseTest {
             List<GetCompensationResponseDTO> result = useCase.getAll();
             // Then
             assertThat(result).isEmpty();
-            verify(compensationRepository).findAll();
+            verify(compensationRepository, times(1)).findAll();
             verifyNoMoreInteractions(compensationRepository, modelMapper);
         }
 
@@ -72,9 +73,9 @@ class GetAllCompensationsUseCaseTest {
             List<GetCompensationResponseDTO> result = useCase.getAll();
             // Then
             assertThat(result).containsExactly(dto1, dto2);
-            verify(compensationRepository).findAll();
-            verify(modelMapper).map(compensation1, GetCompensationResponseDTO.class);
-            verify(modelMapper).map(compensation2, GetCompensationResponseDTO.class);
+            verify(compensationRepository, times(1)).findAll();
+            verify(modelMapper, times(1)).map(compensation1, GetCompensationResponseDTO.class);
+            verify(modelMapper, times(1)).map(compensation2, GetCompensationResponseDTO.class);
             verifyNoMoreInteractions(compensationRepository, modelMapper);
         }
     }

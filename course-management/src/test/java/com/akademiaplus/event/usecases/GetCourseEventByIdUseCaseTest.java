@@ -18,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -67,10 +68,11 @@ class GetCourseEventByIdUseCaseTest {
 
             // Then
             assertThat(result).isEqualTo(expectedDto);
-            verify(tenantContextHolder).getTenantId();
-            verify(courseEventRepository).findById(new CourseEventDataModel.CourseEventCompositeId(TENANT_ID, COURSE_EVENT_ID));
-            verify(modelMapper).map(courseEvent, GetCourseEventResponseDTO.class);
-            verifyNoMoreInteractions(tenantContextHolder, courseEventRepository, modelMapper);
+            InOrder inOrder = inOrder(tenantContextHolder, courseEventRepository, modelMapper);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(courseEventRepository, times(1)).findById(new CourseEventDataModel.CourseEventCompositeId(TENANT_ID, COURSE_EVENT_ID));
+            inOrder.verify(modelMapper, times(1)).map(courseEvent, GetCourseEventResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -94,9 +96,11 @@ class GetCourseEventByIdUseCaseTest {
                         assertThat(ex.getEntityType()).isEqualTo(EntityType.COURSE_EVENT);
                         assertThat(ex.getEntityId()).isEqualTo(String.valueOf(COURSE_EVENT_ID));
                     });
-            verify(tenantContextHolder).getTenantId();
-            verify(courseEventRepository).findById(new CourseEventDataModel.CourseEventCompositeId(TENANT_ID, COURSE_EVENT_ID));
-            verifyNoMoreInteractions(tenantContextHolder, courseEventRepository, modelMapper);
+
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(courseEventRepository, times(1)).findById(new CourseEventDataModel.CourseEventCompositeId(TENANT_ID, COURSE_EVENT_ID));
+            verifyNoInteractions(modelMapper);
+            verifyNoMoreInteractions(tenantContextHolder, courseEventRepository);
         }
     }
 
@@ -114,8 +118,10 @@ class GetCourseEventByIdUseCaseTest {
             assertThatThrownBy(() -> useCase.get(COURSE_EVENT_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(GetCourseEventByIdUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
-            verify(tenantContextHolder).getTenantId();
-            verifyNoMoreInteractions(tenantContextHolder, courseEventRepository, modelMapper);
+
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoInteractions(courseEventRepository, modelMapper);
+            verifyNoMoreInteractions(tenantContextHolder);
         }
     }
 }

@@ -9,6 +9,7 @@ package com.akademiaplus.payroll.usecases;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -64,9 +65,9 @@ class GetCompensationByIdUseCaseTest {
             GetCompensationResponseDTO result = useCase.get(COMPENSATION_ID);
             // Then
             assertThat(result).isEqualTo(expectedDto);
-            verify(tenantContextHolder).getTenantId();
-            verify(compensationRepository).findById(new CompensationDataModel.CompensationCompositeId(TENANT_ID, COMPENSATION_ID));
-            verify(modelMapper).map(compensation, GetCompensationResponseDTO.class);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(compensationRepository, times(1)).findById(new CompensationDataModel.CompensationCompositeId(TENANT_ID, COMPENSATION_ID));
+            verify(modelMapper, times(1)).map(compensation, GetCompensationResponseDTO.class);
             verifyNoMoreInteractions(tenantContextHolder, compensationRepository, modelMapper);
         }
     }
@@ -86,8 +87,8 @@ class GetCompensationByIdUseCaseTest {
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasFieldOrPropertyWithValue("entityType", EntityType.COMPENSATION)
                     .hasFieldOrPropertyWithValue("entityId", String.valueOf(COMPENSATION_ID));
-            verify(tenantContextHolder).getTenantId();
-            verify(compensationRepository).findById(new CompensationDataModel.CompensationCompositeId(TENANT_ID, COMPENSATION_ID));
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(compensationRepository, times(1)).findById(new CompensationDataModel.CompensationCompositeId(TENANT_ID, COMPENSATION_ID));
             verifyNoMoreInteractions(tenantContextHolder, compensationRepository, modelMapper);
         }
     }
@@ -104,7 +105,7 @@ class GetCompensationByIdUseCaseTest {
             assertThatThrownBy(() -> useCase.get(COMPENSATION_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(GetCompensationByIdUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
-            verify(tenantContextHolder).getTenantId();
+            verify(tenantContextHolder, times(1)).getTenantId();
             verifyNoMoreInteractions(tenantContextHolder, compensationRepository, modelMapper);
         }
     }

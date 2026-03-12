@@ -11,7 +11,7 @@ import com.akademiaplus.internal.exceptions.RefreshTokenExpiredException;
 import com.akademiaplus.internal.exceptions.TokenReuseDetectedException;
 import com.akademiaplus.internal.interfaceadapters.RefreshTokenRepository;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
-import com.akademiaplus.internal.interfaceadapters.session.RedisSessionStore;
+import com.akademiaplus.internal.interfaceadapters.session.AkademiaPlusRedisSessionStore;
 import com.akademiaplus.internal.usecases.domain.TokenRefreshResult;
 import com.akademiaplus.security.RefreshTokenDataModel;
 import com.akademiaplus.utilities.security.HashingService;
@@ -53,7 +53,7 @@ public class TokenRefreshUseCase {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final RedisSessionStore redisSessionStore;
+    private final AkademiaPlusRedisSessionStore akademiaPlusRedisSessionStore;
     private final HashingService hashingService;
     private final ApplicationContext applicationContext;
 
@@ -62,18 +62,18 @@ public class TokenRefreshUseCase {
      *
      * @param jwtTokenProvider       the JWT token provider
      * @param refreshTokenRepository the refresh token repository
-     * @param redisSessionStore      the Redis session store
+     * @param akademiaPlusRedisSessionStore      the Redis session store
      * @param hashingService         the hashing service for SHA-256 operations
      * @param applicationContext     the Spring application context for prototype beans
      */
     public TokenRefreshUseCase(JwtTokenProvider jwtTokenProvider,
                                 RefreshTokenRepository refreshTokenRepository,
-                                RedisSessionStore redisSessionStore,
+                                AkademiaPlusRedisSessionStore akademiaPlusRedisSessionStore,
                                 HashingService hashingService,
                                 ApplicationContext applicationContext) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenRepository = refreshTokenRepository;
-        this.redisSessionStore = redisSessionStore;
+        this.akademiaPlusRedisSessionStore = akademiaPlusRedisSessionStore;
         this.hashingService = hashingService;
         this.applicationContext = applicationContext;
     }
@@ -105,7 +105,7 @@ public class TokenRefreshUseCase {
         if (existingToken.getRevokedAt() != null) {
             LOGGER.warn("Token reuse detected for family={}, revoking all tokens", existingToken.getFamilyId());
             refreshTokenRepository.revokeAllByFamilyId(existingToken.getFamilyId(), Instant.now());
-            redisSessionStore.revokeAllSessionsForUser(existingToken.getUsername(), existingToken.getTenantId());
+            akademiaPlusRedisSessionStore.revokeAllSessionsForUser(existingToken.getUsername(), existingToken.getTenantId());
             throw new TokenReuseDetectedException(existingToken.getFamilyId());
         }
 
@@ -123,7 +123,7 @@ public class TokenRefreshUseCase {
                 existingToken.getUsername(), existingToken.getTenantId(), claims);
         String newJti = jwtTokenProvider.getJti(newAccessToken);
 
-        redisSessionStore.storeSession(
+        akademiaPlusRedisSessionStore.storeSession(
                 newJti,
                 existingToken.getUsername(),
                 existingToken.getTenantId(),

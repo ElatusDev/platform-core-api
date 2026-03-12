@@ -7,6 +7,7 @@ import lombok.Setter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -50,7 +51,9 @@ class EntityMetadataResolverTest {
         Method setter = entityClass.getMethod("setUserId", Long.class);
 
         when(introspector.findTableName(entityClass)).thenReturn(Optional.of(TABLE_NAME));
+        when(introspector.hasEmbeddedId(entityClass)).thenReturn(false);
         when(introspector.findIdField(entityClass)).thenReturn(Optional.of(idField));
+        when(introspector.hasGeneratedValue(idField)).thenReturn(false);
         when(introspector.findGetter(entityClass, idField)).thenReturn(getter);
         when(introspector.findSetter(entityClass, idField)).thenReturn(setter);
 
@@ -64,6 +67,15 @@ class EntityMetadataResolverTest {
         assertThat(metadata.getIdFieldName()).isEqualTo(ID_FIELD_NAME);
         assertThat(metadata.getGetter()).isEqualTo(getter);
         assertThat(metadata.getSetter()).isEqualTo(setter);
+
+        InOrder inOrder = inOrder(introspector);
+        inOrder.verify(introspector, times(1)).findTableName(entityClass);
+        inOrder.verify(introspector, times(1)).hasEmbeddedId(entityClass);
+        inOrder.verify(introspector, times(1)).findIdField(entityClass);
+        inOrder.verify(introspector, times(1)).hasGeneratedValue(idField);
+        inOrder.verify(introspector, times(1)).findGetter(entityClass, idField);
+        inOrder.verify(introspector, times(1)).findSetter(entityClass, idField);
+        verifyNoMoreInteractions(introspector);
     }
 
     @Test
@@ -74,7 +86,9 @@ class EntityMetadataResolverTest {
         when(mockField.getName()).thenReturn(ID_FIELD_NAME);
 
         when(introspector.findTableName(entityClass)).thenReturn(Optional.of(TABLE_NAME));
+        when(introspector.hasEmbeddedId(entityClass)).thenReturn(false);
         when(introspector.findIdField(entityClass)).thenReturn(Optional.of(mockField));
+        when(introspector.hasGeneratedValue(mockField)).thenReturn(false);
         when(introspector.findGetter(entityClass, mockField)).thenReturn(mock(Method.class));
         when(introspector.findSetter(entityClass, mockField)).thenReturn(mock(Method.class));
 
@@ -85,6 +99,7 @@ class EntityMetadataResolverTest {
         // Then
         assertThat(firstCall).isSameAs(secondCall); // Same instance from cache
         verify(introspector, times(EXPECTED_SINGLE_INVOCATION)).findTableName(entityClass); // Only called once
+        verifyNoMoreInteractions(introspector);
     }
 
     @Test
@@ -98,6 +113,8 @@ class EntityMetadataResolverTest {
 
         // Then
         assertThat(metadata.isSkip()).isTrue();
+        verify(introspector, times(1)).findTableName(entityClass);
+        verifyNoMoreInteractions(introspector);
     }
 
     @Test
@@ -105,6 +122,7 @@ class EntityMetadataResolverTest {
         // Given
         Class<?> entityClass = ValidEntity.class;
         when(introspector.findTableName(entityClass)).thenReturn(Optional.of(TABLE_NAME));
+        when(introspector.hasEmbeddedId(entityClass)).thenReturn(false);
         when(introspector.findIdField(entityClass)).thenReturn(Optional.empty());
 
         // When
@@ -112,6 +130,12 @@ class EntityMetadataResolverTest {
 
         // Then
         assertThat(metadata.isSkip()).isTrue();
+
+        InOrder inOrder = inOrder(introspector);
+        inOrder.verify(introspector, times(1)).findTableName(entityClass);
+        inOrder.verify(introspector, times(1)).hasEmbeddedId(entityClass);
+        inOrder.verify(introspector, times(1)).findIdField(entityClass);
+        verifyNoMoreInteractions(introspector);
     }
 
     @Test
@@ -121,7 +145,9 @@ class EntityMetadataResolverTest {
         Field idField = mock(Field.class);
 
         when(introspector.findTableName(entityClass)).thenReturn(Optional.of(TABLE_NAME));
+        when(introspector.hasEmbeddedId(entityClass)).thenReturn(false);
         when(introspector.findIdField(entityClass)).thenReturn(Optional.of(idField));
+        when(introspector.hasGeneratedValue(idField)).thenReturn(false);
         when(introspector.findGetter(entityClass, idField))
                 .thenThrow(new NoSuchMethodException("Getter not found"));
 
@@ -130,6 +156,14 @@ class EntityMetadataResolverTest {
 
         // Then
         assertThat(metadata.isSkip()).isTrue();
+
+        InOrder inOrder = inOrder(introspector);
+        inOrder.verify(introspector, times(1)).findTableName(entityClass);
+        inOrder.verify(introspector, times(1)).hasEmbeddedId(entityClass);
+        inOrder.verify(introspector, times(1)).findIdField(entityClass);
+        inOrder.verify(introspector, times(1)).hasGeneratedValue(idField);
+        inOrder.verify(introspector, times(1)).findGetter(entityClass, idField);
+        verifyNoMoreInteractions(introspector);
     }
 
     @Test
@@ -140,7 +174,9 @@ class EntityMetadataResolverTest {
         Method getter = mock(Method.class);
 
         when(introspector.findTableName(entityClass)).thenReturn(Optional.of(TABLE_NAME));
+        when(introspector.hasEmbeddedId(entityClass)).thenReturn(false);
         when(introspector.findIdField(entityClass)).thenReturn(Optional.of(idField));
+        when(introspector.hasGeneratedValue(idField)).thenReturn(false);
         when(introspector.findGetter(entityClass, idField)).thenReturn(getter);
         when(introspector.findSetter(entityClass, idField))
                 .thenThrow(new NoSuchMethodException("Setter not found"));
@@ -150,6 +186,15 @@ class EntityMetadataResolverTest {
 
         // Then
         assertThat(metadata.isSkip()).isTrue();
+
+        InOrder inOrder = inOrder(introspector);
+        inOrder.verify(introspector, times(1)).findTableName(entityClass);
+        inOrder.verify(introspector, times(1)).hasEmbeddedId(entityClass);
+        inOrder.verify(introspector, times(1)).findIdField(entityClass);
+        inOrder.verify(introspector, times(1)).hasGeneratedValue(idField);
+        inOrder.verify(introspector, times(1)).findGetter(entityClass, idField);
+        inOrder.verify(introspector, times(1)).findSetter(entityClass, idField);
+        verifyNoMoreInteractions(introspector);
     }
 
     @Test
@@ -160,7 +205,9 @@ class EntityMetadataResolverTest {
         when(mockField.getName()).thenReturn(ID_FIELD_NAME);
 
         when(introspector.findTableName(entityClass)).thenReturn(Optional.of(TABLE_NAME));
+        when(introspector.hasEmbeddedId(entityClass)).thenReturn(false);
         when(introspector.findIdField(entityClass)).thenReturn(Optional.of(mockField));
+        when(introspector.hasGeneratedValue(mockField)).thenReturn(false);
         when(introspector.findGetter(entityClass, mockField)).thenReturn(mock(Method.class));
         when(introspector.findSetter(entityClass, mockField)).thenReturn(mock(Method.class));
 
@@ -173,6 +220,8 @@ class EntityMetadataResolverTest {
         // Then
         assertThat(resolver.getCacheSize()).isZero();
         assertThat(initialCacheSize).isEqualTo(EXPECTED_SINGLE_CACHE_SIZE);
+        verify(introspector, times(1)).findTableName(entityClass);
+        verifyNoMoreInteractions(introspector);
     }
 
     @Test
@@ -184,12 +233,16 @@ class EntityMetadataResolverTest {
         when(mockField2.getName()).thenReturn(ANOTHER_ID_FIELD_NAME);
 
         when(introspector.findTableName(ValidEntity.class)).thenReturn(Optional.of(TABLE_NAME));
+        when(introspector.hasEmbeddedId(ValidEntity.class)).thenReturn(false);
         when(introspector.findIdField(ValidEntity.class)).thenReturn(Optional.of(mockField1));
+        when(introspector.hasGeneratedValue(mockField1)).thenReturn(false);
         when(introspector.findGetter(ValidEntity.class, mockField1)).thenReturn(mock(Method.class));
         when(introspector.findSetter(ValidEntity.class, mockField1)).thenReturn(mock(Method.class));
 
         when(introspector.findTableName(AnotherEntity.class)).thenReturn(Optional.of(ANOTHER_TABLE_NAME));
+        when(introspector.hasEmbeddedId(AnotherEntity.class)).thenReturn(false);
         when(introspector.findIdField(AnotherEntity.class)).thenReturn(Optional.of(mockField2));
+        when(introspector.hasGeneratedValue(mockField2)).thenReturn(false);
         when(introspector.findGetter(AnotherEntity.class, mockField2)).thenReturn(mock(Method.class));
         when(introspector.findSetter(AnotherEntity.class, mockField2)).thenReturn(mock(Method.class));
 
@@ -200,6 +253,9 @@ class EntityMetadataResolverTest {
 
         // Then
         assertThat(cacheSize).isEqualTo(EXPECTED_DOUBLE_CACHE_SIZE);
+        verify(introspector, times(1)).findTableName(ValidEntity.class);
+        verify(introspector, times(1)).findTableName(AnotherEntity.class);
+        verifyNoMoreInteractions(introspector);
     }
 
     @Test
@@ -210,7 +266,9 @@ class EntityMetadataResolverTest {
         when(mockField.getName()).thenReturn(ID_FIELD_NAME);
 
         when(introspector.findTableName(entityClass)).thenReturn(Optional.of(TABLE_NAME));
+        when(introspector.hasEmbeddedId(entityClass)).thenReturn(false);
         when(introspector.findIdField(entityClass)).thenReturn(Optional.of(mockField));
+        when(introspector.hasGeneratedValue(mockField)).thenReturn(false);
         when(introspector.findGetter(entityClass, mockField)).thenReturn(mock(Method.class));
         when(introspector.findSetter(entityClass, mockField)).thenReturn(mock(Method.class));
 
@@ -226,6 +284,7 @@ class EntityMetadataResolverTest {
         // Then
         assertThat(resolver.getCacheSize()).isEqualTo(EXPECTED_SINGLE_CACHE_SIZE);
         verify(introspector, times(EXPECTED_SINGLE_INVOCATION)).findTableName(entityClass); // Called only once despite concurrent access
+        verifyNoMoreInteractions(introspector);
     }
 
     // Test helper classes

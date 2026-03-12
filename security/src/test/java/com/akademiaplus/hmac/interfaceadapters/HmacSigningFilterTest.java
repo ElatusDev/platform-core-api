@@ -33,6 +33,8 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+import org.mockito.InOrder;
+
 /**
  * Unit tests for {@link HmacSigningFilter}.
  *
@@ -86,8 +88,11 @@ class HmacSigningFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
-            verifyNoInteractions(hmacSignatureService);
+            assertThat(response.getStatus()).isEqualTo(200);
+            verify(hmacProperties, times(1)).isEnabled();
+            verify(filterChain, times(1)).doFilter(request, response);
+            verifyNoInteractions(hmacSignatureService, nonceStore, hmacKeyService);
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
         }
 
         @Test
@@ -100,8 +105,11 @@ class HmacSigningFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(request, response);
-            verifyNoInteractions(hmacSignatureService);
+            assertThat(response.getStatus()).isEqualTo(200);
+            verify(hmacProperties, times(1)).isEnabled();
+            verify(filterChain, times(1)).doFilter(request, response);
+            verifyNoInteractions(hmacSignatureService, nonceStore, hmacKeyService);
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
         }
     }
 
@@ -124,7 +132,9 @@ class HmacSigningFilterTest {
 
             // Then
             assertThat(response.getStatus()).isEqualTo(401);
-            verifyNoInteractions(filterChain);
+            verify(hmacProperties, times(1)).isEnabled();
+            verifyNoInteractions(hmacSignatureService, nonceStore, hmacKeyService, filterChain);
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
         }
 
         @Test
@@ -142,6 +152,9 @@ class HmacSigningFilterTest {
             Map<String, String> body = objectMapper.readValue(
                     response.getContentAsString(), Map.class);
             assertThat(body.get("code")).isEqualTo(HmacSignatureException.ERROR_CODE_HMAC);
+            verify(hmacProperties, times(1)).isEnabled();
+            verifyNoInteractions(hmacSignatureService, nonceStore, hmacKeyService, filterChain);
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
         }
     }
 
@@ -164,7 +177,10 @@ class HmacSigningFilterTest {
 
             // Then
             assertThat(response.getStatus()).isEqualTo(401);
-            verifyNoInteractions(filterChain);
+            verify(hmacProperties, times(1)).isEnabled();
+            verify(hmacProperties, times(2)).getTimestampToleranceSeconds();
+            verifyNoInteractions(hmacSignatureService, nonceStore, hmacKeyService, filterChain);
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
         }
     }
 
@@ -187,7 +203,11 @@ class HmacSigningFilterTest {
 
             // Then
             assertThat(response.getStatus()).isEqualTo(401);
-            verifyNoInteractions(filterChain);
+            verify(hmacProperties, times(1)).isEnabled();
+            verify(hmacProperties, times(1)).getTimestampToleranceSeconds();
+            verify(nonceStore, times(1)).exists(VALID_NONCE);
+            verifyNoInteractions(hmacSignatureService, hmacKeyService, filterChain);
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
         }
     }
 
@@ -213,7 +233,12 @@ class HmacSigningFilterTest {
 
             // Then
             assertThat(response.getStatus()).isEqualTo(401);
-            verifyNoInteractions(filterChain);
+            verify(hmacProperties, times(1)).isEnabled();
+            verify(hmacProperties, times(1)).getTimestampToleranceSeconds();
+            verify(nonceStore, times(1)).exists(VALID_NONCE);
+            verify(hmacSignatureService, times(1)).computeBodyHash(REQUEST_BODY.getBytes(StandardCharsets.UTF_8));
+            verifyNoInteractions(hmacKeyService, filterChain);
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
         }
     }
 
@@ -245,8 +270,10 @@ class HmacSigningFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(filterChain).doFilter(any(CachedBodyHttpServletRequest.class), eq(response));
-            verify(nonceStore).store(VALID_NONCE, TOLERANCE_SECONDS);
+            assertThat(response.getStatus()).isEqualTo(200);
+            verify(filterChain, times(1)).doFilter(any(CachedBodyHttpServletRequest.class), eq(response));
+            verify(nonceStore, times(1)).store(VALID_NONCE, TOLERANCE_SECONDS);
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
         }
 
         @Test
@@ -275,6 +302,7 @@ class HmacSigningFilterTest {
             // Then
             assertThat(response.getStatus()).isEqualTo(401);
             verifyNoInteractions(filterChain);
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
         }
 
         @Test
@@ -301,7 +329,10 @@ class HmacSigningFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             // Then
-            verify(nonceStore).store(VALID_NONCE, TOLERANCE_SECONDS);
+            assertThat(response.getStatus()).isEqualTo(200);
+            verify(nonceStore, times(1)).store(VALID_NONCE, TOLERANCE_SECONDS);
+            verify(filterChain, times(1)).doFilter(any(CachedBodyHttpServletRequest.class), eq(response));
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
         }
     }
 

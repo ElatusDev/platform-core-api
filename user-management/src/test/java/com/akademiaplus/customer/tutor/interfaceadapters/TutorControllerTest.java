@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -101,7 +102,7 @@ class TutorControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.data", hasSize(0)));
 
-            verify(getAllTutorsUseCase).getAll();
+            verify(getAllTutorsUseCase, times(1)).getAll();
             verifyNoMoreInteractions(getAllTutorsUseCase);
         }
 
@@ -119,7 +120,7 @@ class TutorControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.data", hasSize(2)));
 
-            verify(getAllTutorsUseCase).getAll();
+            verify(getAllTutorsUseCase, times(1)).getAll();
             verifyNoMoreInteractions(getAllTutorsUseCase);
         }
     }
@@ -141,7 +142,7 @@ class TutorControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-            verify(getTutorByIdUseCase).get(TUTOR_ID);
+            verify(getTutorByIdUseCase, times(1)).get(TUTOR_ID);
             verifyNoMoreInteractions(getTutorByIdUseCase);
         }
 
@@ -160,7 +161,7 @@ class TutorControllerTest {
                     .andExpect(status().isNotFound())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-            verify(getTutorByIdUseCase).get(TUTOR_ID);
+            verify(getTutorByIdUseCase, times(1)).get(TUTOR_ID);
             verifyNoMoreInteractions(getTutorByIdUseCase);
         }
     }

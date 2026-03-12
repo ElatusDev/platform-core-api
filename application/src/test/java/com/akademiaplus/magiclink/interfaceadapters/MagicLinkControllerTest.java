@@ -26,8 +26,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.mockito.InOrder;
+
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -82,6 +83,12 @@ class MagicLinkControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
+
+            verify(magicLinkRequestUseCase, times(1)).requestMagicLink(
+                    org.mockito.ArgumentMatchers.argThat(dto ->
+                            TEST_EMAIL.equals(dto.getEmail()) && TEST_TENANT_ID.equals(dto.getTenantId())));
+            verifyNoMoreInteractions(magicLinkRequestUseCase, magicLinkVerificationUseCase,
+                    cookieService, httpServletResponse);
         }
 
         @Test
@@ -97,9 +104,11 @@ class MagicLinkControllerTest {
                     .andExpect(status().isOk());
 
             // Then
-            verify(magicLinkRequestUseCase).requestMagicLink(
+            verify(magicLinkRequestUseCase, times(1)).requestMagicLink(
                     org.mockito.ArgumentMatchers.argThat(dto ->
                             TEST_EMAIL.equals(dto.getEmail()) && TEST_TENANT_ID.equals(dto.getTenantId())));
+            verifyNoMoreInteractions(magicLinkRequestUseCase, magicLinkVerificationUseCase,
+                    cookieService, httpServletResponse);
         }
     }
 
@@ -124,6 +133,14 @@ class MagicLinkControllerTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.token").value(ACCESS_TOKEN));
+
+            InOrder inOrder = inOrder(magicLinkVerificationUseCase, cookieService);
+            inOrder.verify(magicLinkVerificationUseCase, times(1)).verifyMagicLink(
+                    org.mockito.ArgumentMatchers.argThat(dto ->
+                            TEST_RAW_TOKEN.equals(dto.getToken()) && TEST_TENANT_ID.equals(dto.getTenantId())));
+            inOrder.verify(cookieService, times(1)).addTokenCookies(httpServletResponse, ACCESS_TOKEN, REFRESH_TOKEN);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoMoreInteractions(magicLinkRequestUseCase, httpServletResponse);
         }
 
         @Test
@@ -144,7 +161,13 @@ class MagicLinkControllerTest {
                     .andExpect(status().isOk());
 
             // Then
-            verify(cookieService).addTokenCookies(httpServletResponse, ACCESS_TOKEN, REFRESH_TOKEN);
+            InOrder inOrder = inOrder(magicLinkVerificationUseCase, cookieService);
+            inOrder.verify(magicLinkVerificationUseCase, times(1)).verifyMagicLink(
+                    org.mockito.ArgumentMatchers.argThat(dto ->
+                            TEST_RAW_TOKEN.equals(dto.getToken()) && TEST_TENANT_ID.equals(dto.getTenantId())));
+            inOrder.verify(cookieService, times(1)).addTokenCookies(httpServletResponse, ACCESS_TOKEN, REFRESH_TOKEN);
+            inOrder.verifyNoMoreInteractions();
+            verifyNoMoreInteractions(magicLinkRequestUseCase, httpServletResponse);
         }
     }
 }

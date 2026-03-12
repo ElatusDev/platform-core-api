@@ -37,7 +37,10 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -88,8 +91,11 @@ class NotificationControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$", hasSize(0)));
 
-            verify(getAllNotificationsUseCase).getAll(null);
-            verifyNoMoreInteractions(getAllNotificationsUseCase);
+            verify(getAllNotificationsUseCase, times(1)).getAll(null);
+            verifyNoMoreInteractions(notificationCreationUseCase, deleteNotificationUseCase,
+                    getAllNotificationsUseCase, getNotificationByIdUseCase,
+                    markNotificationAsReadUseCase, notificationDispatchService,
+                    modelMapper, messageService);
         }
 
         @Test
@@ -106,8 +112,11 @@ class NotificationControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$", hasSize(2)));
 
-            verify(getAllNotificationsUseCase).getAll(null);
-            verifyNoMoreInteractions(getAllNotificationsUseCase);
+            verify(getAllNotificationsUseCase, times(1)).getAll(null);
+            verifyNoMoreInteractions(notificationCreationUseCase, deleteNotificationUseCase,
+                    getAllNotificationsUseCase, getNotificationByIdUseCase,
+                    markNotificationAsReadUseCase, notificationDispatchService,
+                    modelMapper, messageService);
         }
     }
 
@@ -128,8 +137,11 @@ class NotificationControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-            verify(getNotificationByIdUseCase).get(NOTIFICATION_ID);
-            verifyNoMoreInteractions(getNotificationByIdUseCase);
+            verify(getNotificationByIdUseCase, times(1)).get(NOTIFICATION_ID);
+            verifyNoMoreInteractions(notificationCreationUseCase, deleteNotificationUseCase,
+                    getAllNotificationsUseCase, getNotificationByIdUseCase,
+                    markNotificationAsReadUseCase, notificationDispatchService,
+                    modelMapper, messageService);
         }
 
         @Test
@@ -146,9 +158,12 @@ class NotificationControllerTest {
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound());
 
-            verify(getNotificationByIdUseCase).get(NOTIFICATION_ID);
-            verify(messageService).getEntityNotFound(EntityType.NOTIFICATION, String.valueOf(NOTIFICATION_ID));
-            verifyNoMoreInteractions(getNotificationByIdUseCase, messageService);
+            verify(getNotificationByIdUseCase, times(1)).get(NOTIFICATION_ID);
+            verify(messageService, times(1)).getEntityNotFound(EntityType.NOTIFICATION, String.valueOf(NOTIFICATION_ID));
+            verifyNoMoreInteractions(notificationCreationUseCase, deleteNotificationUseCase,
+                    getAllNotificationsUseCase, getNotificationByIdUseCase,
+                    markNotificationAsReadUseCase, notificationDispatchService,
+                    modelMapper, messageService);
         }
     }
 
@@ -167,8 +182,11 @@ class NotificationControllerTest {
                             .param("userId", String.valueOf(USER_ID)))
                     .andExpect(status().isOk());
 
-            verify(markNotificationAsReadUseCase).markAsRead(NOTIFICATION_ID, USER_ID);
-            verifyNoMoreInteractions(markNotificationAsReadUseCase);
+            verify(markNotificationAsReadUseCase, times(1)).markAsRead(NOTIFICATION_ID, USER_ID);
+            verifyNoMoreInteractions(notificationCreationUseCase, deleteNotificationUseCase,
+                    getAllNotificationsUseCase, getNotificationByIdUseCase,
+                    markNotificationAsReadUseCase, notificationDispatchService,
+                    modelMapper, messageService);
         }
     }
 
@@ -199,10 +217,13 @@ class NotificationControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                     .andExpect(jsonPath("$.notificationDeliveryId").value(DELIVERY_ID));
 
-            verify(getNotificationByIdUseCase).getEntity(NOTIFICATION_ID);
-            verify(notificationDispatchService).dispatch(notification);
-            verify(modelMapper).map(delivery, NotificationDispatchResponseDTO.class);
-            verifyNoMoreInteractions(getNotificationByIdUseCase, notificationDispatchService, modelMapper);
+            verify(getNotificationByIdUseCase, times(1)).getEntity(NOTIFICATION_ID);
+            verify(notificationDispatchService, times(1)).dispatch(notification);
+            verify(modelMapper, times(1)).map(delivery, NotificationDispatchResponseDTO.class);
+            verifyNoMoreInteractions(notificationCreationUseCase, deleteNotificationUseCase,
+                    getAllNotificationsUseCase, getNotificationByIdUseCase,
+                    markNotificationAsReadUseCase, notificationDispatchService,
+                    modelMapper, messageService);
         }
 
         @Test
@@ -219,9 +240,12 @@ class NotificationControllerTest {
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound());
 
-            verify(getNotificationByIdUseCase).getEntity(NOTIFICATION_ID);
-            verify(messageService).getEntityNotFound(EntityType.NOTIFICATION, String.valueOf(NOTIFICATION_ID));
-            verifyNoMoreInteractions(getNotificationByIdUseCase, notificationDispatchService, messageService);
+            verify(getNotificationByIdUseCase, times(1)).getEntity(NOTIFICATION_ID);
+            verify(messageService, times(1)).getEntityNotFound(EntityType.NOTIFICATION, String.valueOf(NOTIFICATION_ID));
+            verifyNoMoreInteractions(notificationCreationUseCase, deleteNotificationUseCase,
+                    getAllNotificationsUseCase, getNotificationByIdUseCase,
+                    markNotificationAsReadUseCase, notificationDispatchService,
+                    modelMapper, messageService);
         }
     }
 }

@@ -24,6 +24,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
@@ -130,8 +131,26 @@ class CollaboratorCreationUseCaseTest {
             CollaboratorCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(repository).saveAndFlush(model);
             assertThat(result).isEqualTo(expectedResponse);
+
+            InOrder inOrder = inOrder(applicationContext, modelMapper, piiNormalizer, hashingService,
+                    personPIIRepository, repository);
+            inOrder.verify(applicationContext, times(1)).getBean(InternalAuthDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, model.getInternalAuth());
+            inOrder.verify(applicationContext, times(1)).getBean(PersonPIIDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, personPII);
+            inOrder.verify(applicationContext, times(1)).getBean(CollaboratorDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, model, CollaboratorCreationUseCase.TYPE_MAP);
+            inOrder.verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_EMAIL);
+            inOrder.verify(piiNormalizer, times(1)).normalizePhoneNumber(TEST_PHONE);
+            inOrder.verify(hashingService, times(1)).generateHash(NORMALIZED_PHONE);
+            inOrder.verify(hashingService, times(1)).generateHash("jdoe");
+            inOrder.verify(personPIIRepository, times(1)).existsByEmailHash(EMAIL_HASH);
+            inOrder.verify(personPIIRepository, times(1)).existsByPhoneHash(PHONE_HASH);
+            inOrder.verify(repository, times(1)).saveAndFlush(model);
+            inOrder.verify(modelMapper, times(1)).map(savedModel, CollaboratorCreationResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -158,6 +177,9 @@ class CollaboratorCreationUseCaseTest {
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.COLLABORATOR);
                         assertThat(dee.getField()).isEqualTo(PiiField.EMAIL);
                     });
+
+            verify(personPIIRepository, times(1)).existsByEmailHash(EMAIL_HASH);
+            verifyNoInteractions(repository);
         }
 
         @Test
@@ -180,6 +202,10 @@ class CollaboratorCreationUseCaseTest {
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.COLLABORATOR);
                         assertThat(dee.getField()).isEqualTo(PiiField.PHONE_NUMBER);
                     });
+
+            verify(personPIIRepository, times(1)).existsByEmailHash(EMAIL_HASH);
+            verify(personPIIRepository, times(1)).existsByPhoneHash(PHONE_HASH);
+            verifyNoInteractions(repository);
         }
     }
 }

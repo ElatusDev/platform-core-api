@@ -7,7 +7,7 @@
  */
 package com.akademiaplus.internal.interfaceadapters.jwt;
 
-import com.akademiaplus.internal.interfaceadapters.session.RedisSessionStore;
+import com.akademiaplus.internal.interfaceadapters.session.AkademiaPlusRedisSessionStore;
 import com.akademiaplus.internal.usecases.InternalAuthorizationUseCase;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -49,7 +49,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private final InternalAuthorizationUseCase internalAuthorizationUseCase;
     private final JwtTokenProvider jwtTokenProvider;
     private final CookieService cookieService;
-    private final RedisSessionStore redisSessionStore;
+    private final AkademiaPlusRedisSessionStore akademiaPlusRedisSessionStore;
 
     /**
      * Constructs the filter with all required dependencies.
@@ -57,16 +57,16 @@ public class JwtRequestFilter extends OncePerRequestFilter {
      * @param internalAuthorizationUseCase the authorization use case
      * @param jwtTokenProvider             the JWT token provider
      * @param cookieService                the cookie service for token extraction
-     * @param redisSessionStore            the Redis session store for revocation checks
+     * @param akademiaPlusRedisSessionStore            the Redis session store for revocation checks
      */
     public JwtRequestFilter(InternalAuthorizationUseCase internalAuthorizationUseCase,
                              JwtTokenProvider jwtTokenProvider,
                              CookieService cookieService,
-                             RedisSessionStore redisSessionStore) {
+                             AkademiaPlusRedisSessionStore akademiaPlusRedisSessionStore) {
         this.internalAuthorizationUseCase = internalAuthorizationUseCase;
         this.jwtTokenProvider = jwtTokenProvider;
         this.cookieService = cookieService;
-        this.redisSessionStore = redisSessionStore;
+        this.akademiaPlusRedisSessionStore = akademiaPlusRedisSessionStore;
     }
 
     @Override
@@ -95,7 +95,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             try {
                 if (jwtTokenProvider.validateToken(jwtToken)) {
                     String jti = jwtTokenProvider.getJti(jwtToken);
-                    if (jti != null && !redisSessionStore.isSessionValid(jti)) {
+                    if (jti != null && !akademiaPlusRedisSessionStore.isSessionValid(jti)) {
                         chain.doFilter(request, response);
                         return;
                     }
