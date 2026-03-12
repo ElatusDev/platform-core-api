@@ -172,6 +172,7 @@ class CollaboratorCreationUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.create(dto))
                     .isInstanceOf(DuplicateEntityException.class)
+                    .hasMessage("Duplicate " + PiiField.EMAIL + " for " + EntityType.COLLABORATOR)
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.COLLABORATOR);
@@ -197,6 +198,7 @@ class CollaboratorCreationUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.create(dto))
                     .isInstanceOf(DuplicateEntityException.class)
+                    .hasMessage("Duplicate " + PiiField.PHONE_NUMBER + " for " + EntityType.COLLABORATOR)
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.COLLABORATOR);

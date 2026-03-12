@@ -180,9 +180,10 @@ class PasskeyAuthenticationUseCaseTest {
                     .isInstanceOf(PasskeyAuthenticationException.class)
                     .hasMessageContaining(PasskeyAuthenticationUseCase.ERROR_USER_NOT_FOUND);
 
-            verify(hashingService, times(1)).generateHash(USERNAME);
-            verify(internalAuthRepository, times(1)).findByUsernameHash(USERNAME_HASH);
-            verifyNoMoreInteractions(hashingService, internalAuthRepository);
+            InOrder inOrder = inOrder(hashingService, internalAuthRepository);
+            inOrder.verify(hashingService, times(1)).generateHash(USERNAME);
+            inOrder.verify(internalAuthRepository, times(1)).findByUsernameHash(USERNAME_HASH);
+            inOrder.verifyNoMoreInteractions();
             verifyNoInteractions(relyingParty, challengeStore, credentialRepository,
                     registrationUseCase, jwtTokenProvider,
                     akademiaPlusRedisSessionStore, refreshTokenRepository, applicationContext);
@@ -269,11 +270,13 @@ class PasskeyAuthenticationUseCaseTest {
 
             // Then
             assertThat(result).isEqualTo(CREDENTIALS_GET_JSON);
-            verify(relyingParty, times(1)).startAssertion(argThat(opts -> opts != null));
-            verify(challengeStore, times(1)).store(eq(challenge.getBase64Url()),
+
+            InOrder inOrder = inOrder(relyingParty, challengeStore);
+            inOrder.verify(relyingParty, times(1)).startAssertion(argThat(opts -> opts != null));
+            inOrder.verify(challengeStore, times(1)).store(eq(challenge.getBase64Url()),
                     argThat(meta -> meta.tenantId().equals(TENANT_ID)));
-            verify(challengeStore, times(1)).storeOptions(challenge.getBase64Url(), OPTIONS_JSON);
-            verifyNoMoreInteractions(relyingParty, challengeStore);
+            inOrder.verify(challengeStore, times(1)).storeOptions(challenge.getBase64Url(), OPTIONS_JSON);
+            inOrder.verifyNoMoreInteractions();
             verifyNoInteractions(credentialRepository, registrationUseCase,
                     jwtTokenProvider, internalAuthRepository, hashingService,
                     akademiaPlusRedisSessionStore, refreshTokenRepository, applicationContext);
@@ -298,11 +301,13 @@ class PasskeyAuthenticationUseCaseTest {
 
             // Then
             assertThat(result).isEqualTo(CREDENTIALS_GET_JSON);
-            verify(relyingParty, times(1)).startAssertion(argThat(opts -> opts != null));
-            verify(challengeStore, times(1)).store(eq(challenge.getBase64Url()),
+
+            InOrder inOrder = inOrder(relyingParty, challengeStore);
+            inOrder.verify(relyingParty, times(1)).startAssertion(argThat(opts -> opts != null));
+            inOrder.verify(challengeStore, times(1)).store(eq(challenge.getBase64Url()),
                     argThat(meta -> meta.tenantId().equals(TENANT_ID)));
-            verify(challengeStore, times(1)).storeOptions(challenge.getBase64Url(), OPTIONS_JSON);
-            verifyNoMoreInteractions(relyingParty, challengeStore);
+            inOrder.verify(challengeStore, times(1)).storeOptions(challenge.getBase64Url(), OPTIONS_JSON);
+            inOrder.verifyNoMoreInteractions();
             verifyNoInteractions(credentialRepository, registrationUseCase,
                     jwtTokenProvider, internalAuthRepository, hashingService,
                     akademiaPlusRedisSessionStore, refreshTokenRepository, applicationContext);

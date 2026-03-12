@@ -97,6 +97,7 @@ class MinorStudentControllerTest {
 
             verify(getAllMinorStudentsUseCase, times(1)).getAll();
             verifyNoMoreInteractions(getAllMinorStudentsUseCase);
+            verifyNoInteractions(getMinorStudentByIdUseCase, minorStudentUpdateUseCase, deleteMinorStudentUseCase, messageService);
         }
 
         @Test
@@ -115,6 +116,7 @@ class MinorStudentControllerTest {
 
             verify(getAllMinorStudentsUseCase, times(1)).getAll();
             verifyNoMoreInteractions(getAllMinorStudentsUseCase);
+            verifyNoInteractions(getMinorStudentByIdUseCase, minorStudentUpdateUseCase, deleteMinorStudentUseCase, messageService);
         }
     }
 
@@ -137,6 +139,7 @@ class MinorStudentControllerTest {
 
             verify(getMinorStudentByIdUseCase, times(1)).get(MINOR_STUDENT_ID);
             verifyNoMoreInteractions(getMinorStudentByIdUseCase);
+            verifyNoInteractions(getAllMinorStudentsUseCase, minorStudentUpdateUseCase, deleteMinorStudentUseCase, messageService);
         }
 
         @Test
@@ -155,7 +158,9 @@ class MinorStudentControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
             verify(getMinorStudentByIdUseCase, times(1)).get(MINOR_STUDENT_ID);
-            verifyNoMoreInteractions(getMinorStudentByIdUseCase);
+            verify(messageService, times(1)).getEntityNotFound(EntityType.MINOR_STUDENT, String.valueOf(MINOR_STUDENT_ID));
+            verifyNoMoreInteractions(getMinorStudentByIdUseCase, messageService);
+            verifyNoInteractions(getAllMinorStudentsUseCase, minorStudentUpdateUseCase, deleteMinorStudentUseCase);
         }
     }
 }

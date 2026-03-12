@@ -127,9 +127,10 @@ class OAuthAuthenticationUseCaseTest {
                     .isInstanceOf(OAuthProviderException.class)
                     .hasMessageContaining("google");
 
-            verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
-            verify(googleClient, times(1)).exchangeCodeForProfile(TEST_BAD_CODE, TEST_REDIRECT_URI);
-            verifyNoMoreInteractions(tenantContextHolder, googleClient);
+            InOrder inOrder = inOrder(tenantContextHolder, googleClient);
+            inOrder.verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
+            inOrder.verify(googleClient, times(1)).exchangeCodeForProfile(TEST_BAD_CODE, TEST_REDIRECT_URI);
+            inOrder.verifyNoMoreInteractions();
             verifyNoInteractions(piiNormalizer, hashingService, personPIIRepository,
                     adultStudentRepository, jwtTokenProvider, applicationContext);
         }
@@ -220,14 +221,6 @@ class OAuthAuthenticationUseCaseTest {
             assertThat(result.refreshToken()).isEqualTo(TEST_NEW_REFRESH_TOKEN);
             assertThat(result.username()).isEqualTo(TEST_NEW_EMAIL);
 
-            verify(adultStudentRepository, times(1)).save(studentCaptor.capture());
-            AdultStudentDataModel saved = studentCaptor.getValue();
-            assertThat(saved.getTenantId()).isEqualTo(TEST_TENANT_ID);
-            assertThat(saved.getPersonPII()).isNotNull();
-            assertThat(saved.getPersonPII().getEmail()).isEqualTo(TEST_NEW_EMAIL);
-            assertThat(saved.getCustomerAuth()).isNotNull();
-            assertThat(saved.getCustomerAuth().getProvider()).isEqualTo("google");
-
             InOrder inOrder = inOrder(tenantContextHolder, googleClient, piiNormalizer,
                     hashingService, personPIIRepository, applicationContext,
                     adultStudentRepository, jwtTokenProvider);
@@ -241,6 +234,12 @@ class OAuthAuthenticationUseCaseTest {
             inOrder.verify(applicationContext, times(1)).getBean(CustomerAuthDataModel.class);
             inOrder.verify(applicationContext, times(1)).getBean(AdultStudentDataModel.class);
             inOrder.verify(adultStudentRepository, times(1)).save(studentCaptor.capture());
+            AdultStudentDataModel saved = studentCaptor.getValue();
+            assertThat(saved.getTenantId()).isEqualTo(TEST_TENANT_ID);
+            assertThat(saved.getPersonPII()).isNotNull();
+            assertThat(saved.getPersonPII().getEmail()).isEqualTo(TEST_NEW_EMAIL);
+            assertThat(saved.getCustomerAuth()).isNotNull();
+            assertThat(saved.getCustomerAuth().getProvider()).isEqualTo("google");
             inOrder.verify(jwtTokenProvider, times(1)).createAccessToken(TEST_NEW_EMAIL, TEST_TENANT_ID, expectedClaims);
             inOrder.verify(jwtTokenProvider, times(1)).createRefreshToken(
                     eq(TEST_NEW_EMAIL), eq(TEST_TENANT_ID),

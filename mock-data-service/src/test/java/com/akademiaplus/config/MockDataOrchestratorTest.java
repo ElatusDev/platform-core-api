@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -113,9 +112,10 @@ class MockDataOrchestratorTest {
             // Then — state assertion
             assertThat(TENANT_COUNT).isEqualTo(1);
 
-            // Then — interaction assertion
-            verify(tenantLoader, times(1)).accept(TENANT_COUNT);
-            verifyNoMoreInteractions(tenantLoader);
+            // Then — interaction assertion in order: tenant loader invoked with tenant count
+            InOrder inOrder = inOrder(tenantLoader);
+            inOrder.verify(tenantLoader, times(1)).accept(TENANT_COUNT);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -129,14 +129,15 @@ class MockDataOrchestratorTest {
             // Then — state assertion
             assertThat(ENTITIES_PER_TENANT).isEqualTo(7);
 
-            // Then — interaction assertions
-            verify(employeeLoader, times(1)).accept(ENTITIES_PER_TENANT);
-            verify(collaboratorLoader, times(1)).accept(ENTITIES_PER_TENANT);
-            verify(adultStudentLoader, times(1)).accept(ENTITIES_PER_TENANT);
-            verify(tutorLoader, times(1)).accept(ENTITIES_PER_TENANT);
-            verify(minorStudentLoader, times(1)).accept(ENTITIES_PER_TENANT);
-            verifyNoMoreInteractions(employeeLoader, collaboratorLoader,
+            // Then — interaction assertions in order: all entity loaders invoked
+            InOrder inOrder = inOrder(employeeLoader, collaboratorLoader,
                     adultStudentLoader, tutorLoader, minorStudentLoader);
+            inOrder.verify(employeeLoader, times(1)).accept(ENTITIES_PER_TENANT);
+            inOrder.verify(collaboratorLoader, times(1)).accept(ENTITIES_PER_TENANT);
+            inOrder.verify(adultStudentLoader, times(1)).accept(ENTITIES_PER_TENANT);
+            inOrder.verify(tutorLoader, times(1)).accept(ENTITIES_PER_TENANT);
+            inOrder.verify(minorStudentLoader, times(1)).accept(ENTITIES_PER_TENANT);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -250,15 +251,16 @@ class MockDataOrchestratorTest {
             assertThat(DEFAULT_TENANT_COUNT).isEqualTo(1);
             assertThat(DEFAULT_ENTITIES_PER_TENANT).isEqualTo(50);
 
-            // Then — interaction assertions
-            verify(tenantLoader, times(1)).accept(DEFAULT_TENANT_COUNT);
-            verify(employeeLoader, times(1)).accept(DEFAULT_ENTITIES_PER_TENANT);
-            verify(collaboratorLoader, times(1)).accept(DEFAULT_ENTITIES_PER_TENANT);
-            verify(adultStudentLoader, times(1)).accept(DEFAULT_ENTITIES_PER_TENANT);
-            verify(tutorLoader, times(1)).accept(DEFAULT_ENTITIES_PER_TENANT);
-            verify(minorStudentLoader, times(1)).accept(DEFAULT_ENTITIES_PER_TENANT);
-            verifyNoMoreInteractions(tenantLoader, employeeLoader, collaboratorLoader,
+            // Then — interaction assertions in order: tenant loader → entity loaders
+            InOrder inOrder = inOrder(tenantLoader, employeeLoader, collaboratorLoader,
                     adultStudentLoader, tutorLoader, minorStudentLoader);
+            inOrder.verify(tenantLoader, times(1)).accept(DEFAULT_TENANT_COUNT);
+            inOrder.verify(employeeLoader, times(1)).accept(DEFAULT_ENTITIES_PER_TENANT);
+            inOrder.verify(collaboratorLoader, times(1)).accept(DEFAULT_ENTITIES_PER_TENANT);
+            inOrder.verify(adultStudentLoader, times(1)).accept(DEFAULT_ENTITIES_PER_TENANT);
+            inOrder.verify(tutorLoader, times(1)).accept(DEFAULT_ENTITIES_PER_TENANT);
+            inOrder.verify(minorStudentLoader, times(1)).accept(DEFAULT_ENTITIES_PER_TENANT);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -284,15 +286,16 @@ class MockDataOrchestratorTest {
             // Then — state assertion
             assertThat(EXISTING_TENANT_ID).isEqualTo(1L);
 
-            // Then — interaction assertions
-            verify(tenantContextHolder, times(1)).setTenantId(EXISTING_TENANT_ID);
-            verify(employeeLoader, times(1)).accept(TEST_COUNT);
-            verify(collaboratorLoader, times(1)).accept(TEST_COUNT);
-            verify(adultStudentLoader, times(1)).accept(TEST_COUNT);
-            verify(tutorLoader, times(1)).accept(TEST_COUNT);
-            verify(minorStudentLoader, times(1)).accept(TEST_COUNT);
-            verifyNoMoreInteractions(employeeLoader, collaboratorLoader,
+            // Then — interaction assertions in order: set context → load all entity types
+            InOrder inOrder = inOrder(tenantContextHolder, employeeLoader, collaboratorLoader,
                     adultStudentLoader, tutorLoader, minorStudentLoader);
+            inOrder.verify(tenantContextHolder, times(1)).setTenantId(EXISTING_TENANT_ID);
+            inOrder.verify(employeeLoader, times(1)).accept(TEST_COUNT);
+            inOrder.verify(collaboratorLoader, times(1)).accept(TEST_COUNT);
+            inOrder.verify(adultStudentLoader, times(1)).accept(TEST_COUNT);
+            inOrder.verify(tutorLoader, times(1)).accept(TEST_COUNT);
+            inOrder.verify(minorStudentLoader, times(1)).accept(TEST_COUNT);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -304,6 +307,10 @@ class MockDataOrchestratorTest {
             // When / Then
             assertThatThrownBy(() -> orchestrator.generateForTenant(NON_EXISTENT_TENANT_ID, TEST_COUNT))
                     .isInstanceOf(EntityNotFoundException.class);
+
+            // Then — interaction assertion: tenantRepository was called before the throw
+            verify(tenantRepository, times(1)).findById(NON_EXISTENT_TENANT_ID);
+            verifyNoMoreInteractions(tenantRepository);
 
             // Then — downstream mocks not reached on short-circuit path
             verifyNoInteractions(tenantContextHolder, tenantLoader,
@@ -350,9 +357,12 @@ class MockDataOrchestratorTest {
             // Then — state assertion
             assertThat(EXISTING_TENANT_ID).isEqualTo(1L);
 
-            // Then — interaction assertion: tenant loader never called
-            verify(tenantLoader, never()).accept(TEST_COUNT);
-            verifyNoMoreInteractions(tenantLoader);
+            // Then — tenant loader is never called; entity loaders are called instead
+            verifyNoInteractions(tenantLoader);
+            InOrder inOrder = inOrder(tenantContextHolder, employeeLoader);
+            inOrder.verify(tenantContextHolder, times(1)).setTenantId(EXISTING_TENANT_ID);
+            inOrder.verify(employeeLoader, times(1)).accept(TEST_COUNT);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test

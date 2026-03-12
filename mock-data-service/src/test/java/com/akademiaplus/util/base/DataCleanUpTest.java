@@ -18,7 +18,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @DisplayName("DataCleanUp")
@@ -102,8 +104,12 @@ class DataCleanUpTest {
             assertThatThrownBy(cleanUp::clean)
                     .isInstanceOf(UnprocessableDataModelException.class);
 
+            // Then — interaction assertion: deleteAllInBatch was called before the throw
+            verify(unannotatedRepository, times(1)).deleteAllInBatch();
+
             // Then — downstream mocks not reached (exception thrown before createNativeQuery)
             verifyNoInteractions(nativeQuery);
+            verifyNoMoreInteractions(entityManager, repository, unannotatedRepository, nativeQuery);
         }
     }
 

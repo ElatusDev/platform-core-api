@@ -23,7 +23,12 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("ScheduledNotificationDispatcher")
 @ExtendWith(MockitoExtension.class)
@@ -81,7 +86,9 @@ class ScheduledNotificationDispatcherTest {
             dispatcher.dispatchScheduledNotifications();
 
             // Then
-            verify(notificationRepository).findScheduledBefore(org.mockito.ArgumentMatchers.isA(LocalDateTime.class));
+            verify(notificationRepository, times(1)).findScheduledBefore(org.mockito.ArgumentMatchers.isA(LocalDateTime.class));
+            verifyNoMoreInteractions(notificationRepository);
+            verifyNoInteractions(notificationDispatchService, applicationContext, tenantContextHolder);
         }
     }
 
@@ -103,8 +110,12 @@ class ScheduledNotificationDispatcherTest {
             dispatcher.dispatchScheduledNotifications();
 
             // Then
-            verify(notificationDispatchService).dispatch(notification1);
-            verify(notificationDispatchService).dispatch(notification2);
+            verify(notificationRepository, times(1)).findScheduledBefore(org.mockito.ArgumentMatchers.isA(LocalDateTime.class));
+            verify(applicationContext, times(1)).getBean(com.akademiaplus.infra.persistence.config.TenantContextHolder.class);
+            verify(tenantContextHolder, times(1)).setTenantId(TENANT_ID_1);
+            verify(notificationDispatchService, times(1)).dispatch(notification1);
+            verify(notificationDispatchService, times(1)).dispatch(notification2);
+            verifyNoMoreInteractions(notificationRepository, notificationDispatchService, applicationContext, tenantContextHolder);
         }
 
         @Test
@@ -118,7 +129,9 @@ class ScheduledNotificationDispatcherTest {
             dispatcher.dispatchScheduledNotifications();
 
             // Then
-            verifyNoInteractions(notificationDispatchService);
+            verify(notificationRepository, times(1)).findScheduledBefore(org.mockito.ArgumentMatchers.isA(LocalDateTime.class));
+            verifyNoInteractions(notificationDispatchService, applicationContext, tenantContextHolder);
+            verifyNoMoreInteractions(notificationRepository);
         }
 
         @Test
@@ -136,7 +149,12 @@ class ScheduledNotificationDispatcherTest {
             dispatcher.dispatchScheduledNotifications();
 
             // Then — second notification still dispatched despite first failure
-            verify(notificationDispatchService).dispatch(notification2);
+            verify(notificationRepository, times(1)).findScheduledBefore(org.mockito.ArgumentMatchers.isA(LocalDateTime.class));
+            verify(applicationContext, times(1)).getBean(com.akademiaplus.infra.persistence.config.TenantContextHolder.class);
+            verify(tenantContextHolder, times(1)).setTenantId(TENANT_ID_1);
+            verify(notificationDispatchService, times(1)).dispatch(notification1);
+            verify(notificationDispatchService, times(1)).dispatch(notification2);
+            verifyNoMoreInteractions(notificationRepository, notificationDispatchService, applicationContext, tenantContextHolder);
         }
     }
 
@@ -158,8 +176,13 @@ class ScheduledNotificationDispatcherTest {
             dispatcher.dispatchScheduledNotifications();
 
             // Then
-            verify(tenantContextHolder).setTenantId(TENANT_ID_1);
-            verify(tenantContextHolder).setTenantId(TENANT_ID_2);
+            verify(notificationRepository, times(1)).findScheduledBefore(org.mockito.ArgumentMatchers.isA(LocalDateTime.class));
+            verify(applicationContext, times(2)).getBean(com.akademiaplus.infra.persistence.config.TenantContextHolder.class);
+            verify(tenantContextHolder, times(1)).setTenantId(TENANT_ID_1);
+            verify(tenantContextHolder, times(1)).setTenantId(TENANT_ID_2);
+            verify(notificationDispatchService, times(1)).dispatch(notification1);
+            verify(notificationDispatchService, times(1)).dispatch(notification2);
+            verifyNoMoreInteractions(notificationRepository, notificationDispatchService, applicationContext, tenantContextHolder);
         }
     }
 }

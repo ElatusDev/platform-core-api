@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 import org.mockito.InOrder;
@@ -162,6 +163,61 @@ class AkademiaPlusRedisSessionStoreTest {
             verify(akademiaPlusRedisTemplate, times(1)).delete(AkademiaPlusRedisSessionStore.SESSION_KEY_PREFIX + jti1);
             verify(akademiaPlusRedisTemplate, times(1)).delete(AkademiaPlusRedisSessionStore.SESSION_KEY_PREFIX + jti2);
             verify(akademiaPlusRedisTemplate, times(1)).delete(USER_SESSIONS_KEY);
+            verifyNoMoreInteractions(akademiaPlusRedisTemplate, hashOperations, setOperations);
+        }
+
+        @Test
+        @DisplayName("Should delete user sessions key even when no individual sessions exist")
+        void shouldDeleteUserSessionsKey_whenNoIndividualSessionsExist() {
+            // Given
+            when(akademiaPlusRedisTemplate.opsForSet()).thenReturn(setOperations);
+            when(setOperations.members(USER_SESSIONS_KEY)).thenReturn(null);
+
+            // When
+            akademiaPlusRedisSessionStore.revokeAllSessionsForUser(USERNAME, TENANT_ID);
+
+            // Then
+            assertThat(akademiaPlusRedisSessionStore).isNotNull();
+            verify(akademiaPlusRedisTemplate, times(1)).opsForSet();
+            verify(setOperations, times(1)).members(USER_SESSIONS_KEY);
+            verify(akademiaPlusRedisTemplate, times(1)).delete(USER_SESSIONS_KEY);
+            verifyNoMoreInteractions(akademiaPlusRedisTemplate, hashOperations, setOperations);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when redisTemplate throws on storeSession")
+        void shouldPropagateException_whenRedisTemplateThrowsOnStoreSession() {
+            // Given
+            RuntimeException cause = new RuntimeException("Redis connection error");
+            when(akademiaPlusRedisTemplate.opsForHash()).thenThrow(cause);
+
+            // When / Then
+            assertThatThrownBy(() -> akademiaPlusRedisSessionStore.storeSession(JTI, USERNAME, TENANT_ID, TTL))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Redis connection error");
+
+            verify(akademiaPlusRedisTemplate, times(1)).opsForHash();
+            verifyNoMoreInteractions(akademiaPlusRedisTemplate, hashOperations, setOperations);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when redisTemplate throws on isSessionValid")
+        void shouldPropagateException_whenRedisTemplateThrowsOnIsSessionValid() {
+            // Given
+            RuntimeException cause = new RuntimeException("Redis connection error");
+            when(akademiaPlusRedisTemplate.hasKey(SESSION_KEY)).thenThrow(cause);
+
+            // When / Then
+            assertThatThrownBy(() -> akademiaPlusRedisSessionStore.isSessionValid(JTI))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Redis connection error");
+
+            verify(akademiaPlusRedisTemplate, times(1)).hasKey(SESSION_KEY);
             verifyNoMoreInteractions(akademiaPlusRedisTemplate, hashOperations, setOperations);
         }
     }

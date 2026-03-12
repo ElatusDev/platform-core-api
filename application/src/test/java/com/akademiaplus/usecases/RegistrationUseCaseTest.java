@@ -158,21 +158,24 @@ class RegistrationUseCaseTest {
             stubHappyPath();
 
             // When
-            registrationUseCase.register(request);
+            RegistrationResponseDTO response = registrationUseCase.register(request);
 
             // Then
+            assertThat(response).isNotNull();
+            assertThat(response.getToken()).isEqualTo(TEST_TOKEN);
             EmployeeCreationRequestDTO captured = employeeDtoCaptor.getValue();
             assertThat(captured.getEmployeeType()).isEqualTo(RegistrationUseCase.ADMIN_EMPLOYEE_TYPE);
             assertThat(captured.getRole()).isEqualTo(RegistrationUseCase.ADMIN_ROLE);
 
-            verify(tenantCreationUseCase, times(1)).create(tenantDtoCaptor.getValue());
-            verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
-            verify(employeeCreationUseCase, times(1)).create(employeeDtoCaptor.getValue());
-            verify(jwtTokenProvider, times(1)).createToken(
+            InOrder inOrder = inOrder(tenantCreationUseCase, tenantContextHolder,
+                    employeeCreationUseCase, jwtTokenProvider);
+            inOrder.verify(tenantCreationUseCase, times(1)).create(tenantDtoCaptor.getValue());
+            inOrder.verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
+            inOrder.verify(employeeCreationUseCase, times(1)).create(employeeDtoCaptor.getValue());
+            inOrder.verify(jwtTokenProvider, times(1)).createToken(
                     TEST_USERNAME, TEST_TENANT_ID,
                     Map.of("role", RegistrationUseCase.ADMIN_ROLE));
-            verifyNoMoreInteractions(tenantCreationUseCase, employeeCreationUseCase,
-                    tenantContextHolder, jwtTokenProvider);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -183,22 +186,25 @@ class RegistrationUseCaseTest {
             stubHappyPath();
 
             // When
-            registrationUseCase.register(request);
+            RegistrationResponseDTO response = registrationUseCase.register(request);
 
             // Then
+            assertThat(response).isNotNull();
+            assertThat(response.getToken()).isEqualTo(TEST_TOKEN);
             TenantCreateRequestDTO captured = tenantDtoCaptor.getValue();
             assertThat(captured.getOrganizationName()).isEqualTo(TEST_ORG_NAME);
             assertThat(captured.getEmail()).isEqualTo(TEST_EMAIL);
             assertThat(captured.getAddress()).isEqualTo(TEST_ADDRESS);
 
-            verify(tenantCreationUseCase, times(1)).create(tenantDtoCaptor.getValue());
-            verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
-            verify(employeeCreationUseCase, times(1)).create(employeeDtoCaptor.getValue());
-            verify(jwtTokenProvider, times(1)).createToken(
+            InOrder inOrder = inOrder(tenantCreationUseCase, tenantContextHolder,
+                    employeeCreationUseCase, jwtTokenProvider);
+            inOrder.verify(tenantCreationUseCase, times(1)).create(tenantDtoCaptor.getValue());
+            inOrder.verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
+            inOrder.verify(employeeCreationUseCase, times(1)).create(employeeDtoCaptor.getValue());
+            inOrder.verify(jwtTokenProvider, times(1)).createToken(
                     TEST_USERNAME, TEST_TENANT_ID,
                     Map.of("role", RegistrationUseCase.ADMIN_ROLE));
-            verifyNoMoreInteractions(tenantCreationUseCase, employeeCreationUseCase,
-                    tenantContextHolder, jwtTokenProvider);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -209,9 +215,11 @@ class RegistrationUseCaseTest {
             stubHappyPath();
 
             // When
-            registrationUseCase.register(request);
+            RegistrationResponseDTO response = registrationUseCase.register(request);
 
             // Then
+            assertThat(response).isNotNull();
+            assertThat(response.getToken()).isEqualTo(TEST_TOKEN);
             EmployeeCreationRequestDTO captured = employeeDtoCaptor.getValue();
             assertThat(captured.getFirstName()).isEqualTo(TEST_FIRST_NAME);
             assertThat(captured.getLastName()).isEqualTo(TEST_LAST_NAME);
@@ -223,14 +231,15 @@ class RegistrationUseCaseTest {
             assertThat(captured.getUsername()).isEqualTo(TEST_USERNAME);
             assertThat(captured.getPassword()).isEqualTo(TEST_PASSWORD);
 
-            verify(tenantCreationUseCase, times(1)).create(tenantDtoCaptor.getValue());
-            verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
-            verify(employeeCreationUseCase, times(1)).create(employeeDtoCaptor.getValue());
-            verify(jwtTokenProvider, times(1)).createToken(
+            InOrder inOrder = inOrder(tenantCreationUseCase, tenantContextHolder,
+                    employeeCreationUseCase, jwtTokenProvider);
+            inOrder.verify(tenantCreationUseCase, times(1)).create(tenantDtoCaptor.getValue());
+            inOrder.verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
+            inOrder.verify(employeeCreationUseCase, times(1)).create(employeeDtoCaptor.getValue());
+            inOrder.verify(jwtTokenProvider, times(1)).createToken(
                     TEST_USERNAME, TEST_TENANT_ID,
                     Map.of("role", RegistrationUseCase.ADMIN_ROLE));
-            verifyNoMoreInteractions(tenantCreationUseCase, employeeCreationUseCase,
-                    tenantContextHolder, jwtTokenProvider);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

@@ -33,6 +33,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -446,6 +447,48 @@ class BaseControllerAdviceTest {
             assertThat(response.getBody()).isNotNull();
             assertThat(response.getBody().getCode()).isEqualTo(BaseControllerAdvice.CODE_INTERNAL_ERROR);
             assertThat(response.getBody().getMessage()).isEqualTo(INTERNAL_ERROR_MESSAGE);
+            verify(messageService, times(1)).getInternalErrorHighSeverity();
+            verifyNoMoreInteractions(messageService);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator exception propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when messageService.getEntityNotFound throws")
+        void shouldPropagateException_whenMessageServiceGetEntityNotFoundThrows() {
+            // Given: messageService throws on entity name resolution
+            EntityNotFoundException ex = new EntityNotFoundException(EntityType.EMPLOYEE, ENTITY_ID);
+            RuntimeException messageError = new RuntimeException("Message resolution failed");
+            when(messageService.getEntityNotFound(EntityType.EMPLOYEE, ENTITY_ID))
+                    .thenThrow(messageError);
+
+            // When/Then: exception should propagate
+            assertThatThrownBy(() -> advice.handleEntityNotFound(ex))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Message resolution failed");
+
+            verify(messageService, times(1)).getEntityNotFound(EntityType.EMPLOYEE, ENTITY_ID);
+            verifyNoMoreInteractions(messageService);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when messageService.getInternalErrorHighSeverity throws")
+        void shouldPropagateException_whenMessageServiceGetInternalErrorHighSeverityThrows() {
+            // Given: messageService throws on internal error resolution
+            EncryptionFailureException ex = new EncryptionFailureException("AES failed",
+                    new RuntimeException("key error"));
+            RuntimeException messageError = new RuntimeException("Message resolution failed");
+            when(messageService.getInternalErrorHighSeverity())
+                    .thenThrow(messageError);
+
+            // When/Then: exception should propagate
+            assertThatThrownBy(() -> advice.handleCryptoFailure(ex))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Message resolution failed");
+
             verify(messageService, times(1)).getInternalErrorHighSeverity();
             verifyNoMoreInteractions(messageService);
         }

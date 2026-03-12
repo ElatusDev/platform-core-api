@@ -188,7 +188,8 @@ class PasskeyRegistrationUseCaseTest {
             assertThatThrownBy(() -> registrationUseCase.completeRegistration(
                     invalidJson, TENANT_ID, DISPLAY_NAME))
                     .isInstanceOf(PasskeyRegistrationException.class)
-                    .hasMessageContaining(PasskeyRegistrationUseCase.ERROR_INVALID_RESPONSE);
+                    .hasMessage(String.format(PasskeyRegistrationException.ERROR_REGISTRATION_FAILED,
+                            PasskeyRegistrationUseCase.ERROR_INVALID_RESPONSE));
             verifyNoInteractions(relyingParty, challengeStore, credentialRepository, applicationContext);
             verifyNoMoreInteractions(relyingParty, challengeStore, credentialRepository, applicationContext);
         }
@@ -214,7 +215,8 @@ class PasskeyRegistrationUseCaseTest {
             assertThatThrownBy(() -> registrationUseCase.generateRegistrationOptions(
                     USER_ID, USERNAME, USER_HANDLE, TENANT_ID))
                     .isInstanceOf(PasskeyRegistrationException.class)
-                    .hasMessageContaining(PasskeyRegistrationUseCase.ERROR_OPTIONS_SERIALIZATION_FAILED);
+                    .hasMessage(String.format(PasskeyRegistrationException.ERROR_REGISTRATION_FAILED,
+                            PasskeyRegistrationUseCase.ERROR_OPTIONS_SERIALIZATION_FAILED));
             verify(challengeStore, times(1)).store(eq(challenge.getBase64Url()), any(PasskeyChallengeStore.ChallengeMetadata.class));
             verifyNoInteractions(credentialRepository, applicationContext);
             verifyNoMoreInteractions(relyingParty, challengeStore, credentialRepository, applicationContext);

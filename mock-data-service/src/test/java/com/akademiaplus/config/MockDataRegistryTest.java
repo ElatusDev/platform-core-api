@@ -110,8 +110,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @DisplayName("MockDataRegistry")
@@ -294,8 +292,9 @@ class MockDataRegistryTest {
             assertThat(loaders).containsKey(TENANT);
 
             // Then — interaction assertion
-            verify(tenantUseCase, times(1)).load(RECORD_COUNT);
-            verifyNoMoreInteractions(tenantUseCase);
+            InOrder inOrder = inOrder(tenantUseCase);
+            inOrder.verify(tenantUseCase, times(1)).load(RECORD_COUNT);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -310,8 +309,9 @@ class MockDataRegistryTest {
             assertThat(loaders).containsKey(COURSE);
 
             // Then — interaction assertion
-            verify(courseUseCase, times(1)).load(RECORD_COUNT);
-            verifyNoMoreInteractions(courseUseCase);
+            InOrder inOrder = inOrder(courseUseCase);
+            inOrder.verify(courseUseCase, times(1)).load(RECORD_COUNT);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -326,8 +326,9 @@ class MockDataRegistryTest {
             assertThat(loaders).containsKey(COMPENSATION);
 
             // Then — interaction assertion
-            verify(compensationUseCase, times(1)).load(RECORD_COUNT);
-            verifyNoMoreInteractions(compensationUseCase);
+            InOrder inOrder = inOrder(compensationUseCase);
+            inOrder.verify(compensationUseCase, times(1)).load(RECORD_COUNT);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -342,8 +343,9 @@ class MockDataRegistryTest {
             assertThat(loaders).containsKey(NOTIFICATION);
 
             // Then — interaction assertion
-            verify(notificationUseCase, times(1)).load(RECORD_COUNT);
-            verifyNoMoreInteractions(notificationUseCase);
+            InOrder inOrder = inOrder(notificationUseCase);
+            inOrder.verify(notificationUseCase, times(1)).load(RECORD_COUNT);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -418,8 +420,9 @@ class MockDataRegistryTest {
             assertThat(cleaners).containsKey(TENANT);
 
             // Then — interaction assertion
-            verify(tenantUseCase, times(1)).clean();
-            verifyNoMoreInteractions(tenantUseCase);
+            InOrder inOrder = inOrder(tenantUseCase);
+            inOrder.verify(tenantUseCase, times(1)).clean();
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -434,8 +437,9 @@ class MockDataRegistryTest {
             assertThat(cleaners).containsKey(TENANT_SEQUENCE);
 
             // Then — interaction assertion
-            verify(tenantSequenceCleanUp, times(1)).clean();
-            verifyNoMoreInteractions(tenantSequenceCleanUp);
+            InOrder inOrder = inOrder(tenantSequenceCleanUp);
+            inOrder.verify(tenantSequenceCleanUp, times(1)).clean();
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -450,8 +454,9 @@ class MockDataRegistryTest {
             assertThat(cleaners).containsKey(PERSON_PII);
 
             // Then — interaction assertion
-            verify(personPIICleanUp, times(1)).clean();
-            verifyNoMoreInteractions(personPIICleanUp);
+            InOrder inOrder = inOrder(personPIICleanUp);
+            inOrder.verify(personPIICleanUp, times(1)).clean();
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -466,8 +471,9 @@ class MockDataRegistryTest {
             assertThat(cleaners).containsKey(COURSE);
 
             // Then — interaction assertion
-            verify(courseUseCase, times(1)).clean();
-            verifyNoMoreInteractions(courseUseCase);
+            InOrder inOrder = inOrder(courseUseCase);
+            inOrder.verify(courseUseCase, times(1)).clean();
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -482,8 +488,9 @@ class MockDataRegistryTest {
             assertThat(cleaners).containsKey(NOTIFICATION);
 
             // Then — interaction assertion
-            verify(notificationUseCase, times(1)).clean();
-            verifyNoMoreInteractions(notificationUseCase);
+            InOrder inOrder = inOrder(notificationUseCase);
+            inOrder.verify(notificationUseCase, times(1)).clean();
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test

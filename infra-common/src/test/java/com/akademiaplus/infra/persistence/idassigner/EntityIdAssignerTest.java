@@ -2,11 +2,14 @@ package com.akademiaplus.infra.persistence.idassigner;
 
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.infra.persistence.exceptions.IdAssignmentException;
+import com.akademiaplus.utilities.exceptions.InvalidTenantException;
 import com.akademiaplus.utilities.idgeneration.IDGenerator;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.event.spi.PreInsertEvent;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
@@ -17,6 +20,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
@@ -24,6 +28,7 @@ import static org.mockito.Mockito.*;
  * Unit tests for EntityIdAssigner
  */
 @ExtendWith(MockitoExtension.class)
+@DisplayName("EntityIdAssigner Tests")
 class EntityIdAssignerTest {
 
     private static final Long GENERATED_ID = 12345L;
@@ -74,285 +79,410 @@ class EntityIdAssignerTest {
         entity = new TestEntity();
     }
 
-    @Test
-    void shouldAssignIdWhenEntityHasNoId() throws Exception {
-        // Given
-        when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
-        when(metadata.isSkip()).thenReturn(false);
-        when(metadata.getGetter()).thenReturn(getter);
-        when(metadata.getSetter()).thenReturn(setter);
-        when(metadata.getTableName()).thenReturn(TABLE_NAME);
-        when(metadata.getIdFieldName()).thenReturn(ID_FIELD_NAME);
-        when(getter.invoke(entity)).thenReturn(null);
-        when(idGenerationStrategy.shouldGenerateId(null)).thenReturn(true);
-        when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
-        when(idGenerator.generateId(TABLE_NAME, TENANT_ID)).thenReturn(GENERATED_ID);
+    @Nested
+    @DisplayName("Happy path ID assignment")
+    class HappyPath {
 
-        // When
-        assigner.assignIdIfNeeded(entity, event);
+        @Test
+        @DisplayName("Should assign generated ID when entity has no ID")
+        void shouldAssignGeneratedId_whenEntityHasNoId() throws Exception {
+            // Given
+            when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
+            when(metadata.isSkip()).thenReturn(false);
+            when(metadata.getGetter()).thenReturn(getter);
+            when(metadata.getSetter()).thenReturn(setter);
+            when(metadata.getTableName()).thenReturn(TABLE_NAME);
+            when(metadata.getIdFieldName()).thenReturn(ID_FIELD_NAME);
+            when(getter.invoke(entity)).thenReturn(null);
+            when(idGenerationStrategy.shouldGenerateId(null)).thenReturn(true);
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
+            when(idGenerator.generateId(TABLE_NAME, TENANT_ID)).thenReturn(GENERATED_ID);
 
-        // Then
-        InOrder inOrder = inOrder(metadataResolver, metadata, getter, idGenerationStrategy,
-                tenantContextHolder, idGenerator, setter, hibernateStateUpdater);
-        inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
-        inOrder.verify(metadata, times(1)).isSkip();
-        inOrder.verify(metadata, times(1)).getGetter();
-        inOrder.verify(getter, times(1)).invoke(entity);
-        inOrder.verify(idGenerationStrategy, times(1)).shouldGenerateId(null);
-        inOrder.verify(tenantContextHolder, times(1)).getTenantId();
-        inOrder.verify(idGenerator, times(1)).generateId(TABLE_NAME, TENANT_ID);
-        inOrder.verify(metadata, times(1)).getSetter();
-        inOrder.verify(setter, times(1)).invoke(entity, GENERATED_ID);
-        inOrder.verify(metadata, times(1)).getIdFieldName();
-        inOrder.verify(hibernateStateUpdater, times(1)).updatePropertyInState(event, ID_FIELD_NAME, GENERATED_ID);
-        verifyNoMoreInteractions(idGenerator, tenantContextHolder, metadataResolver,
-                idGenerationStrategy, hibernateStateUpdater, event, metadata, getter, setter);
+            // When
+            assigner.assignIdIfNeeded(entity, event);
+
+            // Then
+            InOrder inOrder = inOrder(metadataResolver, metadata, getter, idGenerationStrategy,
+                    tenantContextHolder, idGenerator, setter, hibernateStateUpdater);
+            inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
+            inOrder.verify(metadata, times(1)).isSkip();
+            inOrder.verify(metadata, times(1)).getGetter();
+            inOrder.verify(getter, times(1)).invoke(entity);
+            inOrder.verify(idGenerationStrategy, times(1)).shouldGenerateId(null);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(metadata, times(1)).getTableName();
+            inOrder.verify(idGenerator, times(1)).generateId(TABLE_NAME, TENANT_ID);
+            inOrder.verify(metadata, times(1)).getSetter();
+            inOrder.verify(setter, times(1)).invoke(entity, GENERATED_ID);
+            inOrder.verify(metadata, times(1)).getIdFieldName();
+            inOrder.verify(hibernateStateUpdater, times(1)).updatePropertyInState(event, ID_FIELD_NAME, GENERATED_ID);
+            verifyNoMoreInteractions(idGenerator, tenantContextHolder, metadataResolver,
+                    idGenerationStrategy, hibernateStateUpdater, event, metadata, getter, setter);
+        }
+
+        @Test
+        @DisplayName("Should handle zero ID as needing generation")
+        void shouldAssignGeneratedId_whenEntityHasZeroId() throws Exception {
+            // Given
+            Long zeroId = 0L;
+            when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
+            when(metadata.isSkip()).thenReturn(false);
+            when(metadata.getGetter()).thenReturn(getter);
+            when(metadata.getSetter()).thenReturn(setter);
+            when(metadata.getTableName()).thenReturn(TABLE_NAME);
+            when(metadata.getIdFieldName()).thenReturn(ID_FIELD_NAME);
+            when(getter.invoke(entity)).thenReturn(zeroId);
+            when(idGenerationStrategy.shouldGenerateId(zeroId)).thenReturn(true);
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
+            when(idGenerator.generateId(TABLE_NAME, TENANT_ID)).thenReturn(GENERATED_ID);
+
+            // When
+            assigner.assignIdIfNeeded(entity, event);
+
+            // Then
+            InOrder inOrder = inOrder(metadataResolver, metadata, getter, idGenerationStrategy,
+                    tenantContextHolder, idGenerator, setter, hibernateStateUpdater);
+            inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
+            inOrder.verify(metadata, times(1)).isSkip();
+            inOrder.verify(metadata, times(1)).getGetter();
+            inOrder.verify(getter, times(1)).invoke(entity);
+            inOrder.verify(idGenerationStrategy, times(1)).shouldGenerateId(zeroId);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(metadata, times(1)).getTableName();
+            inOrder.verify(idGenerator, times(1)).generateId(TABLE_NAME, TENANT_ID);
+            inOrder.verify(metadata, times(1)).getSetter();
+            inOrder.verify(setter, times(1)).invoke(entity, GENERATED_ID);
+            inOrder.verify(metadata, times(1)).getIdFieldName();
+            inOrder.verify(hibernateStateUpdater, times(1)).updatePropertyInState(event, ID_FIELD_NAME, GENERATED_ID);
+            verifyNoMoreInteractions(idGenerator, tenantContextHolder, metadataResolver,
+                    idGenerationStrategy, hibernateStateUpdater, event, metadata, getter, setter);
+        }
+
+        @Test
+        @DisplayName("Should handle empty string ID as needing generation")
+        void shouldAssignGeneratedId_whenEntityHasEmptyStringId() throws Exception {
+            // Given
+            String emptyId = "";
+            when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
+            when(metadata.isSkip()).thenReturn(false);
+            when(metadata.getGetter()).thenReturn(getter);
+            when(metadata.getSetter()).thenReturn(setter);
+            when(metadata.getTableName()).thenReturn(TABLE_NAME);
+            when(metadata.getIdFieldName()).thenReturn(ID_FIELD_NAME);
+            when(getter.invoke(entity)).thenReturn(emptyId);
+            when(idGenerationStrategy.shouldGenerateId(emptyId)).thenReturn(true);
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
+            when(idGenerator.generateId(TABLE_NAME, TENANT_ID)).thenReturn(GENERATED_ID);
+
+            // When
+            assigner.assignIdIfNeeded(entity, event);
+
+            // Then
+            InOrder inOrder = inOrder(metadataResolver, metadata, getter, idGenerationStrategy,
+                    tenantContextHolder, idGenerator, setter, hibernateStateUpdater);
+            inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
+            inOrder.verify(metadata, times(1)).isSkip();
+            inOrder.verify(metadata, times(1)).getGetter();
+            inOrder.verify(getter, times(1)).invoke(entity);
+            inOrder.verify(idGenerationStrategy, times(1)).shouldGenerateId(emptyId);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(metadata, times(1)).getTableName();
+            inOrder.verify(idGenerator, times(1)).generateId(TABLE_NAME, TENANT_ID);
+            inOrder.verify(metadata, times(1)).getSetter();
+            inOrder.verify(setter, times(1)).invoke(entity, GENERATED_ID);
+            inOrder.verify(metadata, times(1)).getIdFieldName();
+            inOrder.verify(hibernateStateUpdater, times(1)).updatePropertyInState(event, ID_FIELD_NAME, GENERATED_ID);
+            verifyNoMoreInteractions(idGenerator, tenantContextHolder, metadataResolver,
+                    idGenerationStrategy, hibernateStateUpdater, event, metadata, getter, setter);
+        }
+
+        @Test
+        @DisplayName("Should override pre-set ID and log warning")
+        void shouldOverridePreSetId_whenEntityHasExistingId() throws Exception {
+            // Given
+            Long preSetId = 999L;
+            when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
+            when(metadata.isSkip()).thenReturn(false);
+            when(metadata.getGetter()).thenReturn(getter);
+            when(metadata.getSetter()).thenReturn(setter);
+            when(metadata.getTableName()).thenReturn(TABLE_NAME);
+            when(metadata.getIdFieldName()).thenReturn(ID_FIELD_NAME);
+            when(getter.invoke(entity)).thenReturn(preSetId);
+            when(idGenerationStrategy.shouldGenerateId(preSetId)).thenReturn(false);
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
+            when(idGenerator.generateId(TABLE_NAME, TENANT_ID)).thenReturn(GENERATED_ID);
+
+            // When
+            assigner.assignIdIfNeeded(entity, event);
+
+            // Then
+            InOrder inOrder = inOrder(metadataResolver, metadata, getter, idGenerationStrategy,
+                    tenantContextHolder, idGenerator, setter, hibernateStateUpdater);
+            inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
+            inOrder.verify(metadata, times(1)).isSkip();
+            inOrder.verify(metadata, times(1)).getGetter();
+            inOrder.verify(getter, times(1)).invoke(entity);
+            inOrder.verify(idGenerationStrategy, times(1)).shouldGenerateId(preSetId);
+            inOrder.verify(tenantContextHolder, times(2)).getTenantId();
+            inOrder.verify(metadata, times(1)).getTableName();
+            inOrder.verify(idGenerator, times(1)).generateId(TABLE_NAME, TENANT_ID);
+            inOrder.verify(metadata, times(1)).getSetter();
+            inOrder.verify(setter, times(1)).invoke(entity, GENERATED_ID);
+            inOrder.verify(metadata, times(1)).getIdFieldName();
+            inOrder.verify(hibernateStateUpdater, times(1)).updatePropertyInState(event, ID_FIELD_NAME, GENERATED_ID);
+            verifyNoMoreInteractions(idGenerator, tenantContextHolder, metadataResolver,
+                    idGenerationStrategy, hibernateStateUpdater, event, metadata, getter, setter);
+        }
     }
 
-    @Test
-    void shouldThrowIdAssignmentException_whenNoTenantContext() throws Exception {
-        // Given
-        when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
-        when(metadata.isSkip()).thenReturn(false);
-        when(metadata.getGetter()).thenReturn(getter);
-        when(metadata.getTableName()).thenReturn(TABLE_NAME);
-        when(getter.invoke(entity)).thenReturn(null);
-        when(idGenerationStrategy.shouldGenerateId(null)).thenReturn(true);
-        when(tenantContextHolder.getTenantId()).thenReturn(Optional.empty());
+    @Nested
+    @DisplayName("Skip metadata path")
+    class SkipMetadata {
 
-        // When / Then
-        String expectedMessage = formatErrorMessage(EntityIdAssigner.ERROR_CANNOT_GENERATE_ID, TEST_ENTITY_NAME);
-        assertThatThrownBy(() -> assigner.assignIdIfNeeded(entity, event))
-                .isInstanceOf(IdAssignmentException.class)
-                .hasMessageContaining(expectedMessage);
+        @Test
+        @DisplayName("Should skip ID assignment when metadata indicates skip")
+        void shouldSkipIdAssignment_whenMetadataIndicatesSkip() {
+            // Given
+            when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
+            when(metadata.isSkip()).thenReturn(true);
 
-        InOrder inOrder = inOrder(metadataResolver, metadata, getter, idGenerationStrategy, tenantContextHolder);
-        inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
-        inOrder.verify(metadata, times(1)).isSkip();
-        inOrder.verify(metadata, times(1)).getGetter();
-        inOrder.verify(getter, times(1)).invoke(entity);
-        inOrder.verify(idGenerationStrategy, times(1)).shouldGenerateId(null);
-        inOrder.verify(tenantContextHolder, times(1)).getTenantId();
-        verifyNoInteractions(idGenerator, setter, hibernateStateUpdater);
-        verifyNoMoreInteractions(metadataResolver, tenantContextHolder, metadataResolver,
-                idGenerationStrategy, event, metadata, getter);
+            // When
+            assigner.assignIdIfNeeded(entity, event);
+
+            // Then
+            InOrder inOrder = inOrder(metadataResolver, metadata);
+            inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
+            inOrder.verify(metadata, times(1)).isSkip();
+            verifyNoInteractions(idGenerator, tenantContextHolder, idGenerationStrategy,
+                    hibernateStateUpdater, getter, setter);
+            verifyNoMoreInteractions(metadataResolver, event, metadata);
+        }
     }
 
-    @Test
-    void shouldOverridePreSetIdAndLogWarning() throws Exception {
-        // Given
-        Long preSetId = 999L;
-        when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
-        when(metadata.isSkip()).thenReturn(false);
-        when(metadata.getGetter()).thenReturn(getter);
-        when(metadata.getSetter()).thenReturn(setter);
-        when(metadata.getTableName()).thenReturn(TABLE_NAME);
-        when(metadata.getIdFieldName()).thenReturn(ID_FIELD_NAME);
-        when(getter.invoke(entity)).thenReturn(preSetId);
-        when(idGenerationStrategy.shouldGenerateId(preSetId)).thenReturn(false);
-        when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
-        when(idGenerator.generateId(TABLE_NAME, TENANT_ID)).thenReturn(GENERATED_ID);
+    @Nested
+    @DisplayName("Exception paths")
+    class ExceptionPaths {
 
-        // When
-        assigner.assignIdIfNeeded(entity, event);
+        @Test
+        @DisplayName("Should throw IdAssignmentException when no tenant context")
+        void shouldThrowIdAssignmentException_whenNoTenantContext() throws Exception {
+            // Given
+            when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
+            when(metadata.isSkip()).thenReturn(false);
+            when(metadata.getGetter()).thenReturn(getter);
+            when(metadata.getTableName()).thenReturn(TABLE_NAME);
+            when(getter.invoke(entity)).thenReturn(null);
+            when(idGenerationStrategy.shouldGenerateId(null)).thenReturn(true);
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.empty());
 
-        // Then - should still assign new ID despite pre-set value
-        InOrder inOrder = inOrder(metadataResolver, metadata, getter, idGenerationStrategy,
-                tenantContextHolder, idGenerator, setter, hibernateStateUpdater);
-        inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
-        inOrder.verify(metadata, times(1)).isSkip();
-        inOrder.verify(metadata, times(1)).getGetter();
-        inOrder.verify(getter, times(1)).invoke(entity);
-        inOrder.verify(idGenerationStrategy, times(1)).shouldGenerateId(preSetId);
-        inOrder.verify(tenantContextHolder, times(2)).getTenantId();
-        inOrder.verify(idGenerator, times(1)).generateId(TABLE_NAME, TENANT_ID);
-        inOrder.verify(metadata, times(1)).getSetter();
-        inOrder.verify(setter, times(1)).invoke(entity, GENERATED_ID);
-        inOrder.verify(metadata, times(1)).getIdFieldName();
-        inOrder.verify(hibernateStateUpdater, times(1)).updatePropertyInState(event, ID_FIELD_NAME, GENERATED_ID);
-        verifyNoMoreInteractions(idGenerator, tenantContextHolder, metadataResolver,
-                idGenerationStrategy, hibernateStateUpdater, event, metadata, getter, setter);
+            // When / Then
+            String expectedMessage = String.format(
+                    EntityIdAssigner.ERROR_CANNOT_GENERATE_ID.replace("{}", "%s"), TEST_ENTITY_NAME);
+            assertThatThrownBy(() -> assigner.assignIdIfNeeded(entity, event))
+                    .isInstanceOf(IdAssignmentException.class)
+                    .hasMessage(expectedMessage)
+                    .hasCauseInstanceOf(InvalidTenantException.class);
+
+            // Verify cutoff: idGenerator, setter, hibernateStateUpdater never called
+            InOrder inOrder = inOrder(metadataResolver, metadata, getter, idGenerationStrategy, tenantContextHolder);
+            inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
+            inOrder.verify(metadata, times(1)).isSkip();
+            inOrder.verify(metadata, times(1)).getGetter();
+            inOrder.verify(getter, times(1)).invoke(entity);
+            inOrder.verify(idGenerationStrategy, times(1)).shouldGenerateId(null);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(metadata, times(1)).getTableName();
+            verifyNoInteractions(idGenerator, setter, hibernateStateUpdater);
+            verifyNoMoreInteractions(metadataResolver, tenantContextHolder,
+                    idGenerationStrategy, event, metadata, getter);
+        }
+
+        @Test
+        @DisplayName("Should throw IdAssignmentException when getter invocation fails")
+        void shouldThrowIdAssignmentException_whenGetterFails() throws Exception {
+            // Given
+            InvocationTargetException getterException = new InvocationTargetException(
+                    new IllegalAccessException("Cannot access getter"));
+
+            when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
+            when(metadata.isSkip()).thenReturn(false);
+            when(metadata.getGetter()).thenReturn(getter);
+            when(getter.invoke(entity)).thenThrow(getterException);
+
+            // When / Then
+            String expectedMessage = String.format(
+                    EntityIdAssigner.ERROR_CANNOT_GENERATE_ID.replace("{}", "%s"), TEST_ENTITY_NAME);
+            assertThatThrownBy(() -> assigner.assignIdIfNeeded(entity, event))
+                    .isInstanceOf(IdAssignmentException.class)
+                    .hasMessage(expectedMessage)
+                    .hasCause(getterException);
+
+            // Verify cutoff: everything after getter not called
+            InOrder inOrder = inOrder(metadataResolver, metadata, getter);
+            inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
+            inOrder.verify(metadata, times(1)).isSkip();
+            inOrder.verify(metadata, times(1)).getGetter();
+            inOrder.verify(getter, times(1)).invoke(entity);
+            verifyNoInteractions(idGenerator, tenantContextHolder, idGenerationStrategy,
+                    hibernateStateUpdater, setter);
+            verifyNoMoreInteractions(metadataResolver, event, metadata, getter);
+        }
+
+        @Test
+        @DisplayName("Should throw IdAssignmentException when setter invocation fails")
+        void shouldThrowIdAssignmentException_whenSetterFails() throws Exception {
+            // Given
+            InvocationTargetException setterException = new InvocationTargetException(
+                    new IllegalAccessException("Cannot access setter"));
+
+            when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
+            when(metadata.isSkip()).thenReturn(false);
+            when(metadata.getGetter()).thenReturn(getter);
+            when(metadata.getSetter()).thenReturn(setter);
+            when(metadata.getTableName()).thenReturn(TABLE_NAME);
+            when(getter.invoke(entity)).thenReturn(null);
+            when(idGenerationStrategy.shouldGenerateId(null)).thenReturn(true);
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
+            when(idGenerator.generateId(TABLE_NAME, TENANT_ID)).thenReturn(GENERATED_ID);
+            when(setter.invoke(entity, GENERATED_ID)).thenThrow(setterException);
+
+            // When / Then
+            String expectedMessage = String.format(
+                    EntityIdAssigner.ERROR_CANNOT_GENERATE_ID.replace("{}", "%s"), TEST_ENTITY_NAME);
+            assertThatThrownBy(() -> assigner.assignIdIfNeeded(entity, event))
+                    .isInstanceOf(IdAssignmentException.class)
+                    .hasMessage(expectedMessage)
+                    .hasCause(setterException);
+
+            // Verify cutoff: hibernateStateUpdater never called
+            InOrder inOrder = inOrder(metadataResolver, metadata, getter, idGenerationStrategy,
+                    tenantContextHolder, idGenerator, setter);
+            inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
+            inOrder.verify(metadata, times(1)).isSkip();
+            inOrder.verify(metadata, times(1)).getGetter();
+            inOrder.verify(getter, times(1)).invoke(entity);
+            inOrder.verify(idGenerationStrategy, times(1)).shouldGenerateId(null);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(metadata, times(1)).getTableName();
+            inOrder.verify(idGenerator, times(1)).generateId(TABLE_NAME, TENANT_ID);
+            inOrder.verify(metadata, times(1)).getSetter();
+            inOrder.verify(setter, times(1)).invoke(entity, GENERATED_ID);
+            verifyNoInteractions(hibernateStateUpdater);
+            verifyNoMoreInteractions(idGenerator, tenantContextHolder, metadataResolver,
+                    idGenerationStrategy, hibernateStateUpdater, event, metadata, getter, setter);
+        }
     }
 
-    @Test
-    void shouldSkipIdAssignment_whenMetadataIndicatesSkip() {
-        // Given
-        when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
-        when(metadata.isSkip()).thenReturn(true);
+    @Nested
+    @DisplayName("Collaborator exception propagation")
+    class CollaboratorExceptionPropagation {
 
-        // When
-        assigner.assignIdIfNeeded(entity, event);
+        @Test
+        @DisplayName("Should throw IdAssignmentException when ID generator fails")
+        void shouldThrowIdAssignmentException_whenIdGeneratorFails() throws Exception {
+            // Given
+            RuntimeException generatorException = new RuntimeException("ID generation failed");
 
-        // Then
-        InOrder inOrder = inOrder(metadataResolver, metadata);
-        inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
-        inOrder.verify(metadata, times(1)).isSkip();
-        verifyNoInteractions(idGenerator, tenantContextHolder, idGenerationStrategy,
-                hibernateStateUpdater, getter, setter);
-        verifyNoMoreInteractions(metadataResolver, event, metadata);
-    }
+            when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
+            when(metadata.isSkip()).thenReturn(false);
+            when(metadata.getGetter()).thenReturn(getter);
+            when(metadata.getTableName()).thenReturn(TABLE_NAME);
+            when(getter.invoke(entity)).thenReturn(null);
+            when(idGenerationStrategy.shouldGenerateId(null)).thenReturn(true);
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
+            when(idGenerator.generateId(TABLE_NAME, TENANT_ID)).thenThrow(generatorException);
 
-    @Test
-    void shouldThrowIdAssignmentExceptionWhenSetterFails() throws Exception {
-        // Given
-        InvocationTargetException setterException = new InvocationTargetException(
-                new IllegalAccessException("Cannot access setter"));
+            // When / Then
+            String expectedMessage = String.format(
+                    EntityIdAssigner.ERROR_CANNOT_GENERATE_ID.replace("{}", "%s"), TEST_ENTITY_NAME);
+            assertThatThrownBy(() -> assigner.assignIdIfNeeded(entity, event))
+                    .isInstanceOf(IdAssignmentException.class)
+                    .hasMessage(expectedMessage)
+                    .hasCause(generatorException);
 
-        when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
-        when(metadata.isSkip()).thenReturn(false);
-        when(metadata.getGetter()).thenReturn(getter);
-        when(metadata.getSetter()).thenReturn(setter);
-        when(metadata.getTableName()).thenReturn(TABLE_NAME);
-        when(getter.invoke(entity)).thenReturn(null);
-        when(idGenerationStrategy.shouldGenerateId(null)).thenReturn(true);
-        when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
-        when(idGenerator.generateId(TABLE_NAME, TENANT_ID)).thenReturn(GENERATED_ID);
-        when(setter.invoke(entity, GENERATED_ID)).thenThrow(setterException);
+            // Verify cutoff: setter and hibernateStateUpdater never called
+            InOrder inOrder = inOrder(metadataResolver, metadata, getter, idGenerationStrategy,
+                    tenantContextHolder, idGenerator);
+            inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
+            inOrder.verify(metadata, times(1)).isSkip();
+            inOrder.verify(metadata, times(1)).getGetter();
+            inOrder.verify(getter, times(1)).invoke(entity);
+            inOrder.verify(idGenerationStrategy, times(1)).shouldGenerateId(null);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(metadata, times(1)).getTableName();
+            inOrder.verify(idGenerator, times(1)).generateId(TABLE_NAME, TENANT_ID);
+            verifyNoInteractions(setter, hibernateStateUpdater);
+            verifyNoMoreInteractions(idGenerator, tenantContextHolder, metadataResolver,
+                    idGenerationStrategy, event, metadata, getter);
+        }
 
-        // When/Then
-        String expectedMessage = formatErrorMessage(EntityIdAssigner.ERROR_CANNOT_GENERATE_ID, TEST_ENTITY_NAME);
-        assertThatThrownBy(() -> assigner.assignIdIfNeeded(entity, event))
-                .isInstanceOf(IdAssignmentException.class)
-                .hasMessageContaining(expectedMessage);
+        @Test
+        @DisplayName("Should throw IdAssignmentException when metadata resolver fails")
+        void shouldThrowIdAssignmentException_whenMetadataResolverFails() {
+            // Given
+            RuntimeException resolverException = new RuntimeException("Resolver failed");
+            when(metadataResolver.resolve(TestEntity.class)).thenThrow(resolverException);
 
-        verify(metadataResolver, times(1)).resolve(TestEntity.class);
-        verify(setter, times(1)).invoke(entity, GENERATED_ID);
-        verify(idGenerator, times(1)).generateId(TABLE_NAME, TENANT_ID);
-        verifyNoInteractions(hibernateStateUpdater);
-        verifyNoMoreInteractions(idGenerator, tenantContextHolder, metadataResolver,
-                idGenerationStrategy, event, metadata, getter, setter);
-    }
+            // When / Then
+            String expectedMessage = String.format(
+                    EntityIdAssigner.ERROR_CANNOT_GENERATE_ID.replace("{}", "%s"), TEST_ENTITY_NAME);
+            assertThatThrownBy(() -> assigner.assignIdIfNeeded(entity, event))
+                    .isInstanceOf(IdAssignmentException.class)
+                    .hasMessage(expectedMessage)
+                    .hasCause(resolverException);
 
-    @Test
-    void shouldThrowIdAssignmentExceptionWhenGetterFails() throws Exception {
-        // Given
-        InvocationTargetException getterException = new InvocationTargetException(
-                new IllegalAccessException("Cannot access getter"));
+            // Verify cutoff: everything after resolver not called
+            verify(metadataResolver, times(1)).resolve(TestEntity.class);
+            verifyNoInteractions(idGenerator, tenantContextHolder, idGenerationStrategy,
+                    hibernateStateUpdater, getter, setter);
+            verifyNoMoreInteractions(metadataResolver, event, metadata);
+        }
 
-        when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
-        when(metadata.isSkip()).thenReturn(false);
-        when(metadata.getGetter()).thenReturn(getter);
-        when(getter.invoke(entity)).thenThrow(getterException);
+        @Test
+        @DisplayName("Should throw IdAssignmentException when hibernate state updater fails")
+        void shouldThrowIdAssignmentException_whenHibernateStateUpdaterFails() throws Exception {
+            // Given
+            RuntimeException updaterException = new RuntimeException("State update failed");
 
-        // When/Then
-        String expectedMessage = formatErrorMessage(EntityIdAssigner.ERROR_CANNOT_GENERATE_ID, TEST_ENTITY_NAME);
-        assertThatThrownBy(() -> assigner.assignIdIfNeeded(entity, event))
-                .isInstanceOf(IdAssignmentException.class)
-                .hasMessageContaining(expectedMessage);
+            when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
+            when(metadata.isSkip()).thenReturn(false);
+            when(metadata.getGetter()).thenReturn(getter);
+            when(metadata.getSetter()).thenReturn(setter);
+            when(metadata.getTableName()).thenReturn(TABLE_NAME);
+            when(metadata.getIdFieldName()).thenReturn(ID_FIELD_NAME);
+            when(getter.invoke(entity)).thenReturn(null);
+            when(idGenerationStrategy.shouldGenerateId(null)).thenReturn(true);
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
+            when(idGenerator.generateId(TABLE_NAME, TENANT_ID)).thenReturn(GENERATED_ID);
+            doThrow(updaterException).when(hibernateStateUpdater)
+                    .updatePropertyInState(event, ID_FIELD_NAME, GENERATED_ID);
 
-        verify(metadataResolver, times(1)).resolve(TestEntity.class);
-        verify(getter, times(1)).invoke(entity);
-        verifyNoInteractions(idGenerator, tenantContextHolder, idGenerationStrategy,
-                hibernateStateUpdater, setter);
-        verifyNoMoreInteractions(metadataResolver, event, metadata, getter);
-    }
+            // When / Then
+            String expectedMessage = String.format(
+                    EntityIdAssigner.ERROR_CANNOT_GENERATE_ID.replace("{}", "%s"), TEST_ENTITY_NAME);
+            assertThatThrownBy(() -> assigner.assignIdIfNeeded(entity, event))
+                    .isInstanceOf(IdAssignmentException.class)
+                    .hasMessage(expectedMessage)
+                    .hasCause(updaterException);
 
-    @Test
-    void shouldThrowIdAssignmentExceptionWhenIdGeneratorFails() throws Exception {
-        // Given
-        RuntimeException generatorException = new RuntimeException("ID generation failed");
-
-        when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
-        when(metadata.isSkip()).thenReturn(false);
-        when(metadata.getGetter()).thenReturn(getter);
-        when(metadata.getTableName()).thenReturn(TABLE_NAME);
-        when(getter.invoke(entity)).thenReturn(null);
-        when(idGenerationStrategy.shouldGenerateId(null)).thenReturn(true);
-        when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
-        when(idGenerator.generateId(TABLE_NAME, TENANT_ID)).thenThrow(generatorException);
-
-        // When/Then
-        String expectedMessage = formatErrorMessage(EntityIdAssigner.ERROR_CANNOT_GENERATE_ID, TEST_ENTITY_NAME);
-        assertThatThrownBy(() -> assigner.assignIdIfNeeded(entity, event))
-                .isInstanceOf(IdAssignmentException.class)
-                .hasMessageContaining(expectedMessage)
-                .hasCause(generatorException);
-
-        verify(metadataResolver, times(1)).resolve(TestEntity.class);
-        verify(idGenerator, times(1)).generateId(TABLE_NAME, TENANT_ID);
-        verifyNoInteractions(setter, hibernateStateUpdater);
-        verifyNoMoreInteractions(idGenerator, tenantContextHolder, metadataResolver,
-                idGenerationStrategy, event, metadata, getter);
-    }
-
-    @Test
-    void shouldHandleZeroIdAsNeedingGeneration() throws Exception {
-        // Given
-        Long zeroId = 0L;
-        when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
-        when(metadata.isSkip()).thenReturn(false);
-        when(metadata.getGetter()).thenReturn(getter);
-        when(metadata.getSetter()).thenReturn(setter);
-        when(metadata.getTableName()).thenReturn(TABLE_NAME);
-        when(metadata.getIdFieldName()).thenReturn(ID_FIELD_NAME);
-        when(getter.invoke(entity)).thenReturn(zeroId);
-        when(idGenerationStrategy.shouldGenerateId(zeroId)).thenReturn(true);
-        when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
-        when(idGenerator.generateId(TABLE_NAME, TENANT_ID)).thenReturn(GENERATED_ID);
-
-        // When
-        assigner.assignIdIfNeeded(entity, event);
-
-        // Then
-        InOrder inOrder = inOrder(metadataResolver, metadata, getter, idGenerationStrategy,
-                tenantContextHolder, idGenerator, setter, hibernateStateUpdater);
-        inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
-        inOrder.verify(metadata, times(1)).isSkip();
-        inOrder.verify(metadata, times(1)).getGetter();
-        inOrder.verify(getter, times(1)).invoke(entity);
-        inOrder.verify(idGenerationStrategy, times(1)).shouldGenerateId(zeroId);
-        inOrder.verify(tenantContextHolder, times(1)).getTenantId();
-        inOrder.verify(idGenerator, times(1)).generateId(TABLE_NAME, TENANT_ID);
-        inOrder.verify(metadata, times(1)).getSetter();
-        inOrder.verify(setter, times(1)).invoke(entity, GENERATED_ID);
-        inOrder.verify(metadata, times(1)).getIdFieldName();
-        inOrder.verify(hibernateStateUpdater, times(1)).updatePropertyInState(event, ID_FIELD_NAME, GENERATED_ID);
-        verifyNoMoreInteractions(idGenerator, tenantContextHolder, metadataResolver,
-                idGenerationStrategy, hibernateStateUpdater, event, metadata, getter, setter);
-    }
-
-    @Test
-    void shouldHandleEmptyStringIdAsNeedingGeneration() throws Exception {
-        // Given
-        String emptyId = "";
-        when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
-        when(metadata.isSkip()).thenReturn(false);
-        when(metadata.getGetter()).thenReturn(getter);
-        when(metadata.getSetter()).thenReturn(setter);
-        when(metadata.getTableName()).thenReturn(TABLE_NAME);
-        when(metadata.getIdFieldName()).thenReturn(ID_FIELD_NAME);
-        when(getter.invoke(entity)).thenReturn(emptyId);
-        when(idGenerationStrategy.shouldGenerateId(emptyId)).thenReturn(true);
-        when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
-        when(idGenerator.generateId(TABLE_NAME, TENANT_ID)).thenReturn(GENERATED_ID);
-
-        // When
-        assigner.assignIdIfNeeded(entity, event);
-
-        // Then
-        InOrder inOrder = inOrder(metadataResolver, metadata, getter, idGenerationStrategy,
-                tenantContextHolder, idGenerator, setter, hibernateStateUpdater);
-        inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
-        inOrder.verify(metadata, times(1)).isSkip();
-        inOrder.verify(metadata, times(1)).getGetter();
-        inOrder.verify(getter, times(1)).invoke(entity);
-        inOrder.verify(idGenerationStrategy, times(1)).shouldGenerateId(emptyId);
-        inOrder.verify(tenantContextHolder, times(1)).getTenantId();
-        inOrder.verify(idGenerator, times(1)).generateId(TABLE_NAME, TENANT_ID);
-        inOrder.verify(metadata, times(1)).getSetter();
-        inOrder.verify(setter, times(1)).invoke(entity, GENERATED_ID);
-        inOrder.verify(metadata, times(1)).getIdFieldName();
-        inOrder.verify(hibernateStateUpdater, times(1)).updatePropertyInState(event, ID_FIELD_NAME, GENERATED_ID);
-        verifyNoMoreInteractions(idGenerator, tenantContextHolder, metadataResolver,
-                idGenerationStrategy, hibernateStateUpdater, event, metadata, getter, setter);
-    }
-
-    /**
-     * Helper method to format error messages the same way EntityIdAssigner does
-     * Converts SLF4J placeholder {} to String.format placeholder %s and formats
-     */
-    private String formatErrorMessage(String messageTemplate, String... args) {
-        return String.format(messageTemplate.replace("{}", "%s"), (Object[]) args);
+            // Verify all collaborators were called up to the failure point
+            InOrder inOrder = inOrder(metadataResolver, metadata, getter, idGenerationStrategy,
+                    tenantContextHolder, idGenerator, setter, hibernateStateUpdater);
+            inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
+            inOrder.verify(metadata, times(1)).isSkip();
+            inOrder.verify(metadata, times(1)).getGetter();
+            inOrder.verify(getter, times(1)).invoke(entity);
+            inOrder.verify(idGenerationStrategy, times(1)).shouldGenerateId(null);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(metadata, times(1)).getTableName();
+            inOrder.verify(idGenerator, times(1)).generateId(TABLE_NAME, TENANT_ID);
+            inOrder.verify(metadata, times(1)).getSetter();
+            inOrder.verify(setter, times(1)).invoke(entity, GENERATED_ID);
+            inOrder.verify(metadata, times(1)).getIdFieldName();
+            inOrder.verify(hibernateStateUpdater, times(1)).updatePropertyInState(event, ID_FIELD_NAME, GENERATED_ID);
+            verifyNoMoreInteractions(idGenerator, tenantContextHolder, metadataResolver,
+                    idGenerationStrategy, hibernateStateUpdater, event, metadata, getter, setter);
+        }
     }
 
     // Test helper class

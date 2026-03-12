@@ -247,6 +247,43 @@ class HmacResponseFilterTest {
         }
     }
 
+    @Nested
+    @DisplayName("Collaborator exception propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("should propagate exception when hmacKeyService throws during response signing")
+        void shouldPropagateException_whenHmacKeyServiceThrows() throws Exception {
+            // Given
+            setAuthentication();
+            when(hmacProperties.isEnabled()).thenReturn(true);
+            request.setAttribute(HmacSigningFilter.REQUEST_ATTR_NONCE, REQUEST_NONCE);
+
+            doAnswer(invocation -> {
+                CachedBodyHttpServletResponse cachedResponse = invocation.getArgument(1);
+                cachedResponse.getWriter().write(RESPONSE_BODY);
+                cachedResponse.getWriter().flush();
+                return null;
+            }).when(filterChain).doFilter(eq(request), any(CachedBodyHttpServletResponse.class));
+
+            when(hmacSignatureService.computeBodyHash(RESPONSE_BODY.getBytes(StandardCharsets.UTF_8)))
+                    .thenReturn(RESPONSE_BODY_HASH);
+            when(hmacSignatureService.buildResponseStringToSign(
+                    eq("200"), eq(RESPONSE_BODY_HASH), anyString(), eq(REQUEST_NONCE)))
+                    .thenReturn("string-to-sign");
+            RuntimeException cause = new RuntimeException("key resolution error");
+            when(hmacKeyService.resolveDefaultKey()).thenThrow(cause);
+
+            // When / Then
+            org.assertj.core.api.Assertions.assertThatThrownBy(
+                    () -> filter.doFilterInternal(request, response, filterChain))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("key resolution error");
+
+            verify(hmacKeyService, times(1)).resolveDefaultKey();
+        }
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private void setAuthentication() {

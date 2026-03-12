@@ -42,78 +42,78 @@ class CidrMatcherTest {
         @Test
         @DisplayName("Should return true when IP is within /24 CIDR range")
         void shouldReturnTrue_whenIpIsWithinCidr24() {
-            // Given
+            // Given: IP in 192.168.1.0/24 range
             List<String> cidrs = List.of(CIDR_CLASS_C);
 
-            // When
+            // When: checking if allowed
             boolean result = CidrMatcher.isAllowed(IP_IN_CLASS_C, cidrs);
 
-            // Then
+            // Then: should be allowed
             assertThat(result).isTrue();
         }
 
         @Test
         @DisplayName("Should return false when IP is outside /24 CIDR range")
         void shouldReturnFalse_whenIpIsOutsideCidr24() {
-            // Given
+            // Given: IP outside 192.168.1.0/24 range
             List<String> cidrs = List.of(CIDR_CLASS_C);
 
-            // When
+            // When: checking if allowed
             boolean result = CidrMatcher.isAllowed(IP_OUTSIDE_CLASS_C, cidrs);
 
-            // Then
+            // Then: should not be allowed
             assertThat(result).isFalse();
         }
 
         @Test
         @DisplayName("Should return true when IP matches /32 single host")
         void shouldReturnTrue_whenIpMatchesSingleHost() {
-            // Given
+            // Given: exact host match
             List<String> cidrs = List.of(CIDR_SINGLE_HOST);
 
-            // When
+            // When: checking if allowed
             boolean result = CidrMatcher.isAllowed(IP_SINGLE_HOST, cidrs);
 
-            // Then
+            // Then: should be allowed
             assertThat(result).isTrue();
         }
 
         @Test
         @DisplayName("Should return true when IP matches any range in list")
         void shouldReturnTrue_whenIpMatchesAnyRangeInList() {
-            // Given
+            // Given: multiple CIDR ranges
             List<String> cidrs = List.of(CIDR_CLASS_C, CIDR_CLASS_A);
 
-            // When
+            // When: checking IP that matches second range
             boolean result = CidrMatcher.isAllowed(IP_IN_CLASS_A, cidrs);
 
-            // Then
+            // Then: should be allowed
             assertThat(result).isTrue();
         }
 
         @Test
         @DisplayName("Should return false when no ranges match")
         void shouldReturnFalse_whenNoRangesMatch() {
-            // Given
+            // Given: CIDR ranges that don't contain the IP
             List<String> cidrs = List.of(CIDR_CLASS_C, CIDR_SINGLE_HOST);
 
-            // When
+            // When: checking unmatched IP
             boolean result = CidrMatcher.isAllowed(IP_OUTSIDE_ALL, cidrs);
 
-            // Then
+            // Then: should not be allowed
             assertThat(result).isFalse();
         }
 
         @Test
         @DisplayName("Should return false when CIDR list is empty")
         void shouldReturnFalse_whenCidrListIsEmpty() {
-            // Given
+            // Given: empty CIDR list
             List<String> cidrs = Collections.emptyList();
 
-            // When
+            // When: checking any IP
             boolean result = CidrMatcher.isAllowed(IP_IN_CLASS_C, cidrs);
 
-            // Then
+            // Then: should not be allowed
             assertThat(result).isFalse();
         }
     }
@@ -125,56 +125,110 @@ class CidrMatcherTest {
         @Test
         @DisplayName("Should return true when IPv6 address is within CIDR range")
         void shouldReturnTrue_whenIpv6IsWithinCidr() {
-            // Given
+            // Given: IPv6 CIDR range
             List<String> cidrs = List.of("2001:db8::/32");
 
-            // When
+            // When: checking IPv6 within range
             boolean result = CidrMatcher.isAllowed("2001:db8::1", cidrs);
 
-            // Then
+            // Then: should be allowed
             assertThat(result).isTrue();
         }
 
         @Test
         @DisplayName("Should return false when IPv6 address is outside CIDR range")
         void shouldReturnFalse_whenIpv6IsOutsideCidr() {
-            // Given
+            // Given: IPv6 CIDR range
             List<String> cidrs = List.of("2001:db8::/32");
 
-            // When
+            // When: checking IPv6 outside range
             boolean result = CidrMatcher.isAllowed("2001:db9::1", cidrs);
 
-            // Then
+            // Then: should not be allowed
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        @DisplayName("Should return false when IPv4 client checked against IPv6 CIDR")
+        void shouldReturnFalse_whenIpv4ClientCheckedAgainstIpv6Cidr() {
+            // Given: IPv6 CIDR range
+            List<String> cidrs = List.of("2001:db8::/32");
+
+            // When: checking IPv4 against IPv6 range
+            boolean result = CidrMatcher.isAllowed(IP_IN_CLASS_C, cidrs);
+
+            // Then: should not match (address family mismatch)
             assertThat(result).isFalse();
         }
     }
 
     @Nested
-    @DisplayName("Error handling")
-    class ErrorHandling {
+    @DisplayName("Input validation")
+    class InputValidation {
 
         @Test
-        @DisplayName("Should throw IllegalArgumentException when IP is malformed")
-        void shouldThrowIllegalArgumentException_whenIpIsMalformed() {
-            // Given
+        @DisplayName("Should throw IllegalArgumentException when client IP is malformed")
+        void shouldThrowIllegalArgumentException_whenClientIpIsMalformed() {
+            // Given: malformed IP address
+            String malformedIp = "not-an-ip";
             List<String> cidrs = List.of(CIDR_CLASS_C);
 
-            // When / Then
-            assertThatThrownBy(() -> CidrMatcher.isAllowed("not-an-ip", cidrs))
+            // When/Then: should throw with message from constant
+            assertThatThrownBy(() -> CidrMatcher.isAllowed(malformedIp, cidrs))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("not-an-ip");
+                    .hasMessage(String.format(CidrMatcher.ERROR_INVALID_IP, malformedIp));
         }
 
         @Test
-        @DisplayName("Should throw IllegalArgumentException when CIDR prefix is malformed")
-        void shouldThrowIllegalArgumentException_whenCidrPrefixIsMalformed() {
-            // Given
-            List<String> cidrs = List.of("192.168.1.0/abc");
+        @DisplayName("Should throw IllegalArgumentException when CIDR network address is malformed")
+        void shouldThrowIllegalArgumentException_whenCidrNetworkAddressIsMalformed() {
+            // Given: CIDR with malformed network address
+            String malformedCidr = "not-an-ip/24";
+            List<String> cidrs = List.of(malformedCidr);
 
-            // When / Then
+            // When/Then: should throw with message from constant
             assertThatThrownBy(() -> CidrMatcher.isAllowed(IP_IN_CLASS_C, cidrs))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("192.168.1.0/abc");
+                    .hasMessage(String.format(CidrMatcher.ERROR_INVALID_IP, "not-an-ip"));
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when CIDR prefix is non-numeric")
+        void shouldThrowIllegalArgumentException_whenCidrPrefixIsNonNumeric() {
+            // Given: CIDR with non-numeric prefix
+            String badCidr = "192.168.1.0/abc";
+            List<String> cidrs = List.of(badCidr);
+
+            // When/Then: should throw with message from constant
+            assertThatThrownBy(() -> CidrMatcher.isAllowed(IP_IN_CLASS_C, cidrs))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage(String.format(CidrMatcher.ERROR_INVALID_CIDR, badCidr));
+        }
+
+        @Test
+        @DisplayName("Should treat CIDR without prefix as single host match")
+        void shouldTreatCidrWithoutPrefix_asSingleHostMatch() {
+            // Given: CIDR without prefix length (treated as /32)
+            List<String> cidrs = List.of("192.168.1.100");
+
+            // When: checking exact IP match
+            boolean result = CidrMatcher.isAllowed(IP_IN_CLASS_C, cidrs);
+
+            // Then: should match as single host
+            assertThat(result).isTrue();
+        }
+
+        @Test
+        @DisplayName("Should not match CIDR without prefix when IPs differ")
+        void shouldNotMatchCidrWithoutPrefix_whenIpsDiffer() {
+            // Given: CIDR without prefix length
+            List<String> cidrs = List.of("192.168.1.1");
+
+            // When: checking different IP
+            boolean result = CidrMatcher.isAllowed(IP_IN_CLASS_C, cidrs);
+
+            // Then: should not match
+            assertThat(result).isFalse();
         }
     }
 }

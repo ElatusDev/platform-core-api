@@ -19,6 +19,7 @@ import org.springframework.context.MessageSource;
 import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -168,6 +169,50 @@ class MessageServiceTest {
             // Then
             assertThat(result).isEqualTo("Contexto de organizacion es requerido");
             verify(messageSource, times(1)).getMessage(MessageService.KEY_INVALID_TENANT, null, LOCALE);
+            verifyNoMoreInteractions(messageSource);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator exception propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate NoSuchMessageException when messageSource throws for entity name resolution")
+        void shouldPropagateNoSuchMessageException_whenMessageSourceThrowsForEntityNameResolution() {
+            // Given: messageSource throws when resolving entity type key
+            org.springframework.context.NoSuchMessageException noSuchMsg =
+                    new org.springframework.context.NoSuchMessageException("unknown.key");
+            when(messageSource.getMessage(EntityType.EMPLOYEE, null, LOCALE))
+                    .thenThrow(noSuchMsg);
+
+            // When/Then: exception should propagate from getEntityNotFound
+            assertThatThrownBy(() -> messageService.getEntityNotFound(EntityType.EMPLOYEE, "1"))
+                    .isInstanceOf(org.springframework.context.NoSuchMessageException.class);
+
+            verify(messageSource, times(1)).getMessage(EntityType.EMPLOYEE, null, LOCALE);
+            verifyNoMoreInteractions(messageSource);
+        }
+
+        @Test
+        @DisplayName("Should propagate NoSuchMessageException when messageSource throws for template resolution")
+        void shouldPropagateNoSuchMessageException_whenMessageSourceThrowsForTemplateResolution() {
+            // Given: entity name resolves, but template key throws
+            when(messageSource.getMessage(EntityType.EMPLOYEE, null, LOCALE))
+                    .thenReturn(ENTITY_NAME_EMPLEADO);
+            org.springframework.context.NoSuchMessageException noSuchMsg =
+                    new org.springframework.context.NoSuchMessageException(MessageService.KEY_ENTITY_NOT_FOUND);
+            when(messageSource.getMessage(MessageService.KEY_ENTITY_NOT_FOUND,
+                    new Object[]{ENTITY_NAME_EMPLEADO, ENTITY_ID}, LOCALE))
+                    .thenThrow(noSuchMsg);
+
+            // When/Then: exception should propagate
+            assertThatThrownBy(() -> messageService.getEntityNotFound(EntityType.EMPLOYEE, ENTITY_ID))
+                    .isInstanceOf(org.springframework.context.NoSuchMessageException.class);
+
+            verify(messageSource, times(1)).getMessage(EntityType.EMPLOYEE, null, LOCALE);
+            verify(messageSource, times(1)).getMessage(MessageService.KEY_ENTITY_NOT_FOUND,
+                    new Object[]{ENTITY_NAME_EMPLEADO, ENTITY_ID}, LOCALE);
             verifyNoMoreInteractions(messageSource);
         }
     }

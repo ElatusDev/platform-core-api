@@ -80,6 +80,7 @@ class NotificationCreationUseCaseTest {
 
             // Then
             verify(applicationContext, times(1)).getBean(NotificationDataModel.class);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, NotificationCreationUseCase.MAP_NAME);
             verifyNoMoreInteractions(applicationContext, notificationRepository, modelMapper);
         }
 
@@ -115,6 +116,7 @@ class NotificationCreationUseCaseTest {
             // Then
             assertThat(result.getType()).isEqualTo(NotificationType.COURSE_REMINDER);
             verify(applicationContext, times(1)).getBean(NotificationDataModel.class);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, NotificationCreationUseCase.MAP_NAME);
             verifyNoMoreInteractions(applicationContext, notificationRepository, modelMapper);
         }
 
@@ -132,6 +134,7 @@ class NotificationCreationUseCaseTest {
             // Then
             assertThat(result.getPriority()).isEqualTo(NotificationPriority.HIGH);
             verify(applicationContext, times(1)).getBean(NotificationDataModel.class);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, NotificationCreationUseCase.MAP_NAME);
             verifyNoMoreInteractions(applicationContext, notificationRepository, modelMapper);
         }
 
@@ -150,6 +153,7 @@ class NotificationCreationUseCaseTest {
             // Then
             assertThat(result.getType()).isNull();
             verify(applicationContext, times(1)).getBean(NotificationDataModel.class);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, NotificationCreationUseCase.MAP_NAME);
             verifyNoMoreInteractions(applicationContext, notificationRepository, modelMapper);
         }
 
@@ -168,6 +172,7 @@ class NotificationCreationUseCaseTest {
             // Then
             assertThat(result.getPriority()).isNull();
             verify(applicationContext, times(1)).getBean(NotificationDataModel.class);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, NotificationCreationUseCase.MAP_NAME);
             verifyNoMoreInteractions(applicationContext, notificationRepository, modelMapper);
         }
     }

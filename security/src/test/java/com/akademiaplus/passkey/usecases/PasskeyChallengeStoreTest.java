@@ -181,6 +181,10 @@ class PasskeyChallengeStoreTest {
                     .isInstanceOf(PasskeyAuthenticationException.class)
                     .hasMessage(PasskeyChallengeStore.ERROR_CHALLENGE_NOT_FOUND);
             verify(valueOperations, times(1)).getAndDelete(CHALLENGE_KEY);
+            verify(valueOperations, never()).set(
+                    org.mockito.ArgumentMatchers.isA(String.class),
+                    org.mockito.ArgumentMatchers.isA(String.class),
+                    org.mockito.ArgumentMatchers.isA(java.time.Duration.class));
             verifyNoMoreInteractions(redisTemplate, valueOperations, properties);
         }
     }
@@ -232,7 +236,50 @@ class PasskeyChallengeStoreTest {
                     .isInstanceOf(PasskeyAuthenticationException.class)
                     .hasMessage(PasskeyChallengeStore.ERROR_CHALLENGE_NOT_FOUND);
             verify(valueOperations, times(1)).getAndDelete(OPTIONS_KEY);
+            verify(valueOperations, never()).set(
+                    org.mockito.ArgumentMatchers.isA(String.class),
+                    org.mockito.ArgumentMatchers.isA(String.class),
+                    org.mockito.ArgumentMatchers.isA(java.time.Duration.class));
             verifyNoMoreInteractions(redisTemplate, valueOperations, properties);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when redisTemplate throws on consumeChallenge")
+        void shouldPropagateException_whenRedisTemplateThrowsOnConsumeChallenge() {
+            // Given
+            RuntimeException cause = new RuntimeException("Redis connection failed");
+            when(redisTemplate.opsForValue()).thenThrow(cause);
+
+            // When / Then
+            assertThatThrownBy(() -> challengeStore.consumeChallenge(CHALLENGE_BASE64))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Redis connection failed");
+
+            verify(redisTemplate, times(1)).opsForValue();
+            verifyNoInteractions(valueOperations, properties);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when redisTemplate throws on store")
+        void shouldPropagateException_whenRedisTemplateThrowsOnStore() {
+            // Given
+            RuntimeException cause = new RuntimeException("Redis connection failed");
+            when(redisTemplate.opsForValue()).thenThrow(cause);
+            PasskeyChallengeStore.ChallengeMetadata metadata = new PasskeyChallengeStore.ChallengeMetadata(
+                    USER_ID, TENANT_ID, PasskeyChallengeStore.OPERATION_REGISTER);
+
+            // When / Then
+            assertThatThrownBy(() -> challengeStore.store(CHALLENGE_BASE64, metadata))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Redis connection failed");
+
+            verify(redisTemplate, times(1)).opsForValue();
+            verifyNoInteractions(valueOperations, properties);
         }
     }
 }

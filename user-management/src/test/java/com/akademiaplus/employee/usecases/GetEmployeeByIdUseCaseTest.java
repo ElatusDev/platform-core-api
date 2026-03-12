@@ -70,10 +70,10 @@ class GetEmployeeByIdUseCaseTest {
 
             // Then
             assertThat(result).isEqualTo(expectedDto);
-            verify(tenantContextHolder).getTenantId();
-            verify(employeeRepository).findById(new EmployeeDataModel.EmployeeCompositeId(TENANT_ID, EMPLOYEE_ID));
-            verify(modelMapper).map(employee, GetEmployeeResponseDTO.class);
-            verify(modelMapper).map(personPII, expectedDto);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(employeeRepository, times(1)).findById(new EmployeeDataModel.EmployeeCompositeId(TENANT_ID, EMPLOYEE_ID));
+            verify(modelMapper, times(1)).map(employee, GetEmployeeResponseDTO.class);
+            verify(modelMapper, times(1)).map(personPII, expectedDto);
             verifyNoMoreInteractions(tenantContextHolder, employeeRepository, modelMapper);
         }
     }
@@ -93,14 +93,16 @@ class GetEmployeeByIdUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.get(EMPLOYEE_ID))
                     .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(EntityType.EMPLOYEE + " with ID " + EMPLOYEE_ID + " not found")
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.EMPLOYEE);
                         assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(EMPLOYEE_ID));
                     });
-            verify(tenantContextHolder).getTenantId();
-            verify(employeeRepository).findById(new EmployeeDataModel.EmployeeCompositeId(TENANT_ID, EMPLOYEE_ID));
-            verifyNoMoreInteractions(tenantContextHolder, employeeRepository, modelMapper);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(employeeRepository, times(1)).findById(new EmployeeDataModel.EmployeeCompositeId(TENANT_ID, EMPLOYEE_ID));
+            verifyNoInteractions(modelMapper);
+            verifyNoMoreInteractions(tenantContextHolder, employeeRepository);
         }
     }
 
@@ -118,8 +120,9 @@ class GetEmployeeByIdUseCaseTest {
             assertThatThrownBy(() -> useCase.get(EMPLOYEE_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(GetEmployeeByIdUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
-            verify(tenantContextHolder).getTenantId();
-            verifyNoMoreInteractions(tenantContextHolder, employeeRepository, modelMapper);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoMoreInteractions(tenantContextHolder);
+            verifyNoInteractions(employeeRepository, modelMapper);
         }
     }
 }

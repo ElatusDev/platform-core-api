@@ -141,15 +141,21 @@ class DeleteUseCaseSupportTest {
         @Test
         @DisplayName("Should throw EntityNotFoundException when not found")
         void shouldThrowEntityNotFound_whenNotFound() {
-            // Given
+            // Given: repository returns empty
             when(repository.findById(COMPOSITE_ID)).thenReturn(Optional.empty());
 
-            // When / Then
+            // When/Then: should throw EntityNotFoundException with correct fields
             assertThatThrownBy(() ->
                     DeleteUseCaseSupport.findOrThrow(
                             repository, COMPOSITE_ID, ENTITY_TYPE, ENTITY_ID))
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .satisfies(ex -> {
+                        EntityNotFoundException enfe = (EntityNotFoundException) ex;
+                        assertThat(enfe.getEntityType()).isEqualTo(ENTITY_TYPE);
+                        assertThat(enfe.getEntityId()).isEqualTo(ENTITY_ID);
+                    });
 
+            // Rule 9: only findById called, no downstream operations
             verify(repository, times(1)).findById(COMPOSITE_ID);
             verifyNoMoreInteractions(repository);
         }

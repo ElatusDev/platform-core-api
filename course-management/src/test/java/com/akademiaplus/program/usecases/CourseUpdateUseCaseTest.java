@@ -165,9 +165,19 @@ class CourseUpdateUseCaseTest {
             // Then
             assertThat(existing.getAvailableCollaborators()).containsExactly(collab1, collab2);
             assertThat(response.getCourseId()).isEqualTo(COURSE_ID);
-            verify(courseValidator, times(1)).validateCollaboratorsExist(collaboratorIds);
-            verifyNoMoreInteractions(tenantContextHolder, courseRepository, scheduleRepository,
-                    courseValidator, modelMapper);
+
+            InOrder inOrder = inOrder(tenantContextHolder, courseRepository, modelMapper,
+                    courseValidator, scheduleRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(courseRepository, times(1)).findById(
+                    new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, CourseUpdateUseCase.MAP_NAME);
+            inOrder.verify(courseValidator, times(1)).validateCollaboratorsExist(collaboratorIds);
+            inOrder.verify(scheduleRepository, times(1)).saveAll(List.of());
+            inOrder.verify(scheduleRepository, times(1)).findAllById(compositeIds);
+            inOrder.verify(scheduleRepository, times(1)).saveAll(List.of(schedule1));
+            inOrder.verify(courseRepository, times(1)).saveAndFlush(existing);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -205,9 +215,19 @@ class CourseUpdateUseCaseTest {
             // Then
             assertThat(oldSchedule.getCourseId()).isNull();
             assertThat(response.getCourseId()).isEqualTo(COURSE_ID);
-            verify(scheduleRepository, times(1)).saveAll(List.of(oldSchedule));
-            verifyNoMoreInteractions(tenantContextHolder, courseRepository, scheduleRepository,
-                    courseValidator, modelMapper);
+
+            InOrder inOrder = inOrder(tenantContextHolder, courseRepository, modelMapper,
+                    courseValidator, scheduleRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(courseRepository, times(1)).findById(
+                    new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            inOrder.verify(modelMapper, times(1)).map(dto, existing, CourseUpdateUseCase.MAP_NAME);
+            inOrder.verify(courseValidator, times(1)).validateCollaboratorsExist(collaboratorIds);
+            inOrder.verify(scheduleRepository, times(1)).saveAll(List.of(oldSchedule));
+            inOrder.verify(scheduleRepository, times(1)).findAllById(compositeIds);
+            inOrder.verify(scheduleRepository, times(1)).saveAll(List.of(newSchedule));
+            inOrder.verify(courseRepository, times(1)).saveAndFlush(existing);
+            inOrder.verifyNoMoreInteractions();
         }
 
         @Test
@@ -239,6 +259,7 @@ class CourseUpdateUseCaseTest {
                     new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
             verify(modelMapper, times(1)).map(dto, existing, CourseUpdateUseCase.MAP_NAME);
             verify(courseValidator, times(1)).validateCollaboratorsExist(collaboratorIds);
+            verify(scheduleRepository, times(1)).saveAll(List.of());
             verify(scheduleRepository, times(1)).findAllById(compositeIds);
             verifyNoMoreInteractions(tenantContextHolder, courseRepository, scheduleRepository,
                     courseValidator, modelMapper);
@@ -272,6 +293,7 @@ class CourseUpdateUseCaseTest {
                     new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
             verify(modelMapper, times(1)).map(dto, existing, CourseUpdateUseCase.MAP_NAME);
             verify(courseValidator, times(1)).validateCollaboratorsExist(collaboratorIds);
+            verify(scheduleRepository, times(1)).saveAll(List.of());
             verify(scheduleRepository, times(1)).findAllById(compositeIds);
             verifyNoMoreInteractions(tenantContextHolder, courseRepository, scheduleRepository,
                     courseValidator, modelMapper);
@@ -318,7 +340,9 @@ class CourseUpdateUseCaseTest {
                     new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
             inOrder.verify(modelMapper, times(1)).map(dto, existing, CourseUpdateUseCase.MAP_NAME);
             inOrder.verify(courseValidator, times(1)).validateCollaboratorsExist(collaboratorIds);
+            inOrder.verify(scheduleRepository, times(1)).saveAll(List.of());
             inOrder.verify(scheduleRepository, times(1)).findAllById(compositeIds);
+            inOrder.verify(scheduleRepository, times(1)).saveAll(List.of(schedule1));
             inOrder.verify(courseRepository, times(1)).saveAndFlush(existing);
             inOrder.verifyNoMoreInteractions();
         }

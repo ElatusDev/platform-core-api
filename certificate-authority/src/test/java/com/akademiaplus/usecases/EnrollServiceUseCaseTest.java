@@ -170,8 +170,8 @@ class EnrollServiceUseCaseTest {
                     .hasMessage(TokenManifest.INVALID_TOKEN_MSG);
 
             verify(tokenManifest, times(1)).validate(VALID_TOKEN, BOUND_CN);
-            verifyNoMoreInteractions(tokenManifest);
             verifyNoInteractions(signCertificateUseCase);
+            verifyNoMoreInteractions(tokenManifest, signCertificateUseCase);
         }
 
         @Test
@@ -188,8 +188,8 @@ class EnrollServiceUseCaseTest {
                     .hasMessage(TokenManifest.TOKEN_ALREADY_USED_MSG);
 
             verify(tokenManifest, times(1)).validate(VALID_TOKEN, BOUND_CN);
-            verifyNoMoreInteractions(tokenManifest);
             verifyNoInteractions(signCertificateUseCase);
+            verifyNoMoreInteractions(tokenManifest, signCertificateUseCase);
         }
 
         @Test
@@ -206,8 +206,8 @@ class EnrollServiceUseCaseTest {
                     .hasMessage(TokenManifest.TOKEN_CN_MISMATCH_MSG);
 
             verify(tokenManifest, times(1)).validate(VALID_TOKEN, BOUND_CN);
-            verifyNoMoreInteractions(tokenManifest);
             verifyNoInteractions(signCertificateUseCase);
+            verifyNoMoreInteractions(tokenManifest, signCertificateUseCase);
         }
 
         @Test

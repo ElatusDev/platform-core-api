@@ -266,7 +266,7 @@ class TokenBindingFilterTest {
 
             // Then
             ArgumentCaptor<AnomalyEvent> captor = ArgumentCaptor.forClass(AnomalyEvent.class);
-            verify(anomalyDetectionService).logAnomaly(captor.capture());
+            verify(anomalyDetectionService, times(1)).logAnomaly(captor.capture());
             AnomalyEvent event = captor.getValue();
             assertThat(event.username()).isEqualTo(USERNAME);
             assertThat(event.eventType()).isEqualTo(AnomalyEvent.EVENT_TYPE_FULL_MISMATCH);

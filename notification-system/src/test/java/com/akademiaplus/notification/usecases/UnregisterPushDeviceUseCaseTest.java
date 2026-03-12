@@ -18,7 +18,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("UnregisterPushDeviceUseCase")
 @ExtendWith(MockitoExtension.class)
@@ -49,8 +52,8 @@ class UnregisterPushDeviceUseCaseTest {
             useCase.unregister(DEVICE_TOKEN);
 
             // Then
-            verify(pushDeviceRepository).existsByDeviceToken(DEVICE_TOKEN);
-            verify(pushDeviceRepository).deleteByDeviceToken(DEVICE_TOKEN);
+            verify(pushDeviceRepository, times(1)).existsByDeviceToken(DEVICE_TOKEN);
+            verify(pushDeviceRepository, times(1)).deleteByDeviceToken(DEVICE_TOKEN);
             verifyNoMoreInteractions(pushDeviceRepository);
         }
 
@@ -64,7 +67,7 @@ class UnregisterPushDeviceUseCaseTest {
             assertThatThrownBy(() -> useCase.unregister(DEVICE_TOKEN))
                     .isInstanceOf(EntityNotFoundException.class);
 
-            verify(pushDeviceRepository).existsByDeviceToken(DEVICE_TOKEN);
+            verify(pushDeviceRepository, times(1)).existsByDeviceToken(DEVICE_TOKEN);
             verifyNoMoreInteractions(pushDeviceRepository);
         }
     }

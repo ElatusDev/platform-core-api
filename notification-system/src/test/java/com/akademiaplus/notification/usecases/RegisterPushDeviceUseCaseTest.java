@@ -116,9 +116,12 @@ class RegisterPushDeviceUseCaseTest {
 
             // Then
             assertThat(result.getPushDeviceId()).isEqualTo(existingDeviceId);
-            verify(pushDeviceRepository).save(existingDevice);
             assertThat(existingDevice.getUserId()).isEqualTo(USER_ID);
             assertThat(existingDevice.getPlatform()).isEqualTo("ANDROID");
+            InOrder inOrder = inOrder(pushDeviceRepository);
+            inOrder.verify(pushDeviceRepository, times(1)).findByDeviceToken(DEVICE_TOKEN);
+            inOrder.verify(pushDeviceRepository, times(1)).save(existingDevice);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

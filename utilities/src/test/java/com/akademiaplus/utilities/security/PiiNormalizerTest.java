@@ -453,7 +453,7 @@ class PiiNormalizerTest {
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(ERROR_PHONE_NULL_OR_EMPTY);
 
-            verifyNoMoreInteractions(phoneUtil);
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -467,7 +467,7 @@ class PiiNormalizerTest {
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(ERROR_PHONE_NULL_OR_EMPTY);
 
-            verifyNoMoreInteractions(phoneUtil);
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -481,7 +481,7 @@ class PiiNormalizerTest {
                     .isInstanceOf(ErrorNormalizationException.class)
                     .hasMessage(ERROR_PHONE_NULL_OR_EMPTY);
 
-            verifyNoMoreInteractions(phoneUtil);
+            verifyNoInteractions(phoneUtil);
         }
 
         @Test
@@ -567,6 +567,30 @@ class PiiNormalizerTest {
                     .hasCause(parseException);
 
             verify(phoneUtil, times(1)).parse(tooLongPhone, DEFAULT_REGION_CODE);
+            verifyNoMoreInteractions(phoneUtil);
+        }
+
+        @Test
+        @DisplayName("Should propagate RuntimeException when phoneUtil.format throws")
+        void shouldPropagateRuntimeException_whenPhoneUtilFormatThrows() throws NumberParseException {
+            // Given: parse and validate succeed, but format throws
+            String validPhone = "+12025551234";
+            Phonenumber.PhoneNumber parsedNumber = createPhoneNumber(1, 2025551234L);
+            RuntimeException formatException = new RuntimeException("Format failed");
+
+            when(phoneUtil.parse(validPhone, DEFAULT_REGION_CODE)).thenReturn(parsedNumber);
+            when(phoneUtil.isValidNumber(parsedNumber)).thenReturn(true);
+            when(phoneUtil.format(parsedNumber, PhoneNumberUtil.PhoneNumberFormat.NATIONAL))
+                    .thenThrow(formatException);
+
+            // When/Then: exception should propagate
+            assertThatThrownBy(() -> piiNormalizer.normalizePhoneNumber(validPhone))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Format failed");
+
+            verify(phoneUtil, times(1)).parse(validPhone, DEFAULT_REGION_CODE);
+            verify(phoneUtil, times(1)).isValidNumber(parsedNumber);
+            verify(phoneUtil, times(1)).format(parsedNumber, PhoneNumberUtil.PhoneNumberFormat.NATIONAL);
             verifyNoMoreInteractions(phoneUtil);
         }
 

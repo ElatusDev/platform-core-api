@@ -84,10 +84,13 @@ class ScheduleCreationUseCaseTest {
 
             // Then
             assertThat(result).isSameAs(prototypeModel);
-            verify(applicationContext, times(1)).getBean(ScheduleDataModel.class);
-            verify(tenantContextHolder, times(1)).getTenantId();
+            InOrder inOrder = inOrder(applicationContext, modelMapper, tenantContextHolder, courseRepository);
+            inOrder.verify(applicationContext, times(1)).getBean(ScheduleDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, ScheduleCreationUseCase.MAP_NAME);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(courseRepository, times(1)).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            inOrder.verifyNoMoreInteractions();
             verifyNoInteractions(scheduleRepository);
-            verifyNoMoreInteractions(applicationContext, courseRepository, tenantContextHolder, modelMapper);
         }
 
         @Test
@@ -125,11 +128,14 @@ class ScheduleCreationUseCaseTest {
             ScheduleDataModel result = useCase.transform(dto);
 
             // Then
-            verify(courseRepository, times(1)).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
             assertThat(result.getCourse()).isSameAs(course);
-            verify(tenantContextHolder, times(1)).getTenantId();
+            InOrder inOrder = inOrder(applicationContext, modelMapper, tenantContextHolder, courseRepository);
+            inOrder.verify(applicationContext, times(1)).getBean(ScheduleDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, ScheduleCreationUseCase.MAP_NAME);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(courseRepository, times(1)).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            inOrder.verifyNoMoreInteractions();
             verifyNoInteractions(scheduleRepository);
-            verifyNoMoreInteractions(applicationContext, courseRepository, tenantContextHolder, modelMapper);
         }
 
         @Test

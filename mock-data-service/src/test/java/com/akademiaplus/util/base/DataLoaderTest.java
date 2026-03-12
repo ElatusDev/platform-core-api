@@ -18,7 +18,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @DisplayName("DataLoader")
@@ -131,8 +130,12 @@ class DataLoaderTest {
             assertThatThrownBy(() -> dataLoader.load(count))
                     .isInstanceOf(FailToGenerateMockDataException.class);
 
-            // Then — all mocks were reached before the throw
-            verifyNoMoreInteractions(factory, transformer, repository);
+            // Then — interaction assertions in order: generate → transform → save (throws)
+            InOrder inOrder = inOrder(factory, transformer, repository);
+            inOrder.verify(factory, times(1)).generate(count);
+            inOrder.verify(transformer, times(1)).apply(dto);
+            inOrder.verify(repository, times(1)).save(model);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 

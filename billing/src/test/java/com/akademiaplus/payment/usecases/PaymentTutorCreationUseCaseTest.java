@@ -85,7 +85,8 @@ class PaymentTutorCreationUseCaseTest {
             useCase.transform(dto);
 
             // Then
-            verify(applicationContext).getBean(PaymentTutorDataModel.class);
+            verify(applicationContext, times(1)).getBean(PaymentTutorDataModel.class);
+            verifyNoMoreInteractions(applicationContext, paymentRepository);
         }
 
         @Test
@@ -102,8 +103,9 @@ class PaymentTutorCreationUseCaseTest {
             PaymentTutorDataModel result = useCase.transform(dto);
 
             // Then
-            verify(modelMapper).map(dto, prototypeModel, PaymentTutorCreationUseCase.MAP_NAME);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, PaymentTutorCreationUseCase.MAP_NAME);
             assertThat(result).isSameAs(prototypeModel);
+            verifyNoMoreInteractions(applicationContext, paymentRepository);
         }
 
         @Test
@@ -122,6 +124,7 @@ class PaymentTutorCreationUseCaseTest {
 
             // Then
             assertThat(result.getMembershipTutor()).isSameAs(membershipTutor);
+            verifyNoMoreInteractions(applicationContext, paymentRepository);
         }
 
         @Test
@@ -137,6 +140,11 @@ class PaymentTutorCreationUseCaseTest {
             assertThatThrownBy(() -> useCase.transform(dto))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining(String.valueOf(MEMBERSHIP_TUTOR_ID));
+
+            verify(applicationContext, times(1)).getBean(PaymentTutorDataModel.class);
+            verify(membershipTutorRepository, times(1)).findById(new MembershipTutorDataModel.MembershipTutorCompositeId(TENANT_ID, MEMBERSHIP_TUTOR_ID));
+            verifyNoInteractions(paymentRepository);
+            verifyNoMoreInteractions(applicationContext, membershipTutorRepository);
         }
     }
 
@@ -166,8 +174,9 @@ class PaymentTutorCreationUseCaseTest {
             PaymentTutorCreationResponseDTO result = useCase.create(dto);
 
             // Then
-            verify(paymentRepository).saveAndFlush(prototypeModel);
+            verify(paymentRepository, times(1)).saveAndFlush(prototypeModel);
             assertThat(result.getPaymentTutorId()).isEqualTo(SAVED_ID);
+            verifyNoMoreInteractions(applicationContext, paymentRepository, membershipTutorRepository, modelMapper);
         }
 
         @Test
@@ -191,11 +200,12 @@ class PaymentTutorCreationUseCaseTest {
 
             // Then
             InOrder inOrder = inOrder(applicationContext, modelMapper, membershipTutorRepository, paymentRepository);
-            inOrder.verify(applicationContext).getBean(PaymentTutorDataModel.class);
-            inOrder.verify(modelMapper).map(dto, prototypeModel, PaymentTutorCreationUseCase.MAP_NAME);
-            inOrder.verify(membershipTutorRepository).findById(new MembershipTutorDataModel.MembershipTutorCompositeId(TENANT_ID, MEMBERSHIP_TUTOR_ID));
-            inOrder.verify(paymentRepository).saveAndFlush(prototypeModel);
-            inOrder.verify(modelMapper).map(savedModel, PaymentTutorCreationResponseDTO.class);
+            inOrder.verify(applicationContext, times(1)).getBean(PaymentTutorDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, PaymentTutorCreationUseCase.MAP_NAME);
+            inOrder.verify(membershipTutorRepository, times(1)).findById(new MembershipTutorDataModel.MembershipTutorCompositeId(TENANT_ID, MEMBERSHIP_TUTOR_ID));
+            inOrder.verify(paymentRepository, times(1)).saveAndFlush(prototypeModel);
+            inOrder.verify(modelMapper, times(1)).map(savedModel, PaymentTutorCreationResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

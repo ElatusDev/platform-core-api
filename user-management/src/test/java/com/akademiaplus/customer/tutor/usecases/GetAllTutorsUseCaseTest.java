@@ -55,7 +55,7 @@ class GetAllTutorsUseCaseTest {
 
             // Then
             assertThat(result).isEmpty();
-            verify(tutorRepository).findAll();
+            verify(tutorRepository, times(1)).findAll();
             verifyNoMoreInteractions(tutorRepository, modelMapper);
         }
 
@@ -83,11 +83,11 @@ class GetAllTutorsUseCaseTest {
 
             // Then
             assertThat(result).containsExactly(dto1, dto2);
-            verify(tutorRepository).findAll();
-            verify(modelMapper).map(tutor1, GetTutorResponseDTO.class);
-            verify(modelMapper).map(personPII1, dto1);
-            verify(modelMapper).map(tutor2, GetTutorResponseDTO.class);
-            verify(modelMapper).map(personPII2, dto2);
+            verify(tutorRepository, times(1)).findAll();
+            verify(modelMapper, times(1)).map(tutor1, GetTutorResponseDTO.class);
+            verify(modelMapper, times(1)).map(personPII1, dto1);
+            verify(modelMapper, times(1)).map(tutor2, GetTutorResponseDTO.class);
+            verify(modelMapper, times(1)).map(personPII2, dto2);
             verifyNoMoreInteractions(tutorRepository, modelMapper);
         }
     }

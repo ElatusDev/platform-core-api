@@ -156,11 +156,16 @@ class CourseEventCreationUseCaseTest {
             CourseEventDataModel result = useCase.transform(dto);
 
             // Then
-            verify(courseRepository, times(1)).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
             assertThat(result.getCourse()).isSameAs(course);
-            verify(tenantContextHolder, times(1)).getTenantId();
-            verifyNoMoreInteractions(applicationContext, courseEventRepository, courseRepository,
-                    scheduleRepository, collaboratorRepository, tenantContextHolder, modelMapper);
+            InOrder inOrder = inOrder(applicationContext, modelMapper, tenantContextHolder, courseRepository, collaboratorRepository, scheduleRepository);
+            inOrder.verify(applicationContext, times(1)).getBean(CourseEventDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, CourseEventCreationUseCase.MAP_NAME);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(courseRepository, times(1)).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            inOrder.verify(collaboratorRepository, times(1)).findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID));
+            inOrder.verify(scheduleRepository, times(1)).findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID));
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(courseEventRepository);
         }
 
         @Test
@@ -179,11 +184,16 @@ class CourseEventCreationUseCaseTest {
             CourseEventDataModel result = useCase.transform(dto);
 
             // Then
-            verify(collaboratorRepository, times(1)).findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID));
             assertThat(result.getCollaborator()).isSameAs(collaborator);
-            verify(tenantContextHolder, times(1)).getTenantId();
-            verifyNoMoreInteractions(applicationContext, courseEventRepository, courseRepository,
-                    scheduleRepository, collaboratorRepository, tenantContextHolder, modelMapper);
+            InOrder inOrder = inOrder(applicationContext, modelMapper, tenantContextHolder, courseRepository, collaboratorRepository, scheduleRepository);
+            inOrder.verify(applicationContext, times(1)).getBean(CourseEventDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, CourseEventCreationUseCase.MAP_NAME);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(courseRepository, times(1)).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            inOrder.verify(collaboratorRepository, times(1)).findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID));
+            inOrder.verify(scheduleRepository, times(1)).findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID));
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(courseEventRepository);
         }
 
         @Test
@@ -202,11 +212,16 @@ class CourseEventCreationUseCaseTest {
             CourseEventDataModel result = useCase.transform(dto);
 
             // Then
-            verify(scheduleRepository, times(1)).findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID));
             assertThat(result.getSchedule()).isSameAs(schedule);
-            verify(tenantContextHolder, times(1)).getTenantId();
-            verifyNoMoreInteractions(applicationContext, courseEventRepository, courseRepository,
-                    scheduleRepository, collaboratorRepository, tenantContextHolder, modelMapper);
+            InOrder inOrder = inOrder(applicationContext, modelMapper, tenantContextHolder, courseRepository, collaboratorRepository, scheduleRepository);
+            inOrder.verify(applicationContext, times(1)).getBean(CourseEventDataModel.class);
+            inOrder.verify(modelMapper, times(1)).map(dto, prototypeModel, CourseEventCreationUseCase.MAP_NAME);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(courseRepository, times(1)).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            inOrder.verify(collaboratorRepository, times(1)).findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID));
+            inOrder.verify(scheduleRepository, times(1)).findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID));
+            inOrder.verifyNoMoreInteractions();
+            verifyNoInteractions(courseEventRepository);
         }
 
         @Test

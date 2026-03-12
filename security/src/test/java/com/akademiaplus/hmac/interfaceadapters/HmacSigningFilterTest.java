@@ -163,6 +163,26 @@ class HmacSigningFilterTest {
     class TimestampValidation {
 
         @Test
+        @DisplayName("should return 401 when timestamp is not a number")
+        void shouldReturn401_whenTimestampIsNotNumeric() throws Exception {
+            // Given
+            setAuthentication();
+            when(hmacProperties.isEnabled()).thenReturn(true);
+            when(hmacProperties.getTimestampToleranceSeconds()).thenReturn(TOLERANCE_SECONDS);
+            setAllHeaders(VALID_SIGNATURE, "not-a-number", VALID_NONCE, VALID_BODY_HASH);
+
+            // When
+            filter.doFilterInternal(request, response, filterChain);
+
+            // Then
+            assertThat(response.getStatus()).isEqualTo(401);
+            verify(hmacProperties, times(1)).isEnabled();
+            verify(hmacProperties, times(1)).getTimestampToleranceSeconds();
+            verifyNoInteractions(hmacSignatureService, nonceStore, hmacKeyService, filterChain);
+            verifyNoMoreInteractions(hmacSignatureService, nonceStore, hmacKeyService, hmacProperties, filterChain);
+        }
+
+        @Test
         @DisplayName("should return 401 when timestamp is outside tolerance")
         void shouldReturn401_whenTimestampOutsideTolerance() throws Exception {
             // Given
@@ -364,6 +384,40 @@ class HmacSigningFilterTest {
             assertThat(result).contains(HmacSigningFilter.HEADER_TIMESTAMP);
             assertThat(result).doesNotContain(HmacSigningFilter.HEADER_NONCE);
             assertThat(result).contains(HmacSigningFilter.HEADER_BODY_HASH);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator exception propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("should propagate exception when hmacKeyService throws")
+        void shouldPropagateException_whenHmacKeyServiceThrows() throws Exception {
+            // Given
+            setAuthentication();
+            when(hmacProperties.isEnabled()).thenReturn(true);
+            when(hmacProperties.getTimestampToleranceSeconds()).thenReturn(TOLERANCE_SECONDS);
+            request.setContent(REQUEST_BODY.getBytes(StandardCharsets.UTF_8));
+            setAllHeaders(VALID_SIGNATURE, VALID_TIMESTAMP, VALID_NONCE, VALID_BODY_HASH);
+            when(nonceStore.exists(VALID_NONCE)).thenReturn(false);
+            when(hmacSignatureService.computeBodyHash(REQUEST_BODY.getBytes(StandardCharsets.UTF_8)))
+                    .thenReturn(VALID_BODY_HASH);
+            String stringToSign = "POST\n/v1/courses\n" + VALID_TIMESTAMP + "\n" + VALID_BODY_HASH + "\n" + VALID_NONCE;
+            when(hmacSignatureService.buildRequestStringToSign(
+                    "POST", "/v1/courses", VALID_TIMESTAMP, VALID_BODY_HASH, VALID_NONCE))
+                    .thenReturn(stringToSign);
+            RuntimeException cause = new RuntimeException("key resolution failed");
+            when(hmacKeyService.resolveDefaultKey()).thenThrow(cause);
+
+            // When / Then
+            org.assertj.core.api.Assertions.assertThatThrownBy(
+                    () -> filter.doFilterInternal(request, response, filterChain))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("key resolution failed");
+
+            verify(hmacKeyService, times(1)).resolveDefaultKey();
+            verifyNoInteractions(filterChain);
         }
     }
 

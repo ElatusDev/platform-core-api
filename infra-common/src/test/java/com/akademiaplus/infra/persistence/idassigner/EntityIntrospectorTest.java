@@ -5,6 +5,8 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
@@ -17,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * Unit tests for EntityIntrospector
  */
+@DisplayName("EntityIntrospector Tests")
 class EntityIntrospectorTest {
 
     private static final String TABLE_NAME = "users";
@@ -32,154 +35,213 @@ class EntityIntrospectorTest {
         introspector = new EntityIntrospector();
     }
 
-    @Test
-    void shouldFindTableNameFromEntity() {
-        // Given
-        Class<?> entityClass = SimpleEntity.class;
+    @Nested
+    @DisplayName("findTableName")
+    class FindTableName {
 
-        // When
-        Optional<String> tableName = introspector.findTableName(entityClass);
+        @Test
+        @DisplayName("Should return table name when entity has @Table annotation")
+        void shouldReturnTableName_whenEntityHasTableAnnotation() {
+            // Given
+            Class<?> entityClass = SimpleEntity.class;
 
-        // Then
-        assertThat(tableName)
-                .isPresent()
-                .hasValue(TABLE_NAME);
+            // When
+            Optional<String> tableName = introspector.findTableName(entityClass);
+
+            // Then
+            assertThat(tableName)
+                    .isPresent()
+                    .hasValue(TABLE_NAME);
+        }
+
+        @Test
+        @DisplayName("Should return empty when entity has no @Table annotation")
+        void shouldReturnEmpty_whenEntityHasNoTableAnnotation() {
+            // Given
+            Class<?> entityClass = EntityWithoutTable.class;
+
+            // When
+            Optional<String> tableName = introspector.findTableName(entityClass);
+
+            // Then
+            assertThat(tableName).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Should return empty when @Table name is empty string")
+        void shouldReturnEmpty_whenTableNameIsEmptyString() {
+            // Given
+            Class<?> entityClass = EntityWithEmptyTableName.class;
+
+            // When
+            Optional<String> tableName = introspector.findTableName(entityClass);
+
+            // Then
+            assertThat(tableName).isEmpty();
+        }
     }
 
-    @Test
-    void shouldReturnEmptyWhenNoTableAnnotation() {
-        // Given
-        Class<?> entityClass = EntityWithoutTable.class;
+    @Nested
+    @DisplayName("findIdField")
+    class FindIdField {
 
-        // When
-        Optional<String> tableName = introspector.findTableName(entityClass);
+        @Test
+        @DisplayName("Should find @Id field when entity has one")
+        void shouldFindIdField_whenEntityHasIdAnnotation() {
+            // Given
+            Class<?> entityClass = SimpleEntity.class;
 
-        // Then
-        assertThat(tableName).isEmpty();
+            // When
+            Optional<Field> idField = introspector.findIdField(entityClass);
+
+            // Then
+            assertThat(idField)
+                    .isPresent()
+                    .get()
+                    .extracting(Field::getName)
+                    .isEqualTo(ID_FIELD_NAME);
+        }
+
+        @Test
+        @DisplayName("Should return empty when entity has no @Id field")
+        void shouldReturnEmpty_whenEntityHasNoIdField() {
+            // Given
+            Class<?> entityClass = EntityWithoutId.class;
+
+            // When
+            Optional<Field> idField = introspector.findIdField(entityClass);
+
+            // Then
+            assertThat(idField).isEmpty();
+        }
     }
 
-    @Test
-    void shouldReturnEmptyWhenTableNameIsEmpty() {
-        // Given
-        Class<?> entityClass = EntityWithEmptyTableName.class;
+    @Nested
+    @DisplayName("findGetter")
+    class FindGetter {
 
-        // When
-        Optional<String> tableName = introspector.findTableName(entityClass);
+        @Test
+        @DisplayName("Should find standard getter method for @Id field")
+        void shouldFindGetter_whenStandardGetterExists() throws Exception {
+            // Given
+            Class<?> entityClass = SimpleEntity.class;
+            Field idField = entityClass.getDeclaredField(ID_FIELD_NAME);
 
-        // Then
-        assertThat(tableName).isEmpty();
+            // When
+            Method getter = introspector.findGetter(entityClass, idField);
+
+            // Then
+            assertThat(getter).isNotNull();
+            assertThat(getter.getName()).isEqualTo(EXPECTED_GETTER_NAME);
+        }
+
+        @Test
+        @DisplayName("Should throw NoSuchMethodException when getter not found")
+        void shouldThrowNoSuchMethodException_whenGetterNotFound() throws Exception {
+            // Given
+            Class<?> entityClass = EntityWithoutGetter.class;
+            Field idField = entityClass.getDeclaredField(ID_FIELD_NAME);
+
+            // When / Then
+            assertThatThrownBy(() -> introspector.findGetter(entityClass, idField))
+                    .isInstanceOf(NoSuchMethodException.class)
+                    .hasMessage(String.format(
+                            EntityIntrospector.ERROR_NO_GETTER_FOUND,
+                            ID_FIELD_NAME,
+                            entityClass.getName(),
+                            "UserId"));
+        }
     }
 
-    @Test
-    void shouldFindIdFieldInEntity() {
-        // Given
-        Class<?> entityClass = SimpleEntity.class;
+    @Nested
+    @DisplayName("findSetter")
+    class FindSetter {
 
-        // When
-        Optional<Field> idField = introspector.findIdField(entityClass);
+        @Test
+        @DisplayName("Should find standard setter method for @Id field")
+        void shouldFindSetter_whenStandardSetterExists() throws Exception {
+            // Given
+            Class<?> entityClass = SimpleEntity.class;
+            Field idField = entityClass.getDeclaredField(ID_FIELD_NAME);
 
-        // Then
-        assertThat(idField)
-                .isPresent()
-                .get()
-                .extracting(Field::getName)
-                .isEqualTo(ID_FIELD_NAME);
+            // When
+            Method setter = introspector.findSetter(entityClass, idField);
+
+            // Then
+            assertThat(setter).isNotNull();
+            assertThat(setter.getName()).isEqualTo(EXPECTED_SETTER_NAME);
+            assertThat(setter.getParameterCount()).isEqualTo(EXPECTED_SETTER_PARAM_COUNT);
+        }
+
+        @Test
+        @DisplayName("Should find setter with different parameter type")
+        void shouldFindSetter_whenSetterHasDifferentParameterType() throws Exception {
+            // Given
+            Class<?> entityClass = EntityWithFlexibleSetter.class;
+            Field idField = entityClass.getDeclaredField(ID_FIELD_NAME);
+
+            // When
+            Method setter = introspector.findSetter(entityClass, idField);
+
+            // Then
+            assertThat(setter).isNotNull();
+            assertThat(setter.getName()).isEqualTo(EXPECTED_SETTER_NAME);
+            assertThat(setter.getParameterCount()).isEqualTo(EXPECTED_SETTER_PARAM_COUNT);
+        }
+
+        @Test
+        @DisplayName("Should throw NoSuchMethodException when setter not found")
+        void shouldThrowNoSuchMethodException_whenSetterNotFound() throws Exception {
+            // Given
+            Class<?> entityClass = EntityWithoutSetter.class;
+            Field idField = entityClass.getDeclaredField(ID_FIELD_NAME);
+
+            // When / Then
+            assertThatThrownBy(() -> introspector.findSetter(entityClass, idField))
+                    .isInstanceOf(NoSuchMethodException.class)
+                    .hasMessage(String.format(
+                            EntityIntrospector.ERROR_NO_SETTER_FOUND,
+                            ID_FIELD_NAME,
+                            entityClass.getName(),
+                            EXPECTED_SETTER_NAME,
+                            "Long"));
+        }
     }
 
-    @Test
-    void shouldReturnEmptyWhenNoIdField() {
-        // Given
-        Class<?> entityClass = EntityWithoutId.class;
+    @Nested
+    @DisplayName("hasEmbeddedId")
+    class HasEmbeddedId {
 
-        // When
-        Optional<Field> idField = introspector.findIdField(entityClass);
+        @Test
+        @DisplayName("Should return false when entity has no @EmbeddedId")
+        void shouldReturnFalse_whenEntityHasNoEmbeddedId() {
+            // Given
+            Class<?> entityClass = SimpleEntity.class;
 
-        // Then
-        assertThat(idField).isEmpty();
+            // When
+            boolean result = introspector.hasEmbeddedId(entityClass);
+
+            // Then
+            assertThat(result).isFalse();
+        }
     }
 
-    @Test
-    void shouldFindStandardGetter() throws Exception {
-        // Given
-        Class<?> entityClass = SimpleEntity.class;
-        Field idField = entityClass.getDeclaredField(ID_FIELD_NAME);
+    @Nested
+    @DisplayName("hasGeneratedValue")
+    class HasGeneratedValue {
 
-        // When
-        Method getter = introspector.findGetter(entityClass, idField);
+        @Test
+        @DisplayName("Should return false when @Id field has no @GeneratedValue")
+        void shouldReturnFalse_whenIdFieldHasNoGeneratedValue() throws Exception {
+            // Given
+            Field idField = SimpleEntity.class.getDeclaredField(ID_FIELD_NAME);
 
-        // Then
-        assertThat(getter).isNotNull();
-        assertThat(getter.getName()).isEqualTo(EXPECTED_GETTER_NAME);
-    }
+            // When
+            boolean result = introspector.hasGeneratedValue(idField);
 
-    @Test
-    void shouldThrowExceptionWhenGetterNotFound() throws Exception {
-        // Given
-        Class<?> entityClass = EntityWithoutGetter.class;
-        Field idField = entityClass.getDeclaredField(ID_FIELD_NAME);
-
-        // When/Then
-        assertThatThrownBy(() -> introspector.findGetter(entityClass, idField))
-                .isInstanceOf(NoSuchMethodException.class)
-                .hasMessageContaining(formatErrorMessage(
-                        EntityIntrospector.ERROR_NO_GETTER_FOUND,
-                        ID_FIELD_NAME,
-                        entityClass.getName(),
-                        "UserId"));
-    }
-
-    @Test
-    void shouldFindStandardSetter() throws Exception {
-        // Given
-        Class<?> entityClass = SimpleEntity.class;
-        Field idField = entityClass.getDeclaredField(ID_FIELD_NAME);
-
-        // When
-        Method setter = introspector.findSetter(entityClass, idField);
-
-        // Then
-        assertThat(setter).isNotNull();
-        assertThat(setter.getName()).isEqualTo(EXPECTED_SETTER_NAME);
-        assertThat(setter.getParameterCount()).isEqualTo(EXPECTED_SETTER_PARAM_COUNT);
-    }
-
-    @Test
-    void shouldFindSetterWithDifferentParameterType() throws Exception {
-        // Given
-        Class<?> entityClass = EntityWithFlexibleSetter.class;
-        Field idField = entityClass.getDeclaredField(ID_FIELD_NAME);
-
-        // When
-        Method setter = introspector.findSetter(entityClass, idField);
-
-        // Then
-        assertThat(setter).isNotNull();
-        assertThat(setter.getName()).isEqualTo(EXPECTED_SETTER_NAME);
-        assertThat(setter.getParameterCount()).isEqualTo(EXPECTED_SETTER_PARAM_COUNT);
-    }
-
-    @Test
-    void shouldThrowExceptionWhenSetterNotFound() throws Exception {
-        // Given
-        Class<?> entityClass = EntityWithoutSetter.class;
-        Field idField = entityClass.getDeclaredField(ID_FIELD_NAME);
-
-        // When/Then
-        assertThatThrownBy(() -> introspector.findSetter(entityClass, idField))
-                .isInstanceOf(NoSuchMethodException.class)
-                .hasMessageContaining(formatErrorMessage(
-                        EntityIntrospector.ERROR_NO_SETTER_FOUND,
-                        ID_FIELD_NAME,
-                        entityClass.getName(),
-                        EXPECTED_SETTER_NAME,
-                        "Long"));
-    }
-
-    /**
-     * Helper method to format error messages the same way EntityIntrospector does
-     */
-    private String formatErrorMessage(String messageTemplate, String... args) {
-        return String.format(messageTemplate, (Object[]) args);
+            // Then
+            assertThat(result).isFalse();
+        }
     }
 
     // Test helper classes

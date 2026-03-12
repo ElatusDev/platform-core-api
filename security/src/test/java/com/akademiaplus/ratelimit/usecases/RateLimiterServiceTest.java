@@ -22,6 +22,7 @@ import org.springframework.data.redis.core.ZSetOperations;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -256,6 +257,27 @@ class RateLimiterServiceTest {
             verify(zSetOps, times(1)).zCard(TEST_KEY);
             verify(zSetOps, times(1)).add(eq(TEST_KEY), anyString(), anyDouble());
             verify(redisTemplate, times(1)).expire(eq(TEST_KEY), anyLong(), eq(TimeUnit.SECONDS));
+            verifyNoMoreInteractions(redisTemplate, zSetOps);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when redisTemplate throws")
+        void shouldPropagateException_whenRedisTemplateThrows() {
+            // Given
+            RuntimeException cause = new RuntimeException("Redis connection error");
+            when(redisTemplate.opsForZSet()).thenThrow(cause);
+
+            // When / Then
+            assertThatThrownBy(() -> service.checkRateLimit(TEST_KEY, LIMIT, WINDOW_MS))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Redis connection error");
+
+            verify(redisTemplate, times(1)).opsForZSet();
             verifyNoMoreInteractions(redisTemplate, zSetOps);
         }
     }

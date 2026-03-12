@@ -105,6 +105,7 @@ class DeleteTutorUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(TUTOR_ID))
                     .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(EntityType.TUTOR + " with ID " + TUTOR_ID + " not found")
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.TUTOR);
@@ -130,17 +131,25 @@ class DeleteTutorUseCaseTest {
                     .thenReturn(3L);
 
             // When / Then
+            String expectedReason = String.format(DeleteTutorUseCase.ACTIVE_MINOR_STUDENTS_REASON, 3L);
+
             assertThatThrownBy(() -> useCase.delete(TUTOR_ID))
                     .isInstanceOf(EntityDeletionNotAllowedException.class)
+                    .hasMessage("Deletion of " + EntityType.TUTOR + " with ID " + TUTOR_ID + " not allowed: " + expectedReason)
                     .satisfies(ex -> {
                         EntityDeletionNotAllowedException edna =
                                 (EntityDeletionNotAllowedException) ex;
                         assertThat(edna.getEntityType()).isEqualTo(EntityType.TUTOR);
                         assertThat(edna.getEntityId()).isEqualTo(String.valueOf(TUTOR_ID));
-                        assertThat(edna.getReason()).isEqualTo(
-                                String.format(DeleteTutorUseCase.ACTIVE_MINOR_STUDENTS_REASON, 3L));
+                        assertThat(edna.getReason()).isEqualTo(expectedReason);
                         assertThat(edna.getCause()).isNull();
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, tutorRepository, minorStudentRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(tutorRepository, times(1)).findById(COMPOSITE_ID);
+            inOrder.verify(minorStudentRepository, times(1)).countByTenantIdAndTutorId(TENANT_ID, TUTOR_ID);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 
@@ -163,6 +172,7 @@ class DeleteTutorUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(TUTOR_ID))
                     .isInstanceOf(EntityDeletionNotAllowedException.class)
+                    .hasMessage("Deletion of " + EntityType.TUTOR + " with ID " + TUTOR_ID + " not allowed")
                     .satisfies(ex -> {
                         EntityDeletionNotAllowedException edna =
                                 (EntityDeletionNotAllowedException) ex;
@@ -172,6 +182,13 @@ class DeleteTutorUseCaseTest {
                         assertThat(edna.getCause())
                                 .isInstanceOf(DataIntegrityViolationException.class);
                     });
+
+            InOrder inOrder = inOrder(tenantContextHolder, tutorRepository, minorStudentRepository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(tutorRepository, times(1)).findById(COMPOSITE_ID);
+            inOrder.verify(minorStudentRepository, times(1)).countByTenantIdAndTutorId(TENANT_ID, TUTOR_ID);
+            inOrder.verify(tutorRepository, times(1)).delete(tutor);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

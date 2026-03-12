@@ -129,6 +129,7 @@ class CollaboratorUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(COLLABORATOR_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(EntityType.COLLABORATOR + " with ID " + COLLABORATOR_ID + " not found")
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.COLLABORATOR);
