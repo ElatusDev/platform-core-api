@@ -37,7 +37,7 @@ platform-core-api/
 └── multi-tenant-data/target/site/jacoco/jacoco.xml
 ```
 
-Modules without test sources (e.g., `application`, `etl-system`, `audit-system`) produce no report — this is expected.
+Modules without test sources (e.g., `application`, `etl-service`, `audit-service`) produce no report — this is expected.
 
 ### Data Flow
 

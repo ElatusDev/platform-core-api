@@ -8,8 +8,6 @@
 package com.akademiaplus.hmac.interfaceadapters;
 
 import com.akademiaplus.hmac.usecases.NonceStore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.stereotype.Service;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -19,11 +17,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>Uses a {@link ConcurrentHashMap} with lazy expiry checks. Not suitable
  * for production multi-instance deployments (nonces are not shared between instances).</p>
  *
+ * <p>Registered conditionally via {@link config.NonceStoreConfig}.</p>
+ *
  * @author ElatusDev
  * @since 1.0
  */
-@Service
-@ConditionalOnMissingBean(RedisNonceStore.class)
 public class InMemoryNonceStore implements NonceStore {
 
     private final ConcurrentHashMap<String, Long> nonceMap = new ConcurrentHashMap<>();

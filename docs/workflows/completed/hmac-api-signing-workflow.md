@@ -108,7 +108,7 @@ Per CLAUDE.md Hard Rules #12, #13, #14 and DESIGN.md Section 3.2.8:
 | `HmacSignatureService` | security | `hmac/usecases/` | Use case — HMAC computation and verification |
 | `HmacKeyService` | security | `hmac/usecases/` | Use case — signing key resolution per app |
 | `NonceStore` | security | `hmac/usecases/` | Use case interface — nonce tracking |
-| `RedisNonceStore` | security | `hmac/interfaceadapters/` | Interface adapter — Redis-backed implementation |
+| `AkademiaPlusRedisNonceStore` | security | `hmac/interfaceadapters/` | Interface adapter — Redis-backed implementation |
 | `HmacSigningFilter` | security | `hmac/interfaceadapters/` | Servlet filter — request signature verification |
 | `HmacResponseFilter` | security | `hmac/interfaceadapters/` | Servlet filter — response signing |
 | `CachedBodyHttpServletRequest` | security | `hmac/interfaceadapters/` | Wrapper — re-readable request body |
@@ -160,7 +160,7 @@ Per CLAUDE.md Hard Rules #12, #13, #14 and DESIGN.md Section 3.2.8:
 | 3 | `security/.../hmac/usecases/domain/HmacSignatureResult.java` | security | 2 |
 | 4 | `security/.../hmac/usecases/HmacSignatureService.java` | security | 2 |
 | 5 | `security/.../hmac/usecases/NonceStore.java` | security | 3 |
-| 6 | `security/.../hmac/interfaceadapters/RedisNonceStore.java` | security | 3 |
+| 6 | `security/.../hmac/interfaceadapters/AkademiaPlusRedisNonceStore.java` | security | 3 |
 | 7 | `security/.../hmac/interfaceadapters/InMemoryNonceStore.java` | security | 3 |
 | 8 | `security/.../hmac/usecases/HmacKeyService.java` | security | 4 |
 | 9 | `security/.../hmac/interfaceadapters/HmacSigningFilter.java` | security | 5 |
@@ -194,7 +194,7 @@ Phase 1:   CachedBodyHttpServletRequest + CachedBodyHttpServletResponse
     |
 Phase 2:   HmacSignatureService + HmacSignatureResult record
     |
-Phase 3:   NonceStore interface + RedisNonceStore + InMemoryNonceStore
+Phase 3:   NonceStore interface + AkademiaPlusRedisNonceStore + InMemoryNonceStore
     |
 Phase 4:   HmacKeyService (signing key management)
     |
@@ -551,9 +551,9 @@ public interface NonceStore {
 }
 ```
 
-#### Step 3.2: Create RedisNonceStore
+#### Step 3.2: Create AkademiaPlusRedisNonceStore
 
-**File**: `security/src/main/java/com/akademiaplus/hmac/interfaceadapters/RedisNonceStore.java`
+**File**: `security/src/main/java/com/akademiaplus/hmac/interfaceadapters/AkademiaPlusRedisNonceStore.java`
 
 ```java
 /**
@@ -568,7 +568,7 @@ public interface NonceStore {
  */
 @Service
 @ConditionalOnBean(StringRedisTemplate.class)
-public class RedisNonceStore implements NonceStore {
+public class AkademiaPlusRedisNonceStore implements NonceStore {
 
     public static final String NONCE_KEY_PREFIX = "hmac:nonce:";
     public static final String NONCE_VALUE = "1";
@@ -608,7 +608,7 @@ public class RedisNonceStore implements NonceStore {
  * @since 1.0
  */
 @Service
-@ConditionalOnMissingBean(RedisNonceStore.class)
+@ConditionalOnMissingBean(AkademiaPlusRedisNonceStore.class)
 public class InMemoryNonceStore implements NonceStore {
 
     private final ConcurrentHashMap<String, Long> nonceMap = new ConcurrentHashMap<>();
@@ -655,7 +655,7 @@ mvn clean compile -pl security -am -DskipTests -f platform-core-api/pom.xml
 feat(security): add NonceStore interface with Redis and in-memory implementations
 
 Add NonceStore interface for replay attack prevention. Add
-RedisNonceStore (production, TTL-based) and InMemoryNonceStore
+AkademiaPlusRedisNonceStore (production, TTL-based) and InMemoryNonceStore
 (testing/local, ConcurrentHashMap with scheduled cleanup).
 ```
 

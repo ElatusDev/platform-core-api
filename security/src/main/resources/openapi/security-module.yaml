@@ -34,6 +34,8 @@ components:
       $ref: './magic-link-authentication.yaml#/components/schemas/MagicLinkRequest'
     MagicLinkVerifyRequest:
       $ref: './magic-link-authentication.yaml#/components/schemas/MagicLinkVerifyRequest'
+    OAuthLoginRequest:
+      $ref: './oauth-authentication.yaml#/components/schemas/OAuthLoginRequest'
 
 paths:
   /login/internal:
@@ -52,3 +54,5 @@ paths:
     $ref: './magic-link-authentication.yaml#/paths/~1login~1magic-link~1request'
   /login/magic-link/verify:
     $ref: './magic-link-authentication.yaml#/paths/~1login~1magic-link~1verify'
+  /login/oauth:
+    $ref: './oauth-authentication.yaml#/paths/~1login~1oauth'

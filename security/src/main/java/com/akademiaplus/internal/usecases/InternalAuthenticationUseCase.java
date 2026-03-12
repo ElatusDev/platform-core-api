@@ -11,7 +11,7 @@ import com.akademiaplus.exceptions.InvalidLoginException;
 import com.akademiaplus.internal.interfaceadapters.InternalAuthRepository;
 import com.akademiaplus.internal.interfaceadapters.RefreshTokenRepository;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
-import com.akademiaplus.internal.interfaceadapters.session.RedisSessionStore;
+import com.akademiaplus.internal.interfaceadapters.session.AkademiaPlusRedisSessionStore;
 import com.akademiaplus.internal.usecases.domain.LoginResult;
 import com.akademiaplus.security.InternalAuthDataModel;
 import com.akademiaplus.security.RefreshTokenDataModel;
@@ -43,7 +43,7 @@ public class InternalAuthenticationUseCase {
     private final JwtTokenProvider jwtTokenProvider;
     private final HashingService hashingService;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final RedisSessionStore redisSessionStore;
+    private final AkademiaPlusRedisSessionStore akademiaPlusRedisSessionStore;
     private final ApplicationContext applicationContext;
 
     /**
@@ -53,20 +53,20 @@ public class InternalAuthenticationUseCase {
      * @param jwtTokenProvider       the JWT token provider
      * @param hashingService         the hashing service for SHA-256 operations
      * @param refreshTokenRepository the refresh token repository
-     * @param redisSessionStore      the Redis session store
+     * @param akademiaPlusRedisSessionStore      the Redis session store
      * @param applicationContext     the Spring application context for prototype beans
      */
     public InternalAuthenticationUseCase(InternalAuthRepository repository,
                                          JwtTokenProvider jwtTokenProvider,
                                          HashingService hashingService,
                                          RefreshTokenRepository refreshTokenRepository,
-                                         RedisSessionStore redisSessionStore,
+                                         AkademiaPlusRedisSessionStore akademiaPlusRedisSessionStore,
                                          ApplicationContext applicationContext) {
         this.repository = repository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.hashingService = hashingService;
         this.refreshTokenRepository = refreshTokenRepository;
-        this.redisSessionStore = redisSessionStore;
+        this.akademiaPlusRedisSessionStore = akademiaPlusRedisSessionStore;
         this.applicationContext = applicationContext;
     }
 
@@ -110,7 +110,7 @@ public class InternalAuthenticationUseCase {
         String accessToken = jwtTokenProvider.createAccessToken(auth.getUsername(), auth.getTenantId(), claims);
         String jti = jwtTokenProvider.getJti(accessToken);
 
-        redisSessionStore.storeSession(
+        akademiaPlusRedisSessionStore.storeSession(
                 jti,
                 auth.getUsername(),
                 auth.getTenantId(),

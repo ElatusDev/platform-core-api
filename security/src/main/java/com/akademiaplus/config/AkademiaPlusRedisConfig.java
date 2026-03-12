@@ -23,7 +23,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  * @since 1.0
  */
 @Configuration
-public class RedisConfig {
+public class AkademiaPlusRedisConfig {
 
     /**
      * Creates a RedisTemplate with string key and value serializers.
@@ -32,7 +32,7 @@ public class RedisConfig {
      * @return configured RedisTemplate for session storage
      */
     @Bean
-    public RedisTemplate<String, String> sessionRedisTemplate(RedisConnectionFactory connectionFactory) {
+    public RedisTemplate<String, String> akademiaPlusRedisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, String> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
         template.setKeySerializer(new StringRedisSerializer());

@@ -16,6 +16,7 @@ import com.yubico.webauthn.RelyingParty;
 import com.yubico.webauthn.StartRegistrationOptions;
 import com.yubico.webauthn.data.*;
 import com.yubico.webauthn.exception.RegistrationFailedException;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
  * @since 1.0
  */
 @Service
+@ConditionalOnProperty(prefix = "security.passkey", name = "rp-id")
 public class PasskeyRegistrationUseCase {
 
     /** Error message when registration validation fails. */

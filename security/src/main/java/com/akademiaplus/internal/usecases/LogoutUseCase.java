@@ -9,7 +9,7 @@ package com.akademiaplus.internal.usecases;
 
 import com.akademiaplus.internal.interfaceadapters.RefreshTokenRepository;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
-import com.akademiaplus.internal.interfaceadapters.session.RedisSessionStore;
+import com.akademiaplus.internal.interfaceadapters.session.AkademiaPlusRedisSessionStore;
 import io.jsonwebtoken.Claims;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,21 +34,21 @@ public class LogoutUseCase {
     private static final Logger LOGGER = LoggerFactory.getLogger(LogoutUseCase.class);
 
     private final RefreshTokenRepository refreshTokenRepository;
-    private final RedisSessionStore redisSessionStore;
+    private final AkademiaPlusRedisSessionStore akademiaPlusRedisSessionStore;
     private final JwtTokenProvider jwtTokenProvider;
 
     /**
      * Constructs the use case with all required dependencies.
      *
      * @param refreshTokenRepository the refresh token repository
-     * @param redisSessionStore      the Redis session store
+     * @param akademiaPlusRedisSessionStore      the Redis session store
      * @param jwtTokenProvider       the JWT token provider
      */
     public LogoutUseCase(RefreshTokenRepository refreshTokenRepository,
-                          RedisSessionStore redisSessionStore,
+                          AkademiaPlusRedisSessionStore akademiaPlusRedisSessionStore,
                           JwtTokenProvider jwtTokenProvider) {
         this.refreshTokenRepository = refreshTokenRepository;
-        this.redisSessionStore = redisSessionStore;
+        this.akademiaPlusRedisSessionStore = akademiaPlusRedisSessionStore;
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
@@ -68,7 +68,7 @@ public class LogoutUseCase {
             refreshTokenRepository.revokeAllByUserIdAndTenantId(userId, tenantId, Instant.now());
         }
 
-        redisSessionStore.revokeAllSessionsForUser(username, tenantId);
+        akademiaPlusRedisSessionStore.revokeAllSessionsForUser(username, tenantId);
 
         LOGGER.info("User {} logged out from tenant {}", username, tenantId);
     }

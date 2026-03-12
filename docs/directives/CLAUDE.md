@@ -12,7 +12,7 @@
 **Owner**: ElatusDev
 **Stack**: Java 24, Spring Boot 4.0.3, MariaDB, Maven multi-module
 **License**: Proprietary — all files carry ElatusDev copyright header
-**Repo path**: `/Volumes/ElatusDev/ElatusDev/AkademiaPlus/platform-core-api`
+**Repo path**: `/Volumes/ElatusDev/ElatusDev/platform/core-api`
 
 ---
 
@@ -32,7 +32,8 @@
 12. **External service abstraction**: External integrations (OAuth providers, payment gateways, email services) MUST define a strategy interface in `usecases/` — implementations live alongside the interface, enabling testability without mocking HTTP clients
 13. **Non-entity domain objects**: Records and value objects that are NOT JPA entities go in `usecases/domain/` within the feature package — never in `interfaceadapters/` or `config/`
 14. **Cross-module boundaries**: Domain modules may import repositories from other domain modules but NEVER import use cases — use-case-to-use-case calls are restricted to the `application` module only
-15. **Workflow + Prompt documentation**: Every multi-file feature (3+ new production files) MUST have a paired workflow (`docs/workflows/`) and prompt (`docs/prompts/`) authored BEFORE implementation begins. The workflow defines architecture, phases, file inventory, and test plan. The prompt provides step-by-step executable instructions with compile/test gates and commit messages. See `AI-CODE-REF.md` Section 13 for format guide.
+15. **Workflow + Prompt documentation**: Every multi-file feature (3+ new production files) MUST have a paired workflow (`docs/workflows/`) and prompt (`docs/prompts/`) authored BEFORE implementation begins. Workflows follow `platform/knowledge-base/templates/WORKFLOW-TEMPLATE.md` (11 sections). Prompts follow `platform/knowledge-base/templates/PROMPT-TEMPLATE.md` (Temporal-inspired, 8 sections with Activity Model steps). See `AI-CODE-REF.md` Section 13 for format guide.
+16. **Execution retrospective**: After every prompt execution completes (or is aborted), write a retrospective in `docs/retrospectives/` following `platform/knowledge-base/templates/RETROSPECTIVE-TEMPLATE.md`. The retrospective MUST include the Document Updates phase (§8) — all identified workflow, prompt, template, and memory corrections applied before closing.
 
 ### Constant Extraction Pattern
 ```java
@@ -47,7 +48,7 @@ assertThatThrownBy(() -> service.process(null))
 ### Copyright Header (required on ALL files)
 ```java
 /*
- * Copyright (c) 2025 ElatusDev
+ * Copyright (c) 2026 ElatusDev
  * All rights reserved.
  *
  * This code is proprietary and confidential.
@@ -62,29 +63,34 @@ assertThatThrownBy(() -> service.process(null))
 ### Module Dependency Graph (build order, bottom-up)
 
 ```
-utilities             ← ZERO internal deps. Security services: AES-GCM, hashing, PII, ID generation
+utilities                ← ZERO internal deps. Security services: AES-GCM, hashing, PII, ID generation
      ↑
-infra-common          ← Base persistence: TenantScoped, Auditable, SoftDeletable, EntityIdAssigner
+infra-common             ← Base persistence: TenantScoped, Auditable, SoftDeletable, EntityIdAssigner
      ↑
-multi-tenant-data     ← JPA entity models: all @Entity classes, composite keys, data relationships
+multi-tenant-data        ← JPA entity models: all @Entity classes, composite keys, data relationships
      ↑
-security              ← Auth: JWT provider, filters, internal auth, module security configurators
+security                 ← Auth: JWT provider, filters, internal auth, module security configurators
      ↑
-┌────┼────────┬─────────────┬──────────────┬───────────────┬──────────────┐
-│    │        │             │              │               │              │
-user-mgmt  billing  course-mgmt  notification  tenant-mgmt  pos-system
-│    │        │             │              │               │              │
-└────┼────────┴─────────────┴──────────────┴───────────────┴──────────────┘
+┌────┼──────────┬───────────────┬────────────────────┬─────────────────┬──────────────┐
+│    │          │               │                    │                 │              │
+user-mgmt  billing  course-mgmt  notification-system  tenant-mgmt  pos-system  lead-mgmt
+│    │          │               │                    │                 │              │
+└────┼──────────┴───────────────┴────────────────────┴─────────────────┴──────────────┘
      ↑          Cross-domain: billing → user-mgmt + course-mgmt
      ↑                        course-mgmt → user-mgmt
      ↑                        pos-system → user-mgmt
-application           ← Spring Boot main class, assembles all modules
+application              ← Spring Boot main class, assembles all modules
 
-(Standalone services)
-certificate-authority ← Separate Spring Boot app — JWKS trust broker
-mock-data-system      ← Separate Spring Boot app — test data seeding (deps on ALL domain modules)
-audit-system          ← Placeholder for audit logging
+(Standalone services — each has own Maven profile, Spring profile, SecurityFilterChain, Dockerfile)
+certificate-authority    ← JWKS trust broker (profile: ca-service)
+mock-data-service        ← Test data seeding via DataFaker (profile: mock-data-service)
+etl-service              ← Data pipeline: Excel/Word → MongoDB staging → MariaDB (profile: etl-service)
+audit-service            ← Audit logging (placeholder)
 ```
+
+#### Module Naming Convention
+- **Domain modules**: named by domain boundary (`-management`, `-system`, or plain)
+- **Standalone services**: named with `-service` suffix — each independently deployable with own profile
 
 ### Clean Architecture Mapping
 
@@ -149,11 +155,14 @@ docker compose -f docker-compose.dev.yml up trust-broker multi_tenant_db platfor
 
 ### Maven Profiles
 
-| Profile | Modules | Purpose |
-|---------|---------|---------|
-| `platform-core-api` (default) | notification, course, user, billing, app, security, multi-tenant, utilities | Main platform |
-| `ca-service` | certificate-authority | JWKS trust broker |
-| `mock-data-service` | mock-data, multi-tenant, utilities | Test data generation |
+| Profile | Spring Profile | Modules | Purpose |
+|---------|----------------|---------|---------|
+| `platform-core-api` (default) | `dev` / `local` / `prod` / `qa` | notification-system, course-management, user-management, billing, lead-management, pos-system, tenant-management, application, security, multi-tenant-data, infra-common, utilities | Main platform |
+| `ca-service` | `ca-service` | certificate-authority | JWKS trust broker |
+| `mock-data-service` | `mock-data-service` | mock-data-service, multi-tenant-data, utilities | Test data generation |
+| `etl-service` | `etl-service` | etl-service, multi-tenant-data, utilities, security, infra-common, user-management, course-management, billing, pos-system, tenant-management | Data pipeline |
+
+Each standalone service has a matching `application-{profile}.properties` auto-loaded by Spring Boot when the profile is active.
 
 ---
 
@@ -182,7 +191,7 @@ Every new feature, endpoint, or behavioral change MUST include all three test ti
 |------|------|----------|--------|-----------------|
 | 1 | **Unit Tests** | `platform-core-api/{module}/src/test/` | `mvn test -pl {module}` | Individual classes in isolation — use cases, strategies, registries, controllers (standalone MockMvc) |
 | 2 | **Component Tests** | `platform-core-api/{module}/src/test/` | `mvn verify -pl {module}` | Full Spring context + Testcontainers MariaDB — HTTP → Controller → UseCase → Repository → DB |
-| 3 | **E2E Tests** | `platform-api-e2e/` | `newman run` | Real running server over the network — deployed API contract, auth flow, cross-module integration |
+| 3 | **E2E Tests** | `core-api-e2e/` | `newman run` | Real running server over the network — deployed API contract, auth flow, cross-module integration |
 
 ### Per-Tier Scope
 
@@ -197,9 +206,9 @@ Every new feature, endpoint, or behavioral change MUST include all three test ti
 - Follow: `docs/workflows/completed/component-test-workflow.md`
 
 **Tier 3 — E2E Tests** (Postman/Newman):
-- Requests added to `platform-api-e2e/Postman Collections/platform-api-e2e.json`
+- Requests added to `core-api-e2e/Postman Collections/core-api-e2e.json`
 - Cover: Create, GetById, GetAll, Delete + error codes (404, 409, 400)
-- Follow: `platform-api-e2e/docs/workflows/completed/E2E-TEST-WORKFLOW.md`
+- Follow: `core-api-e2e/docs/workflows/completed/E2E-TEST-WORKFLOW.md`
 
 ### When Planning a Feature
 
@@ -222,7 +231,7 @@ Workflow and prompt documents MUST include test phases for all three tiers. A fe
 - [ ] Code compiles: `mvn clean install -DskipTests`
 - [ ] Unit tests pass: `mvn test -pl {module}`
 - [ ] Component tests pass: `mvn verify -pl {module}`
-- [ ] E2E tests updated in `platform-api-e2e` (if new/changed endpoints)
+- [ ] E2E tests updated in `core-api-e2e` (if new/changed endpoints)
 - [ ] New public APIs have Javadoc with `@param`, `@return`, `@throws`
 - [ ] All string literals extracted to constants
 - [ ] Tests follow Given-When-Then with proper naming
@@ -240,6 +249,9 @@ Workflow and prompt documents MUST include test phases for all three tiers. A fe
 | AI-CODE-REF.md | `docs/directives/` | Coding standards, review rules, detection patterns |
 | DESIGN.md | `docs/design/` | Architecture, module catalog, multi-tenancy model |
 | MANIFEST.md | `docs/` | Documentation status tracker |
+| WORKFLOW-TEMPLATE.md | `platform/knowledge-base/templates/` | Canonical workflow template (11 sections) — all workflows must follow |
+| PROMPT-TEMPLATE.md | `platform/knowledge-base/templates/` | Canonical prompt template (Temporal-inspired, 8 sections) — all prompts must follow |
+| RETROSPECTIVE-TEMPLATE.md | `platform/knowledge-base/templates/` | Execution retrospective template (10 sections) — required after every prompt execution |
 
 ---
 
@@ -252,3 +264,23 @@ Workflow and prompt documents MUST include test phases for all three tiers. A fe
 - Use `public static final` constants for all error messages — never inline strings
 - Use static imports for test assertions (`assertThat`, `assertThatThrownBy`)
 - **Always commit changes** at the end of any workflow, prompt execution, or task — never leave work uncommitted. Split commits by feature when changes span multiple modules or concerns
+
+---
+
+## Knowledge Base (`platform/knowledge-base/`)
+
+The knowledge base is the platform's institutional memory. **Consult it before building, update it after building.**
+
+### Before Starting Work (Consult)
+
+- **Before designing a workflow**: Read `patterns/{domain}.md` for proven approaches, `anti-patterns/catalog.md` for known failure modes, `decisions/log.md` for prior decisions on similar problems
+- **Before writing a prompt**: Read `patterns/prompt-engineering.md` for step structures that work, `patterns/testing.md` for test setup patterns to reference
+- **Before a BAR (Before Action Review)**: Search patterns for "what worked on similar features", anti-patterns for "what could go wrong", `retrospective-index.md` for the current Improvement Kata target
+
+### After Completing Work (Update)
+
+- **After every prompt execution**: Write a retrospective following `templates/RETROSPECTIVE-TEMPLATE.md`. Execute §8 Document Updates — transfer new patterns, anti-patterns, and decisions to the knowledge base
+- **After discovering a reusable pattern**: Add it to `patterns/{domain}.md` immediately — don't wait for the retrospective
+- **After hitting a failure caused by a known gap**: Add it to `anti-patterns/catalog.md` with root cause and alternative
+- **After making an implementation decision**: Record it in `decisions/log.md` with rationale and alternatives considered
+- **After closing a retrospective**: Update `retrospective-index.md` with metrics from §9

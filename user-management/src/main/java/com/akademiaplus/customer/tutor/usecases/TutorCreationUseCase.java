@@ -51,6 +51,12 @@ public class TutorCreationUseCase {
     public static final String TUTOR_MAP_NAME = "tutorMap";
     public static final String MINOR_STUDENT_MAP_NAME = "minorStudentMap";
 
+    /** Error message when tenant context is not available during minor student creation. */
+    public static final String ERROR_TENANT_CONTEXT_REQUIRED = "Tenant context is required";
+
+    /** Error message when referenced tutor is not found during minor student creation. */
+    public static final String ERROR_TUTOR_NOT_FOUND = "Tutor not found: ";
+
     private final ApplicationContext applicationContext;
     private final TutorRepository tutorRepository;
     private final MinorStudentRepository minorStudentRepository;
@@ -149,10 +155,10 @@ public class TutorCreationUseCase {
         model.setCustomerAuth(customerAuth);
 
         Long tenantId = tenantContextHolder.getTenantId()
-                .orElseThrow(() -> new IllegalArgumentException("Tenant context is required"));
+                .orElseThrow(() -> new IllegalArgumentException(ERROR_TENANT_CONTEXT_REQUIRED));
         TutorDataModel tutor = tutorRepository.findById(
                         new TutorDataModel.TutorCompositeId(tenantId, dto.getTutorId()))
-                .orElseThrow(() -> new IllegalArgumentException("Tutor not found: " + dto.getTutorId()));
+                .orElseThrow(() -> new IllegalArgumentException(ERROR_TUTOR_NOT_FOUND + dto.getTutorId()));
         model.setTutor(tutor);
 
         return model;

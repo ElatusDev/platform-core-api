@@ -79,11 +79,13 @@ public class MagicLinkRequestUseCase {
     private final MagicLinkProperties properties;
     private final TenantContextHolder tenantContextHolder;
     private final ApplicationContext applicationContext;
-    private final MagicLinkEmailSender emailSender;
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Autowired(required = false)
     private RateLimiterService rateLimiterService;
+
+    @Autowired(required = false)
+    private MagicLinkEmailSender emailSender;
 
     /**
      * Constructs the use case with required dependencies.
@@ -93,20 +95,17 @@ public class MagicLinkRequestUseCase {
      * @param properties               the magic link configuration
      * @param tenantContextHolder      the tenant context holder
      * @param applicationContext       the Spring application context for bean creation
-     * @param emailSender              the magic link email sender
      */
     public MagicLinkRequestUseCase(MagicLinkTokenRepository magicLinkTokenRepository,
                                    HashingService hashingService,
                                    MagicLinkProperties properties,
                                    TenantContextHolder tenantContextHolder,
-                                   ApplicationContext applicationContext,
-                                   MagicLinkEmailSender emailSender) {
+                                   ApplicationContext applicationContext) {
         this.magicLinkTokenRepository = magicLinkTokenRepository;
         this.hashingService = hashingService;
         this.properties = properties;
         this.tenantContextHolder = tenantContextHolder;
         this.applicationContext = applicationContext;
-        this.emailSender = emailSender;
     }
 
     /**
@@ -129,6 +128,11 @@ public class MagicLinkRequestUseCase {
         String tokenHash = hashingService.generateHash(rawToken);
 
         storeToken(dto, tokenHash);
+
+        if (emailSender == null) {
+            log.warn("MagicLinkEmailSender not available — skipping email delivery");
+            return;
+        }
 
         String magicLinkUrl = buildMagicLinkUrl(rawToken, dto.getTenantId());
         String htmlContent = String.format(EMAIL_TEMPLATE, magicLinkUrl, magicLinkUrl);

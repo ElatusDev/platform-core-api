@@ -99,8 +99,8 @@ JwtRequestFilter (modified)
 |-----------|--------|---------|-----------|
 | `RefreshTokenDataModel` | multi-tenant-data | `security/` | Entity with composite key (Hard Rule #13) |
 | `RefreshTokenRepository` | security | `internal/interfaceadapters/` | Repository for refresh tokens |
-| `RedisSessionStore` | security | `internal/interfaceadapters/session/` | Redis access token session management |
-| `RedisConfig` | security | `config/` | Redis connection + template beans |
+| `AkademiaPlusRedisSessionStore` | security | `internal/interfaceadapters/session/` | Redis access token session management |
+| `AkademiaPlusRedisConfig` | security | `config/` | Redis connection + template beans |
 | `CookieService` | security | `internal/interfaceadapters/jwt/` | HttpOnly cookie creation/extraction |
 | `TokenRefreshUseCase` | security | `internal/usecases/` | Token rotation business logic |
 | `TokenRefreshController` | security | `internal/interfaceadapters/` | POST /v1/security/token/refresh |
@@ -119,8 +119,8 @@ JwtRequestFilter (modified)
 |---|------|--------|-------|
 | 1 | `multi-tenant-data/.../security/RefreshTokenDataModel.java` | multi-tenant-data | 2 |
 | 2 | `security/.../internal/interfaceadapters/RefreshTokenRepository.java` | security | 2 |
-| 3 | `security/.../config/RedisConfig.java` | security | 1 |
-| 4 | `security/.../internal/interfaceadapters/session/RedisSessionStore.java` | security | 1 |
+| 3 | `security/.../config/AkademiaPlusRedisConfig.java` | security | 1 |
+| 4 | `security/.../internal/interfaceadapters/session/AkademiaPlusRedisSessionStore.java` | security | 1 |
 | 5 | `security/.../internal/interfaceadapters/jwt/CookieService.java` | security | 3 |
 | 6 | `security/.../internal/usecases/TokenRefreshUseCase.java` | security | 4 |
 | 7 | `security/.../internal/interfaceadapters/TokenRefreshController.java` | security | 4 |
@@ -128,7 +128,7 @@ JwtRequestFilter (modified)
 | 9 | `security/.../internal/interfaceadapters/LogoutController.java` | security | 6 |
 | 10 | `security/.../internal/exceptions/TokenReuseDetectedException.java` | security | 5 |
 | 11 | `security/.../internal/exceptions/RefreshTokenExpiredException.java` | security | 5 |
-| 12 | `security/test/.../internal/interfaceadapters/session/RedisSessionStoreTest.java` | security | 8 |
+| 12 | `security/test/.../internal/interfaceadapters/session/AkademiaPlusAkademiaPlusRedisSessionStoreTest.java` | security | 8 |
 | 13 | `security/test/.../internal/interfaceadapters/jwt/CookieServiceTest.java` | security | 8 |
 | 14 | `security/test/.../internal/usecases/TokenRefreshUseCaseTest.java` | security | 8 |
 | 15 | `security/test/.../internal/usecases/LogoutUseCaseTest.java` | security | 8 |
@@ -155,7 +155,7 @@ JwtRequestFilter (modified)
 ### Phase Dependency Graph
 
 ```
-Phase 1:  Redis infrastructure (dependencies, RedisConfig, RedisSessionStore)
+Phase 1:  Redis infrastructure (dependencies, AkademiaPlusRedisConfig, AkademiaPlusRedisSessionStore)
     |
 Phase 2:  RefreshTokenDataModel + RefreshTokenRepository + DB schema
     |
@@ -219,9 +219,9 @@ jwt.refresh-token.validity-ms=2592000000
 jwt.refresh-token.keystore.alias=${JWT_REFRESH_KEY_ALIAS:refresh-key}
 ```
 
-#### Step 1.3: Create RedisConfig
+#### Step 1.3: Create AkademiaPlusRedisConfig
 
-**File**: `security/src/main/java/com/akademiaplus/config/RedisConfig.java`
+**File**: `security/src/main/java/com/akademiaplus/config/AkademiaPlusRedisConfig.java`
 
 ```java
 /*
@@ -249,7 +249,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  * @since 1.0
  */
 @Configuration
-public class RedisConfig {
+public class AkademiaPlusRedisConfig {
 
     /**
      * Creates a RedisTemplate with string key and value serializers.
@@ -258,7 +258,7 @@ public class RedisConfig {
      * @return configured RedisTemplate for session storage
      */
     @Bean
-    public RedisTemplate<String, String> sessionRedisTemplate(RedisConnectionFactory connectionFactory) {
+    public RedisTemplate<String, String> akademiaPlusRedisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, String> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
         template.setKeySerializer(new StringRedisSerializer());
@@ -270,9 +270,9 @@ public class RedisConfig {
 }
 ```
 
-#### Step 1.4: Create RedisSessionStore
+#### Step 1.4: Create AkademiaPlusRedisSessionStore
 
-**File**: `security/src/main/java/com/akademiaplus/internal/interfaceadapters/session/RedisSessionStore.java`
+**File**: `security/src/main/java/com/akademiaplus/internal/interfaceadapters/session/AkademiaPlusRedisSessionStore.java`
 
 ```java
 /*
@@ -304,9 +304,9 @@ import java.util.Set;
  * @since 1.0
  */
 @Service
-public class RedisSessionStore {
+public class AkademiaPlusRedisSessionStore {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RedisSessionStore.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AkademiaPlusRedisSessionStore.class);
 
     public static final String SESSION_KEY_PREFIX = "session:";
     public static final String USER_SESSIONS_KEY_PREFIX = "user_sessions:";
@@ -314,15 +314,15 @@ public class RedisSessionStore {
     public static final String FIELD_TENANT_ID = "tenantId";
     public static final String FIELD_USERNAME = "username";
 
-    private final RedisTemplate<String, String> sessionRedisTemplate;
+    private final RedisTemplate<String, String> akademiaPlusRedisTemplate;
 
     /**
-     * Constructs a RedisSessionStore with the provided Redis template.
+     * Constructs a AkademiaPlusRedisSessionStore with the provided Redis template.
      *
-     * @param sessionRedisTemplate the Redis template for session operations
+     * @param akademiaPlusRedisTemplate the Redis template for session operations
      */
-    public RedisSessionStore(RedisTemplate<String, String> sessionRedisTemplate) {
-        this.sessionRedisTemplate = sessionRedisTemplate;
+    public AkademiaPlusRedisSessionStore(RedisTemplate<String, String> akademiaPlusRedisTemplate) {
+        this.akademiaPlusRedisTemplate = akademiaPlusRedisTemplate;
     }
 
     /**
@@ -337,12 +337,12 @@ public class RedisSessionStore {
         String sessionKey = SESSION_KEY_PREFIX + jti;
         String userSessionsKey = USER_SESSIONS_KEY_PREFIX + tenantId + ":" + username;
 
-        sessionRedisTemplate.opsForHash().put(sessionKey, FIELD_USERNAME, username);
-        sessionRedisTemplate.opsForHash().put(sessionKey, FIELD_TENANT_ID, String.valueOf(tenantId));
-        sessionRedisTemplate.expire(sessionKey, ttl);
+        akademiaPlusRedisTemplate.opsForHash().put(sessionKey, FIELD_USERNAME, username);
+        akademiaPlusRedisTemplate.opsForHash().put(sessionKey, FIELD_TENANT_ID, String.valueOf(tenantId));
+        akademiaPlusRedisTemplate.expire(sessionKey, ttl);
 
-        sessionRedisTemplate.opsForSet().add(userSessionsKey, jti);
-        sessionRedisTemplate.expire(userSessionsKey, ttl);
+        akademiaPlusRedisTemplate.opsForSet().add(userSessionsKey, jti);
+        akademiaPlusRedisTemplate.expire(userSessionsKey, ttl);
 
         LOGGER.debug("Stored session for jti={} user={} tenant={}", jti, username, tenantId);
     }
@@ -355,7 +355,7 @@ public class RedisSessionStore {
      */
     public boolean isSessionValid(String jti) {
         String sessionKey = SESSION_KEY_PREFIX + jti;
-        return Boolean.TRUE.equals(sessionRedisTemplate.hasKey(sessionKey));
+        return Boolean.TRUE.equals(akademiaPlusRedisTemplate.hasKey(sessionKey));
     }
 
     /**
@@ -365,7 +365,7 @@ public class RedisSessionStore {
      */
     public void revokeSession(String jti) {
         String sessionKey = SESSION_KEY_PREFIX + jti;
-        sessionRedisTemplate.delete(sessionKey);
+        akademiaPlusRedisTemplate.delete(sessionKey);
         LOGGER.debug("Revoked session jti={}", jti);
     }
 
@@ -380,7 +380,7 @@ public class RedisSessionStore {
      */
     public void revokeAllSessionsForUser(String username, Long tenantId) {
         String userSessionsKey = USER_SESSIONS_KEY_PREFIX + tenantId + ":" + username;
-        Set<String> jtis = sessionRedisTemplate.opsForSet().members(userSessionsKey);
+        Set<String> jtis = akademiaPlusRedisTemplate.opsForSet().members(userSessionsKey);
 
         if (jtis != null) {
             for (String jti : jtis) {
@@ -388,7 +388,7 @@ public class RedisSessionStore {
             }
         }
 
-        sessionRedisTemplate.delete(userSessionsKey);
+        akademiaPlusRedisTemplate.delete(userSessionsKey);
         LOGGER.info("Revoked all sessions for user={} tenant={}", username, tenantId);
     }
 }
@@ -405,8 +405,8 @@ mvn clean compile -pl security -am -DskipTests -f platform-core-api/pom.xml
 ```
 feat(security): add Redis infrastructure for session management
 
-Add spring-boot-starter-data-redis dependency, RedisConfig with
-StringRedisSerializer template, and RedisSessionStore service for
+Add spring-boot-starter-data-redis dependency, AkademiaPlusRedisConfig with
+StringRedisSerializer template, and AkademiaPlusRedisSessionStore service for
 access token session tracking and revocation.
 ```
 
@@ -838,7 +838,7 @@ public class CookieService {
 
 **File**: `security/src/main/java/com/akademiaplus/internal/interfaceadapters/InternalAuthController.java`
 
-Add `CookieService` and `RedisSessionStore` dependencies. After login succeeds, set cookies on the response in addition to returning the token in the body (backward compatibility during migration).
+Add `CookieService` and `AkademiaPlusRedisSessionStore` dependencies. After login succeeds, set cookies on the response in addition to returning the token in the body (backward compatibility during migration).
 
 #### Step 3.4: Compile check
 
@@ -894,7 +894,7 @@ public class TokenRefreshUseCase {
     public static final String ERROR_REFRESH_TOKEN_EXPIRED = "Refresh token has expired";
     public static final String ERROR_TOKEN_REUSE_DETECTED = "Token reuse detected — all tokens in family revoked";
 
-    // Constructor: JwtTokenProvider, RefreshTokenRepository, RedisSessionStore,
+    // Constructor: JwtTokenProvider, RefreshTokenRepository, AkademiaPlusRedisSessionStore,
     //              HashingService, ApplicationContext
 
     /**
@@ -1171,7 +1171,7 @@ package com.akademiaplus.internal.usecases;
 @Service
 public class LogoutUseCase {
 
-    // Constructor: RefreshTokenRepository, RedisSessionStore, JwtTokenProvider
+    // Constructor: RefreshTokenRepository, AkademiaPlusRedisSessionStore, JwtTokenProvider
 
     /**
      * Revokes all tokens and sessions for the authenticated user.
@@ -1276,7 +1276,7 @@ clears HttpOnly cookies and delegates to LogoutUseCase.
 
 **File**: `security/src/main/java/com/akademiaplus/internal/interfaceadapters/jwt/JwtRequestFilter.java`
 
-Add `CookieService` and `RedisSessionStore` as constructor dependencies.
+Add `CookieService` and `AkademiaPlusRedisSessionStore` as constructor dependencies.
 
 Modify `doFilterInternal()`:
 
@@ -1362,9 +1362,9 @@ compatibility. Add Redis session validation to reject revoked tokens.
 
 All tests follow conventions: Given-When-Then, `shouldDoX_whenY()`, `@DisplayName`, `@Nested`, zero `any()` matchers, `public static final` constants.
 
-#### Step 8.1: RedisSessionStoreTest
+#### Step 8.1: AkademiaPlusAkademiaPlusRedisSessionStoreTest
 
-**File**: `security/src/test/java/com/akademiaplus/internal/interfaceadapters/session/RedisSessionStoreTest.java`
+**File**: `security/src/test/java/com/akademiaplus/internal/interfaceadapters/session/AkademiaPlusAkademiaPlusRedisSessionStoreTest.java`
 
 | @Nested | Tests |
 |---------|-------|
@@ -1428,7 +1428,7 @@ mvn test -pl security -am -f platform-core-api/pom.xml
 ```
 test(security): add unit tests for refresh token rotation and logout
 
-RedisSessionStoreTest, CookieServiceTest, TokenRefreshUseCaseTest,
+AkademiaPlusAkademiaPlusRedisSessionStoreTest, CookieServiceTest, TokenRefreshUseCaseTest,
 LogoutUseCaseTest, TokenRefreshControllerTest, LogoutControllerTest.
 Cover session management, cookie handling, token rotation, reuse
 detection, and logout with full revocation.

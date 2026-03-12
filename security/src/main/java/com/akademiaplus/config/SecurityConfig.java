@@ -16,6 +16,7 @@ import com.akademiaplus.hmac.interfaceadapters.HmacSigningFilter;
 import com.akademiaplus.tokenbinding.interfaceadapters.TokenBindingFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -102,9 +103,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .addFilterBefore(appOriginFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(ipWhitelistFilter, JwtRequestFilter.class)
-                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(appOriginFilter, JwtRequestFilter.class)
+                .addFilterBefore(ipWhitelistFilter, JwtRequestFilter.class);
 
         return http.build();
     }
@@ -164,9 +165,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .addFilterBefore(appOriginFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(rateLimitingFilter, JwtRequestFilter.class)
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(appOriginFilter, JwtRequestFilter.class)
+                .addFilterBefore(rateLimitingFilter, JwtRequestFilter.class)
                 .addFilterAfter(tokenBindingFilter, JwtRequestFilter.class)
                 .addFilterAfter(hmacSigningFilter, TokenBindingFilter.class)
                 .addFilterAfter(hmacResponseFilter, HmacSigningFilter.class);
@@ -193,6 +194,7 @@ public class SecurityConfig {
                 .requestMatchers("/v1/security/passkey/login/**").permitAll()
                 .requestMatchers("/v1/security/login/magic-link/request").permitAll()
                 .requestMatchers("/v1/security/login/magic-link/verify").permitAll()
+                .requestMatchers("/v1/security/login/oauth").permitAll()
                 .requestMatchers("/v3/api-docs/**").permitAll()
                 .requestMatchers("/swagger-ui/**").permitAll()
                 .requestMatchers("/swagger-ui.html").permitAll();
@@ -225,6 +227,7 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/v1/security/passkey/login/**", loginCorsConfig);
         source.registerCorsConfiguration("/v1/security/login/magic-link/request", loginCorsConfig);
         source.registerCorsConfiguration("/v1/security/login/magic-link/verify", loginCorsConfig);
+        source.registerCorsConfiguration("/v1/security/login/oauth", loginCorsConfig);
         return source;
     }
 
@@ -274,6 +277,84 @@ public class SecurityConfig {
 
         source.registerCorsConfiguration("/**", corsConfig);
         return source;
+    }
+
+    /**
+     * Security filter chain for the ETL service.
+     *
+     * <p>This service is an internal data pipeline that loads documents
+     * and stages data. It requires no authentication — access is restricted
+     * by Docker network isolation. The actuator health endpoint must remain
+     * accessible for Docker healthchecks.</p>
+     */
+    @SuppressWarnings("java:S4502") // CSRF disabled: internal etl-service, stateless API
+    @Bean
+    @Profile({"etl-service"})
+    public SecurityFilterChain securityFilterChainForEtlService(HttpSecurity http) throws Exception {
+        http
+            .csrf(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests(auth -> auth
+                        .anyRequest().permitAll())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .formLogin(AbstractHttpConfigurer::disable)
+            .httpBasic(AbstractHttpConfigurer::disable);
+        return http.build();
+    }
+
+    // ─── Disable servlet auto-registration for security filters ────────────────
+    // These filters must only run inside the SecurityFilterChain where they are
+    // explicitly added via addFilterBefore/addFilterAfter. Without this, Spring
+    // Boot auto-registers @Component filters as standalone servlet filters that
+    // intercept ALL requests — including healthchecks on standalone services
+    // (mock-data-service, etl-service) that don't need them.
+
+    @Bean
+    public FilterRegistrationBean<JwtRequestFilter> disableJwtAutoRegistration(JwtRequestFilter f) {
+        FilterRegistrationBean<JwtRequestFilter> r = new FilterRegistrationBean<>(f);
+        r.setEnabled(false);
+        return r;
+    }
+
+    @Bean
+    public FilterRegistrationBean<AppOriginFilter> disableAppOriginAutoRegistration(AppOriginFilter f) {
+        FilterRegistrationBean<AppOriginFilter> r = new FilterRegistrationBean<>(f);
+        r.setEnabled(false);
+        return r;
+    }
+
+    @Bean
+    public FilterRegistrationBean<IpWhitelistFilter> disableIpWhitelistAutoRegistration(IpWhitelistFilter f) {
+        FilterRegistrationBean<IpWhitelistFilter> r = new FilterRegistrationBean<>(f);
+        r.setEnabled(false);
+        return r;
+    }
+
+    @Bean
+    public FilterRegistrationBean<RateLimitingFilter> disableRateLimitAutoRegistration(RateLimitingFilter f) {
+        FilterRegistrationBean<RateLimitingFilter> r = new FilterRegistrationBean<>(f);
+        r.setEnabled(false);
+        return r;
+    }
+
+    @Bean
+    public FilterRegistrationBean<TokenBindingFilter> disableTokenBindingAutoRegistration(TokenBindingFilter f) {
+        FilterRegistrationBean<TokenBindingFilter> r = new FilterRegistrationBean<>(f);
+        r.setEnabled(false);
+        return r;
+    }
+
+    @Bean
+    public FilterRegistrationBean<HmacSigningFilter> disableHmacSigningAutoRegistration(HmacSigningFilter f) {
+        FilterRegistrationBean<HmacSigningFilter> r = new FilterRegistrationBean<>(f);
+        r.setEnabled(false);
+        return r;
+    }
+
+    @Bean
+    public FilterRegistrationBean<HmacResponseFilter> disableHmacResponseAutoRegistration(HmacResponseFilter f) {
+        FilterRegistrationBean<HmacResponseFilter> r = new FilterRegistrationBean<>(f);
+        r.setEnabled(false);
+        return r;
     }
 
     /**

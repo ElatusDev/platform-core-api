@@ -306,7 +306,7 @@ hard implementation waves so it doesn't block them, but it must complete before 
 ### Completed
 
 - ✅ `Dockerfile` module references — already aligned with current artifact IDs
-- ✅ `mock-data-system/Dockerfile` — correctly references all dependency modules
+- ✅ `mock-data-service/Dockerfile` — correctly references all dependency modules
 - ✅ `certificate-authority/Dockerfile` — correctly references all reactor POMs
 - ✅ `docker-compose.dev.yml` — 5 services with healthchecks, proper `depends_on` ordering
 - ✅ `docker-compose.dev.yml` — E2E runner service added (profile-gated)
@@ -586,7 +586,7 @@ unacceptable for enterprise clients.
 
 ### Context
 
-`etl-system` and `audit-system` are Maven modules containing only `Main.java`.
+`etl-service` and `audit-service` are Maven modules containing only `Main.java`.
 They appear in the build graph, inflate the module count, and imply capabilities
 that don't exist.
 
@@ -598,11 +598,11 @@ that don't exist.
 | **B: Implement audit MVP** | ~20h | Audit log of all write operations per tenant |
 | **C: Stub to structured placeholder** | ~2h | Module compiles but returns 501 on all endpoints |
 
-**Recommendation**: Option A for `etl-system` (genuinely out of scope for beta).
-Option C for `audit-system` (enterprise clients expect audit trails — surface the
+**Recommendation**: Option A for `etl-service` (genuinely out of scope for beta).
+Option C for `audit-service` (enterprise clients expect audit trails — surface the
 endpoint so the contract is established, even if the implementation is deferred).
 
-Audit MVP scope (if Option B chosen for `audit-system`):
+Audit MVP scope (if Option B chosen for `audit-service`):
 - `AuditEvent` entity: `tenantId`, `entityType`, `entityId`, `action` (CREATE/UPDATE/DELETE), `actorId`, `timestamp`, `before`, `after` (JSON)
 - Spring AOP `@Around` advice on all `@Service` methods annotated with `@Audited`
 - `GET /v1/audit?entityType=&entityId=&from=&to=` paginated query

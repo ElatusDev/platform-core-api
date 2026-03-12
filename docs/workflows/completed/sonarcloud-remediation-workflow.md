@@ -140,7 +140,7 @@ Remove the `callerIdentity` local variable entirely since it only served as null
 
 #### S2077 — Dynamic SQL in `DataCleanUp`
 
-**File**: `mock-data-system/src/main/java/com/akademiaplus/util/base/DataCleanUp.java:44`
+**File**: `mock-data-service/src/main/java/com/akademiaplus/util/base/DataCleanUp.java:44`
 
 **Current code**:
 

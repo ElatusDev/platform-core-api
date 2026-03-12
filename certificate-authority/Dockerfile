@@ -3,12 +3,12 @@ WORKDIR /app
 
 COPY pom.xml /app/
 COPY application/pom.xml           application/
-COPY audit-system/pom.xml          audit-system/
+COPY audit-service/pom.xml          audit-service/
 COPY billing/pom.xml               billing/
 COPY certificate-authority/pom.xml certificate-authority/
 COPY course-management/pom.xml     course-management/
 COPY infra-common/pom.xml          infra-common/
-COPY mock-data-system/pom.xml      mock-data-system/
+COPY mock-data-service/pom.xml      mock-data-service/
 COPY multi-tenant-data/pom.xml     multi-tenant-data/
 COPY notification-system/pom.xml   notification-system/
 COPY pos-system/pom.xml            pos-system/
@@ -16,7 +16,7 @@ COPY security/pom.xml              security/
 COPY tenant-management/pom.xml     tenant-management/
 COPY user-management/pom.xml       user-management/
 COPY utilities/pom.xml             utilities/
-COPY etl-system/pom.xml            etl-system/
+COPY etl-service/pom.xml            etl-service/
 COPY lead-management/pom.xml       lead-management/
 
 RUN apk add --no-cache maven

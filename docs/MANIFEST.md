@@ -77,7 +77,9 @@ Executable prompts for Claude Code CLI.
 
 ### Pending (`docs/prompts/pending/`)
 
-_No pending prompts for core-api._
+| Prompt | Purpose | Status |
+|--------|---------|--------|
+| [etl-service-prompt.md](prompts/pending/etl-service-prompt.md) | ETL module — MongoDB staging, Excel/Word parsing, Claude API analysis, MariaDB load | 🟡 Ready to execute |
 
 ### Completed (`docs/prompts/completed/`)
 
@@ -106,6 +108,7 @@ _No pending prompts for core-api._
 | [rate-limiting-prompt.md](prompts/completed/rate-limiting-prompt.md) | Redis sliding window rate limiting | Implemented |
 | [magic-link-auth-prompt.md](prompts/completed/magic-link-auth-prompt.md) | Magic link passwordless authentication | Implemented |
 | [component-test-coverage-gaps-prompt.md](prompts/completed/component-test-coverage-gaps-prompt.md) | Component tests for Phase 1–4 endpoints (26 tests) | Implemented |
+| [mock-data-new-loaders-prompt.md](prompts/completed/mock-data-new-loaders-prompt.md) | 5 new mock data loaders for unseeded entities | Implemented |
 
 ---
 
@@ -115,7 +118,9 @@ Step-by-step implementation plans. Referenced by prompts.
 
 ### Pending (`docs/workflows/pending/`)
 
-_No pending workflows for core-api._
+| Workflow | Purpose | Status |
+|----------|---------|--------|
+| [etl-service-workflow.md](workflows/pending/etl-service-workflow.md) | ETL module — MongoDB staging, Excel/Word parsing, Claude API analysis, MariaDB load (5 phases) | 🟡 Ready to execute |
 
 ### Completed (`docs/workflows/completed/`)
 
@@ -146,6 +151,7 @@ _No pending workflows for core-api._
 | [rate-limiting-workflow.md](workflows/completed/rate-limiting-workflow.md) | Redis sliding window rate limiting | Implemented |
 | [magic-link-auth-workflow.md](workflows/completed/magic-link-auth-workflow.md) | Magic link passwordless authentication | Implemented |
 | [component-test-coverage-gaps-workflow.md](workflows/completed/component-test-coverage-gaps-workflow.md) | Component tests for Phase 1–4 endpoints (26 tests, 3 prod fixes) | Implemented |
+| [mock-data-new-loaders-workflow.md](workflows/completed/mock-data-new-loaders-workflow.md) | 5 new mock data loaders (attendance, demo request, push device, notification read status) | Implemented |
 
 ---
 

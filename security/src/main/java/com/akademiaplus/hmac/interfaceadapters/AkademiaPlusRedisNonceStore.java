@@ -8,9 +8,7 @@
 package com.akademiaplus.hmac.interfaceadapters;
 
 import com.akademiaplus.hmac.usecases.NonceStore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
 
@@ -20,12 +18,12 @@ import java.util.concurrent.TimeUnit;
  * <p>Uses Redis SET with TTL to automatically expire nonces after the
  * configured window. The key format is {@code hmac:nonce:<nonce-value>}.</p>
  *
+ * <p>Registered conditionally via {@link config.NonceStoreConfig}.</p>
+ *
  * @author ElatusDev
  * @since 1.0
  */
-@Service
-@ConditionalOnBean(StringRedisTemplate.class)
-public class RedisNonceStore implements NonceStore {
+public class AkademiaPlusRedisNonceStore implements NonceStore {
 
     /** Redis key prefix for nonce entries. */
     public static final String NONCE_KEY_PREFIX = "hmac:nonce:";
@@ -40,7 +38,7 @@ public class RedisNonceStore implements NonceStore {
      *
      * @param redisTemplate the Redis template
      */
-    public RedisNonceStore(StringRedisTemplate redisTemplate) {
+    public AkademiaPlusRedisNonceStore(StringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 

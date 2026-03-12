@@ -27,9 +27,9 @@ import java.util.Set;
  * @since 1.0
  */
 @Service
-public class RedisSessionStore {
+public class AkademiaPlusRedisSessionStore {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RedisSessionStore.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AkademiaPlusRedisSessionStore.class);
 
     /** Prefix for individual session keys: {@code session:{jti}}. */
     public static final String SESSION_KEY_PREFIX = "session:";
@@ -46,15 +46,15 @@ public class RedisSessionStore {
     /** Hash field name for the username. */
     public static final String FIELD_USERNAME = "username";
 
-    private final RedisTemplate<String, String> sessionRedisTemplate;
+    private final RedisTemplate<String, String> akademiaPlusRedisTemplate;
 
     /**
-     * Constructs a RedisSessionStore with the required Redis template.
+     * Constructs a AkademiaPlusRedisSessionStore with the required Redis template.
      *
-     * @param sessionRedisTemplate the Redis template for session storage
+     * @param akademiaPlusRedisTemplate the Redis template for session storage
      */
-    public RedisSessionStore(RedisTemplate<String, String> sessionRedisTemplate) {
-        this.sessionRedisTemplate = sessionRedisTemplate;
+    public AkademiaPlusRedisSessionStore(RedisTemplate<String, String> akademiaPlusRedisTemplate) {
+        this.akademiaPlusRedisTemplate = akademiaPlusRedisTemplate;
     }
 
     /**
@@ -72,14 +72,14 @@ public class RedisSessionStore {
         String sessionKey = SESSION_KEY_PREFIX + jti;
         String userSessionsKey = USER_SESSIONS_KEY_PREFIX + username + ":" + tenantId;
 
-        sessionRedisTemplate.opsForHash().putAll(sessionKey, Map.of(
+        akademiaPlusRedisTemplate.opsForHash().putAll(sessionKey, Map.of(
                 FIELD_USERNAME, username,
                 FIELD_TENANT_ID, String.valueOf(tenantId)
         ));
-        sessionRedisTemplate.expire(sessionKey, ttl);
+        akademiaPlusRedisTemplate.expire(sessionKey, ttl);
 
-        sessionRedisTemplate.opsForSet().add(userSessionsKey, jti);
-        sessionRedisTemplate.expire(userSessionsKey, ttl);
+        akademiaPlusRedisTemplate.opsForSet().add(userSessionsKey, jti);
+        akademiaPlusRedisTemplate.expire(userSessionsKey, ttl);
 
         LOGGER.debug("Stored session for user {} tenant {} with jti {}", username, tenantId, jti);
     }
@@ -92,7 +92,7 @@ public class RedisSessionStore {
      */
     public boolean isSessionValid(String jti) {
         String sessionKey = SESSION_KEY_PREFIX + jti;
-        return Boolean.TRUE.equals(sessionRedisTemplate.hasKey(sessionKey));
+        return Boolean.TRUE.equals(akademiaPlusRedisTemplate.hasKey(sessionKey));
     }
 
     /**
@@ -102,7 +102,7 @@ public class RedisSessionStore {
      */
     public void revokeSession(String jti) {
         String sessionKey = SESSION_KEY_PREFIX + jti;
-        sessionRedisTemplate.delete(sessionKey);
+        akademiaPlusRedisTemplate.delete(sessionKey);
         LOGGER.debug("Revoked session with jti {}", jti);
     }
 
@@ -117,14 +117,14 @@ public class RedisSessionStore {
      */
     public void revokeAllSessionsForUser(String username, Long tenantId) {
         String userSessionsKey = USER_SESSIONS_KEY_PREFIX + username + ":" + tenantId;
-        Set<String> sessionIds = sessionRedisTemplate.opsForSet().members(userSessionsKey);
+        Set<String> sessionIds = akademiaPlusRedisTemplate.opsForSet().members(userSessionsKey);
 
         if (sessionIds != null && !sessionIds.isEmpty()) {
             for (String jti : sessionIds) {
-                sessionRedisTemplate.delete(SESSION_KEY_PREFIX + jti);
+                akademiaPlusRedisTemplate.delete(SESSION_KEY_PREFIX + jti);
             }
         }
-        sessionRedisTemplate.delete(userSessionsKey);
+        akademiaPlusRedisTemplate.delete(userSessionsKey);
         LOGGER.debug("Revoked all sessions for user {} tenant {}", username, tenantId);
     }
 }

@@ -43,6 +43,12 @@ public class HmacSignatureService {
     public static final String EMPTY_BODY_HASH =
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
+    /** Error message when SHA-256 algorithm is not available. */
+    public static final String ERROR_SHA256_NOT_AVAILABLE = "SHA-256 algorithm not available";
+
+    /** Error message when HMAC-SHA256 computation fails. */
+    public static final String ERROR_HMAC_COMPUTATION_FAILED = "HMAC-SHA256 computation failed";
+
     /**
      * Computes the SHA-256 hash of the given bytes, returning a hex string.
      *
@@ -55,7 +61,7 @@ public class HmacSignatureService {
             byte[] hash = digest.digest(body);
             return HexFormat.of().formatHex(hash);
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 algorithm not available", e);
+            throw new IllegalStateException(ERROR_SHA256_NOT_AVAILABLE, e);
         }
     }
 
@@ -109,7 +115,7 @@ public class HmacSignatureService {
             byte[] hmacBytes = mac.doFinal(stringToSign.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(hmacBytes);
         } catch (Exception e) {
-            throw new IllegalStateException("HMAC-SHA256 computation failed", e);
+            throw new IllegalStateException(ERROR_HMAC_COMPUTATION_FAILED, e);
         }
     }
 

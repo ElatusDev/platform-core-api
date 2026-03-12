@@ -74,9 +74,9 @@ jwt.refresh-token.validity-ms=2592000000
 jwt.refresh-token.keystore.alias=${JWT_REFRESH_KEY_ALIAS:refresh-key}
 ```
 
-### Step 1.3: Create RedisConfig
+### Step 1.3: Create AkademiaPlusRedisConfig
 
-**File**: `security/src/main/java/com/akademiaplus/config/RedisConfig.java`
+**File**: `security/src/main/java/com/akademiaplus/config/AkademiaPlusRedisConfig.java`
 
 ```java
 /*
@@ -104,7 +104,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  * @since 1.0
  */
 @Configuration
-public class RedisConfig {
+public class AkademiaPlusRedisConfig {
 
     /**
      * Creates a RedisTemplate with string key and value serializers.
@@ -113,7 +113,7 @@ public class RedisConfig {
      * @return configured RedisTemplate for session storage
      */
     @Bean
-    public RedisTemplate<String, String> sessionRedisTemplate(RedisConnectionFactory connectionFactory) {
+    public RedisTemplate<String, String> akademiaPlusRedisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, String> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
         template.setKeySerializer(new StringRedisSerializer());
@@ -125,15 +125,15 @@ public class RedisConfig {
 }
 ```
 
-### Step 1.4: Create RedisSessionStore
+### Step 1.4: Create AkademiaPlusRedisSessionStore
 
-**File**: `security/src/main/java/com/akademiaplus/internal/interfaceadapters/session/RedisSessionStore.java`
+**File**: `security/src/main/java/com/akademiaplus/internal/interfaceadapters/session/AkademiaPlusRedisSessionStore.java`
 
 ```bash
 mkdir -p security/src/main/java/com/akademiaplus/internal/interfaceadapters/session
 ```
 
-Create the `RedisSessionStore` service. See the workflow document Phase 1 Step 1.4 for the full implementation.
+Create the `AkademiaPlusRedisSessionStore` service. See the workflow document Phase 1 Step 1.4 for the full implementation.
 
 Key methods:
 - `storeSession(String jti, String username, Long tenantId, Duration ttl)` -- stores session metadata with TTL
@@ -159,11 +159,11 @@ mvn clean compile -pl security -am -DskipTests -f platform-core-api/pom.xml
 ### Step 1.6: Commit
 
 ```bash
-git add security/pom.xml security/src/main/java/com/akademiaplus/config/RedisConfig.java security/src/main/java/com/akademiaplus/internal/interfaceadapters/session/ application/src/main/resources/application.properties
+git add security/pom.xml security/src/main/java/com/akademiaplus/config/AkademiaPlusRedisConfig.java security/src/main/java/com/akademiaplus/internal/interfaceadapters/session/ application/src/main/resources/application.properties
 git commit -m "feat(security): add Redis infrastructure for session management
 
-Add spring-boot-starter-data-redis dependency, RedisConfig with
-StringRedisSerializer template, and RedisSessionStore service for
+Add spring-boot-starter-data-redis dependency, AkademiaPlusRedisConfig with
+StringRedisSerializer template, and AkademiaPlusRedisSessionStore service for
 access token session tracking and revocation."
 ```
 
@@ -426,7 +426,7 @@ public record TokenRefreshResult(String accessToken, String refreshToken, String
 Dependencies (constructor-injected):
 - `JwtTokenProvider`
 - `RefreshTokenRepository`
-- `RedisSessionStore`
+- `AkademiaPlusRedisSessionStore`
 - `HashingService`
 - `ApplicationContext`
 
@@ -645,7 +645,7 @@ package com.akademiaplus.internal.usecases;
 
 import com.akademiaplus.internal.interfaceadapters.RefreshTokenRepository;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
-import com.akademiaplus.internal.interfaceadapters.session.RedisSessionStore;
+import com.akademiaplus.internal.interfaceadapters.session.AkademiaPlusRedisSessionStore;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -661,7 +661,7 @@ import java.time.Instant;
 public class LogoutUseCase {
 
     private final RefreshTokenRepository refreshTokenRepository;
-    private final RedisSessionStore redisSessionStore;
+    private final AkademiaPlusRedisSessionStore redisSessionStore;
     private final JwtTokenProvider jwtTokenProvider;
 
     /**
@@ -672,7 +672,7 @@ public class LogoutUseCase {
      * @param jwtTokenProvider       the JWT token provider
      */
     public LogoutUseCase(RefreshTokenRepository refreshTokenRepository,
-                         RedisSessionStore redisSessionStore,
+                         AkademiaPlusRedisSessionStore redisSessionStore,
                          JwtTokenProvider jwtTokenProvider) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.redisSessionStore = redisSessionStore;
@@ -814,7 +814,7 @@ cat security/src/main/java/com/akademiaplus/internal/interfaceadapters/jwt/JwtRe
 
 Add constructor dependencies:
 - `CookieService cookieService`
-- `RedisSessionStore redisSessionStore`
+- `AkademiaPlusRedisSessionStore redisSessionStore`
 
 Add constants:
 ```java
@@ -869,9 +869,9 @@ mkdir -p security/src/test/java/com/akademiaplus/internal/usecases
 mkdir -p security/src/test/java/com/akademiaplus/internal/interfaceadapters
 ```
 
-### Step 8.2: RedisSessionStoreTest
+### Step 8.2: AkademiaPlusAkademiaPlusRedisSessionStoreTest
 
-**File**: `security/src/test/java/com/akademiaplus/internal/interfaceadapters/session/RedisSessionStoreTest.java`
+**File**: `security/src/test/java/com/akademiaplus/internal/interfaceadapters/session/AkademiaPlusAkademiaPlusRedisSessionStoreTest.java`
 
 - `@ExtendWith(MockitoExtension.class)`
 - `@Mock RedisTemplate<String, String>`
@@ -902,7 +902,7 @@ mkdir -p security/src/test/java/com/akademiaplus/internal/interfaceadapters
 **File**: `security/src/test/java/com/akademiaplus/internal/usecases/TokenRefreshUseCaseTest.java`
 
 - `@ExtendWith(MockitoExtension.class)`
-- `@Mock JwtTokenProvider`, `@Mock RefreshTokenRepository`, `@Mock RedisSessionStore`, `@Mock HashingService`, `@Mock ApplicationContext`
+- `@Mock JwtTokenProvider`, `@Mock RefreshTokenRepository`, `@Mock AkademiaPlusRedisSessionStore`, `@Mock HashingService`, `@Mock ApplicationContext`
 
 | @Nested | Tests |
 |---------|-------|
@@ -950,7 +950,7 @@ mvn test -pl security -am -f platform-core-api/pom.xml
 git add security/src/test/
 git commit -m "test(security): add unit tests for refresh token rotation and logout
 
-RedisSessionStoreTest, CookieServiceTest, TokenRefreshUseCaseTest,
+AkademiaPlusAkademiaPlusRedisSessionStoreTest, CookieServiceTest, TokenRefreshUseCaseTest,
 LogoutUseCaseTest, TokenRefreshControllerTest, LogoutControllerTest.
 Cover session management, cookie handling, token rotation, reuse
 detection, and logout with full revocation."

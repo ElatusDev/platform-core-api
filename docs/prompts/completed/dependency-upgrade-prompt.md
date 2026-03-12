@@ -552,14 +552,14 @@ mvn clean compile -pl pos-system -am -DskipTests
 mvn test -pl pos-system -am
 ```
 
-**mock-data-system**:
+**mock-data-service**:
 
 ```bash
 grep -rln "import com.fasterxml.jackson" --include="*.java" \
-  /Volumes/ElatusDev/ElatusDev/AkademiaPlus/platform-core-api/mock-data-system/
+  /Volumes/ElatusDev/ElatusDev/AkademiaPlus/platform-core-api/mock-data-service/
 
-mvn clean compile -pl mock-data-system -am -DskipTests
-mvn test -pl mock-data-system -am
+mvn clean compile -pl mock-data-service -am -DskipTests
+mvn test -pl mock-data-service -am
 ```
 
 **application** (aggregator — unlikely to have direct Jackson imports but verify):
