@@ -89,6 +89,9 @@ public class JwtTokenProvider {
     /** Profile type value for tutors. */
     public static final String PROFILE_TYPE_TUTOR = "TUTOR";
 
+    /** Profile type value for collaborators (teachers). */
+    public static final String PROFILE_TYPE_COLLABORATOR = "COLLABORATOR";
+
     private KeyPair keyPair;
     private JwtParser jwtParser;
 

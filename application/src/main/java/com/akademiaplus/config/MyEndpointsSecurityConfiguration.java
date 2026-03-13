@@ -13,10 +13,14 @@ import org.springframework.security.config.annotation.web.configurers.AuthorizeH
 
 /**
  * Security configuration for self-service endpoints.
- * Requires CUSTOMER role for all {@code /v1/my/**} paths.
+ * Requires CUSTOMER or COLLABORATOR role for all {@code /v1/my/**} paths.
  *
- * <p>Internal users (employees, collaborators) do not have the CUSTOMER
- * role and will receive 403 Forbidden when accessing these endpoints.</p>
+ * <p>Customers access student/tutor endpoints, collaborators access
+ * teacher-facing endpoints. Each use case validates the correct
+ * {@code profileType} internally.</p>
+ *
+ * <p>Employees (non-collaborator internal users) do not have either
+ * role and will receive 403 Forbidden.</p>
  *
  * @author ElatusDev
  * @since 1.0
@@ -29,6 +33,6 @@ public class MyEndpointsSecurityConfiguration implements ModuleSecurityConfigura
 
     @Override
     public void configure(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) throws Exception {
-        auth.requestMatchers(MY_PATH_ANY).hasRole("CUSTOMER");
+        auth.requestMatchers(MY_PATH_ANY).hasAnyRole("CUSTOMER", "COLLABORATOR");
     }
 }

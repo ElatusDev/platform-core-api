@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -45,29 +46,33 @@ public class InternalAuthenticationUseCase {
     private final RefreshTokenRepository refreshTokenRepository;
     private final AkademiaPlusRedisSessionStore akademiaPlusRedisSessionStore;
     private final ApplicationContext applicationContext;
+    private final List<ProfileClaimEnricher> profileClaimEnrichers;
 
     /**
      * Constructs the use case with all required dependencies.
      *
-     * @param repository             the internal auth repository
-     * @param jwtTokenProvider       the JWT token provider
-     * @param hashingService         the hashing service for SHA-256 operations
-     * @param refreshTokenRepository the refresh token repository
-     * @param akademiaPlusRedisSessionStore      the Redis session store
-     * @param applicationContext     the Spring application context for prototype beans
+     * @param repository                    the internal auth repository
+     * @param jwtTokenProvider              the JWT token provider
+     * @param hashingService                the hashing service for SHA-256 operations
+     * @param refreshTokenRepository        the refresh token repository
+     * @param akademiaPlusRedisSessionStore the Redis session store
+     * @param applicationContext            the Spring application context for prototype beans
+     * @param profileClaimEnrichers         profile claim enrichers (may be empty)
      */
     public InternalAuthenticationUseCase(InternalAuthRepository repository,
                                          JwtTokenProvider jwtTokenProvider,
                                          HashingService hashingService,
                                          RefreshTokenRepository refreshTokenRepository,
                                          AkademiaPlusRedisSessionStore akademiaPlusRedisSessionStore,
-                                         ApplicationContext applicationContext) {
+                                         ApplicationContext applicationContext,
+                                         List<ProfileClaimEnricher> profileClaimEnrichers) {
         this.repository = repository;
         this.jwtTokenProvider = jwtTokenProvider;
         this.hashingService = hashingService;
         this.refreshTokenRepository = refreshTokenRepository;
         this.akademiaPlusRedisSessionStore = akademiaPlusRedisSessionStore;
         this.applicationContext = applicationContext;
+        this.profileClaimEnrichers = profileClaimEnrichers;
     }
 
     /**
@@ -106,6 +111,7 @@ public class InternalAuthenticationUseCase {
         if (fingerprintClaims != null) {
             claims.putAll(fingerprintClaims);
         }
+        profileClaimEnrichers.forEach(enricher -> enricher.enrich(auth.getInternalAuthId(), claims));
 
         String accessToken = jwtTokenProvider.createAccessToken(auth.getUsername(), auth.getTenantId(), claims);
         String jti = jwtTokenProvider.getJti(accessToken);

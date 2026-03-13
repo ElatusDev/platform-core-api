@@ -33,6 +33,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.akademiaplus.collaborator.interfaceadapters.CollaboratorRepository;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.time.Duration;
@@ -96,6 +97,7 @@ public class PasskeyAuthenticationUseCase {
     private final AkademiaPlusRedisSessionStore akademiaPlusRedisSessionStore;
     private final RefreshTokenRepository refreshTokenRepository;
     private final ApplicationContext applicationContext;
+    private final CollaboratorRepository collaboratorRepository;
 
     /**
      * Constructs the authentication use case with all required dependencies.
@@ -110,6 +112,7 @@ public class PasskeyAuthenticationUseCase {
      * @param akademiaPlusRedisSessionStore      the Redis session store
      * @param refreshTokenRepository the refresh token repository
      * @param applicationContext     the Spring application context for prototype beans
+     * @param collaboratorRepository the collaborator repository for profile claims
      */
     public PasskeyAuthenticationUseCase(RelyingParty relyingParty,
                                          PasskeyChallengeStore challengeStore,
@@ -120,7 +123,8 @@ public class PasskeyAuthenticationUseCase {
                                          HashingService hashingService,
                                          AkademiaPlusRedisSessionStore akademiaPlusRedisSessionStore,
                                          RefreshTokenRepository refreshTokenRepository,
-                                         ApplicationContext applicationContext) {
+                                         ApplicationContext applicationContext,
+                                         CollaboratorRepository collaboratorRepository) {
         this.relyingParty = relyingParty;
         this.challengeStore = challengeStore;
         this.credentialRepository = credentialRepository;
@@ -131,6 +135,7 @@ public class PasskeyAuthenticationUseCase {
         this.akademiaPlusRedisSessionStore = akademiaPlusRedisSessionStore;
         this.refreshTokenRepository = refreshTokenRepository;
         this.applicationContext = applicationContext;
+        this.collaboratorRepository = collaboratorRepository;
     }
 
     // ── Registration orchestration ────────────────────────────────────────
@@ -300,6 +305,7 @@ public class PasskeyAuthenticationUseCase {
         if (fingerprintClaims != null) {
             claims.putAll(fingerprintClaims);
         }
+        enrichCollaboratorClaims(auth.getInternalAuthId(), claims);
 
         String accessToken = jwtTokenProvider.createAccessToken(auth.getUsername(), tenantId, claims);
         String jti = jwtTokenProvider.getJti(accessToken);
@@ -326,6 +332,20 @@ public class PasskeyAuthenticationUseCase {
         refreshTokenRepository.save(refreshTokenEntity);
 
         return new LoginResult(accessToken, refreshToken, auth.getUsername());
+    }
+
+    /**
+     * Adds collaborator profile claims to the JWT if the authenticated user is a collaborator.
+     *
+     * @param internalAuthId the internal auth ID
+     * @param claims         the mutable claims map
+     */
+    private void enrichCollaboratorClaims(Long internalAuthId, Map<String, Object> claims) {
+        collaboratorRepository.findByInternalAuthId(internalAuthId)
+                .ifPresent(collaborator -> {
+                    claims.put(JwtTokenProvider.PROFILE_TYPE_CLAIM, JwtTokenProvider.PROFILE_TYPE_COLLABORATOR);
+                    claims.put(JwtTokenProvider.PROFILE_ID_CLAIM, collaborator.getCollaboratorId());
+                });
     }
 
     /**
