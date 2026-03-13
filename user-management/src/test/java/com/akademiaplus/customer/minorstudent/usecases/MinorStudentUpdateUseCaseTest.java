@@ -150,6 +150,8 @@ class MinorStudentUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(MINOR_STUDENT_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.MINOR_STUDENT, MINOR_STUDENT_ID))
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.MINOR_STUDENT);
@@ -189,6 +191,8 @@ class MinorStudentUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(MINOR_STUDENT_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.TUTOR, TUTOR_ID))
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.TUTOR);
@@ -317,6 +321,8 @@ class MinorStudentUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(MINOR_STUDENT_ID, dto))
                     .isInstanceOf(DuplicateEntityException.class)
+                    .hasMessage(String.format(DuplicateEntityException.MESSAGE_TEMPLATE,
+                            PiiField.EMAIL, EntityType.MINOR_STUDENT))
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.MINOR_STUDENT);
@@ -363,6 +369,8 @@ class MinorStudentUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(MINOR_STUDENT_ID, dto))
                     .isInstanceOf(DuplicateEntityException.class)
+                    .hasMessage(String.format(DuplicateEntityException.MESSAGE_TEMPLATE,
+                            PiiField.PHONE_NUMBER, EntityType.MINOR_STUDENT))
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.MINOR_STUDENT);

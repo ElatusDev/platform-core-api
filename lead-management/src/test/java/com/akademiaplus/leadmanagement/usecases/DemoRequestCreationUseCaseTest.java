@@ -9,6 +9,7 @@ package com.akademiaplus.leadmanagement.usecases;
 
 import com.akademiaplus.leadmanagement.DemoRequestDataModel;
 import com.akademiaplus.leadmanagement.interfaceadapters.DemoRequestRepository;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.exceptions.DuplicateEntityException;
 import openapi.akademiaplus.domain.lead.management.dto.DemoRequestCreationRequestDTO;
 import openapi.akademiaplus.domain.lead.management.dto.DemoRequestCreationResponseDTO;
@@ -183,11 +184,80 @@ class DemoRequestCreationUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.create(dto))
-                    .isInstanceOf(DuplicateEntityException.class);
+                    .isInstanceOf(DuplicateEntityException.class)
+                    .hasMessage(String.format(DuplicateEntityException.MESSAGE_TEMPLATE,
+                            DemoRequestCreationUseCase.FIELD_EMAIL,
+                            EntityType.DEMO_REQUEST));
 
             verify(demoRequestRepository, times(1)).existsByEmail(EMAIL);
             verifyNoMoreInteractions(demoRequestRepository);
             verifyNoInteractions(applicationContext, modelMapper);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when existsByEmail throws")
+        void shouldPropagateException_whenExistsByEmailThrows() {
+            // Given
+            DemoRequestCreationRequestDTO dto = buildRequest();
+            RuntimeException dbException = new RuntimeException("DB connection failed");
+            when(demoRequestRepository.existsByEmail(EMAIL)).thenThrow(dbException);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.create(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection failed");
+
+            verify(demoRequestRepository, times(1)).existsByEmail(EMAIL);
+            verifyNoMoreInteractions(demoRequestRepository);
+            verifyNoInteractions(applicationContext, modelMapper);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when applicationContext.getBean throws")
+        void shouldPropagateException_whenGetBeanThrows() {
+            // Given
+            DemoRequestCreationRequestDTO dto = buildRequest();
+            RuntimeException beanException = new RuntimeException("Bean not found");
+            when(demoRequestRepository.existsByEmail(EMAIL)).thenReturn(false);
+            when(applicationContext.getBean(DemoRequestDataModel.class)).thenThrow(beanException);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.create(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Bean not found");
+
+            verify(demoRequestRepository, times(1)).existsByEmail(EMAIL);
+            verify(applicationContext, times(1)).getBean(DemoRequestDataModel.class);
+            verifyNoMoreInteractions(demoRequestRepository, applicationContext);
+            verifyNoInteractions(modelMapper);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when repository save throws")
+        void shouldPropagateException_whenSaveThrows() {
+            // Given
+            DemoRequestCreationRequestDTO dto = buildRequest();
+            DemoRequestDataModel model = new DemoRequestDataModel();
+            RuntimeException saveException = new RuntimeException("Save failed");
+
+            when(demoRequestRepository.existsByEmail(EMAIL)).thenReturn(false);
+            when(applicationContext.getBean(DemoRequestDataModel.class)).thenReturn(model);
+            when(demoRequestRepository.save(model)).thenThrow(saveException);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.create(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Save failed");
+
+            verify(demoRequestRepository, times(1)).existsByEmail(EMAIL);
+            verify(applicationContext, times(1)).getBean(DemoRequestDataModel.class);
+            verify(modelMapper, times(1)).map(dto, model, DemoRequestCreationUseCase.MAP_NAME);
+            verify(demoRequestRepository, times(1)).save(model);
         }
     }
 }

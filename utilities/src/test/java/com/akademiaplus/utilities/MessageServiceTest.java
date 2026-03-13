@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 ElatusDev
+ * Copyright (c) 2026 ElatusDev
  * All rights reserved.
  *
  * This code is proprietary and confidential.
@@ -188,7 +188,8 @@ class MessageServiceTest {
 
             // When/Then: exception should propagate from getEntityNotFound
             assertThatThrownBy(() -> messageService.getEntityNotFound(EntityType.EMPLOYEE, "1"))
-                    .isInstanceOf(org.springframework.context.NoSuchMessageException.class);
+                    .isInstanceOf(org.springframework.context.NoSuchMessageException.class)
+                    .hasMessageContaining("unknown.key");
 
             verify(messageSource, times(1)).getMessage(EntityType.EMPLOYEE, null, LOCALE);
             verifyNoMoreInteractions(messageSource);
@@ -208,7 +209,8 @@ class MessageServiceTest {
 
             // When/Then: exception should propagate
             assertThatThrownBy(() -> messageService.getEntityNotFound(EntityType.EMPLOYEE, ENTITY_ID))
-                    .isInstanceOf(org.springframework.context.NoSuchMessageException.class);
+                    .isInstanceOf(org.springframework.context.NoSuchMessageException.class)
+                    .hasMessageContaining(MessageService.KEY_ENTITY_NOT_FOUND);
 
             verify(messageSource, times(1)).getMessage(EntityType.EMPLOYEE, null, LOCALE);
             verify(messageSource, times(1)).getMessage(MessageService.KEY_ENTITY_NOT_FOUND,

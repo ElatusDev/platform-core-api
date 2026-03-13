@@ -411,6 +411,54 @@ class TokenBindingFilterTest {
         }
     }
 
+    @Nested
+    @DisplayName("Collaborator exception propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("should propagate exception when jwtTokenProvider throws")
+        void shouldPropagateException_whenJwtTokenProviderThrows() throws Exception {
+            // Given
+            setAuthentication();
+            when(tokenBindingProperties.getMode()).thenReturn(TokenBindingMode.STRICT);
+            when(cookieService.extractAccessToken(request)).thenReturn(Optional.of(ACCESS_TOKEN));
+            RuntimeException cause = new RuntimeException("JWT parse error");
+            when(jwtTokenProvider.getClaims(ACCESS_TOKEN)).thenThrow(cause);
+
+            // When / Then
+            org.assertj.core.api.Assertions.assertThatThrownBy(
+                    () -> filter.doFilterInternal(request, response, filterChain))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("JWT parse error");
+
+            verify(jwtTokenProvider, times(1)).getClaims(ACCESS_TOKEN);
+            verifyNoInteractions(deviceFingerprintService, anomalyDetectionService, filterChain);
+        }
+
+        @Test
+        @DisplayName("should propagate exception when deviceFingerprintService throws")
+        void shouldPropagateException_whenDeviceFingerprintServiceThrows() throws Exception {
+            // Given
+            setAuthentication();
+            when(tokenBindingProperties.getMode()).thenReturn(TokenBindingMode.STRICT);
+            when(cookieService.extractAccessToken(request)).thenReturn(Optional.of(ACCESS_TOKEN));
+            when(jwtTokenProvider.getClaims(ACCESS_TOKEN)).thenReturn(claims);
+            when(claims.get(JwtTokenProvider.FINGERPRINT_CLAIM, String.class)).thenReturn(FULL_HASH);
+            when(claims.get(JwtTokenProvider.DEVICE_FINGERPRINT_CLAIM, String.class)).thenReturn(DEVICE_ONLY_HASH);
+            RuntimeException cause = new RuntimeException("fingerprint failure");
+            when(deviceFingerprintService.computeFingerprint(request)).thenThrow(cause);
+
+            // When / Then
+            org.assertj.core.api.Assertions.assertThatThrownBy(
+                    () -> filter.doFilterInternal(request, response, filterChain))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("fingerprint failure");
+
+            verify(deviceFingerprintService, times(1)).computeFingerprint(request);
+            verifyNoInteractions(anomalyDetectionService, filterChain);
+        }
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private void setAuthentication() {

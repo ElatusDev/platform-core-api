@@ -155,11 +155,102 @@ class MembershipAdultStudentCreationUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.transform(dto))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining(String.valueOf(MEMBERSHIP_ID));
+                    .hasMessage(MembershipAdultStudentCreationUseCase.ERROR_MEMBERSHIP_NOT_FOUND + MEMBERSHIP_ID);
 
             verify(applicationContext, times(1)).getBean(MembershipAdultStudentDataModel.class);
             verify(membershipRepository, times(1)).findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID));
             verifyNoMoreInteractions(applicationContext, repository, courseRepository, adultStudentRepository);
+        }
+
+        @Test
+        @DisplayName("Should throw when course is not found")
+        void shouldThrow_whenCourseNotFound() {
+            // Given
+            MembershipAdultStudentCreationRequestDTO dto = buildDto();
+            MembershipAdultStudentDataModel prototypeModel = new MembershipAdultStudentDataModel();
+            when(applicationContext.getBean(MembershipAdultStudentDataModel.class)).thenReturn(prototypeModel);
+            when(membershipRepository.findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID))).thenReturn(Optional.of(new MembershipDataModel()));
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.empty());
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.transform(dto))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage(MembershipAdultStudentCreationUseCase.ERROR_COURSE_NOT_FOUND + COURSE_ID);
+
+            verify(applicationContext, times(1)).getBean(MembershipAdultStudentDataModel.class);
+            verify(membershipRepository, times(1)).findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID));
+            verify(courseRepository, times(1)).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            verifyNoMoreInteractions(applicationContext, repository, adultStudentRepository);
+        }
+
+        @Test
+        @DisplayName("Should throw when adult student is not found")
+        void shouldThrow_whenAdultStudentNotFound() {
+            // Given
+            MembershipAdultStudentCreationRequestDTO dto = buildDto();
+            MembershipAdultStudentDataModel prototypeModel = new MembershipAdultStudentDataModel();
+            when(applicationContext.getBean(MembershipAdultStudentDataModel.class)).thenReturn(prototypeModel);
+            when(membershipRepository.findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID))).thenReturn(Optional.of(new MembershipDataModel()));
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(new CourseDataModel()));
+            when(adultStudentRepository.findById(new AdultStudentDataModel.AdultStudentCompositeId(TENANT_ID, ADULT_STUDENT_ID))).thenReturn(Optional.empty());
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.transform(dto))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage(MembershipAdultStudentCreationUseCase.ERROR_ADULT_STUDENT_NOT_FOUND + ADULT_STUDENT_ID);
+
+            verify(applicationContext, times(1)).getBean(MembershipAdultStudentDataModel.class);
+            verify(membershipRepository, times(1)).findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID));
+            verify(courseRepository, times(1)).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
+            verify(adultStudentRepository, times(1)).findById(new AdultStudentDataModel.AdultStudentCompositeId(TENANT_ID, ADULT_STUDENT_ID));
+            verifyNoMoreInteractions(applicationContext, repository);
+        }
+
+        @Test
+        @DisplayName("Should throw when tenant context is missing")
+        void shouldThrow_whenTenantContextMissing() {
+            // Given
+            MembershipAdultStudentCreationRequestDTO dto = buildDto();
+            MembershipAdultStudentDataModel prototypeModel = new MembershipAdultStudentDataModel();
+            when(applicationContext.getBean(MembershipAdultStudentDataModel.class)).thenReturn(prototypeModel);
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.empty());
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.transform(dto))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage(MembershipAdultStudentCreationUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
+
+            verify(applicationContext, times(1)).getBean(MembershipAdultStudentDataModel.class);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoMoreInteractions(applicationContext, repository, membershipRepository, courseRepository, adultStudentRepository);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator exception propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when repository saveAndFlush throws")
+        void shouldPropagateException_whenRepositorySaveAndFlushThrows() {
+            // Given
+            MembershipAdultStudentCreationRequestDTO dto = buildDto();
+            MembershipAdultStudentDataModel prototypeModel = new MembershipAdultStudentDataModel();
+            when(applicationContext.getBean(MembershipAdultStudentDataModel.class)).thenReturn(prototypeModel);
+            doNothing().when(modelMapper).map(dto, prototypeModel, MembershipAdultStudentCreationUseCase.MAP_NAME);
+            when(membershipRepository.findById(new MembershipDataModel.MembershipCompositeId(TENANT_ID, MEMBERSHIP_ID))).thenReturn(Optional.of(new MembershipDataModel()));
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(new CourseDataModel()));
+            when(adultStudentRepository.findById(new AdultStudentDataModel.AdultStudentCompositeId(TENANT_ID, ADULT_STUDENT_ID))).thenReturn(Optional.of(new AdultStudentDataModel()));
+            RuntimeException dbException = new RuntimeException("Database connection failed");
+            when(repository.saveAndFlush(prototypeModel)).thenThrow(dbException);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.create(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Database connection failed");
+
+            verify(repository, times(1)).saveAndFlush(prototypeModel);
+            verifyNoMoreInteractions(repository);
         }
     }
 

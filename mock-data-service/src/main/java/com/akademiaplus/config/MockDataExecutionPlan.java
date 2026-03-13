@@ -31,6 +31,8 @@ import java.util.Set;
  */
 public class MockDataExecutionPlan {
 
+    static final String ERROR_NULL_ENTITY_SET = "Requested entity set must not be null";
+
     private final List<MockEntityType> loadOrder;
     private final List<MockEntityType> cleanupOrder;
 
@@ -58,7 +60,7 @@ public class MockDataExecutionPlan {
      */
     public static MockDataExecutionPlan forEntities(Set<MockEntityType> requested) {
         if (requested == null) {
-            throw new IllegalArgumentException("Requested entity set must not be null");
+            throw new IllegalArgumentException(ERROR_NULL_ENTITY_SET);
         }
         if (requested.isEmpty()) {
             return new MockDataExecutionPlan(List.of(), List.of());

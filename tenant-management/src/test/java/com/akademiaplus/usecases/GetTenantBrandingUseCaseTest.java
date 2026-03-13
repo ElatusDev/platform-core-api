@@ -10,6 +10,7 @@ package com.akademiaplus.usecases;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.interfaceadapters.TenantBrandingRepository;
 import com.akademiaplus.tenancy.TenantBrandingDataModel;
+import com.akademiaplus.utilities.exceptions.InvalidTenantException;
 import openapi.akademiaplus.domain.tenant.management.dto.GetTenantBrandingResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,7 +24,12 @@ import org.modelmapper.ModelMapper;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("GetTenantBrandingUseCase")
 @ExtendWith(MockitoExtension.class)
@@ -97,6 +103,58 @@ class GetTenantBrandingUseCaseTest {
             verify(tenantContextHolder, times(1)).requireTenantId();
             verify(tenantBrandingRepository, times(1)).findById(TENANT_ID);
             verifyNoInteractions(modelMapper);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate InvalidTenantException when tenant context missing")
+        void shouldPropagateException_whenTenantContextMissing() {
+            // Given
+            when(tenantContextHolder.requireTenantId())
+                    .thenThrow(new InvalidTenantException());
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.get())
+                    .isInstanceOf(InvalidTenantException.class)
+                    .hasMessage(InvalidTenantException.DEFAULT_MESSAGE);
+            verifyNoInteractions(tenantBrandingRepository, modelMapper);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when repository.findById throws")
+        void shouldPropagateException_whenFindByIdThrows() {
+            // Given
+            when(tenantContextHolder.requireTenantId()).thenReturn(TENANT_ID);
+            when(tenantBrandingRepository.findById(TENANT_ID))
+                    .thenThrow(new RuntimeException("DB connection lost"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.get())
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection lost");
+            verify(tenantBrandingRepository, times(1)).findById(TENANT_ID);
+            verifyNoInteractions(modelMapper);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when modelMapper.map throws")
+        void shouldPropagateException_whenModelMapperThrows() {
+            // Given
+            TenantBrandingDataModel entity = new TenantBrandingDataModel();
+            when(tenantContextHolder.requireTenantId()).thenReturn(TENANT_ID);
+            when(tenantBrandingRepository.findById(TENANT_ID)).thenReturn(Optional.of(entity));
+            when(modelMapper.map(entity, GetTenantBrandingResponseDTO.class))
+                    .thenThrow(new RuntimeException("Mapping configuration error"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.get())
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Mapping configuration error");
+            verify(modelMapper, times(1)).map(entity, GetTenantBrandingResponseDTO.class);
         }
     }
 }

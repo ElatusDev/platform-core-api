@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 ElatusDev
+ * Copyright (c) 2026 ElatusDev
  * All rights reserved.
  *
  * This code is proprietary and confidential.
@@ -42,14 +42,14 @@ class EntityNotFoundExceptionTest {
         }
 
         @Test
-        @DisplayName("Should include entityType and entityId in message")
-        void shouldIncludeEntityTypeAndEntityIdInMessage_whenConstructed() {
+        @DisplayName("Should format message using MESSAGE_TEMPLATE with entityType and entityId")
+        void shouldFormatMessageUsingTemplate_whenConstructed() {
             // Given & When
             EntityNotFoundException exception = new EntityNotFoundException(ENTITY_TYPE, ENTITY_ID);
 
             // Then
-            assertThat(exception.getMessage()).contains(ENTITY_TYPE);
-            assertThat(exception.getMessage()).contains(ENTITY_ID);
+            assertThat(exception.getMessage())
+                    .isEqualTo(String.format(EntityNotFoundException.MESSAGE_TEMPLATE, ENTITY_TYPE, ENTITY_ID));
         }
     }
 

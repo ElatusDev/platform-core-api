@@ -28,6 +28,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -174,6 +175,82 @@ class DemoRequestControllerTest {
 
             verify(deleteDemoRequestUseCase, times(1)).delete(DEMO_REQUEST_ID);
             verifyNoMoreInteractions(deleteDemoRequestUseCase);
+            verifyNoInteractions(demoRequestCreationUseCase, getDemoRequestByIdUseCase,
+                    getAllDemoRequestsUseCase);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when create use case throws")
+        void shouldPropagateException_whenCreateUseCaseThrows() {
+            // Given
+            DemoRequestCreationRequestDTO request = new DemoRequestCreationRequestDTO();
+            request.setEmail("test@example.com");
+            RuntimeException useCaseException = new RuntimeException("Creation failed");
+            when(demoRequestCreationUseCase.create(request)).thenThrow(useCaseException);
+
+            // When / Then
+            assertThatThrownBy(() -> controller.createDemoRequest(request))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Creation failed");
+
+            verify(demoRequestCreationUseCase, times(1)).create(request);
+            verifyNoInteractions(getDemoRequestByIdUseCase, getAllDemoRequestsUseCase,
+                    deleteDemoRequestUseCase);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when get by id use case throws")
+        void shouldPropagateException_whenGetByIdUseCaseThrows() {
+            // Given
+            RuntimeException useCaseException = new RuntimeException("Not found");
+            when(getDemoRequestByIdUseCase.get(DEMO_REQUEST_ID)).thenThrow(useCaseException);
+
+            // When / Then
+            assertThatThrownBy(() -> controller.getDemoRequestById(DEMO_REQUEST_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Not found");
+
+            verify(getDemoRequestByIdUseCase, times(1)).get(DEMO_REQUEST_ID);
+            verifyNoInteractions(demoRequestCreationUseCase, getAllDemoRequestsUseCase,
+                    deleteDemoRequestUseCase);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when get all use case throws")
+        void shouldPropagateException_whenGetAllUseCaseThrows() {
+            // Given
+            RuntimeException useCaseException = new RuntimeException("DB error");
+            when(getAllDemoRequestsUseCase.getAll()).thenThrow(useCaseException);
+
+            // When / Then
+            assertThatThrownBy(() -> controller.getAllDemoRequests())
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB error");
+
+            verify(getAllDemoRequestsUseCase, times(1)).getAll();
+            verifyNoInteractions(demoRequestCreationUseCase, getDemoRequestByIdUseCase,
+                    deleteDemoRequestUseCase);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when delete use case throws")
+        void shouldPropagateException_whenDeleteUseCaseThrows() {
+            // Given
+            RuntimeException useCaseException = new RuntimeException("Delete error");
+            org.mockito.Mockito.doThrow(useCaseException)
+                    .when(deleteDemoRequestUseCase).delete(DEMO_REQUEST_ID);
+
+            // When / Then
+            assertThatThrownBy(() -> controller.deleteDemoRequest(DEMO_REQUEST_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Delete error");
+
+            verify(deleteDemoRequestUseCase, times(1)).delete(DEMO_REQUEST_ID);
             verifyNoInteractions(demoRequestCreationUseCase, getDemoRequestByIdUseCase,
                     getAllDemoRequestsUseCase);
         }

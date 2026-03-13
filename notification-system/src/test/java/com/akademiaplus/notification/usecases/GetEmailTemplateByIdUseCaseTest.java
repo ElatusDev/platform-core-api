@@ -86,8 +86,8 @@ class GetEmailTemplateByIdUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.get(TEMPLATE_ID))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining(EntityType.EMAIL_TEMPLATE)
-                    .hasMessageContaining(String.valueOf(TEMPLATE_ID));
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.EMAIL_TEMPLATE, String.valueOf(TEMPLATE_ID)));
             verify(emailTemplateRepository, times(1)).findByTemplateId(TEMPLATE_ID);
             verifyNoInteractions(modelMapper);
             verifyNoMoreInteractions(emailTemplateRepository);

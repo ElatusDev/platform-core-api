@@ -356,9 +356,12 @@ class SequentialIDGeneratorTest {
 
             // Then: should return initial value
             assertThat(generatedId).isEqualTo(INITIAL_SEQUENCE_VALUE);
+
+            ArgumentCaptor<TenantSequence> flushCaptor = ArgumentCaptor.forClass(TenantSequence.class);
             verify(repository, times(1)).findById(sequenceId);
-            verify(repository, times(1)).saveAndFlush(newSequence);
+            verify(repository, times(1)).saveAndFlush(flushCaptor.capture());
             verify(repository, times(1)).save(newSequence);
+            assertThat(flushCaptor.getValue().getNextValue()).isEqualTo(INITIAL_SEQUENCE_VALUE);
             verifyNoMoreInteractions(repository);
         }
 
@@ -556,9 +559,12 @@ class SequentialIDGeneratorTest {
 
             // Then: should return IDs starting from 1
             assertThat(ids).containsExactly(expectedIds);
+
+            ArgumentCaptor<TenantSequence> flushCaptor = ArgumentCaptor.forClass(TenantSequence.class);
             verify(repository, times(1)).findById(sequenceId);
-            verify(repository, times(1)).saveAndFlush(newSequence);
+            verify(repository, times(1)).saveAndFlush(flushCaptor.capture());
             verify(repository, times(1)).save(newSequence);
+            assertThat(flushCaptor.getValue().getNextValue()).isEqualTo(INITIAL_SEQUENCE_VALUE);
             verifyNoMoreInteractions(repository);
         }
 
@@ -677,9 +683,12 @@ class SequentialIDGeneratorTest {
 
             // Then: should return initial value
             assertThat(startId).isEqualTo(INITIAL_SEQUENCE_VALUE);
+
+            ArgumentCaptor<TenantSequence> flushCaptor = ArgumentCaptor.forClass(TenantSequence.class);
             verify(repository, times(1)).findById(sequenceId);
-            verify(repository, times(1)).saveAndFlush(newSequence);
+            verify(repository, times(1)).saveAndFlush(flushCaptor.capture());
             verify(repository, times(1)).save(newSequence);
+            assertThat(flushCaptor.getValue().getNextValue()).isEqualTo(INITIAL_SEQUENCE_VALUE);
             verifyNoMoreInteractions(repository);
         }
 

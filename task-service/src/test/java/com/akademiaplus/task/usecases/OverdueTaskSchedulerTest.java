@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -64,6 +65,27 @@ class OverdueTaskSchedulerTest {
             scheduler.markOverdueTasks();
 
             // Then
+            verify(taskRepository, times(1)).markOverdueTasks(today);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when markOverdueTasks throws")
+        void shouldPropagateException_whenMarkOverdueTasksThrows() {
+            // Given
+            LocalDate today = LocalDate.now();
+            RuntimeException dbException = new RuntimeException("DB error");
+            when(taskRepository.markOverdueTasks(today)).thenThrow(dbException);
+
+            // When / Then
+            assertThatThrownBy(() -> scheduler.markOverdueTasks())
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB error");
+
             verify(taskRepository, times(1)).markOverdueTasks(today);
         }
     }

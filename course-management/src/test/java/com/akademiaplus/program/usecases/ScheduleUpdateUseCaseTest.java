@@ -112,7 +112,8 @@ class ScheduleUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(SCHEDULE_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining(String.valueOf(SCHEDULE_ID));
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.SCHEDULE, String.valueOf(SCHEDULE_ID)));
 
             verify(tenantContextHolder, times(1)).requireTenantId();
             verify(scheduleRepository, times(1)).findById(
@@ -142,7 +143,8 @@ class ScheduleUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(SCHEDULE_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining(String.valueOf(COURSE_ID));
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.COURSE, String.valueOf(COURSE_ID)));
 
             verify(tenantContextHolder, times(1)).requireTenantId();
             verify(scheduleRepository, times(1)).findById(
@@ -151,6 +153,32 @@ class ScheduleUpdateUseCaseTest {
             verify(courseRepository, times(1)).findById(
                     new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
             verifyNoMoreInteractions(tenantContextHolder, scheduleRepository, courseRepository, modelMapper);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when scheduleRepository.saveAndFlush throws")
+        void shouldPropagateException_whenSaveAndFlushThrows() {
+            // Given
+            stubTenantId();
+            ScheduleUpdateRequestDTO dto = buildDto();
+            ScheduleDataModel existing = buildExistingSchedule();
+            stubScheduleFound(existing);
+            doNothing().when(modelMapper).map(dto, existing, ScheduleUpdateUseCase.MAP_NAME);
+            stubCourseFound();
+            when(scheduleRepository.saveAndFlush(existing))
+                    .thenThrow(new RuntimeException("DB connection lost"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.update(SCHEDULE_ID, dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection lost");
+
+            verify(scheduleRepository, times(1)).saveAndFlush(existing);
         }
     }
 

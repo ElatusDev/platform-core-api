@@ -9,6 +9,9 @@ package com.akademiaplus.task.usecases;
 
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.task.TaskDataModel;
+import com.akademiaplus.task.domain.DomainTask;
+import com.akademiaplus.task.domain.exception.TaskDueDateInPastException;
+import com.akademiaplus.task.domain.exception.TaskTitleRequiredException;
 import com.akademiaplus.task.interfaceadapters.TaskRepository;
 import openapi.akademiaplus.domain.task.service.dto.AssigneeTypeDTO;
 import openapi.akademiaplus.domain.task.service.dto.CreateTaskRequestDTO;
@@ -30,6 +33,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @DisplayName("CreateTaskUseCase")
@@ -39,6 +44,7 @@ class CreateTaskUseCaseTest {
     @Mock private TaskRepository taskRepository;
     @Mock private TenantContextHolder tenantContextHolder;
     @Mock private ApplicationContext applicationContext;
+    @Mock private DomainTask domainTask;
 
     private CreateTaskUseCase useCase;
 
@@ -51,7 +57,8 @@ class CreateTaskUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        useCase = new CreateTaskUseCase(taskRepository, tenantContextHolder, applicationContext);
+        useCase = new CreateTaskUseCase(taskRepository, tenantContextHolder,
+                applicationContext, domainTask);
     }
 
     private CreateTaskRequestDTO buildDto() {
@@ -92,6 +99,9 @@ class CreateTaskUseCaseTest {
             TaskDataModel prototypeBean = new TaskDataModel();
             TaskDataModel savedEntity = buildSavedEntity();
             when(applicationContext.getBean(TaskDataModel.class)).thenReturn(prototypeBean);
+            when(domainTask.get(prototypeBean)).thenReturn(domainTask);
+            when(domainTask.validateTitle()).thenReturn(domainTask);
+            when(domainTask.validateDueDate()).thenReturn(domainTask);
             when(taskRepository.saveAndFlush(prototypeBean)).thenReturn(savedEntity);
 
             // When
@@ -112,6 +122,9 @@ class CreateTaskUseCaseTest {
             TaskDataModel prototypeBean = new TaskDataModel();
             TaskDataModel savedEntity = buildSavedEntity();
             when(applicationContext.getBean(TaskDataModel.class)).thenReturn(prototypeBean);
+            when(domainTask.get(prototypeBean)).thenReturn(domainTask);
+            when(domainTask.validateTitle()).thenReturn(domainTask);
+            when(domainTask.validateDueDate()).thenReturn(domainTask);
             when(taskRepository.saveAndFlush(prototypeBean)).thenReturn(savedEntity);
 
             // When
@@ -134,11 +147,17 @@ class CreateTaskUseCaseTest {
             // Given
             CreateTaskRequestDTO dto = buildDto();
             dto.setTitle("  ");
+            TaskDataModel prototypeBean = new TaskDataModel();
+            when(applicationContext.getBean(TaskDataModel.class)).thenReturn(prototypeBean);
+            when(domainTask.get(prototypeBean)).thenReturn(domainTask);
+            when(domainTask.validateTitle()).thenThrow(new TaskTitleRequiredException());
 
             // When/Then
             assertThatThrownBy(() -> useCase.create(dto, USER_ID))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage(CreateTaskUseCase.ERROR_TITLE_REQUIRED);
+                    .isInstanceOf(TaskTitleRequiredException.class)
+                    .hasMessage(TaskTitleRequiredException.ERROR_MESSAGE);
+
+            verifyNoInteractions(taskRepository);
         }
 
         @Test
@@ -147,11 +166,17 @@ class CreateTaskUseCaseTest {
             // Given
             CreateTaskRequestDTO dto = buildDto();
             dto.setTitle(null);
+            TaskDataModel prototypeBean = new TaskDataModel();
+            when(applicationContext.getBean(TaskDataModel.class)).thenReturn(prototypeBean);
+            when(domainTask.get(prototypeBean)).thenReturn(domainTask);
+            when(domainTask.validateTitle()).thenThrow(new TaskTitleRequiredException());
 
             // When/Then
             assertThatThrownBy(() -> useCase.create(dto, USER_ID))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage(CreateTaskUseCase.ERROR_TITLE_REQUIRED);
+                    .isInstanceOf(TaskTitleRequiredException.class)
+                    .hasMessage(TaskTitleRequiredException.ERROR_MESSAGE);
+
+            verifyNoInteractions(taskRepository);
         }
 
         @Test
@@ -159,12 +184,64 @@ class CreateTaskUseCaseTest {
         void shouldThrow_whenDueDateInPast() {
             // Given
             CreateTaskRequestDTO dto = buildDto();
-            dto.setDueDate(LocalDate.now().minusDays(1));
+            LocalDate pastDate = LocalDate.now().minusDays(1);
+            dto.setDueDate(pastDate);
+            TaskDataModel prototypeBean = new TaskDataModel();
+            when(applicationContext.getBean(TaskDataModel.class)).thenReturn(prototypeBean);
+            when(domainTask.get(prototypeBean)).thenReturn(domainTask);
+            when(domainTask.validateTitle()).thenReturn(domainTask);
+            when(domainTask.validateDueDate()).thenThrow(new TaskDueDateInPastException(pastDate));
 
             // When/Then
             assertThatThrownBy(() -> useCase.create(dto, USER_ID))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage(CreateTaskUseCase.ERROR_DUE_DATE_IN_PAST);
+                    .isInstanceOf(TaskDueDateInPastException.class)
+                    .hasMessageContaining(TaskDueDateInPastException.ERROR_MESSAGE);
+
+            verifyNoInteractions(taskRepository);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when applicationContext.getBean throws")
+        void shouldPropagateException_whenGetBeanThrows() {
+            // Given
+            CreateTaskRequestDTO dto = buildDto();
+            RuntimeException beanException = new RuntimeException("Bean not found");
+            when(applicationContext.getBean(TaskDataModel.class)).thenThrow(beanException);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.create(dto, USER_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Bean not found");
+
+            verify(applicationContext, times(1)).getBean(TaskDataModel.class);
+            verifyNoInteractions(taskRepository, domainTask);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when saveAndFlush throws")
+        void shouldPropagateException_whenSaveAndFlushThrows() {
+            // Given
+            CreateTaskRequestDTO dto = buildDto();
+            TaskDataModel prototypeBean = new TaskDataModel();
+            RuntimeException saveException = new RuntimeException("Save failed");
+
+            when(applicationContext.getBean(TaskDataModel.class)).thenReturn(prototypeBean);
+            when(domainTask.get(prototypeBean)).thenReturn(domainTask);
+            when(domainTask.validateTitle()).thenReturn(domainTask);
+            when(domainTask.validateDueDate()).thenReturn(domainTask);
+            when(taskRepository.saveAndFlush(prototypeBean)).thenThrow(saveException);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.create(dto, USER_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Save failed");
+
+            verify(taskRepository, times(1)).saveAndFlush(prototypeBean);
         }
     }
 }

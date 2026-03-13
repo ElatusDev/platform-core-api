@@ -8,6 +8,7 @@
 package com.akademiaplus.notification.usecases;
 
 import com.akademiaplus.notification.interfaceadapters.PushDeviceRepository;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -65,8 +66,11 @@ class UnregisterPushDeviceUseCaseTest {
 
             // When & Then
             assertThatThrownBy(() -> useCase.unregister(DEVICE_TOKEN))
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.PUSH_DEVICE, DEVICE_TOKEN));
 
+            // Rule 9 — verify downstream deleteByDeviceToken was NOT called
             verify(pushDeviceRepository, times(1)).existsByDeviceToken(DEVICE_TOKEN);
             verifyNoMoreInteractions(pushDeviceRepository);
         }

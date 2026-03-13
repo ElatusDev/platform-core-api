@@ -95,11 +95,8 @@ class DeleteTenantUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(TENANT_ID))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .satisfies(ex -> {
-                        EntityNotFoundException enfe = (EntityNotFoundException) ex;
-                        assertThat(enfe.getEntityType()).isEqualTo(EntityType.TENANT);
-                        assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(TENANT_ID));
-                    });
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.TENANT, String.valueOf(TENANT_ID)));
             verify(repository, times(1)).findById(TENANT_ID);
             verifyNoMoreInteractions(repository);
         }
@@ -121,17 +118,32 @@ class DeleteTenantUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(TENANT_ID))
                     .isInstanceOf(EntityDeletionNotAllowedException.class)
-                    .satisfies(ex -> {
-                        EntityDeletionNotAllowedException edna =
-                                (EntityDeletionNotAllowedException) ex;
-                        assertThat(edna.getEntityType()).isEqualTo(EntityType.TENANT);
-                        assertThat(edna.getEntityId()).isEqualTo(String.valueOf(TENANT_ID));
-                        assertThat(edna.getReason()).isNull();
-                    });
+                    .hasMessage(String.format(EntityDeletionNotAllowedException.MESSAGE_TEMPLATE,
+                            EntityType.TENANT, String.valueOf(TENANT_ID)));
             InOrder inOrder = inOrder(repository);
             inOrder.verify(repository, times(1)).findById(TENANT_ID);
             inOrder.verify(repository, times(1)).delete(entity);
             inOrder.verifyNoMoreInteractions();
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when repository.findById throws")
+        void shouldPropagateException_whenFindByIdThrows() {
+            // Given
+            when(repository.findById(TENANT_ID))
+                    .thenThrow(new RuntimeException("DB connection lost"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.delete(TENANT_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection lost");
+            verify(repository, times(1)).findById(TENANT_ID);
+            verifyNoMoreInteractions(repository);
         }
     }
 }

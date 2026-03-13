@@ -103,11 +103,8 @@ class DeleteNotificationUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(NOTIFICATION_ID))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .satisfies(ex -> {
-                        EntityNotFoundException enfe = (EntityNotFoundException) ex;
-                        assertThat(enfe.getEntityType()).isEqualTo(EntityType.NOTIFICATION);
-                        assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(NOTIFICATION_ID));
-                    });
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.NOTIFICATION, String.valueOf(NOTIFICATION_ID)));
             verify(tenantContextHolder, times(1)).requireTenantId();
             verify(repository, times(1)).findById(compositeId);
             verifyNoMoreInteractions(repository, tenantContextHolder);
@@ -133,13 +130,8 @@ class DeleteNotificationUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(NOTIFICATION_ID))
                     .isInstanceOf(EntityDeletionNotAllowedException.class)
-                    .satisfies(ex -> {
-                        EntityDeletionNotAllowedException edna =
-                                (EntityDeletionNotAllowedException) ex;
-                        assertThat(edna.getEntityType()).isEqualTo(EntityType.NOTIFICATION);
-                        assertThat(edna.getEntityId()).isEqualTo(String.valueOf(NOTIFICATION_ID));
-                        assertThat(edna.getReason()).isNull();
-                    });
+                    .hasMessage(String.format(EntityDeletionNotAllowedException.MESSAGE_TEMPLATE,
+                            EntityType.NOTIFICATION, String.valueOf(NOTIFICATION_ID)));
             verify(tenantContextHolder, times(1)).requireTenantId();
             verify(repository, times(1)).findById(compositeId);
             verify(repository, times(1)).delete(entity);

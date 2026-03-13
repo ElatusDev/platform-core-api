@@ -29,6 +29,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ScheduleFactory implements DataFactory<ScheduleCreationRequestDTO> {
 
+    static final String ERROR_COURSE_IDS_NOT_SET =
+            "availableCourseIds must be set before generating schedules";
+
     private final ScheduleDataGenerator generator;
 
     @Setter
@@ -37,7 +40,7 @@ public class ScheduleFactory implements DataFactory<ScheduleCreationRequestDTO> 
     @Override
     public List<ScheduleCreationRequestDTO> generate(int count) {
         if (availableCourseIds.isEmpty()) {
-            throw new IllegalStateException("availableCourseIds must be set before generating schedules");
+            throw new IllegalStateException(ERROR_COURSE_IDS_NOT_SET);
         }
         List<ScheduleCreationRequestDTO> schedules = new ArrayList<>();
         for (int i = 0; i < count; i++) {

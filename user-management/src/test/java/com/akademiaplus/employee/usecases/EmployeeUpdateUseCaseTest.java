@@ -129,7 +129,8 @@ class EmployeeUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(EMPLOYEE_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessage(EntityType.EMPLOYEE + " with ID " + EMPLOYEE_ID + " not found")
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.EMPLOYEE, EMPLOYEE_ID))
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.EMPLOYEE);
@@ -320,7 +321,8 @@ class EmployeeUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(EMPLOYEE_ID, dto))
                     .isInstanceOf(DuplicateEntityException.class)
-                    .hasMessage("Duplicate " + PiiField.EMAIL + " for " + EntityType.EMPLOYEE)
+                    .hasMessage(String.format(DuplicateEntityException.MESSAGE_TEMPLATE,
+                            PiiField.EMAIL, EntityType.EMPLOYEE))
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.EMPLOYEE);
@@ -363,7 +365,8 @@ class EmployeeUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(EMPLOYEE_ID, dto))
                     .isInstanceOf(DuplicateEntityException.class)
-                    .hasMessage("Duplicate " + PiiField.PHONE_NUMBER + " for " + EntityType.EMPLOYEE)
+                    .hasMessage(String.format(DuplicateEntityException.MESSAGE_TEMPLATE,
+                            PiiField.PHONE_NUMBER, EntityType.EMPLOYEE))
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.EMPLOYEE);

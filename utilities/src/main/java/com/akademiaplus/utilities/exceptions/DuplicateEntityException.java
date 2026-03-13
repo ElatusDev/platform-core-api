@@ -18,6 +18,9 @@ package com.akademiaplus.utilities.exceptions;
  */
 public class DuplicateEntityException extends RuntimeException {
 
+    /** Message template: {@code "Duplicate %s for %s"}. */
+    public static final String MESSAGE_TEMPLATE = "Duplicate %s for %s";
+
     private final String entityType;
     private final String field;
 
@@ -29,7 +32,7 @@ public class DuplicateEntityException extends RuntimeException {
      * @param field      the field that has a duplicate value (e.g., "email", "phoneNumber")
      */
     public DuplicateEntityException(String entityType, String field) {
-        super("Duplicate " + field + " for " + entityType);
+        super(String.format(MESSAGE_TEMPLATE, field, entityType));
         this.entityType = entityType;
         this.field = field;
     }
@@ -42,7 +45,7 @@ public class DuplicateEntityException extends RuntimeException {
      * @param cause      the original {@link org.springframework.dao.DataIntegrityViolationException}
      */
     public DuplicateEntityException(String entityType, String field, Throwable cause) {
-        super("Duplicate " + field + " for " + entityType, cause);
+        super(String.format(MESSAGE_TEMPLATE, field, entityType), cause);
         this.entityType = entityType;
         this.field = field;
     }

@@ -128,7 +128,8 @@ class DataLoaderTest {
 
             // When / Then
             assertThatThrownBy(() -> dataLoader.load(count))
-                    .isInstanceOf(FailToGenerateMockDataException.class);
+                    .isInstanceOf(FailToGenerateMockDataException.class)
+                    .hasMessageContaining("DB error");
 
             // Then — interaction assertions in order: generate → transform → save (throws)
             InOrder inOrder = inOrder(factory, transformer, repository);

@@ -91,6 +91,8 @@ class GetCourseByIdUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.get(COURSE_ID))
                     .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.COURSE, String.valueOf(COURSE_ID)))
                     .satisfies(exception -> {
                         EntityNotFoundException ex = (EntityNotFoundException) exception;
                         assertThat(ex.getEntityType()).isEqualTo(EntityType.COURSE);

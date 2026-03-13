@@ -27,6 +27,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CourseEventFactory implements DataFactory<CourseEventCreateRequestDTO> {
 
+    static final String ERROR_COURSE_IDS_NOT_SET =
+            "availableCourseIds must be set before generating course events";
+    static final String ERROR_SCHEDULE_IDS_NOT_SET =
+            "availableScheduleIds must be set before generating course events";
+    static final String ERROR_COLLABORATOR_IDS_NOT_SET =
+            "availableCollaboratorIds must be set before generating course events";
+
     private final CourseEventDataGenerator generator;
 
     @Setter
@@ -41,13 +48,13 @@ public class CourseEventFactory implements DataFactory<CourseEventCreateRequestD
     @Override
     public List<CourseEventCreateRequestDTO> generate(int count) {
         if (availableCourseIds.isEmpty()) {
-            throw new IllegalStateException("availableCourseIds must be set before generating course events");
+            throw new IllegalStateException(ERROR_COURSE_IDS_NOT_SET);
         }
         if (availableScheduleIds.isEmpty()) {
-            throw new IllegalStateException("availableScheduleIds must be set before generating course events");
+            throw new IllegalStateException(ERROR_SCHEDULE_IDS_NOT_SET);
         }
         if (availableCollaboratorIds.isEmpty()) {
-            throw new IllegalStateException("availableCollaboratorIds must be set before generating course events");
+            throw new IllegalStateException(ERROR_COLLABORATOR_IDS_NOT_SET);
         }
         List<CourseEventCreateRequestDTO> events = new ArrayList<>();
         for (int i = 0; i < count; i++) {

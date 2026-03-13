@@ -3,6 +3,7 @@ package com.akademiaplus.config;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.interfaceadapters.TenantRepository;
 import com.akademiaplus.tenancy.TenantDataModel;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -306,7 +307,9 @@ class MockDataOrchestratorTest {
 
             // When / Then
             assertThatThrownBy(() -> orchestrator.generateForTenant(NON_EXISTENT_TENANT_ID, TEST_COUNT))
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.TENANT, String.valueOf(NON_EXISTENT_TENANT_ID)));
 
             // Then — interaction assertion: tenantRepository was called before the throw
             verify(tenantRepository, times(1)).findById(NON_EXISTENT_TENANT_ID);

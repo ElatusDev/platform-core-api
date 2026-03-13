@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 ElatusDev
+ * Copyright (c) 2026 ElatusDev
  * All rights reserved.
  *
  * This code is proprietary and confidential.
@@ -60,8 +60,8 @@ class DuplicateEntityExceptionTest {
         }
 
         @Test
-        @DisplayName("Should include entityType and field in message")
-        void shouldIncludeEntityTypeAndFieldInMessage_whenConstructed() {
+        @DisplayName("Should format message using MESSAGE_TEMPLATE")
+        void shouldFormatMessageUsingTemplate_whenConstructed() {
             // Given
             Throwable cause = new RuntimeException("Unique constraint violated");
 
@@ -70,8 +70,50 @@ class DuplicateEntityExceptionTest {
                     new DuplicateEntityException(ENTITY_TYPE, DUPLICATE_FIELD, cause);
 
             // Then
-            assertThat(exception.getMessage()).contains(ENTITY_TYPE);
-            assertThat(exception.getMessage()).contains(DUPLICATE_FIELD);
+            assertThat(exception.getMessage())
+                    .isEqualTo(String.format(
+                            DuplicateEntityException.MESSAGE_TEMPLATE, DUPLICATE_FIELD, ENTITY_TYPE));
+        }
+    }
+
+    @Nested
+    @DisplayName("Two-arg Constructor")
+    class TwoArgConstructor {
+
+        @Test
+        @DisplayName("Should store entityType and field correctly without cause")
+        void shouldStoreEntityTypeAndField_whenConstructedWithoutCause() {
+            // Given & When
+            DuplicateEntityException exception =
+                    new DuplicateEntityException(ENTITY_TYPE, DUPLICATE_FIELD);
+
+            // Then
+            assertThat(exception.getEntityType()).isEqualTo(ENTITY_TYPE);
+            assertThat(exception.getField()).isEqualTo(DUPLICATE_FIELD);
+        }
+
+        @Test
+        @DisplayName("Should have null cause when constructed without cause")
+        void shouldHaveNullCause_whenConstructedWithoutCause() {
+            // Given & When
+            DuplicateEntityException exception =
+                    new DuplicateEntityException(ENTITY_TYPE, DUPLICATE_FIELD);
+
+            // Then
+            assertThat(exception.getCause()).isNull();
+        }
+
+        @Test
+        @DisplayName("Should format message using MESSAGE_TEMPLATE without cause")
+        void shouldFormatMessageUsingTemplate_whenConstructedWithoutCause() {
+            // Given & When
+            DuplicateEntityException exception =
+                    new DuplicateEntityException(ENTITY_TYPE, DUPLICATE_FIELD);
+
+            // Then
+            assertThat(exception.getMessage())
+                    .isEqualTo(String.format(
+                            DuplicateEntityException.MESSAGE_TEMPLATE, DUPLICATE_FIELD, ENTITY_TYPE));
         }
     }
 

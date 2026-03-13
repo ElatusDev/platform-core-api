@@ -16,6 +16,7 @@ import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
 import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.customer.AdultStudentDataModel;
 import com.akademiaplus.users.customer.TutorDataModel;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.my.dto.MyProfileResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -133,7 +134,9 @@ class GetMyProfileUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.execute())
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.ADULT_STUDENT, PROFILE_ID.toString()));
 
             verify(adultStudentRepository, times(1)).findById(
                     new AdultStudentDataModel.AdultStudentCompositeId(TENANT_ID, PROFILE_ID));
@@ -193,7 +196,9 @@ class GetMyProfileUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.execute())
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.TUTOR, PROFILE_ID.toString()));
 
             verify(tutorRepository, times(1)).findById(
                     new TutorDataModel.TutorCompositeId(TENANT_ID, PROFILE_ID));
@@ -215,7 +220,9 @@ class GetMyProfileUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.execute())
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            GetMyProfileUseCase.ERROR_UNSUPPORTED_PROFILE_TYPE, "UNKNOWN"));
 
             verifyNoInteractions(adultStudentRepository, tutorRepository);
         }

@@ -94,8 +94,8 @@ class GetStoreTransactionByIdUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.get(STORE_TRANSACTION_ID))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasFieldOrPropertyWithValue("entityType", EntityType.STORE_TRANSACTION)
-                    .hasFieldOrPropertyWithValue("entityId", String.valueOf(STORE_TRANSACTION_ID));
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.STORE_TRANSACTION, STORE_TRANSACTION_ID));
 
             InOrder inOrder = inOrder(tenantContextHolder, storeTransactionRepository);
             inOrder.verify(tenantContextHolder, times(1)).getTenantId();
@@ -124,6 +124,56 @@ class GetStoreTransactionByIdUseCaseTest {
             verify(tenantContextHolder, times(1)).getTenantId();
             verifyNoMoreInteractions(tenantContextHolder);
             verifyNoInteractions(storeTransactionRepository, modelMapper);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when repository findById throws")
+        void shouldPropagateException_whenRepositoryFindByIdThrows() {
+            // Given
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
+            when(storeTransactionRepository.findById(
+                    new StoreTransactionDataModel.StoreTransactionCompositeId(TENANT_ID, STORE_TRANSACTION_ID)))
+                    .thenThrow(new RuntimeException("DB connection failed"));
+
+            // When & Then
+            assertThatThrownBy(() -> useCase.get(STORE_TRANSACTION_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection failed");
+
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(storeTransactionRepository, times(1)).findById(
+                    new StoreTransactionDataModel.StoreTransactionCompositeId(TENANT_ID, STORE_TRANSACTION_ID));
+            verifyNoInteractions(modelMapper);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when modelMapper throws")
+        void shouldPropagateException_whenModelMapperThrows() {
+            // Given
+            StoreTransactionDataModel transaction = new StoreTransactionDataModel();
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
+            when(storeTransactionRepository.findById(
+                    new StoreTransactionDataModel.StoreTransactionCompositeId(TENANT_ID, STORE_TRANSACTION_ID)))
+                    .thenReturn(Optional.of(transaction));
+            when(modelMapper.map(transaction, GetStoreTransactionResponseDTO.class))
+                    .thenThrow(new RuntimeException("Mapping failed"));
+
+            // When & Then
+            assertThatThrownBy(() -> useCase.get(STORE_TRANSACTION_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Mapping failed");
+
+            InOrder inOrder = inOrder(tenantContextHolder, storeTransactionRepository, modelMapper);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(storeTransactionRepository, times(1)).findById(
+                    new StoreTransactionDataModel.StoreTransactionCompositeId(TENANT_ID, STORE_TRANSACTION_ID));
+            inOrder.verify(modelMapper, times(1)).map(transaction, GetStoreTransactionResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

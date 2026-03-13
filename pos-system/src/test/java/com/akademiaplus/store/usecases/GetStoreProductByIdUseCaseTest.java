@@ -94,8 +94,8 @@ class GetStoreProductByIdUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.get(STORE_PRODUCT_ID))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasFieldOrPropertyWithValue("entityType", EntityType.STORE_PRODUCT)
-                    .hasFieldOrPropertyWithValue("entityId", String.valueOf(STORE_PRODUCT_ID));
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.STORE_PRODUCT, STORE_PRODUCT_ID));
 
             InOrder inOrder = inOrder(tenantContextHolder, storeProductRepository);
             inOrder.verify(tenantContextHolder, times(1)).getTenantId();
@@ -124,6 +124,56 @@ class GetStoreProductByIdUseCaseTest {
             verify(tenantContextHolder, times(1)).getTenantId();
             verifyNoMoreInteractions(tenantContextHolder);
             verifyNoInteractions(storeProductRepository, modelMapper);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when repository findById throws")
+        void shouldPropagateException_whenRepositoryFindByIdThrows() {
+            // Given
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
+            when(storeProductRepository.findById(
+                    new StoreProductDataModel.ProductCompositeId(TENANT_ID, STORE_PRODUCT_ID)))
+                    .thenThrow(new RuntimeException("DB connection failed"));
+
+            // When & Then
+            assertThatThrownBy(() -> useCase.get(STORE_PRODUCT_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection failed");
+
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(storeProductRepository, times(1)).findById(
+                    new StoreProductDataModel.ProductCompositeId(TENANT_ID, STORE_PRODUCT_ID));
+            verifyNoInteractions(modelMapper);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when modelMapper throws")
+        void shouldPropagateException_whenModelMapperThrows() {
+            // Given
+            StoreProductDataModel product = new StoreProductDataModel();
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
+            when(storeProductRepository.findById(
+                    new StoreProductDataModel.ProductCompositeId(TENANT_ID, STORE_PRODUCT_ID)))
+                    .thenReturn(Optional.of(product));
+            when(modelMapper.map(product, GetStoreProductResponseDTO.class))
+                    .thenThrow(new RuntimeException("Mapping failed"));
+
+            // When & Then
+            assertThatThrownBy(() -> useCase.get(STORE_PRODUCT_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Mapping failed");
+
+            InOrder inOrder = inOrder(tenantContextHolder, storeProductRepository, modelMapper);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            inOrder.verify(storeProductRepository, times(1)).findById(
+                    new StoreProductDataModel.ProductCompositeId(TENANT_ID, STORE_PRODUCT_ID));
+            inOrder.verify(modelMapper, times(1)).map(product, GetStoreProductResponseDTO.class);
+            inOrder.verifyNoMoreInteractions();
         }
     }
 }

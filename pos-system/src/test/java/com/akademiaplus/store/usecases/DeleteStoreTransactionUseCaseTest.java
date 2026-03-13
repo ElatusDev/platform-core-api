@@ -13,6 +13,7 @@ import com.akademiaplus.store.interfaceadapters.StoreTransactionRepository;
 import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.exceptions.EntityDeletionNotAllowedException;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
+import com.akademiaplus.utilities.exceptions.InvalidTenantException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -98,11 +99,8 @@ class DeleteStoreTransactionUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(STORE_TRANSACTION_ID))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .satisfies(ex -> {
-                        EntityNotFoundException enfe = (EntityNotFoundException) ex;
-                        assertThat(enfe.getEntityType()).isEqualTo(EntityType.STORE_TRANSACTION);
-                        assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(STORE_TRANSACTION_ID));
-                    });
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.STORE_TRANSACTION, STORE_TRANSACTION_ID));
 
             InOrder inOrder = inOrder(tenantContextHolder, repository);
             inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
@@ -130,18 +128,61 @@ class DeleteStoreTransactionUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(STORE_TRANSACTION_ID))
                     .isInstanceOf(EntityDeletionNotAllowedException.class)
-                    .satisfies(ex -> {
-                        EntityDeletionNotAllowedException edna =
-                                (EntityDeletionNotAllowedException) ex;
-                        assertThat(edna.getEntityType()).isEqualTo(EntityType.STORE_TRANSACTION);
-                        assertThat(edna.getEntityId()).isEqualTo(String.valueOf(STORE_TRANSACTION_ID));
-                        assertThat(edna.getReason()).isNull();
-                    });
+                    .hasMessage(String.format(EntityDeletionNotAllowedException.MESSAGE_TEMPLATE,
+                            EntityType.STORE_TRANSACTION, STORE_TRANSACTION_ID));
 
             InOrder inOrder = inOrder(tenantContextHolder, repository);
             inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
             inOrder.verify(repository, times(1)).findById(compositeId);
             inOrder.verify(repository, times(1)).delete(entity);
+            inOrder.verifyNoMoreInteractions();
+        }
+    }
+
+    @Nested
+    @DisplayName("Tenant Context")
+    class TenantContext {
+
+        @Test
+        @DisplayName("Should throw InvalidTenantException when tenant context is missing")
+        void shouldThrowInvalidTenantException_whenTenantContextMissing() {
+            // Given
+            when(tenantContextHolder.requireTenantId())
+                    .thenThrow(new InvalidTenantException());
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.delete(STORE_TRANSACTION_ID))
+                    .isInstanceOf(InvalidTenantException.class)
+                    .hasMessage(InvalidTenantException.DEFAULT_MESSAGE);
+
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verifyNoMoreInteractions(tenantContextHolder);
+            verifyNoInteractions(repository);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when repository findById throws")
+        void shouldPropagateException_whenRepositoryFindByIdThrows() {
+            // Given
+            when(tenantContextHolder.requireTenantId()).thenReturn(TENANT_ID);
+            StoreTransactionDataModel.StoreTransactionCompositeId compositeId =
+                    new StoreTransactionDataModel.StoreTransactionCompositeId(TENANT_ID, STORE_TRANSACTION_ID);
+            when(repository.findById(compositeId))
+                    .thenThrow(new RuntimeException("DB connection failed"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.delete(STORE_TRANSACTION_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection failed");
+
+            InOrder inOrder = inOrder(tenantContextHolder, repository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(repository, times(1)).findById(compositeId);
             inOrder.verifyNoMoreInteractions();
         }
     }

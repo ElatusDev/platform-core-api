@@ -91,6 +91,8 @@ class GetScheduleByIdUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.get(SCHEDULE_ID))
                     .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.SCHEDULE, String.valueOf(SCHEDULE_ID)))
                     .satisfies(exception -> {
                         EntityNotFoundException ex = (EntityNotFoundException) exception;
                         assertThat(ex.getEntityType()).isEqualTo(EntityType.SCHEDULE);

@@ -147,4 +147,38 @@ class StoreTransactionControllerTest {
                     getAllStoreTransactionsUseCase);
         }
     }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should return 500 when getAllStoreTransactionsUseCase throws RuntimeException")
+        void shouldReturn500_whenGetAllUseCaseThrows() throws Exception {
+            // Given
+            when(getAllStoreTransactionsUseCase.getAll())
+                    .thenThrow(new RuntimeException("Unexpected error"));
+
+            // When & Then
+            mockMvc.perform(get(BASE_PATH).accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isInternalServerError());
+
+            verify(getAllStoreTransactionsUseCase, times(1)).getAll();
+        }
+
+        @Test
+        @DisplayName("Should return 500 when getStoreTransactionByIdUseCase throws RuntimeException")
+        void shouldReturn500_whenGetByIdUseCaseThrows() throws Exception {
+            // Given
+            when(getStoreTransactionByIdUseCase.get(STORE_TRANSACTION_ID))
+                    .thenThrow(new RuntimeException("Unexpected error"));
+
+            // When & Then
+            mockMvc.perform(get(BASE_PATH + "/{storeTransactionId}", STORE_TRANSACTION_ID)
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isInternalServerError());
+
+            verify(getStoreTransactionByIdUseCase, times(1)).get(STORE_TRANSACTION_ID);
+        }
+    }
 }

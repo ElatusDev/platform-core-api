@@ -23,6 +23,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.context.ApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @DisplayName("CompensationCreationUseCase")
@@ -144,6 +145,31 @@ class CompensationCreationUseCaseTest {
             inOrder.verify(compensationRepository, times(1)).saveAndFlush(prototypeModel);
             inOrder.verify(modelMapper, times(1)).map(savedModel, CompensationCreationResponseDTO.class);
             inOrder.verifyNoMoreInteractions();
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator exception propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when repository saveAndFlush throws")
+        void shouldPropagateException_whenRepositorySaveAndFlushThrows() {
+            // Given
+            CompensationCreationRequestDTO dto = buildDto();
+            CompensationDataModel prototypeModel = new CompensationDataModel();
+            when(applicationContext.getBean(CompensationDataModel.class)).thenReturn(prototypeModel);
+            doNothing().when(modelMapper).map(dto, prototypeModel, CompensationCreationUseCase.MAP_NAME);
+            RuntimeException dbException = new RuntimeException("Database connection failed");
+            when(compensationRepository.saveAndFlush(prototypeModel)).thenThrow(dbException);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.create(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Database connection failed");
+
+            verify(compensationRepository, times(1)).saveAndFlush(prototypeModel);
+            verifyNoMoreInteractions(compensationRepository);
         }
     }
 }

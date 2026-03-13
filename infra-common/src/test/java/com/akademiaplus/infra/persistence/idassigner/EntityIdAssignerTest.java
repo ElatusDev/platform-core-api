@@ -439,6 +439,71 @@ class EntityIdAssignerTest {
         }
 
         @Test
+        @DisplayName("Should throw IdAssignmentException when ID generation strategy fails")
+        void shouldThrowIdAssignmentException_whenIdGenerationStrategyFails() throws Exception {
+            // Given
+            RuntimeException strategyException = new RuntimeException("Strategy failed");
+
+            when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
+            when(metadata.isSkip()).thenReturn(false);
+            when(metadata.getGetter()).thenReturn(getter);
+            when(getter.invoke(entity)).thenReturn(null);
+            when(idGenerationStrategy.shouldGenerateId(null)).thenThrow(strategyException);
+
+            // When / Then
+            String expectedMessage = String.format(
+                    EntityIdAssigner.ERROR_CANNOT_GENERATE_ID.replace("{}", "%s"), TEST_ENTITY_NAME);
+            assertThatThrownBy(() -> assigner.assignIdIfNeeded(entity, event))
+                    .isInstanceOf(IdAssignmentException.class)
+                    .hasMessage(expectedMessage)
+                    .hasCause(strategyException);
+
+            // Verify cutoff: everything after strategy not called
+            InOrder inOrder = inOrder(metadataResolver, metadata, getter, idGenerationStrategy);
+            inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
+            inOrder.verify(metadata, times(1)).isSkip();
+            inOrder.verify(metadata, times(1)).getGetter();
+            inOrder.verify(getter, times(1)).invoke(entity);
+            inOrder.verify(idGenerationStrategy, times(1)).shouldGenerateId(null);
+            verifyNoInteractions(idGenerator, tenantContextHolder, setter, hibernateStateUpdater);
+            verifyNoMoreInteractions(metadataResolver, idGenerationStrategy, event, metadata, getter);
+        }
+
+        @Test
+        @DisplayName("Should throw IdAssignmentException when tenant context holder fails")
+        void shouldThrowIdAssignmentException_whenTenantContextHolderFails() throws Exception {
+            // Given
+            RuntimeException tenantException = new RuntimeException("Tenant context failed");
+
+            when(metadataResolver.resolve(TestEntity.class)).thenReturn(metadata);
+            when(metadata.isSkip()).thenReturn(false);
+            when(metadata.getGetter()).thenReturn(getter);
+            when(getter.invoke(entity)).thenReturn(null);
+            when(idGenerationStrategy.shouldGenerateId(null)).thenReturn(true);
+            when(tenantContextHolder.getTenantId()).thenThrow(tenantException);
+
+            // When / Then
+            String expectedMessage = String.format(
+                    EntityIdAssigner.ERROR_CANNOT_GENERATE_ID.replace("{}", "%s"), TEST_ENTITY_NAME);
+            assertThatThrownBy(() -> assigner.assignIdIfNeeded(entity, event))
+                    .isInstanceOf(IdAssignmentException.class)
+                    .hasMessage(expectedMessage)
+                    .hasCause(tenantException);
+
+            // Verify cutoff: everything after tenant context not called
+            InOrder inOrder = inOrder(metadataResolver, metadata, getter, idGenerationStrategy, tenantContextHolder);
+            inOrder.verify(metadataResolver, times(1)).resolve(TestEntity.class);
+            inOrder.verify(metadata, times(1)).isSkip();
+            inOrder.verify(metadata, times(1)).getGetter();
+            inOrder.verify(getter, times(1)).invoke(entity);
+            inOrder.verify(idGenerationStrategy, times(1)).shouldGenerateId(null);
+            inOrder.verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoInteractions(idGenerator, setter, hibernateStateUpdater);
+            verifyNoMoreInteractions(metadataResolver, tenantContextHolder,
+                    idGenerationStrategy, event, metadata, getter);
+        }
+
+        @Test
         @DisplayName("Should throw IdAssignmentException when hibernate state updater fails")
         void shouldThrowIdAssignmentException_whenHibernateStateUpdaterFails() throws Exception {
             // Given

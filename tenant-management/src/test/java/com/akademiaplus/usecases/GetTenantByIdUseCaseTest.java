@@ -99,14 +99,47 @@ class GetTenantByIdUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.get(TENANT_ID))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .satisfies(ex -> {
-                        EntityNotFoundException enfe = (EntityNotFoundException) ex;
-                        assertThat(enfe.getEntityType()).isEqualTo(EntityType.TENANT);
-                        assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(TENANT_ID));
-                    });
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.TENANT, String.valueOf(TENANT_ID)));
             verify(tenantRepository, times(1)).findById(TENANT_ID);
             verifyNoInteractions(modelMapper);
             verifyNoMoreInteractions(tenantRepository);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when repository.findById throws")
+        void shouldPropagateException_whenFindByIdThrows() {
+            // Given
+            when(tenantRepository.findById(TENANT_ID))
+                    .thenThrow(new RuntimeException("DB connection lost"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.get(TENANT_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection lost");
+            verify(tenantRepository, times(1)).findById(TENANT_ID);
+            verifyNoInteractions(modelMapper);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when modelMapper.map throws")
+        void shouldPropagateException_whenModelMapperThrows() {
+            // Given
+            TenantDataModel entity = new TenantDataModel();
+            when(tenantRepository.findById(TENANT_ID)).thenReturn(Optional.of(entity));
+            when(modelMapper.map(entity, TenantDetailsDTO.class))
+                    .thenThrow(new RuntimeException("Mapping configuration error"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.get(TENANT_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Mapping configuration error");
+            verify(modelMapper, times(1)).map(entity, TenantDetailsDTO.class);
         }
     }
 }

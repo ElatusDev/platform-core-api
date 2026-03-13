@@ -172,7 +172,8 @@ class EmployeeCreationUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.create(dto))
                     .isInstanceOf(DuplicateEntityException.class)
-                    .hasMessage("Duplicate " + PiiField.EMAIL + " for " + EntityType.EMPLOYEE)
+                    .hasMessage(String.format(DuplicateEntityException.MESSAGE_TEMPLATE,
+                            PiiField.EMAIL, EntityType.EMPLOYEE))
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.EMPLOYEE);
@@ -198,7 +199,8 @@ class EmployeeCreationUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.create(dto))
                     .isInstanceOf(DuplicateEntityException.class)
-                    .hasMessage("Duplicate " + PiiField.PHONE_NUMBER + " for " + EntityType.EMPLOYEE)
+                    .hasMessage(String.format(DuplicateEntityException.MESSAGE_TEMPLATE,
+                            PiiField.PHONE_NUMBER, EntityType.EMPLOYEE))
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.EMPLOYEE);

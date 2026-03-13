@@ -16,6 +16,7 @@ import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
 import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.customer.AdultStudentDataModel;
 import com.akademiaplus.users.customer.TutorDataModel;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import com.akademiaplus.utilities.security.HashingService;
 import com.akademiaplus.utilities.security.PiiNormalizer;
@@ -176,7 +177,9 @@ class UpdateMyProfileUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.execute(request))
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.ADULT_STUDENT, PROFILE_ID.toString()));
 
             verifyNoInteractions(tutorRepository, piiNormalizer, hashingService);
         }
@@ -237,7 +240,9 @@ class UpdateMyProfileUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.execute(request))
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            UpdateMyProfileUseCase.ERROR_UNSUPPORTED_PROFILE_TYPE, "UNKNOWN"));
 
             verifyNoInteractions(adultStudentRepository, tutorRepository, piiNormalizer, hashingService);
         }

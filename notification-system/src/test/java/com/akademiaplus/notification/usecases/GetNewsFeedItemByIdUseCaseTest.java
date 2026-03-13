@@ -26,7 +26,11 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("GetNewsFeedItemByIdUseCase")
 @ExtendWith(MockitoExtension.class)
@@ -92,8 +96,15 @@ class GetNewsFeedItemByIdUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.get(NEWS_FEED_ITEM_ID))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasFieldOrPropertyWithValue("entityType", EntityType.NEWS_FEED_ITEM)
-                    .hasFieldOrPropertyWithValue("entityId", String.valueOf(NEWS_FEED_ITEM_ID));
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.NEWS_FEED_ITEM, String.valueOf(NEWS_FEED_ITEM_ID)));
+
+            // Rule 9 — verify downstream modelMapper was NOT called
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verify(newsFeedItemRepository, times(1)).findById(
+                    new NewsFeedItemDataModel.NewsFeedItemCompositeId(TENANT_ID, NEWS_FEED_ITEM_ID));
+            verifyNoInteractions(modelMapper);
+            verifyNoMoreInteractions(tenantContextHolder, newsFeedItemRepository);
         }
     }
 
@@ -111,6 +122,11 @@ class GetNewsFeedItemByIdUseCaseTest {
             assertThatThrownBy(() -> useCase.get(NEWS_FEED_ITEM_ID))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(GetNewsFeedItemByIdUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
+
+            // Rule 9 — verify downstream mocks were NOT called
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoInteractions(newsFeedItemRepository, modelMapper);
+            verifyNoMoreInteractions(tenantContextHolder);
         }
     }
 }

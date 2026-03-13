@@ -201,7 +201,8 @@ class EmailDeliveryManagementUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.getDeliveryById(DELIVERY_ID))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining(String.valueOf(DELIVERY_ID));
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.NOTIFICATION_DELIVERY, String.valueOf(DELIVERY_ID)));
             verify(notificationDeliveryRepository, times(1)).findByNotificationDeliveryId(DELIVERY_ID);
             verifyNoInteractions(modelMapper);
             verifyNoMoreInteractions(applicationContext, notificationDeliveryRepository,
@@ -298,8 +299,9 @@ class EmailDeliveryManagementUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.retryDelivery(DELIVERY_ID, notification))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining(String.valueOf(DELIVERY_ID))
-                    .hasMessageContaining(DeliveryStatus.SENT.name());
+                    .hasMessage(String.format(
+                            EmailDeliveryManagementUseCase.ERROR_NOT_RETRYABLE,
+                            DELIVERY_ID, DeliveryStatus.SENT));
             verify(notificationDeliveryRepository, times(1)).findByNotificationDeliveryId(DELIVERY_ID);
             verifyNoInteractions(emailDeliveryChannelStrategy, modelMapper);
             verifyNoMoreInteractions(applicationContext, notificationDeliveryRepository, tenantContextHolder);

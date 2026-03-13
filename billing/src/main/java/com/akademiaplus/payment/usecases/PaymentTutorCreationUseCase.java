@@ -33,6 +33,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PaymentTutorCreationUseCase {
     public static final String MAP_NAME = "paymentTutorMap";
+    public static final String ERROR_TENANT_CONTEXT_REQUIRED = "Tenant context is required";
+    public static final String ERROR_MEMBERSHIP_TUTOR_NOT_FOUND = "MembershipTutor not found: ";
 
     private final ApplicationContext applicationContext;
     private final PaymentTutorRepository paymentRepository;
@@ -52,12 +54,12 @@ public class PaymentTutorCreationUseCase {
         modelMapper.map(dto, model, MAP_NAME);
 
         Long tenantId = tenantContextHolder.getTenantId()
-                .orElseThrow(() -> new IllegalArgumentException("Tenant context is required"));
+                .orElseThrow(() -> new IllegalArgumentException(ERROR_TENANT_CONTEXT_REQUIRED));
         MembershipTutorDataModel membershipTutor =
                 membershipTutorRepository.findById(
                                 new MembershipTutorDataModel.MembershipTutorCompositeId(tenantId, dto.getMembershipTutorId()))
                         .orElseThrow(() -> new IllegalArgumentException(
-                                "MembershipTutor not found: " + dto.getMembershipTutorId()));
+                                ERROR_MEMBERSHIP_TUTOR_NOT_FOUND + dto.getMembershipTutorId()));
         model.setMembershipTutor(membershipTutor);
 
         return model;

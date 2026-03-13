@@ -74,7 +74,7 @@ class PaymentTutorFactoryTest {
             // Given & When & Then
             assertThatThrownBy(() -> factory.generate(1))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("availableMembershipTutorIds must be set");
+                    .hasMessage(PaymentTutorFactory.ERROR_MEMBERSHIP_TUTOR_IDS_NOT_SET);
         }
     }
 

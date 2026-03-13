@@ -97,6 +97,8 @@ class DeleteCourseEventUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(COURSE_EVENT_ID))
                     .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.COURSE_EVENT, String.valueOf(COURSE_EVENT_ID)))
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.COURSE_EVENT);
@@ -128,6 +130,8 @@ class DeleteCourseEventUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(COURSE_EVENT_ID))
                     .isInstanceOf(EntityDeletionNotAllowedException.class)
+                    .hasMessage(String.format(EntityDeletionNotAllowedException.MESSAGE_TEMPLATE,
+                            EntityType.COURSE_EVENT, String.valueOf(COURSE_EVENT_ID)))
                     .satisfies(ex -> {
                         EntityDeletionNotAllowedException edna =
                                 (EntityDeletionNotAllowedException) ex;

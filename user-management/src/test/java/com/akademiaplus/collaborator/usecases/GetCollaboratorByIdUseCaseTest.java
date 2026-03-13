@@ -96,6 +96,8 @@ class GetCollaboratorByIdUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.get(COLLABORATOR_ID))
                     .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.COLLABORATOR, COLLABORATOR_ID))
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.COLLABORATOR);

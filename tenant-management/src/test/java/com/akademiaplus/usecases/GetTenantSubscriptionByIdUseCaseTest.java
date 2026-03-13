@@ -109,11 +109,8 @@ class GetTenantSubscriptionByIdUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.get(SUBSCRIPTION_ID))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .satisfies(ex -> {
-                        EntityNotFoundException enfe = (EntityNotFoundException) ex;
-                        assertThat(enfe.getEntityType()).isEqualTo(EntityType.TENANT_SUBSCRIPTION);
-                        assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(SUBSCRIPTION_ID));
-                    });
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.TENANT_SUBSCRIPTION, String.valueOf(SUBSCRIPTION_ID)));
             verify(tenantContextHolder, times(1)).getTenantId();
             verify(tenantSubscriptionRepository, times(1)).findById(compositeId);
             verifyNoInteractions(modelMapper);
@@ -138,6 +135,63 @@ class GetTenantSubscriptionByIdUseCaseTest {
             verify(tenantContextHolder, times(1)).getTenantId();
             verifyNoInteractions(tenantSubscriptionRepository, modelMapper);
             verifyNoMoreInteractions(tenantContextHolder);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when tenantContextHolder.getTenantId throws")
+        void shouldPropagateException_whenGetTenantIdThrows() {
+            // Given
+            when(tenantContextHolder.getTenantId())
+                    .thenThrow(new RuntimeException("Thread-local corrupted"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.get(SUBSCRIPTION_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Thread-local corrupted");
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoInteractions(tenantSubscriptionRepository, modelMapper);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when repository.findById throws")
+        void shouldPropagateException_whenFindByIdThrows() {
+            // Given
+            TenantSubscriptionDataModel.TenantSubscriptionCompositeId compositeId =
+                    new TenantSubscriptionDataModel.TenantSubscriptionCompositeId(TENANT_ID, SUBSCRIPTION_ID);
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
+            when(tenantSubscriptionRepository.findById(compositeId))
+                    .thenThrow(new RuntimeException("DB connection lost"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.get(SUBSCRIPTION_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection lost");
+            verify(tenantSubscriptionRepository, times(1)).findById(compositeId);
+            verifyNoInteractions(modelMapper);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when modelMapper.map throws")
+        void shouldPropagateException_whenModelMapperThrows() {
+            // Given
+            TenantSubscriptionDataModel entity = new TenantSubscriptionDataModel();
+            TenantSubscriptionDataModel.TenantSubscriptionCompositeId compositeId =
+                    new TenantSubscriptionDataModel.TenantSubscriptionCompositeId(TENANT_ID, SUBSCRIPTION_ID);
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
+            when(tenantSubscriptionRepository.findById(compositeId)).thenReturn(Optional.of(entity));
+            when(modelMapper.map(entity, TenantSubscriptionDTO.class))
+                    .thenThrow(new RuntimeException("Mapping configuration error"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.get(SUBSCRIPTION_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Mapping configuration error");
+            verify(modelMapper, times(1)).map(entity, TenantSubscriptionDTO.class);
         }
     }
 }

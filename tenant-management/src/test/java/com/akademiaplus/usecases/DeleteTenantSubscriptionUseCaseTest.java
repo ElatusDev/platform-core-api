@@ -13,6 +13,7 @@ import com.akademiaplus.tenancy.TenantSubscriptionDataModel;
 import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.exceptions.EntityDeletionNotAllowedException;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
+import com.akademiaplus.utilities.exceptions.InvalidTenantException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -102,11 +103,8 @@ class DeleteTenantSubscriptionUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(TENANT_SUBSCRIPTION_ID))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .satisfies(ex -> {
-                        EntityNotFoundException enfe = (EntityNotFoundException) ex;
-                        assertThat(enfe.getEntityType()).isEqualTo(EntityType.TENANT_SUBSCRIPTION);
-                        assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(TENANT_SUBSCRIPTION_ID));
-                    });
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.TENANT_SUBSCRIPTION, String.valueOf(TENANT_SUBSCRIPTION_ID)));
             InOrder inOrder = inOrder(tenantContextHolder, repository);
             inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
             inOrder.verify(repository, times(1)).findById(compositeId);
@@ -133,17 +131,51 @@ class DeleteTenantSubscriptionUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(TENANT_SUBSCRIPTION_ID))
                     .isInstanceOf(EntityDeletionNotAllowedException.class)
-                    .satisfies(ex -> {
-                        EntityDeletionNotAllowedException edna =
-                                (EntityDeletionNotAllowedException) ex;
-                        assertThat(edna.getEntityType()).isEqualTo(EntityType.TENANT_SUBSCRIPTION);
-                        assertThat(edna.getEntityId()).isEqualTo(String.valueOf(TENANT_SUBSCRIPTION_ID));
-                        assertThat(edna.getReason()).isNull();
-                    });
+                    .hasMessage(String.format(EntityDeletionNotAllowedException.MESSAGE_TEMPLATE,
+                            EntityType.TENANT_SUBSCRIPTION, String.valueOf(TENANT_SUBSCRIPTION_ID)));
             InOrder inOrder = inOrder(tenantContextHolder, repository);
             inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
             inOrder.verify(repository, times(1)).findById(compositeId);
             inOrder.verify(repository, times(1)).delete(entity);
+            inOrder.verifyNoMoreInteractions();
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate InvalidTenantException when tenant context missing")
+        void shouldPropagateException_whenTenantContextMissing() {
+            // Given
+            when(tenantContextHolder.requireTenantId())
+                    .thenThrow(new InvalidTenantException());
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.delete(TENANT_SUBSCRIPTION_ID))
+                    .isInstanceOf(InvalidTenantException.class)
+                    .hasMessage(InvalidTenantException.DEFAULT_MESSAGE);
+            verifyNoInteractions(repository);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when repository.findById throws")
+        void shouldPropagateException_whenFindByIdThrows() {
+            // Given
+            when(tenantContextHolder.requireTenantId()).thenReturn(TENANT_ID);
+            TenantSubscriptionDataModel.TenantSubscriptionCompositeId compositeId =
+                    new TenantSubscriptionDataModel.TenantSubscriptionCompositeId(TENANT_ID, TENANT_SUBSCRIPTION_ID);
+            when(repository.findById(compositeId))
+                    .thenThrow(new RuntimeException("DB connection lost"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.delete(TENANT_SUBSCRIPTION_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection lost");
+            InOrder inOrder = inOrder(tenantContextHolder, repository);
+            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
+            inOrder.verify(repository, times(1)).findById(compositeId);
             inOrder.verifyNoMoreInteractions();
         }
     }

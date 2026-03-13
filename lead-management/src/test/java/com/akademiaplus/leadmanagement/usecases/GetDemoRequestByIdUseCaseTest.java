@@ -9,6 +9,7 @@ package com.akademiaplus.leadmanagement.usecases;
 
 import com.akademiaplus.leadmanagement.DemoRequestDataModel;
 import com.akademiaplus.leadmanagement.interfaceadapters.DemoRequestRepository;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.lead.management.dto.GetDemoRequestResponseDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -101,11 +102,57 @@ class GetDemoRequestByIdUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.get(DEMO_REQUEST_ID))
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.DEMO_REQUEST, DEMO_REQUEST_ID.toString()));
 
             verify(demoRequestRepository, times(1)).findById(DEMO_REQUEST_ID);
             verifyNoMoreInteractions(demoRequestRepository);
             verifyNoInteractions(modelMapper);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when findById throws")
+        void shouldPropagateException_whenFindByIdThrows() {
+            // Given
+            RuntimeException dbException = new RuntimeException("DB connection failed");
+            when(demoRequestRepository.findById(DEMO_REQUEST_ID)).thenThrow(dbException);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.get(DEMO_REQUEST_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection failed");
+
+            verify(demoRequestRepository, times(1)).findById(DEMO_REQUEST_ID);
+            verifyNoMoreInteractions(demoRequestRepository);
+            verifyNoInteractions(modelMapper);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when modelMapper throws")
+        void shouldPropagateException_whenModelMapperThrows() {
+            // Given
+            DemoRequestDataModel model = new DemoRequestDataModel();
+            model.setDemoRequestId(DEMO_REQUEST_ID);
+            RuntimeException mapException = new RuntimeException("Mapping failed");
+
+            when(demoRequestRepository.findById(DEMO_REQUEST_ID))
+                    .thenReturn(Optional.of(model));
+            when(modelMapper.map(model, GetDemoRequestResponseDTO.class))
+                    .thenThrow(mapException);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.get(DEMO_REQUEST_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Mapping failed");
+
+            verify(demoRequestRepository, times(1)).findById(DEMO_REQUEST_ID);
+            verify(modelMapper, times(1)).map(model, GetDemoRequestResponseDTO.class);
         }
     }
 }

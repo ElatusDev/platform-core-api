@@ -20,6 +20,7 @@ import com.akademiaplus.program.interfaceadapters.ScheduleRepository;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
 import com.akademiaplus.users.customer.AdultStudentDataModel;
 import com.akademiaplus.users.customer.MinorStudentDataModel;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.course.management.dto.CourseEventUpdateRequestDTO;
 import openapi.akademiaplus.domain.course.management.dto.CourseEventUpdateResponseDTO;
@@ -166,7 +167,8 @@ class CourseEventUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(COURSE_EVENT_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining(String.valueOf(COURSE_EVENT_ID));
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.COURSE_EVENT, String.valueOf(COURSE_EVENT_ID)));
 
             verify(tenantContextHolder, times(1)).requireTenantId();
             verify(courseEventRepository, times(1)).findById(
@@ -197,7 +199,8 @@ class CourseEventUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(COURSE_EVENT_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining(String.valueOf(COURSE_ID));
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.COURSE, String.valueOf(COURSE_ID)));
 
             verify(tenantContextHolder, times(1)).requireTenantId();
             verify(courseEventRepository, times(1)).findById(
@@ -232,7 +235,8 @@ class CourseEventUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(COURSE_EVENT_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining(String.valueOf(INSTRUCTOR_ID));
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.COLLABORATOR, String.valueOf(INSTRUCTOR_ID)));
 
             verify(tenantContextHolder, times(1)).requireTenantId();
             verify(courseEventRepository, times(1)).findById(
@@ -270,7 +274,8 @@ class CourseEventUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(COURSE_EVENT_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining(String.valueOf(SCHEDULE_ID));
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.SCHEDULE, String.valueOf(SCHEDULE_ID)));
 
             verify(tenantContextHolder, times(1)).requireTenantId();
             verify(courseEventRepository, times(1)).findById(
@@ -315,7 +320,8 @@ class CourseEventUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(COURSE_EVENT_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining(String.valueOf(ADULT_ATTENDEE_ID_2));
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.ADULT_STUDENT, String.valueOf(ADULT_ATTENDEE_ID_2)));
 
             verify(tenantContextHolder, times(1)).requireTenantId();
             verify(courseEventRepository, times(1)).findById(
@@ -357,7 +363,8 @@ class CourseEventUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(COURSE_EVENT_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining(String.valueOf(MINOR_ATTENDEE_ID_2));
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.MINOR_STUDENT, String.valueOf(MINOR_ATTENDEE_ID_2)));
 
             verify(tenantContextHolder, times(1)).requireTenantId();
             verify(courseEventRepository, times(1)).findById(
@@ -424,6 +431,36 @@ class CourseEventUpdateUseCaseTest {
                     new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID));
             inOrder.verify(courseEventRepository, times(1)).saveAndFlush(existing);
             inOrder.verifyNoMoreInteractions();
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when courseEventRepository.saveAndFlush throws")
+        void shouldPropagateException_whenSaveAndFlushThrows() {
+            // Given
+            stubTenantId();
+            CourseEventUpdateRequestDTO dto = buildDto();
+            CourseEventDataModel existing = buildExistingEvent();
+            stubEventFound(existing);
+            doNothing().when(modelMapper).map(dto, existing, CourseEventUpdateUseCase.MAP_NAME);
+            stubCourseFound();
+            stubCollaboratorFound();
+            stubScheduleFound();
+            stubAdultAttendeesFound();
+            stubMinorAttendeesFound();
+            when(courseEventRepository.saveAndFlush(existing))
+                    .thenThrow(new RuntimeException("DB connection lost"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.update(COURSE_EVENT_ID, dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection lost");
+
+            verify(courseEventRepository, times(1)).saveAndFlush(existing);
         }
     }
 }

@@ -149,7 +149,8 @@ class TutorUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(TUTOR_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessage(EntityType.TUTOR + " with ID " + TUTOR_ID + " not found")
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.TUTOR, TUTOR_ID))
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.TUTOR);
@@ -342,7 +343,8 @@ class TutorUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(TUTOR_ID, dto))
                     .isInstanceOf(DuplicateEntityException.class)
-                    .hasMessage("Duplicate " + PiiField.EMAIL + " for " + EntityType.TUTOR)
+                    .hasMessage(String.format(DuplicateEntityException.MESSAGE_TEMPLATE,
+                            PiiField.EMAIL, EntityType.TUTOR))
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.TUTOR);
@@ -386,7 +388,8 @@ class TutorUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(TUTOR_ID, dto))
                     .isInstanceOf(DuplicateEntityException.class)
-                    .hasMessage("Duplicate " + PiiField.PHONE_NUMBER + " for " + EntityType.TUTOR)
+                    .hasMessage(String.format(DuplicateEntityException.MESSAGE_TEMPLATE,
+                            PiiField.PHONE_NUMBER, EntityType.TUTOR))
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.TUTOR);

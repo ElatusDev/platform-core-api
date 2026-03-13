@@ -96,6 +96,8 @@ class GetAdultStudentByIdUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.get(ADULT_STUDENT_ID))
                     .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.ADULT_STUDENT, ADULT_STUDENT_ID))
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.ADULT_STUDENT);

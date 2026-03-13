@@ -93,7 +93,8 @@ class GetTutorByIdUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.get(TUTOR_ID))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessage(EntityType.TUTOR + " with ID " + TUTOR_ID + " not found")
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.TUTOR, TUTOR_ID))
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.TUTOR);

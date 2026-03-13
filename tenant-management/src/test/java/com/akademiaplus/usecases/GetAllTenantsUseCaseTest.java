@@ -24,9 +24,11 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
@@ -94,6 +96,42 @@ class GetAllTenantsUseCaseTest {
             assertThat(result).isEmpty();
             verify(tenantRepository, times(1)).findAll();
             verifyNoMoreInteractions(tenantRepository, modelMapper);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when repository.findAll throws")
+        void shouldPropagateException_whenFindAllThrows() {
+            // Given
+            when(tenantRepository.findAll())
+                    .thenThrow(new RuntimeException("DB connection lost"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.getAll())
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection lost");
+            verify(tenantRepository, times(1)).findAll();
+            verifyNoInteractions(modelMapper);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when modelMapper.map throws")
+        void shouldPropagateException_whenModelMapperThrows() {
+            // Given
+            TenantDataModel entity = new TenantDataModel();
+            when(tenantRepository.findAll()).thenReturn(List.of(entity));
+            when(modelMapper.map(entity, TenantDTO.class))
+                    .thenThrow(new RuntimeException("Mapping configuration error"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.getAll())
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Mapping configuration error");
+            verify(modelMapper, times(1)).map(entity, TenantDTO.class);
         }
     }
 }

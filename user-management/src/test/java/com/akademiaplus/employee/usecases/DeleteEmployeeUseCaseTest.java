@@ -99,7 +99,8 @@ class DeleteEmployeeUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(EMPLOYEE_ID))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessage(EntityType.EMPLOYEE + " with ID " + EMPLOYEE_ID + " not found")
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.EMPLOYEE, EMPLOYEE_ID))
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.EMPLOYEE);
@@ -132,7 +133,8 @@ class DeleteEmployeeUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(EMPLOYEE_ID))
                     .isInstanceOf(EntityDeletionNotAllowedException.class)
-                    .hasMessage("Deletion of " + EntityType.EMPLOYEE + " with ID " + EMPLOYEE_ID + " not allowed")
+                    .hasMessage(String.format(EntityDeletionNotAllowedException.MESSAGE_TEMPLATE,
+                            EntityType.EMPLOYEE, EMPLOYEE_ID))
                     .satisfies(ex -> {
                         EntityDeletionNotAllowedException edna =
                                 (EntityDeletionNotAllowedException) ex;

@@ -128,7 +128,8 @@ class MagicLinkVerificationUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.verifyMagicLink(dto))
-                    .isInstanceOf(MagicLinkTokenNotFoundException.class);
+                    .isInstanceOf(MagicLinkTokenNotFoundException.class)
+                    .hasMessage(MagicLinkTokenNotFoundException.ERROR_TOKEN_NOT_FOUND);
 
             InOrder inOrder = inOrder(tenantContextHolder, hashingService, magicLinkTokenRepository);
             inOrder.verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
@@ -150,7 +151,8 @@ class MagicLinkVerificationUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.verifyMagicLink(dto))
-                    .isInstanceOf(MagicLinkTokenAlreadyUsedException.class);
+                    .isInstanceOf(MagicLinkTokenAlreadyUsedException.class)
+                    .hasMessage(MagicLinkTokenAlreadyUsedException.ERROR_TOKEN_ALREADY_USED);
 
             InOrder inOrder = inOrder(tenantContextHolder, hashingService, magicLinkTokenRepository);
             inOrder.verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
@@ -172,7 +174,8 @@ class MagicLinkVerificationUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.verifyMagicLink(dto))
-                    .isInstanceOf(MagicLinkTokenExpiredException.class);
+                    .isInstanceOf(MagicLinkTokenExpiredException.class)
+                    .hasMessage(MagicLinkTokenExpiredException.ERROR_TOKEN_EXPIRED);
 
             InOrder inOrder = inOrder(tenantContextHolder, hashingService, magicLinkTokenRepository);
             inOrder.verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);

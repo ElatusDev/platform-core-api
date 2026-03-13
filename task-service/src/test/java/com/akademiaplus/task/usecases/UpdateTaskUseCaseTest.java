@@ -11,6 +11,7 @@ import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.task.TaskDataModel;
 import com.akademiaplus.task.TaskId;
 import com.akademiaplus.task.interfaceadapters.TaskRepository;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.task.service.dto.TaskDTO;
 import openapi.akademiaplus.domain.task.service.dto.TaskPriorityDTO;
@@ -31,6 +32,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @DisplayName("UpdateTaskUseCase")
@@ -128,7 +131,56 @@ class UpdateTaskUseCaseTest {
 
             // When/Then
             assertThatThrownBy(() -> useCase.update(TASK_ID, dto))
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.TASK, String.valueOf(TASK_ID)));
+
+            verify(taskRepository, times(1)).findById(new TaskId(TENANT_ID, TASK_ID));
+            verifyNoMoreInteractions(taskRepository);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when requireTenantId throws")
+        void shouldPropagateException_whenRequireTenantIdThrows() {
+            // Given
+            RuntimeException tenantException = new RuntimeException("No tenant");
+            when(tenantContextHolder.requireTenantId()).thenThrow(tenantException);
+            UpdateTaskRequestDTO dto = new UpdateTaskRequestDTO();
+            dto.setTitle(UPDATED_TITLE);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.update(TASK_ID, dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("No tenant");
+
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verifyNoInteractions(taskRepository);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when saveAndFlush throws")
+        void shouldPropagateException_whenSaveAndFlushThrows() {
+            // Given
+            TaskDataModel entity = buildEntity();
+            when(tenantContextHolder.requireTenantId()).thenReturn(TENANT_ID);
+            when(taskRepository.findById(new TaskId(TENANT_ID, TASK_ID))).thenReturn(Optional.of(entity));
+            RuntimeException saveException = new RuntimeException("Save failed");
+            when(taskRepository.saveAndFlush(entity)).thenThrow(saveException);
+
+            UpdateTaskRequestDTO dto = new UpdateTaskRequestDTO();
+            dto.setTitle(UPDATED_TITLE);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.update(TASK_ID, dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Save failed");
+
+            verify(taskRepository, times(1)).saveAndFlush(entity);
         }
     }
 }

@@ -27,9 +27,11 @@ import org.openapitools.jackson.nullable.JsonNullable;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
@@ -206,6 +208,63 @@ class TenantSubscriptionCreationUseCaseTest {
             inOrder.verify(repository, times(1)).saveAndFlush(prototypeModel);
             inOrder.verify(modelMapper, times(1)).map(savedModel, TenantSubscriptionDTO.class);
             inOrder.verifyNoMoreInteractions();
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when applicationContext.getBean throws")
+        void shouldPropagateException_whenGetBeanThrows() {
+            // Given
+            SubscriptionCreateRequestDTO dto = buildDto();
+            when(applicationContext.getBean(TenantSubscriptionDataModel.class))
+                    .thenThrow(new RuntimeException("Bean creation failed"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.create(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Bean creation failed");
+            verifyNoInteractions(repository);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when repository.saveAndFlush throws")
+        void shouldPropagateException_whenSaveAndFlushThrows() {
+            // Given
+            SubscriptionCreateRequestDTO dto = buildDto();
+            TenantSubscriptionDataModel prototypeModel = new TenantSubscriptionDataModel();
+            when(applicationContext.getBean(TenantSubscriptionDataModel.class)).thenReturn(prototypeModel);
+            doNothing().when(modelMapper).map(dto, prototypeModel, TenantSubscriptionCreationUseCase.MAP_NAME);
+            when(repository.saveAndFlush(prototypeModel))
+                    .thenThrow(new RuntimeException("DB connection lost"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.create(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection lost");
+            verifyNoMoreInteractions(repository);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when modelMapper.map for response throws")
+        void shouldPropagateException_whenResponseMappingThrows() {
+            // Given
+            SubscriptionCreateRequestDTO dto = buildDto();
+            TenantSubscriptionDataModel prototypeModel = new TenantSubscriptionDataModel();
+            TenantSubscriptionDataModel savedModel = new TenantSubscriptionDataModel();
+            when(applicationContext.getBean(TenantSubscriptionDataModel.class)).thenReturn(prototypeModel);
+            doNothing().when(modelMapper).map(dto, prototypeModel, TenantSubscriptionCreationUseCase.MAP_NAME);
+            when(repository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
+            when(modelMapper.map(savedModel, TenantSubscriptionDTO.class))
+                    .thenThrow(new RuntimeException("Mapping configuration error"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.create(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Mapping configuration error");
         }
     }
 }

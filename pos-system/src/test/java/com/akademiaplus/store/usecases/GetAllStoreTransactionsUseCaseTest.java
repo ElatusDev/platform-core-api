@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @DisplayName("GetAllStoreTransactionsUseCase")
@@ -82,6 +83,45 @@ class GetAllStoreTransactionsUseCaseTest {
             inOrder.verify(modelMapper, times(1)).map(transaction1, GetStoreTransactionResponseDTO.class);
             inOrder.verify(modelMapper, times(1)).map(transaction2, GetStoreTransactionResponseDTO.class);
             inOrder.verifyNoMoreInteractions();
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when repository findAll throws")
+        void shouldPropagateException_whenRepositoryFindAllThrows() {
+            // Given
+            when(storeTransactionRepository.findAll())
+                    .thenThrow(new RuntimeException("DB connection failed"));
+
+            // When & Then
+            assertThatThrownBy(() -> useCase.getAll())
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection failed");
+
+            verify(storeTransactionRepository, times(1)).findAll();
+            verifyNoInteractions(modelMapper);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when modelMapper throws")
+        void shouldPropagateException_whenModelMapperThrows() {
+            // Given
+            StoreTransactionDataModel transaction = new StoreTransactionDataModel();
+            when(storeTransactionRepository.findAll()).thenReturn(List.of(transaction));
+            when(modelMapper.map(transaction, GetStoreTransactionResponseDTO.class))
+                    .thenThrow(new RuntimeException("Mapping failed"));
+
+            // When & Then
+            assertThatThrownBy(() -> useCase.getAll())
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Mapping failed");
+
+            verify(storeTransactionRepository, times(1)).findAll();
+            verify(modelMapper, times(1)).map(transaction, GetStoreTransactionResponseDTO.class);
         }
     }
 }

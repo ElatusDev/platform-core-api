@@ -37,6 +37,10 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CourseEventCreationUseCase {
     public static final String MAP_NAME = "courseEventMap";
+    public static final String ERROR_TENANT_CONTEXT_REQUIRED = "Tenant context is required";
+    public static final String ERROR_COURSE_NOT_FOUND = "Course not found: ";
+    public static final String ERROR_COLLABORATOR_NOT_FOUND = "Collaborator not found: ";
+    public static final String ERROR_SCHEDULE_NOT_FOUND = "Schedule not found: ";
 
     private final ApplicationContext applicationContext;
     private final CourseEventRepository courseEventRepository;
@@ -73,21 +77,21 @@ public class CourseEventCreationUseCase {
         modelMapper.map(dto, model, MAP_NAME);
 
         Long tenantId = tenantContextHolder.getTenantId()
-                .orElseThrow(() -> new IllegalArgumentException("Tenant context is required"));
+                .orElseThrow(() -> new IllegalArgumentException(ERROR_TENANT_CONTEXT_REQUIRED));
 
         CourseDataModel course = courseRepository.findById(
                         new CourseDataModel.CourseCompositeId(tenantId, dto.getCourseId()))
-                .orElseThrow(() -> new IllegalArgumentException("Course not found: " + dto.getCourseId()));
+                .orElseThrow(() -> new IllegalArgumentException(ERROR_COURSE_NOT_FOUND + dto.getCourseId()));
         model.setCourse(course);
 
         CollaboratorDataModel collaborator = collaboratorRepository.findById(
                         new CollaboratorDataModel.CollaboratorCompositeId(tenantId, dto.getInstructorId()))
-                .orElseThrow(() -> new IllegalArgumentException("Collaborator not found: " + dto.getInstructorId()));
+                .orElseThrow(() -> new IllegalArgumentException(ERROR_COLLABORATOR_NOT_FOUND + dto.getInstructorId()));
         model.setCollaborator(collaborator);
 
         ScheduleDataModel schedule = scheduleRepository.findById(
                         new ScheduleDataModel.ScheduleCompositeId(tenantId, dto.getScheduleId()))
-                .orElseThrow(() -> new IllegalArgumentException("Schedule not found: " + dto.getScheduleId()));
+                .orElseThrow(() -> new IllegalArgumentException(ERROR_SCHEDULE_NOT_FOUND + dto.getScheduleId()));
         model.setSchedule(schedule);
 
         return model;

@@ -23,6 +23,7 @@ import org.modelmapper.ModelMapper;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -105,6 +106,49 @@ class GetAllDemoRequestsUseCaseTest {
             verify(demoRequestRepository, times(1)).findAll();
             verifyNoMoreInteractions(demoRequestRepository);
             verifyNoInteractions(modelMapper);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when findAll throws")
+        void shouldPropagateException_whenFindAllThrows() {
+            // Given
+            RuntimeException dbException = new RuntimeException("DB connection failed");
+            when(demoRequestRepository.findAll()).thenThrow(dbException);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.getAll())
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection failed");
+
+            verify(demoRequestRepository, times(1)).findAll();
+            verifyNoMoreInteractions(demoRequestRepository);
+            verifyNoInteractions(modelMapper);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when modelMapper throws")
+        void shouldPropagateException_whenModelMapperThrows() {
+            // Given
+            DemoRequestDataModel model = new DemoRequestDataModel();
+            model.setDemoRequestId(1L);
+            RuntimeException mapException = new RuntimeException("Mapping failed");
+
+            when(demoRequestRepository.findAll()).thenReturn(List.of(model));
+            when(modelMapper.map(model, GetDemoRequestResponseDTO.class))
+                    .thenThrow(mapException);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.getAll())
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Mapping failed");
+
+            verify(demoRequestRepository, times(1)).findAll();
+            verify(modelMapper, times(1)).map(model, GetDemoRequestResponseDTO.class);
         }
     }
 }

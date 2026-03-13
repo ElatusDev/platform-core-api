@@ -95,8 +95,8 @@ class GetNotificationByIdUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.get(NOTIFICATION_ID))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasFieldOrPropertyWithValue("entityType", EntityType.NOTIFICATION)
-                    .hasFieldOrPropertyWithValue("entityId", String.valueOf(NOTIFICATION_ID));
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.NOTIFICATION, String.valueOf(NOTIFICATION_ID)));
             verify(tenantContextHolder, times(1)).getTenantId();
             verify(notificationRepository, times(1)).findById(
                     new NotificationDataModel.NotificationCompositeId(TENANT_ID, NOTIFICATION_ID));
@@ -161,8 +161,8 @@ class GetNotificationByIdUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.getEntity(NOTIFICATION_ID))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasFieldOrPropertyWithValue("entityType", EntityType.NOTIFICATION)
-                    .hasFieldOrPropertyWithValue("entityId", String.valueOf(NOTIFICATION_ID));
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.NOTIFICATION, String.valueOf(NOTIFICATION_ID)));
             verify(tenantContextHolder, times(1)).getTenantId();
             verify(notificationRepository, times(1)).findById(
                     new NotificationDataModel.NotificationCompositeId(TENANT_ID, NOTIFICATION_ID));

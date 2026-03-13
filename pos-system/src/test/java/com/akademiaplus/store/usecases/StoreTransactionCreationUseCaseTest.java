@@ -183,12 +183,8 @@ class StoreTransactionCreationUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.create(dto))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .satisfies(ex -> {
-                        EntityNotFoundException enfe = (EntityNotFoundException) ex;
-                        assertThat(enfe.getEntityType()).isEqualTo(EntityType.STORE_PRODUCT);
-                        assertThat(enfe.getEntityId())
-                                .isEqualTo(String.valueOf(PRODUCT_ID_1));
-                    });
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.STORE_PRODUCT, PRODUCT_ID_1));
 
             InOrder inOrder = inOrder(applicationContext, modelMapper, storeProductRepository);
             inOrder.verify(applicationContext, times(1)).getBean(StoreTransactionDataModel.class);
@@ -726,6 +722,79 @@ class StoreTransactionCreationUseCaseTest {
                     storeProductRepository, modelMapper);
 
             SecurityContextHolder.clearContext();
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when applicationContext getBean throws")
+        void shouldPropagateException_whenApplicationContextGetBeanThrows() {
+            // Given
+            SaleItemRequestDTO item = buildSaleItemDto(PRODUCT_ID_1, QUANTITY_1);
+            StoreTransactionCreationRequestDTO dto = buildDto(
+                    StoreTransactionCreationUseCase.TRANSACTION_TYPE_SALE, item);
+            when(applicationContext.getBean(StoreTransactionDataModel.class))
+                    .thenThrow(new RuntimeException("Bean creation failed"));
+
+            // When & Then
+            assertThatThrownBy(() -> useCase.create(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Bean creation failed");
+
+            verify(applicationContext, times(1)).getBean(StoreTransactionDataModel.class);
+            verifyNoInteractions(storeTransactionRepository, storeProductRepository);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when storeTransactionRepository saveAndFlush throws")
+        void shouldPropagateException_whenTransactionRepositorySaveAndFlushThrows() {
+            // Given
+            SaleItemRequestDTO item = buildSaleItemDto(PRODUCT_ID_1, QUANTITY_1);
+            StoreTransactionCreationRequestDTO dto = buildDto(
+                    StoreTransactionCreationUseCase.TRANSACTION_TYPE_SALE, item);
+            StoreTransactionDataModel transaction = stubTransformFlow(dto);
+
+            StoreProductDataModel product = buildProduct(
+                    PRODUCT_ID_1, PRODUCT_NAME_1, PRODUCT_PRICE_1, STOCK_1);
+            when(storeProductRepository.findById(compositeId(PRODUCT_ID_1)))
+                    .thenReturn(Optional.of(product));
+
+            StoreSaleItemDataModel saleItem = new StoreSaleItemDataModel();
+            when(applicationContext.getBean(StoreSaleItemDataModel.class)).thenReturn(saleItem);
+
+            when(storeTransactionRepository.saveAndFlush(transaction))
+                    .thenThrow(new RuntimeException("DB write failed"));
+
+            // When & Then
+            assertThatThrownBy(() -> useCase.create(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB write failed");
+
+            verify(storeTransactionRepository, times(1)).saveAndFlush(transaction);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when storeProductRepository findById throws during product resolution")
+        void shouldPropagateException_whenProductRepositoryFindByIdThrows() {
+            // Given
+            SaleItemRequestDTO item = buildSaleItemDto(PRODUCT_ID_1, QUANTITY_1);
+            StoreTransactionCreationRequestDTO dto = buildDto(
+                    StoreTransactionCreationUseCase.TRANSACTION_TYPE_SALE, item);
+            StoreTransactionDataModel transaction = stubTransformFlow(dto);
+
+            when(storeProductRepository.findById(compositeId(PRODUCT_ID_1)))
+                    .thenThrow(new RuntimeException("DB connection failed"));
+
+            // When & Then
+            assertThatThrownBy(() -> useCase.create(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection failed");
+
+            verify(storeProductRepository, times(1)).findById(compositeId(PRODUCT_ID_1));
+            verifyNoInteractions(storeTransactionRepository);
         }
     }
 }

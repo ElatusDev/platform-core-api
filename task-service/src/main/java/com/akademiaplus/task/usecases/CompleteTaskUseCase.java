@@ -10,6 +10,7 @@ package com.akademiaplus.task.usecases;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.task.TaskDataModel;
 import com.akademiaplus.task.TaskId;
+import com.akademiaplus.task.domain.DomainTask;
 import com.akademiaplus.task.interfaceadapters.TaskRepository;
 import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
@@ -18,8 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 
 /**
  * Marks a task as completed.
@@ -30,18 +29,31 @@ import java.time.ZoneOffset;
 @Service
 public class CompleteTaskUseCase {
 
-    public static final String COMPLETED_STATUS = "COMPLETED";
-    public static final String ERROR_TASK_ALREADY_COMPLETED = "Task is already completed";
-
     private final TaskRepository taskRepository;
     private final TenantContextHolder tenantContextHolder;
+    private final DomainTask domainTask;
 
+    /**
+     * Creates a new instance with required dependencies.
+     *
+     * @param taskRepository     task persistence
+     * @param tenantContextHolder tenant context
+     * @param domainTask         domain object for task business rules
+     */
     public CompleteTaskUseCase(TaskRepository taskRepository,
-                               TenantContextHolder tenantContextHolder) {
+                               TenantContextHolder tenantContextHolder,
+                               DomainTask domainTask) {
         this.taskRepository = taskRepository;
         this.tenantContextHolder = tenantContextHolder;
+        this.domainTask = domainTask;
     }
 
+    /**
+     * Marks a task as completed after domain validation.
+     *
+     * @param taskId the ID of the task to complete
+     * @return response DTO with taskId and completedAt
+     */
     @Transactional
     public CompleteTaskResponseDTO complete(Long taskId) {
         Long tenantId = tenantContextHolder.requireTenantId();
@@ -49,18 +61,14 @@ public class CompleteTaskUseCase {
                 .orElseThrow(() -> new EntityNotFoundException(
                         EntityType.TASK, String.valueOf(taskId)));
 
-        if (COMPLETED_STATUS.equals(task.getStatus())) {
-            throw new IllegalStateException(ERROR_TASK_ALREADY_COMPLETED);
-        }
+        // Domain validates + produces DTO
+        CompleteTaskResponseDTO response = domainTask.get(task).complete();
 
-        LocalDateTime now = LocalDateTime.now();
-        task.setStatus(COMPLETED_STATUS);
-        task.setCompletedAt(now);
+        // Persist state change
+        task.setStatus(DomainTask.COMPLETED_STATUS);
+        task.setCompletedAt(LocalDateTime.now());
         taskRepository.saveAndFlush(task);
 
-        CompleteTaskResponseDTO response = new CompleteTaskResponseDTO();
-        response.setTaskId(taskId);
-        response.setCompletedAt(now.atOffset(ZoneOffset.UTC));
         return response;
     }
 }

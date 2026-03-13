@@ -11,6 +11,7 @@ import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.task.TaskDataModel;
 import com.akademiaplus.task.TaskId;
 import com.akademiaplus.task.interfaceadapters.TaskRepository;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.task.service.dto.TaskDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +29,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @DisplayName("GetTaskByIdUseCase")
@@ -97,7 +100,50 @@ class GetTaskByIdUseCaseTest {
 
             // When/Then
             assertThatThrownBy(() -> useCase.get(TASK_ID))
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.TASK, String.valueOf(TASK_ID)));
+
+            verify(taskRepository, times(1)).findById(new TaskId(TENANT_ID, TASK_ID));
+            verifyNoMoreInteractions(taskRepository);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when requireTenantId throws")
+        void shouldPropagateException_whenRequireTenantIdThrows() {
+            // Given
+            RuntimeException tenantException = new RuntimeException("No tenant");
+            when(tenantContextHolder.requireTenantId()).thenThrow(tenantException);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.get(TASK_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("No tenant");
+
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verifyNoInteractions(taskRepository);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when findById throws")
+        void shouldPropagateException_whenFindByIdThrows() {
+            // Given
+            when(tenantContextHolder.requireTenantId()).thenReturn(TENANT_ID);
+            RuntimeException dbException = new RuntimeException("DB error");
+            when(taskRepository.findById(new TaskId(TENANT_ID, TASK_ID))).thenThrow(dbException);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.get(TASK_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB error");
+
+            verify(taskRepository, times(1)).findById(new TaskId(TENANT_ID, TASK_ID));
+            verifyNoMoreInteractions(taskRepository);
         }
     }
 }

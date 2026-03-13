@@ -10,6 +10,7 @@ package com.akademiaplus.usecases;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.interfaceadapters.TenantBrandingRepository;
 import com.akademiaplus.tenancy.TenantBrandingDataModel;
+import com.akademiaplus.utilities.exceptions.InvalidTenantException;
 import openapi.akademiaplus.domain.tenant.management.dto.GetTenantBrandingResponseDTO;
 import openapi.akademiaplus.domain.tenant.management.dto.TenantBrandingUpdateRequestDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +27,14 @@ import org.springframework.context.ApplicationContext;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("UpdateTenantBrandingUseCase")
 @ExtendWith(MockitoExtension.class)
@@ -122,6 +130,85 @@ class UpdateTenantBrandingUseCaseTest {
             assertThat(result.getSchoolName()).isEqualTo(SCHOOL_NAME);
             assertThat(newEntity.getTenantId()).isEqualTo(TENANT_ID);
             verify(applicationContext, times(1)).getBean(TenantBrandingDataModel.class);
+            verify(tenantBrandingRepository, times(1)).saveAndFlush(newEntity);
+            verify(modelMapper, times(1)).map(saved, GetTenantBrandingResponseDTO.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate InvalidTenantException when tenant context missing")
+        void shouldPropagateException_whenTenantContextMissing() {
+            // Given
+            TenantBrandingUpdateRequestDTO dto = buildDto();
+            when(tenantContextHolder.requireTenantId())
+                    .thenThrow(new InvalidTenantException());
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.upsert(dto))
+                    .isInstanceOf(InvalidTenantException.class)
+                    .hasMessage(InvalidTenantException.DEFAULT_MESSAGE);
+            verifyNoInteractions(tenantBrandingRepository, applicationContext, modelMapper);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when repository.findById throws")
+        void shouldPropagateException_whenFindByIdThrows() {
+            // Given
+            TenantBrandingUpdateRequestDTO dto = buildDto();
+            when(tenantContextHolder.requireTenantId()).thenReturn(TENANT_ID);
+            when(tenantBrandingRepository.findById(TENANT_ID))
+                    .thenThrow(new RuntimeException("DB connection lost"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.upsert(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection lost");
+            verify(tenantBrandingRepository, times(1)).findById(TENANT_ID);
+            verifyNoInteractions(applicationContext);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when repository.saveAndFlush throws")
+        void shouldPropagateException_whenSaveAndFlushThrows() {
+            // Given
+            TenantBrandingUpdateRequestDTO dto = buildDto();
+            TenantBrandingDataModel existing = new TenantBrandingDataModel();
+            when(tenantContextHolder.requireTenantId()).thenReturn(TENANT_ID);
+            when(tenantBrandingRepository.findById(TENANT_ID)).thenReturn(Optional.of(existing));
+            doNothing().when(modelMapper).map(dto, existing, UpdateTenantBrandingUseCase.MAP_NAME);
+            when(tenantBrandingRepository.saveAndFlush(existing))
+                    .thenThrow(new RuntimeException("DB connection lost"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.upsert(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection lost");
+            verify(tenantBrandingRepository, times(1)).saveAndFlush(existing);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when modelMapper.map for response throws")
+        void shouldPropagateException_whenResponseMappingThrows() {
+            // Given
+            TenantBrandingUpdateRequestDTO dto = buildDto();
+            TenantBrandingDataModel existing = new TenantBrandingDataModel();
+            TenantBrandingDataModel saved = new TenantBrandingDataModel();
+            when(tenantContextHolder.requireTenantId()).thenReturn(TENANT_ID);
+            when(tenantBrandingRepository.findById(TENANT_ID)).thenReturn(Optional.of(existing));
+            doNothing().when(modelMapper).map(dto, existing, UpdateTenantBrandingUseCase.MAP_NAME);
+            when(tenantBrandingRepository.saveAndFlush(existing)).thenReturn(saved);
+            when(modelMapper.map(saved, GetTenantBrandingResponseDTO.class))
+                    .thenThrow(new RuntimeException("Mapping configuration error"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.upsert(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Mapping configuration error");
+            verify(modelMapper, times(1)).map(saved, GetTenantBrandingResponseDTO.class);
         }
     }
 }

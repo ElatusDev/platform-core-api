@@ -30,7 +30,13 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("UpdateNewsFeedItemUseCase")
 @ExtendWith(MockitoExtension.class)
@@ -214,12 +220,10 @@ class UpdateNewsFeedItemUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(NEWS_FEED_ITEM_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .satisfies(ex -> {
-                        EntityNotFoundException enfe = (EntityNotFoundException) ex;
-                        assertThat(enfe.getEntityType()).isEqualTo(EntityType.NEWS_FEED_ITEM);
-                        assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(NEWS_FEED_ITEM_ID));
-                    });
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.NEWS_FEED_ITEM, String.valueOf(NEWS_FEED_ITEM_ID)));
 
+            // Rule 9 — verify downstream mocks were NOT called
             InOrder inOrder = inOrder(tenantContextHolder, newsFeedItemRepository);
             inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
             inOrder.verify(newsFeedItemRepository, times(1)).findById(compositeId);

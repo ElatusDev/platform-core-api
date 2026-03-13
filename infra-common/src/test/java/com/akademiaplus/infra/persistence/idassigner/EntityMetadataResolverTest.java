@@ -242,7 +242,7 @@ class EntityMetadataResolverTest {
         }
 
         @Test
-        @DisplayName("Should return skip metadata when introspector throws RuntimeException")
+        @DisplayName("Should return skip metadata when introspector throws RuntimeException on findTableName")
         void shouldReturnSkipMetadata_whenIntrospectorThrowsRuntimeException() {
             // Given
             Class<?> entityClass = ValidEntity.class;
@@ -256,6 +256,77 @@ class EntityMetadataResolverTest {
             assertThat(metadata.isSkip()).isTrue();
 
             verify(introspector, times(1)).findTableName(entityClass);
+            verifyNoMoreInteractions(introspector);
+        }
+
+        @Test
+        @DisplayName("Should return skip metadata when hasEmbeddedId throws RuntimeException")
+        void shouldReturnSkipMetadata_whenHasEmbeddedIdThrowsRuntimeException() {
+            // Given
+            Class<?> entityClass = ValidEntity.class;
+            when(introspector.findTableName(entityClass)).thenReturn(Optional.of(TABLE_NAME));
+            when(introspector.hasEmbeddedId(entityClass))
+                    .thenThrow(new RuntimeException("EmbeddedId check failed"));
+
+            // When
+            EntityMetadata metadata = resolver.resolve(entityClass);
+
+            // Then
+            assertThat(metadata.isSkip()).isTrue();
+
+            InOrder inOrder = inOrder(introspector);
+            inOrder.verify(introspector, times(1)).findTableName(entityClass);
+            inOrder.verify(introspector, times(1)).hasEmbeddedId(entityClass);
+            verifyNoMoreInteractions(introspector);
+        }
+
+        @Test
+        @DisplayName("Should return skip metadata when findIdField throws RuntimeException")
+        void shouldReturnSkipMetadata_whenFindIdFieldThrowsRuntimeException() {
+            // Given
+            Class<?> entityClass = ValidEntity.class;
+            when(introspector.findTableName(entityClass)).thenReturn(Optional.of(TABLE_NAME));
+            when(introspector.hasEmbeddedId(entityClass)).thenReturn(false);
+            when(introspector.findIdField(entityClass))
+                    .thenThrow(new RuntimeException("Id field lookup failed"));
+
+            // When
+            EntityMetadata metadata = resolver.resolve(entityClass);
+
+            // Then
+            assertThat(metadata.isSkip()).isTrue();
+
+            InOrder inOrder = inOrder(introspector);
+            inOrder.verify(introspector, times(1)).findTableName(entityClass);
+            inOrder.verify(introspector, times(1)).hasEmbeddedId(entityClass);
+            inOrder.verify(introspector, times(1)).findIdField(entityClass);
+            verifyNoMoreInteractions(introspector);
+        }
+
+        @Test
+        @DisplayName("Should return skip metadata when hasGeneratedValue throws RuntimeException")
+        void shouldReturnSkipMetadata_whenHasGeneratedValueThrowsRuntimeException() {
+            // Given
+            Class<?> entityClass = ValidEntity.class;
+            Field mockField = mock(Field.class);
+
+            when(introspector.findTableName(entityClass)).thenReturn(Optional.of(TABLE_NAME));
+            when(introspector.hasEmbeddedId(entityClass)).thenReturn(false);
+            when(introspector.findIdField(entityClass)).thenReturn(Optional.of(mockField));
+            when(introspector.hasGeneratedValue(mockField))
+                    .thenThrow(new RuntimeException("GeneratedValue check failed"));
+
+            // When
+            EntityMetadata metadata = resolver.resolve(entityClass);
+
+            // Then
+            assertThat(metadata.isSkip()).isTrue();
+
+            InOrder inOrder = inOrder(introspector);
+            inOrder.verify(introspector, times(1)).findTableName(entityClass);
+            inOrder.verify(introspector, times(1)).hasEmbeddedId(entityClass);
+            inOrder.verify(introspector, times(1)).findIdField(entityClass);
+            inOrder.verify(introspector, times(1)).hasGeneratedValue(mockField);
             verifyNoMoreInteractions(introspector);
         }
     }

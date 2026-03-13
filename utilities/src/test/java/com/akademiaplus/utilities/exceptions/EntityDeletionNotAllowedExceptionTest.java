@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 ElatusDev
+ * Copyright (c) 2026 ElatusDev
  * All rights reserved.
  *
  * This code is proprietary and confidential.
@@ -75,8 +75,8 @@ class EntityDeletionNotAllowedExceptionTest {
         }
 
         @Test
-        @DisplayName("Should include entity info in message when DB constraint violation")
-        void shouldIncludeEntityInfoInMessage_whenDbConstraintViolation() {
+        @DisplayName("Should format message using MESSAGE_TEMPLATE when DB constraint violation")
+        void shouldFormatMessageUsingTemplate_whenDbConstraintViolation() {
             // Given
             Throwable cause = new RuntimeException("FK constraint violated");
 
@@ -85,8 +85,9 @@ class EntityDeletionNotAllowedExceptionTest {
                     new EntityDeletionNotAllowedException(ENTITY_TYPE, ENTITY_ID, cause);
 
             // Then
-            assertThat(exception.getMessage()).contains(ENTITY_TYPE);
-            assertThat(exception.getMessage()).contains(ENTITY_ID);
+            assertThat(exception.getMessage())
+                    .isEqualTo(String.format(
+                            EntityDeletionNotAllowedException.MESSAGE_TEMPLATE, ENTITY_TYPE, ENTITY_ID));
         }
     }
 
@@ -129,16 +130,17 @@ class EntityDeletionNotAllowedExceptionTest {
         }
 
         @Test
-        @DisplayName("Should include entity info and reason in message when business rule violation")
-        void shouldIncludeEntityInfoAndReasonInMessage_whenBusinessRuleViolation() {
+        @DisplayName("Should format message using MESSAGE_TEMPLATE_WITH_REASON when business rule violation")
+        void shouldFormatMessageUsingTemplateWithReason_whenBusinessRuleViolation() {
             // Given & When
             EntityDeletionNotAllowedException exception =
                     new EntityDeletionNotAllowedException(ENTITY_TYPE, ENTITY_ID, BUSINESS_REASON);
 
             // Then
-            assertThat(exception.getMessage()).contains(ENTITY_TYPE);
-            assertThat(exception.getMessage()).contains(ENTITY_ID);
-            assertThat(exception.getMessage()).contains(BUSINESS_REASON);
+            assertThat(exception.getMessage())
+                    .isEqualTo(String.format(
+                            EntityDeletionNotAllowedException.MESSAGE_TEMPLATE_WITH_REASON,
+                            ENTITY_TYPE, ENTITY_ID, BUSINESS_REASON));
         }
     }
 }

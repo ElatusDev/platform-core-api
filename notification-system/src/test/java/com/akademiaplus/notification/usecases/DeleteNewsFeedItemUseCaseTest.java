@@ -27,7 +27,12 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("DeleteNewsFeedItemUseCase")
 @ExtendWith(MockitoExtension.class)
@@ -88,11 +93,13 @@ class DeleteNewsFeedItemUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(NEWS_FEED_ITEM_ID))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .satisfies(ex -> {
-                        EntityNotFoundException enfe = (EntityNotFoundException) ex;
-                        assertThat(enfe.getEntityType()).isEqualTo(EntityType.NEWS_FEED_ITEM);
-                        assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(NEWS_FEED_ITEM_ID));
-                    });
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.NEWS_FEED_ITEM, String.valueOf(NEWS_FEED_ITEM_ID)));
+
+            // Rule 9 — verify downstream delete was NOT called
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(repository, times(1)).findById(compositeId);
+            verifyNoMoreInteractions(repository, tenantContextHolder);
         }
     }
 
@@ -114,7 +121,15 @@ class DeleteNewsFeedItemUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.delete(NEWS_FEED_ITEM_ID))
-                    .isInstanceOf(EntityDeletionNotAllowedException.class);
+                    .isInstanceOf(EntityDeletionNotAllowedException.class)
+                    .hasMessage(String.format(EntityDeletionNotAllowedException.MESSAGE_TEMPLATE,
+                            EntityType.NEWS_FEED_ITEM, String.valueOf(NEWS_FEED_ITEM_ID)));
+
+            // Rule 9 — verify all collaborators called in order
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(repository, times(1)).findById(compositeId);
+            verify(repository, times(1)).delete(entity);
+            verifyNoMoreInteractions(repository, tenantContextHolder);
         }
     }
 }

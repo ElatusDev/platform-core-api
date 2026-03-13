@@ -27,6 +27,13 @@ import java.util.Locale;
 @Component
 public class MembershipTutorFactory implements DataFactory<MembershipTutorCreationRequestDTO> {
 
+    static final String ERROR_MEMBERSHIP_IDS_NOT_SET =
+            "availableMembershipIds must be set before generating";
+    static final String ERROR_COURSE_IDS_NOT_SET =
+            "availableCourseIds must be set before generating";
+    static final String ERROR_TUTOR_IDS_NOT_SET =
+            "availableTutorIds must be set before generating";
+
     private final Faker faker;
 
     @Setter
@@ -45,13 +52,13 @@ public class MembershipTutorFactory implements DataFactory<MembershipTutorCreati
     @Override
     public List<MembershipTutorCreationRequestDTO> generate(int count) {
         if (availableMembershipIds.isEmpty()) {
-            throw new IllegalStateException("availableMembershipIds must be set before generating");
+            throw new IllegalStateException(ERROR_MEMBERSHIP_IDS_NOT_SET);
         }
         if (availableCourseIds.isEmpty()) {
-            throw new IllegalStateException("availableCourseIds must be set before generating");
+            throw new IllegalStateException(ERROR_COURSE_IDS_NOT_SET);
         }
         if (availableTutorIds.isEmpty()) {
-            throw new IllegalStateException("availableTutorIds must be set before generating");
+            throw new IllegalStateException(ERROR_TUTOR_IDS_NOT_SET);
         }
         List<MembershipTutorCreationRequestDTO> associations = new ArrayList<>();
         for (int i = 0; i < count; i++) {

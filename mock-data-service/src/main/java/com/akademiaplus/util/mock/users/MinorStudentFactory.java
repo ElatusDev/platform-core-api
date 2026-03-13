@@ -28,6 +28,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MinorStudentFactory implements DataFactory<MinorStudentCreationRequestDTO> {
 
+    static final String ERROR_TUTOR_IDS_NOT_SET =
+            "availableTutorIds must be set before generating minor students";
+
     private final MinorStudentDataGenerator generator;
 
     @Setter
@@ -36,7 +39,7 @@ public class MinorStudentFactory implements DataFactory<MinorStudentCreationRequ
     @Override
     public List<MinorStudentCreationRequestDTO> generate(int count) {
         if (availableTutorIds.isEmpty()) {
-            throw new IllegalStateException("availableTutorIds must be set before generating minor students");
+            throw new IllegalStateException(ERROR_TUTOR_IDS_NOT_SET);
         }
         List<MinorStudentCreationRequestDTO> students = new ArrayList<>();
         for (int i = 0; i < count; i++) {

@@ -9,6 +9,7 @@ package com.akademiaplus.leadmanagement.usecases;
 
 import com.akademiaplus.leadmanagement.DemoRequestDataModel;
 import com.akademiaplus.leadmanagement.interfaceadapters.DemoRequestRepository;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -91,10 +92,55 @@ class DeleteDemoRequestUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.delete(DEMO_REQUEST_ID))
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.DEMO_REQUEST, DEMO_REQUEST_ID.toString()));
 
             verify(demoRequestRepository, times(1)).findById(DEMO_REQUEST_ID);
             verifyNoMoreInteractions(demoRequestRepository);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when findById throws")
+        void shouldPropagateException_whenFindByIdThrows() {
+            // Given
+            RuntimeException dbException = new RuntimeException("DB connection failed");
+            when(demoRequestRepository.findById(DEMO_REQUEST_ID)).thenThrow(dbException);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.delete(DEMO_REQUEST_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection failed");
+
+            verify(demoRequestRepository, times(1)).findById(DEMO_REQUEST_ID);
+            verifyNoMoreInteractions(demoRequestRepository);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when delete throws")
+        void shouldPropagateException_whenDeleteThrows() {
+            // Given
+            DemoRequestDataModel model = new DemoRequestDataModel();
+            model.setDemoRequestId(DEMO_REQUEST_ID);
+            RuntimeException deleteException = new RuntimeException("Delete failed");
+
+            when(demoRequestRepository.findById(DEMO_REQUEST_ID))
+                    .thenReturn(Optional.of(model));
+            org.mockito.Mockito.doThrow(deleteException)
+                    .when(demoRequestRepository).delete(model);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.delete(DEMO_REQUEST_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Delete failed");
+
+            verify(demoRequestRepository, times(1)).findById(DEMO_REQUEST_ID);
+            verify(demoRequestRepository, times(1)).delete(model);
         }
     }
 }

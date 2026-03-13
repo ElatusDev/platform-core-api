@@ -28,7 +28,8 @@ import java.util.regex.Pattern;
  */
 @RequiredArgsConstructor
 public class DataCleanUp<M, I> {
-    private static final String ANNOTATION_MISSING = "missing table annotation";
+    static final String ANNOTATION_MISSING = "missing table annotation";
+    static final String INVALID_TABLE_NAME_PREFIX = "Invalid table name: ";
     private static final Pattern VALID_TABLE_NAME = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
 
     @PersistenceContext
@@ -53,7 +54,7 @@ public class DataCleanUp<M, I> {
         if (tableAnnotation != null && !tableAnnotation.name().isEmpty()) {
             String name = tableAnnotation.name();
             if (!VALID_TABLE_NAME.matcher(name).matches()) {
-                throw new UnprocessableDataModelException("Invalid table name: " + name);
+                throw new UnprocessableDataModelException(INVALID_TABLE_NAME_PREFIX + name);
             }
             return name;
         }

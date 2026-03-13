@@ -233,7 +233,9 @@ class GetCurrentUserUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.getCurrentUser())
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.INTERNAL_AUTH, USERNAME));
 
             InOrder inOrder = inOrder(hashingService, internalAuthRepository);
             inOrder.verify(hashingService, times(1)).generateHash(USERNAME);
@@ -259,7 +261,9 @@ class GetCurrentUserUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.getCurrentUser())
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.USER, USERNAME));
 
             InOrder inOrder = inOrder(hashingService, internalAuthRepository, employeeRepository, collaboratorRepository);
             inOrder.verify(hashingService, times(1)).generateHash(USERNAME);

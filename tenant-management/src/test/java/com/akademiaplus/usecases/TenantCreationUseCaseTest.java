@@ -23,9 +23,11 @@ import org.modelmapper.ModelMapper;
 import org.springframework.context.ApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
@@ -171,6 +173,63 @@ class TenantCreationUseCaseTest {
             inOrder.verify(tenantRepository, times(1)).save(prototypeModel);
             inOrder.verify(modelMapper, times(1)).map(savedModel, TenantDTO.class);
             inOrder.verifyNoMoreInteractions();
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when applicationContext.getBean throws")
+        void shouldPropagateException_whenGetBeanThrows() {
+            // Given
+            TenantCreateRequestDTO dto = buildDto();
+            when(applicationContext.getBean(TenantDataModel.class))
+                    .thenThrow(new RuntimeException("Bean creation failed"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.create(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Bean creation failed");
+            verifyNoInteractions(tenantRepository);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when repository.save throws")
+        void shouldPropagateException_whenSaveThrows() {
+            // Given
+            TenantCreateRequestDTO dto = buildDto();
+            TenantDataModel prototypeModel = new TenantDataModel();
+            when(applicationContext.getBean(TenantDataModel.class)).thenReturn(prototypeModel);
+            doNothing().when(modelMapper).map(dto, prototypeModel, TenantCreationUseCase.MAP_NAME);
+            when(tenantRepository.save(prototypeModel))
+                    .thenThrow(new RuntimeException("DB connection lost"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.create(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection lost");
+            verifyNoMoreInteractions(tenantRepository);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when modelMapper.map for response throws")
+        void shouldPropagateException_whenResponseMappingThrows() {
+            // Given
+            TenantCreateRequestDTO dto = buildDto();
+            TenantDataModel prototypeModel = new TenantDataModel();
+            TenantDataModel savedModel = new TenantDataModel();
+            when(applicationContext.getBean(TenantDataModel.class)).thenReturn(prototypeModel);
+            doNothing().when(modelMapper).map(dto, prototypeModel, TenantCreationUseCase.MAP_NAME);
+            when(tenantRepository.save(prototypeModel)).thenReturn(savedModel);
+            when(modelMapper.map(savedModel, TenantDTO.class))
+                    .thenThrow(new RuntimeException("Mapping configuration error"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.create(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Mapping configuration error");
         }
     }
 }

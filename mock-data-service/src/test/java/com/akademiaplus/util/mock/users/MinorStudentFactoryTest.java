@@ -37,7 +37,7 @@ class MinorStudentFactoryTest {
             // When & Then
             assertThatThrownBy(() -> factory.generate(count))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("availableTutorIds");
+                    .hasMessage(MinorStudentFactory.ERROR_TUTOR_IDS_NOT_SET);
         }
 
         @Test

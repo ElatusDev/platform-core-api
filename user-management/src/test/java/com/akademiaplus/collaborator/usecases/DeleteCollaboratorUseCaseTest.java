@@ -99,6 +99,8 @@ class DeleteCollaboratorUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(COLLABORATOR_ID))
                     .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.COLLABORATOR, COLLABORATOR_ID))
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.COLLABORATOR);
@@ -131,6 +133,8 @@ class DeleteCollaboratorUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(COLLABORATOR_ID))
                     .isInstanceOf(EntityDeletionNotAllowedException.class)
+                    .hasMessage(String.format(EntityDeletionNotAllowedException.MESSAGE_TEMPLATE,
+                            EntityType.COLLABORATOR, COLLABORATOR_ID))
                     .satisfies(ex -> {
                         EntityDeletionNotAllowedException edna =
                                 (EntityDeletionNotAllowedException) ex;

@@ -140,12 +140,59 @@ class PaymentAdultStudentCreationUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.transform(dto))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining(String.valueOf(MEMBERSHIP_ADULT_STUDENT_ID));
+                    .hasMessage(PaymentAdultStudentCreationUseCase.ERROR_MEMBERSHIP_ADULT_STUDENT_NOT_FOUND + MEMBERSHIP_ADULT_STUDENT_ID);
 
             verify(applicationContext, times(1)).getBean(PaymentAdultStudentDataModel.class);
             verify(membershipAdultStudentRepository, times(1)).findById(new MembershipAdultStudentDataModel.MembershipAdultStudentCompositeId(TENANT_ID, MEMBERSHIP_ADULT_STUDENT_ID));
             verifyNoInteractions(paymentRepository);
             verifyNoMoreInteractions(applicationContext, membershipAdultStudentRepository);
+        }
+
+        @Test
+        @DisplayName("Should throw when tenant context is missing")
+        void shouldThrow_whenTenantContextMissing() {
+            // Given
+            PaymentAdultStudentCreationRequestDTO dto = buildDto();
+            PaymentAdultStudentDataModel prototypeModel = new PaymentAdultStudentDataModel();
+            when(applicationContext.getBean(PaymentAdultStudentDataModel.class)).thenReturn(prototypeModel);
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.empty());
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.transform(dto))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage(PaymentAdultStudentCreationUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
+
+            verify(applicationContext, times(1)).getBean(PaymentAdultStudentDataModel.class);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoInteractions(paymentRepository);
+            verifyNoMoreInteractions(applicationContext, membershipAdultStudentRepository);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator exception propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when repository saveAndFlush throws")
+        void shouldPropagateException_whenRepositorySaveAndFlushThrows() {
+            // Given
+            PaymentAdultStudentCreationRequestDTO dto = buildDto();
+            PaymentAdultStudentDataModel prototypeModel = new PaymentAdultStudentDataModel();
+            when(applicationContext.getBean(PaymentAdultStudentDataModel.class)).thenReturn(prototypeModel);
+            doNothing().when(modelMapper).map(dto, prototypeModel, PaymentAdultStudentCreationUseCase.MAP_NAME);
+            when(membershipAdultStudentRepository.findById(new MembershipAdultStudentDataModel.MembershipAdultStudentCompositeId(TENANT_ID, MEMBERSHIP_ADULT_STUDENT_ID)))
+                    .thenReturn(Optional.of(new MembershipAdultStudentDataModel()));
+            RuntimeException dbException = new RuntimeException("Database connection failed");
+            when(paymentRepository.saveAndFlush(prototypeModel)).thenThrow(dbException);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.create(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Database connection failed");
+
+            verify(paymentRepository, times(1)).saveAndFlush(prototypeModel);
+            verifyNoMoreInteractions(paymentRepository);
         }
     }
 

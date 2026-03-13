@@ -23,7 +23,11 @@ import org.modelmapper.ModelMapper;
 import org.springframework.context.ApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @DisplayName("NewsFeedItemCreationUseCase")
 @ExtendWith(MockitoExtension.class)

@@ -105,7 +105,8 @@ class DeleteTutorUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(TUTOR_ID))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessage(EntityType.TUTOR + " with ID " + TUTOR_ID + " not found")
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.TUTOR, TUTOR_ID))
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.TUTOR);
@@ -135,7 +136,8 @@ class DeleteTutorUseCaseTest {
 
             assertThatThrownBy(() -> useCase.delete(TUTOR_ID))
                     .isInstanceOf(EntityDeletionNotAllowedException.class)
-                    .hasMessage("Deletion of " + EntityType.TUTOR + " with ID " + TUTOR_ID + " not allowed: " + expectedReason)
+                    .hasMessage(String.format(EntityDeletionNotAllowedException.MESSAGE_TEMPLATE_WITH_REASON,
+                            EntityType.TUTOR, TUTOR_ID, expectedReason))
                     .satisfies(ex -> {
                         EntityDeletionNotAllowedException edna =
                                 (EntityDeletionNotAllowedException) ex;
@@ -172,7 +174,8 @@ class DeleteTutorUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.delete(TUTOR_ID))
                     .isInstanceOf(EntityDeletionNotAllowedException.class)
-                    .hasMessage("Deletion of " + EntityType.TUTOR + " with ID " + TUTOR_ID + " not allowed")
+                    .hasMessage(String.format(EntityDeletionNotAllowedException.MESSAGE_TEMPLATE,
+                            EntityType.TUTOR, TUTOR_ID))
                     .satisfies(ex -> {
                         EntityDeletionNotAllowedException edna =
                                 (EntityDeletionNotAllowedException) ex;

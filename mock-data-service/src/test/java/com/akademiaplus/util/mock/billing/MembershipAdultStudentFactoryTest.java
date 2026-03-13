@@ -82,7 +82,7 @@ class MembershipAdultStudentFactoryTest {
             // When & Then
             assertThatThrownBy(() -> factory.generate(1))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("availableMembershipIds must be set");
+                    .hasMessage(MembershipAdultStudentFactory.ERROR_MEMBERSHIP_IDS_NOT_SET);
         }
 
         @Test
@@ -95,7 +95,7 @@ class MembershipAdultStudentFactoryTest {
             // When & Then
             assertThatThrownBy(() -> factory.generate(1))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("availableCourseIds must be set");
+                    .hasMessage(MembershipAdultStudentFactory.ERROR_COURSE_IDS_NOT_SET);
         }
 
         @Test
@@ -108,7 +108,7 @@ class MembershipAdultStudentFactoryTest {
             // When & Then
             assertThatThrownBy(() -> factory.generate(1))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("availableAdultStudentIds must be set");
+                    .hasMessage(MembershipAdultStudentFactory.ERROR_ADULT_STUDENT_IDS_NOT_SET);
         }
     }
 

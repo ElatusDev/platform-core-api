@@ -21,6 +21,9 @@ package com.akademiaplus.utilities.exceptions;
  */
 public class EntityNotFoundException extends RuntimeException {
 
+    /** Message template: {@code "%s with ID %s not found"}. */
+    public static final String MESSAGE_TEMPLATE = "%s with ID %s not found";
+
     private final String entityType;
     private final String entityId;
 
@@ -31,7 +34,7 @@ public class EntityNotFoundException extends RuntimeException {
      * @param entityId   the entity ID that was not found (as String for display)
      */
     public EntityNotFoundException(String entityType, String entityId) {
-        super(entityType + " with ID " + entityId + " not found");
+        super(String.format(MESSAGE_TEMPLATE, entityType, entityId));
         this.entityType = entityType;
         this.entityId = entityId;
     }

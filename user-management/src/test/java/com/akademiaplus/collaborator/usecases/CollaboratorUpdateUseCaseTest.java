@@ -129,7 +129,8 @@ class CollaboratorUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(COLLABORATOR_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessage(EntityType.COLLABORATOR + " with ID " + COLLABORATOR_ID + " not found")
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.COLLABORATOR, COLLABORATOR_ID))
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.COLLABORATOR);
@@ -324,6 +325,8 @@ class CollaboratorUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(COLLABORATOR_ID, dto))
                     .isInstanceOf(DuplicateEntityException.class)
+                    .hasMessage(String.format(DuplicateEntityException.MESSAGE_TEMPLATE,
+                            PiiField.EMAIL, EntityType.COLLABORATOR))
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.COLLABORATOR);
@@ -366,6 +369,8 @@ class CollaboratorUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(COLLABORATOR_ID, dto))
                     .isInstanceOf(DuplicateEntityException.class)
+                    .hasMessage(String.format(DuplicateEntityException.MESSAGE_TEMPLATE,
+                            PiiField.PHONE_NUMBER, EntityType.COLLABORATOR))
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.COLLABORATOR);

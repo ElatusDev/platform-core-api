@@ -215,7 +215,8 @@ class InternalAuthenticationUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.login(USERNAME, PASSWORD))
-                    .isInstanceOf(InvalidLoginException.class);
+                    .isInstanceOf(InvalidLoginException.class)
+                    .hasMessage(null);
 
             // Then — interactions
             verify(hashingService, times(1)).generateHash(USERNAME);
@@ -239,9 +240,61 @@ class InternalAuthenticationUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.login(USERNAME, "wrong-password"))
-                    .isInstanceOf(InvalidLoginException.class);
+                    .isInstanceOf(InvalidLoginException.class)
+                    .hasMessage(null);
 
             // Then — interactions
+            verify(repository, times(1)).findByUsernameHash(USERNAME_HASH);
+            verifyNoInteractions(jwtTokenProvider, refreshTokenRepository,
+                    akademiaPlusRedisSessionStore, applicationContext);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when hashingService throws")
+        void shouldPropagateException_whenHashingServiceThrows() {
+            // Given
+            InternalAuthenticationUseCase useCase = new InternalAuthenticationUseCase(
+                    repository, jwtTokenProvider, hashingService,
+                    refreshTokenRepository, akademiaPlusRedisSessionStore,
+                    applicationContext, List.of());
+
+            RuntimeException cause = new RuntimeException("hash failure");
+            when(hashingService.generateHash(USERNAME)).thenThrow(cause);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.login(USERNAME, PASSWORD))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("hash failure");
+
+            verify(hashingService, times(1)).generateHash(USERNAME);
+            verifyNoInteractions(repository, jwtTokenProvider, refreshTokenRepository,
+                    akademiaPlusRedisSessionStore, applicationContext);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when repository throws")
+        void shouldPropagateException_whenRepositoryThrows() {
+            // Given
+            InternalAuthenticationUseCase useCase = new InternalAuthenticationUseCase(
+                    repository, jwtTokenProvider, hashingService,
+                    refreshTokenRepository, akademiaPlusRedisSessionStore,
+                    applicationContext, List.of());
+
+            when(hashingService.generateHash(USERNAME)).thenReturn(USERNAME_HASH);
+            RuntimeException cause = new RuntimeException("db error");
+            when(repository.findByUsernameHash(USERNAME_HASH)).thenThrow(cause);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.login(USERNAME, PASSWORD))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("db error");
+
+            verify(hashingService, times(1)).generateHash(USERNAME);
             verify(repository, times(1)).findByUsernameHash(USERNAME_HASH);
             verifyNoInteractions(jwtTokenProvider, refreshTokenRepository,
                     akademiaPlusRedisSessionStore, applicationContext);

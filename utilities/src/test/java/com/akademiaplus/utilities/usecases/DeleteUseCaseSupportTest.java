@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 ElatusDev
+ * Copyright (c) 2026 ElatusDev
  * All rights reserved.
  *
  * This code is proprietary and confidential.
@@ -77,6 +77,8 @@ class DeleteUseCaseSupportTest {
                     DeleteUseCaseSupport.executeDelete(
                             repository, COMPOSITE_ID, ENTITY_TYPE, ENTITY_ID))
                     .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(
+                            EntityNotFoundException.MESSAGE_TEMPLATE, ENTITY_TYPE, ENTITY_ID))
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(ENTITY_TYPE);
@@ -102,6 +104,8 @@ class DeleteUseCaseSupportTest {
                     DeleteUseCaseSupport.executeDelete(
                             repository, COMPOSITE_ID, ENTITY_TYPE, ENTITY_ID))
                     .isInstanceOf(EntityDeletionNotAllowedException.class)
+                    .hasMessage(String.format(
+                            EntityDeletionNotAllowedException.MESSAGE_TEMPLATE, ENTITY_TYPE, ENTITY_ID))
                     .satisfies(ex -> {
                         EntityDeletionNotAllowedException edna =
                                 (EntityDeletionNotAllowedException) ex;
@@ -149,6 +153,8 @@ class DeleteUseCaseSupportTest {
                     DeleteUseCaseSupport.findOrThrow(
                             repository, COMPOSITE_ID, ENTITY_TYPE, ENTITY_ID))
                     .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(
+                            EntityNotFoundException.MESSAGE_TEMPLATE, ENTITY_TYPE, ENTITY_ID))
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(ENTITY_TYPE);

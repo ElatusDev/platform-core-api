@@ -29,6 +29,7 @@ import org.springframework.context.ApplicationContext;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @DisplayName("CreateCourseUseCase")
@@ -280,6 +281,74 @@ class CreateCourseUseCaseTest {
             inOrder.verify(scheduleRepository, times(1)).saveAll(schedules);
             inOrder.verify(modelMapper, times(1)).map(savedModel, CourseCreationResponseDTO.class);
             inOrder.verifyNoMoreInteractions();
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when courseValidator.validateCollaboratorsExist throws")
+        void shouldPropagateException_whenValidateCollaboratorsThrows() {
+            // Given
+            CourseCreationRequestDTO dto = buildDto();
+            when(courseValidator.validateCollaboratorsExist(dto.getAvailableCollaboratorIds()))
+                    .thenThrow(new RuntimeException("Collaborator validation failed"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.create(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Collaborator validation failed");
+
+            verify(courseValidator, times(1)).validateCollaboratorsExist(dto.getAvailableCollaboratorIds());
+            verifyNoInteractions(applicationContext, courseRepository, scheduleRepository);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when courseRepository.saveAndFlush throws")
+        void shouldPropagateException_whenSaveAndFlushThrows() {
+            // Given
+            CourseCreationRequestDTO dto = buildDto();
+            CourseDataModel prototypeModel = new CourseDataModel();
+            CollaboratorDataModel collaborator = new CollaboratorDataModel();
+            when(courseValidator.validateCollaboratorsExist(dto.getAvailableCollaboratorIds()))
+                    .thenReturn(List.of(collaborator));
+            when(applicationContext.getBean(CourseDataModel.class)).thenReturn(prototypeModel);
+            when(courseRepository.saveAndFlush(prototypeModel))
+                    .thenThrow(new RuntimeException("DB connection lost"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.create(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection lost");
+
+            verify(courseRepository, times(1)).saveAndFlush(prototypeModel);
+            verifyNoInteractions(scheduleRepository);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when courseValidator.validateSchedulesAvailable throws")
+        void shouldPropagateException_whenValidateSchedulesThrows() {
+            // Given
+            CourseCreationRequestDTO dto = buildDto();
+            CourseDataModel prototypeModel = new CourseDataModel();
+            CourseDataModel savedModel = new CourseDataModel();
+            CollaboratorDataModel collaborator = new CollaboratorDataModel();
+            when(courseValidator.validateCollaboratorsExist(dto.getAvailableCollaboratorIds()))
+                    .thenReturn(List.of(collaborator));
+            when(applicationContext.getBean(CourseDataModel.class)).thenReturn(prototypeModel);
+            when(courseRepository.saveAndFlush(prototypeModel)).thenReturn(savedModel);
+            when(courseValidator.validateSchedulesAvailable(dto.getTimeTableIds()))
+                    .thenThrow(new RuntimeException("Schedule validation failed"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.create(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Schedule validation failed");
+
+            verify(courseValidator, times(1)).validateSchedulesAvailable(dto.getTimeTableIds());
+            verifyNoInteractions(scheduleRepository);
         }
     }
 }

@@ -15,6 +15,7 @@ import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
 import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.customer.AdultStudentDataModel;
 import com.akademiaplus.users.customer.MinorStudentDataModel;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.my.dto.MyClassStudentDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -168,7 +169,9 @@ class GetMyClassStudentsUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.execute(CLASS_ID))
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.COURSE_EVENT, CLASS_ID.toString()));
 
             // Then — interactions
             verify(courseEventRepository, times(1)).findById(compositeId);
@@ -187,7 +190,9 @@ class GetMyClassStudentsUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.execute(CLASS_ID))
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.COURSE_EVENT, CLASS_ID.toString()));
 
             // Then — interactions
             verify(courseEventRepository, times(1)).findById(compositeId);

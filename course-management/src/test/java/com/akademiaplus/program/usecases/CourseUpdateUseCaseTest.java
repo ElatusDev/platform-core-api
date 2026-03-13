@@ -9,12 +9,14 @@ package com.akademiaplus.program.usecases;
 
 import com.akademiaplus.courses.program.CourseDataModel;
 import com.akademiaplus.courses.program.ScheduleDataModel;
-import com.akademiaplus.exception.ScheduleNotAvailableException;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.program.application.CourseValidator;
+import com.akademiaplus.program.domain.DomainCourse;
+import com.akademiaplus.program.domain.exception.ScheduleConflictException;
 import com.akademiaplus.program.interfaceadapters.CourseRepository;
 import com.akademiaplus.program.interfaceadapters.ScheduleRepository;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.course.management.dto.CourseUpdateRequestDTO;
 import openapi.akademiaplus.domain.course.management.dto.CourseUpdateResponseDTO;
@@ -34,6 +36,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -59,6 +63,7 @@ class CourseUpdateUseCaseTest {
     @Mock private CourseRepository courseRepository;
     @Mock private ScheduleRepository scheduleRepository;
     @Mock private CourseValidator courseValidator;
+    @Mock private DomainCourse domainCourse;
     @Mock private TenantContextHolder tenantContextHolder;
     @Mock private ModelMapper modelMapper;
 
@@ -68,7 +73,7 @@ class CourseUpdateUseCaseTest {
     void setUp() {
         useCase = new CourseUpdateUseCase(
                 courseRepository, scheduleRepository, courseValidator,
-                tenantContextHolder, modelMapper);
+                domainCourse, tenantContextHolder, modelMapper);
     }
 
     private CourseUpdateRequestDTO buildDto() {
@@ -106,6 +111,12 @@ class CourseUpdateUseCaseTest {
                 .thenReturn(Optional.of(existing));
     }
 
+    private void stubDomainCoursePassThrough(CourseDataModel existing) {
+        when(domainCourse.get(existing)).thenReturn(domainCourse);
+        when(domainCourse.validateScheduleConflict(anyList(), eq(COURSE_ID)))
+                .thenReturn(domainCourse);
+    }
+
     @Nested
     @DisplayName("Entity Lookup")
     class EntityLookup {
@@ -123,12 +134,13 @@ class CourseUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(COURSE_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining(String.valueOf(COURSE_ID));
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.COURSE, String.valueOf(COURSE_ID)));
 
             verify(tenantContextHolder, times(1)).requireTenantId();
             verify(courseRepository, times(1)).findById(
                     new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
-            verifyNoInteractions(scheduleRepository, courseValidator, modelMapper);
+            verifyNoInteractions(scheduleRepository, courseValidator, modelMapper, domainCourse);
             verifyNoMoreInteractions(tenantContextHolder, courseRepository);
         }
     }
@@ -157,6 +169,7 @@ class CourseUpdateUseCaseTest {
             List<ScheduleDataModel.ScheduleCompositeId> compositeIds =
                     List.of(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID_1));
             when(scheduleRepository.findAllById(compositeIds)).thenReturn(List.of(schedule1));
+            stubDomainCoursePassThrough(existing);
             when(courseRepository.saveAndFlush(existing)).thenReturn(existing);
 
             // When
@@ -166,18 +179,13 @@ class CourseUpdateUseCaseTest {
             assertThat(existing.getAvailableCollaborators()).containsExactly(collab1, collab2);
             assertThat(response.getCourseId()).isEqualTo(COURSE_ID);
 
-            InOrder inOrder = inOrder(tenantContextHolder, courseRepository, modelMapper,
-                    courseValidator, scheduleRepository);
-            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
-            inOrder.verify(courseRepository, times(1)).findById(
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(courseRepository, times(1)).findById(
                     new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
-            inOrder.verify(modelMapper, times(1)).map(dto, existing, CourseUpdateUseCase.MAP_NAME);
-            inOrder.verify(courseValidator, times(1)).validateCollaboratorsExist(collaboratorIds);
-            inOrder.verify(scheduleRepository, times(1)).saveAll(List.of());
-            inOrder.verify(scheduleRepository, times(1)).findAllById(compositeIds);
-            inOrder.verify(scheduleRepository, times(1)).saveAll(List.of(schedule1));
-            inOrder.verify(courseRepository, times(1)).saveAndFlush(existing);
-            inOrder.verifyNoMoreInteractions();
+            verify(modelMapper, times(1)).map(dto, existing, CourseUpdateUseCase.MAP_NAME);
+            verify(courseValidator, times(1)).validateCollaboratorsExist(collaboratorIds);
+            verify(domainCourse, times(1)).get(existing);
+            verify(courseRepository, times(1)).saveAndFlush(existing);
         }
     }
 
@@ -207,6 +215,7 @@ class CourseUpdateUseCaseTest {
             List<ScheduleDataModel.ScheduleCompositeId> compositeIds =
                     List.of(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID_2));
             when(scheduleRepository.findAllById(compositeIds)).thenReturn(List.of(newSchedule));
+            stubDomainCoursePassThrough(existing);
             when(courseRepository.saveAndFlush(existing)).thenReturn(existing);
 
             // When
@@ -216,23 +225,18 @@ class CourseUpdateUseCaseTest {
             assertThat(oldSchedule.getCourseId()).isNull();
             assertThat(response.getCourseId()).isEqualTo(COURSE_ID);
 
-            InOrder inOrder = inOrder(tenantContextHolder, courseRepository, modelMapper,
-                    courseValidator, scheduleRepository);
-            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
-            inOrder.verify(courseRepository, times(1)).findById(
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(courseRepository, times(1)).findById(
                     new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
-            inOrder.verify(modelMapper, times(1)).map(dto, existing, CourseUpdateUseCase.MAP_NAME);
-            inOrder.verify(courseValidator, times(1)).validateCollaboratorsExist(collaboratorIds);
-            inOrder.verify(scheduleRepository, times(1)).saveAll(List.of(oldSchedule));
-            inOrder.verify(scheduleRepository, times(1)).findAllById(compositeIds);
-            inOrder.verify(scheduleRepository, times(1)).saveAll(List.of(newSchedule));
-            inOrder.verify(courseRepository, times(1)).saveAndFlush(existing);
-            inOrder.verifyNoMoreInteractions();
+            verify(modelMapper, times(1)).map(dto, existing, CourseUpdateUseCase.MAP_NAME);
+            verify(courseValidator, times(1)).validateCollaboratorsExist(collaboratorIds);
+            verify(domainCourse, times(1)).get(existing);
+            verify(courseRepository, times(1)).saveAndFlush(existing);
         }
 
         @Test
-        @DisplayName("Should throw ScheduleNotAvailableException when schedule assigned to another course")
-        void shouldThrowScheduleNotAvailableException_whenScheduleAssignedToAnotherCourse() {
+        @DisplayName("Should throw ScheduleConflictException when schedule assigned to another course")
+        void shouldThrowScheduleConflictException_whenScheduleAssignedToAnotherCourse() {
             // Given
             stubTenantId();
             CourseUpdateRequestDTO dto = buildDto();
@@ -244,25 +248,23 @@ class CourseUpdateUseCaseTest {
             when(courseValidator.validateCollaboratorsExist(collaboratorIds))
                     .thenReturn(List.of(new CollaboratorDataModel()));
 
-            Long otherCourseId = 999L;
-            ScheduleDataModel conflictingSchedule = buildSchedule(SCHEDULE_ID_1, otherCourseId);
+            ScheduleDataModel conflictingSchedule = buildSchedule(SCHEDULE_ID_1, 999L);
             List<ScheduleDataModel.ScheduleCompositeId> compositeIds =
                     List.of(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID_1));
             when(scheduleRepository.findAllById(compositeIds)).thenReturn(List.of(conflictingSchedule));
+            when(domainCourse.get(existing)).thenReturn(domainCourse);
+            when(domainCourse.validateScheduleConflict(List.of(conflictingSchedule), COURSE_ID))
+                    .thenThrow(new ScheduleConflictException(String.valueOf(SCHEDULE_ID_1)));
 
             // When & Then
             assertThatThrownBy(() -> useCase.update(COURSE_ID, dto))
-                    .isInstanceOf(ScheduleNotAvailableException.class);
+                    .isInstanceOf(ScheduleConflictException.class)
+                    .hasMessageContaining(ScheduleConflictException.ERROR_MESSAGE);
 
             verify(tenantContextHolder, times(1)).requireTenantId();
             verify(courseRepository, times(1)).findById(
                     new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
-            verify(modelMapper, times(1)).map(dto, existing, CourseUpdateUseCase.MAP_NAME);
-            verify(courseValidator, times(1)).validateCollaboratorsExist(collaboratorIds);
-            verify(scheduleRepository, times(1)).saveAll(List.of());
-            verify(scheduleRepository, times(1)).findAllById(compositeIds);
-            verifyNoMoreInteractions(tenantContextHolder, courseRepository, scheduleRepository,
-                    courseValidator, modelMapper);
+            verify(domainCourse, times(1)).get(existing);
         }
 
         @Test
@@ -286,7 +288,8 @@ class CourseUpdateUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.update(COURSE_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining(String.valueOf(SCHEDULE_ID_1));
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.SCHEDULE, String.valueOf(SCHEDULE_ID_1)));
 
             verify(tenantContextHolder, times(1)).requireTenantId();
             verify(courseRepository, times(1)).findById(
@@ -295,8 +298,69 @@ class CourseUpdateUseCaseTest {
             verify(courseValidator, times(1)).validateCollaboratorsExist(collaboratorIds);
             verify(scheduleRepository, times(1)).saveAll(List.of());
             verify(scheduleRepository, times(1)).findAllById(compositeIds);
+            verifyNoInteractions(domainCourse);
             verifyNoMoreInteractions(tenantContextHolder, courseRepository, scheduleRepository,
                     courseValidator, modelMapper);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when courseValidator.validateCollaboratorsExist throws")
+        void shouldPropagateException_whenValidateCollaboratorsThrows() {
+            // Given
+            stubTenantId();
+            CourseUpdateRequestDTO dto = buildDto();
+            CourseDataModel existing = buildExistingCourse();
+            stubCourseFound(existing);
+            doNothing().when(modelMapper).map(dto, existing, CourseUpdateUseCase.MAP_NAME);
+
+            List<Long> collaboratorIds = List.of(COLLABORATOR_ID_1, COLLABORATOR_ID_2);
+            when(courseValidator.validateCollaboratorsExist(collaboratorIds))
+                    .thenThrow(new EntityNotFoundException(EntityType.COLLABORATOR, String.valueOf(COLLABORATOR_ID_1)));
+
+            // When & Then
+            assertThatThrownBy(() -> useCase.update(COURSE_ID, dto))
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.COLLABORATOR, String.valueOf(COLLABORATOR_ID_1)));
+
+            verify(courseValidator, times(1)).validateCollaboratorsExist(collaboratorIds);
+            verifyNoInteractions(domainCourse);
+            verifyNoMoreInteractions(courseRepository);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when courseRepository.saveAndFlush throws")
+        void shouldPropagateException_whenSaveAndFlushThrows() {
+            // Given
+            stubTenantId();
+            CourseUpdateRequestDTO dto = buildDto();
+            CourseDataModel existing = buildExistingCourse();
+            stubCourseFound(existing);
+            doNothing().when(modelMapper).map(dto, existing, CourseUpdateUseCase.MAP_NAME);
+
+            List<Long> collaboratorIds = List.of(COLLABORATOR_ID_1, COLLABORATOR_ID_2);
+            when(courseValidator.validateCollaboratorsExist(collaboratorIds))
+                    .thenReturn(List.of(new CollaboratorDataModel()));
+
+            ScheduleDataModel schedule1 = buildSchedule(SCHEDULE_ID_1, null);
+            List<ScheduleDataModel.ScheduleCompositeId> compositeIds =
+                    List.of(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID_1));
+            when(scheduleRepository.findAllById(compositeIds)).thenReturn(List.of(schedule1));
+            stubDomainCoursePassThrough(existing);
+            when(courseRepository.saveAndFlush(existing))
+                    .thenThrow(new RuntimeException("DB connection lost"));
+
+            // When & Then
+            assertThatThrownBy(() -> useCase.update(COURSE_ID, dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection lost");
+
+            verify(courseRepository, times(1)).saveAndFlush(existing);
         }
     }
 
@@ -323,6 +387,7 @@ class CourseUpdateUseCaseTest {
             List<ScheduleDataModel.ScheduleCompositeId> compositeIds =
                     List.of(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID_1));
             when(scheduleRepository.findAllById(compositeIds)).thenReturn(List.of(schedule1));
+            stubDomainCoursePassThrough(existing);
             when(courseRepository.saveAndFlush(existing)).thenReturn(existing);
 
             // When
@@ -333,18 +398,13 @@ class CourseUpdateUseCaseTest {
             assertThat(response.getMessage()).isEqualTo(CourseUpdateUseCase.UPDATE_SUCCESS_MESSAGE);
             assertThat(schedule1.getCourseId()).isEqualTo(COURSE_ID);
 
-            InOrder inOrder = inOrder(tenantContextHolder, courseRepository, modelMapper,
-                    courseValidator, scheduleRepository);
-            inOrder.verify(tenantContextHolder, times(1)).requireTenantId();
-            inOrder.verify(courseRepository, times(1)).findById(
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verify(courseRepository, times(1)).findById(
                     new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
-            inOrder.verify(modelMapper, times(1)).map(dto, existing, CourseUpdateUseCase.MAP_NAME);
-            inOrder.verify(courseValidator, times(1)).validateCollaboratorsExist(collaboratorIds);
-            inOrder.verify(scheduleRepository, times(1)).saveAll(List.of());
-            inOrder.verify(scheduleRepository, times(1)).findAllById(compositeIds);
-            inOrder.verify(scheduleRepository, times(1)).saveAll(List.of(schedule1));
-            inOrder.verify(courseRepository, times(1)).saveAndFlush(existing);
-            inOrder.verifyNoMoreInteractions();
+            verify(modelMapper, times(1)).map(dto, existing, CourseUpdateUseCase.MAP_NAME);
+            verify(courseValidator, times(1)).validateCollaboratorsExist(collaboratorIds);
+            verify(domainCourse, times(1)).get(existing);
+            verify(courseRepository, times(1)).saveAndFlush(existing);
         }
     }
 }

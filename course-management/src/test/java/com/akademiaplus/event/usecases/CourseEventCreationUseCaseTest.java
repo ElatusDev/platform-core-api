@@ -225,8 +225,8 @@ class CourseEventCreationUseCaseTest {
         }
 
         @Test
-        @DisplayName("Should throw when course is not found")
-        void shouldThrow_whenCourseNotFound() {
+        @DisplayName("Should throw IllegalArgumentException when course is not found")
+        void shouldThrowIllegalArgumentException_whenCourseNotFound() {
             // Given
             CourseEventCreateRequestDTO dto = buildDto();
             CourseEventDataModel prototypeModel = new CourseEventDataModel();
@@ -236,20 +236,20 @@ class CourseEventCreationUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.transform(dto))
                     .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining(CourseEventCreationUseCase.ERROR_COURSE_NOT_FOUND)
                     .hasMessageContaining(String.valueOf(COURSE_ID));
 
             verify(applicationContext, times(1)).getBean(CourseEventDataModel.class);
             verify(modelMapper, times(1)).map(dto, prototypeModel, CourseEventCreationUseCase.MAP_NAME);
             verify(tenantContextHolder, times(1)).getTenantId();
             verify(courseRepository, times(1)).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
-            verifyNoInteractions(courseEventRepository);
-            verifyNoMoreInteractions(applicationContext, courseRepository, collaboratorRepository,
-                    scheduleRepository, tenantContextHolder, modelMapper);
+            verifyNoInteractions(courseEventRepository, collaboratorRepository, scheduleRepository);
+            verifyNoMoreInteractions(applicationContext, courseRepository, tenantContextHolder, modelMapper);
         }
 
         @Test
-        @DisplayName("Should throw when collaborator is not found")
-        void shouldThrow_whenCollaboratorNotFound() {
+        @DisplayName("Should throw IllegalArgumentException when collaborator is not found")
+        void shouldThrowIllegalArgumentException_whenCollaboratorNotFound() {
             // Given
             CourseEventCreateRequestDTO dto = buildDto();
             CourseEventDataModel prototypeModel = new CourseEventDataModel();
@@ -260,6 +260,7 @@ class CourseEventCreationUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.transform(dto))
                     .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining(CourseEventCreationUseCase.ERROR_COLLABORATOR_NOT_FOUND)
                     .hasMessageContaining(String.valueOf(INSTRUCTOR_ID));
 
             verify(applicationContext, times(1)).getBean(CourseEventDataModel.class);
@@ -267,14 +268,14 @@ class CourseEventCreationUseCaseTest {
             verify(tenantContextHolder, times(1)).getTenantId();
             verify(courseRepository, times(1)).findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID));
             verify(collaboratorRepository, times(1)).findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID));
-            verifyNoInteractions(courseEventRepository);
+            verifyNoInteractions(courseEventRepository, scheduleRepository);
             verifyNoMoreInteractions(applicationContext, courseRepository, collaboratorRepository,
-                    scheduleRepository, tenantContextHolder, modelMapper);
+                    tenantContextHolder, modelMapper);
         }
 
         @Test
-        @DisplayName("Should throw when schedule is not found")
-        void shouldThrow_whenScheduleNotFound() {
+        @DisplayName("Should throw IllegalArgumentException when schedule is not found")
+        void shouldThrowIllegalArgumentException_whenScheduleNotFound() {
             // Given
             CourseEventCreateRequestDTO dto = buildDto();
             CourseEventDataModel prototypeModel = new CourseEventDataModel();
@@ -286,6 +287,7 @@ class CourseEventCreationUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.transform(dto))
                     .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining(CourseEventCreationUseCase.ERROR_SCHEDULE_NOT_FOUND)
                     .hasMessageContaining(String.valueOf(SCHEDULE_ID));
 
             verify(applicationContext, times(1)).getBean(CourseEventDataModel.class);
@@ -297,6 +299,56 @@ class CourseEventCreationUseCaseTest {
             verifyNoInteractions(courseEventRepository);
             verifyNoMoreInteractions(applicationContext, courseRepository, collaboratorRepository,
                     scheduleRepository, tenantContextHolder, modelMapper);
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalArgumentException when tenant context is missing")
+        void shouldThrowIllegalArgumentException_whenTenantContextMissing() {
+            // Given
+            CourseEventCreateRequestDTO dto = buildDto();
+            CourseEventDataModel prototypeModel = new CourseEventDataModel();
+            when(applicationContext.getBean(CourseEventDataModel.class)).thenReturn(prototypeModel);
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.empty());
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.transform(dto))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage(CourseEventCreationUseCase.ERROR_TENANT_CONTEXT_REQUIRED);
+
+            verify(applicationContext, times(1)).getBean(CourseEventDataModel.class);
+            verify(modelMapper, times(1)).map(dto, prototypeModel, CourseEventCreationUseCase.MAP_NAME);
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoInteractions(courseEventRepository, courseRepository, collaboratorRepository, scheduleRepository);
+            verifyNoMoreInteractions(applicationContext, tenantContextHolder, modelMapper);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when courseEventRepository.saveAndFlush throws")
+        void shouldPropagateException_whenSaveAndFlushThrows() {
+            // Given
+            CourseEventCreateRequestDTO dto = buildDto();
+            CourseEventDataModel prototypeModel = new CourseEventDataModel();
+
+            when(applicationContext.getBean(CourseEventDataModel.class)).thenReturn(prototypeModel);
+            doNothing().when(modelMapper).map(dto, prototypeModel, CourseEventCreationUseCase.MAP_NAME);
+            when(courseRepository.findById(new CourseDataModel.CourseCompositeId(TENANT_ID, COURSE_ID))).thenReturn(Optional.of(new CourseDataModel()));
+            when(collaboratorRepository.findById(new CollaboratorDataModel.CollaboratorCompositeId(TENANT_ID, INSTRUCTOR_ID))).thenReturn(Optional.of(new CollaboratorDataModel()));
+            when(scheduleRepository.findById(new ScheduleDataModel.ScheduleCompositeId(TENANT_ID, SCHEDULE_ID))).thenReturn(Optional.of(new ScheduleDataModel()));
+            when(courseEventRepository.saveAndFlush(prototypeModel))
+                    .thenThrow(new RuntimeException("DB connection lost"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.create(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection lost");
+
+            verify(courseEventRepository, times(1)).saveAndFlush(prototypeModel);
+            verifyNoMoreInteractions(courseEventRepository);
         }
     }
 

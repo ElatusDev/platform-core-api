@@ -162,6 +162,8 @@ class AdultStudentCreationUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.create(dto))
                     .isInstanceOf(DuplicateEntityException.class)
+                    .hasMessage(String.format(DuplicateEntityException.MESSAGE_TEMPLATE,
+                            PiiField.EMAIL, EntityType.ADULT_STUDENT))
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.ADULT_STUDENT);
@@ -187,6 +189,8 @@ class AdultStudentCreationUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.create(dto))
                     .isInstanceOf(DuplicateEntityException.class)
+                    .hasMessage(String.format(DuplicateEntityException.MESSAGE_TEMPLATE,
+                            PiiField.PHONE_NUMBER, EntityType.ADULT_STUDENT))
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.ADULT_STUDENT);

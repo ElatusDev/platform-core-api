@@ -30,6 +30,9 @@ import java.util.Random;
 @SuppressWarnings("java:S2245") // Random used for non-security test data generation
 public class PaymentAdultStudentFactory implements DataFactory<PaymentAdultStudentCreationRequestDTO> {
 
+    static final String ERROR_MEMBERSHIP_ADULT_STUDENT_IDS_NOT_SET =
+            "availableMembershipAdultStudentIds must be set before generating payments";
+
     private static final List<String> PAYMENT_METHODS = Arrays.asList(
             "cash", "card", "transfer", "check"
     );
@@ -48,8 +51,7 @@ public class PaymentAdultStudentFactory implements DataFactory<PaymentAdultStude
     @Override
     public List<PaymentAdultStudentCreationRequestDTO> generate(int count) {
         if (availableMembershipAdultStudentIds.isEmpty()) {
-            throw new IllegalStateException(
-                    "availableMembershipAdultStudentIds must be set before generating payments");
+            throw new IllegalStateException(ERROR_MEMBERSHIP_ADULT_STUDENT_IDS_NOT_SET);
         }
         List<PaymentAdultStudentCreationRequestDTO> payments = new ArrayList<>();
         for (int i = 0; i < count; i++) {

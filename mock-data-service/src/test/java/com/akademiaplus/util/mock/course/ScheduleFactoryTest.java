@@ -78,7 +78,7 @@ class ScheduleFactoryTest {
             // When & Then
             assertThatThrownBy(() -> factory.generate(count))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("availableCourseIds must be set");
+                    .hasMessage(ScheduleFactory.ERROR_COURSE_IDS_NOT_SET);
         }
     }
 

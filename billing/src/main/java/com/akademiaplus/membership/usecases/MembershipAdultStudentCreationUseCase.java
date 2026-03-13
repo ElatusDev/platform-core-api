@@ -37,6 +37,10 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class MembershipAdultStudentCreationUseCase {
     public static final String MAP_NAME = "membershipAdultStudentMap";
+    public static final String ERROR_TENANT_CONTEXT_REQUIRED = "Tenant context is required";
+    public static final String ERROR_MEMBERSHIP_NOT_FOUND = "Membership not found: ";
+    public static final String ERROR_COURSE_NOT_FOUND = "Course not found: ";
+    public static final String ERROR_ADULT_STUDENT_NOT_FOUND = "Adult student not found: ";
 
     private final ApplicationContext applicationContext;
     private final MembershipAdultStudentRepository repository;
@@ -58,21 +62,21 @@ public class MembershipAdultStudentCreationUseCase {
         modelMapper.map(dto, model, MAP_NAME);
 
         Long tenantId = tenantContextHolder.getTenantId()
-                .orElseThrow(() -> new IllegalArgumentException("Tenant context is required"));
+                .orElseThrow(() -> new IllegalArgumentException(ERROR_TENANT_CONTEXT_REQUIRED));
 
         MembershipDataModel membership = membershipRepository.findById(
                         new MembershipDataModel.MembershipCompositeId(tenantId, dto.getMembershipId()))
-                .orElseThrow(() -> new IllegalArgumentException("Membership not found: " + dto.getMembershipId()));
+                .orElseThrow(() -> new IllegalArgumentException(ERROR_MEMBERSHIP_NOT_FOUND + dto.getMembershipId()));
         model.setMembership(membership);
 
         CourseDataModel course = courseRepository.findById(
                         new CourseDataModel.CourseCompositeId(tenantId, dto.getCourseId()))
-                .orElseThrow(() -> new IllegalArgumentException("Course not found: " + dto.getCourseId()));
+                .orElseThrow(() -> new IllegalArgumentException(ERROR_COURSE_NOT_FOUND + dto.getCourseId()));
         model.setCourse(course);
 
         AdultStudentDataModel adultStudent = adultStudentRepository.findById(
                         new AdultStudentDataModel.AdultStudentCompositeId(tenantId, dto.getAdultStudentId()))
-                .orElseThrow(() -> new IllegalArgumentException("Adult student not found: " + dto.getAdultStudentId()));
+                .orElseThrow(() -> new IllegalArgumentException(ERROR_ADULT_STUDENT_NOT_FOUND + dto.getAdultStudentId()));
         model.setAdultStudent(adultStudent);
 
         return model;

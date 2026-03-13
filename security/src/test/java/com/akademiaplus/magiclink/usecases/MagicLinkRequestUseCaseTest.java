@@ -397,4 +397,46 @@ class MagicLinkRequestUseCaseTest {
                     applicationContext, emailSender);
         }
     }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when hashingService throws")
+        void shouldPropagateException_whenHashingServiceThrows() {
+            // Given
+            when(hashingService.generateHash(argThat(token -> token != null && token.length() == 43)))
+                    .thenThrow(new RuntimeException("hash failure"));
+            MagicLinkRequestDTO dto = buildRequest();
+
+            // When / Then
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> useCase.requestMagicLink(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("hash failure");
+
+            verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
+            verify(hashingService, times(1)).generateHash(anyString());
+            verifyNoInteractions(magicLinkTokenRepository, applicationContext, emailSender);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when magicLinkTokenRepository throws")
+        void shouldPropagateException_whenMagicLinkTokenRepositoryThrows() {
+            // Given
+            stubTokenCreation();
+            RuntimeException cause = new RuntimeException("db error");
+            when(magicLinkTokenRepository.save(any(MagicLinkTokenDataModel.class))).thenThrow(cause);
+            MagicLinkRequestDTO dto = buildRequest();
+
+            // When / Then
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> useCase.requestMagicLink(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("db error");
+
+            verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
+            verify(magicLinkTokenRepository, times(1)).save(any(MagicLinkTokenDataModel.class));
+            verifyNoInteractions(emailSender);
+        }
+    }
 }

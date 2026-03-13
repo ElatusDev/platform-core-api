@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @DisplayName("GetStoreCatalogUseCase")
@@ -110,6 +111,47 @@ class GetStoreCatalogUseCaseTest {
             // Then
             assertThat(result).containsExactly(dto);
             verify(storeProductRepository, times(1)).findCatalogProducts(CATEGORY);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when repository findCatalogProducts throws")
+        void shouldPropagateException_whenRepositoryFindCatalogProductsThrows() {
+            // Given
+            when(storeProductRepository.findCatalogProducts(null))
+                    .thenThrow(new RuntimeException("DB connection failed"));
+
+            // When & Then
+            assertThatThrownBy(() -> useCase.getCatalog(null))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection failed");
+
+            verify(storeProductRepository, times(1)).findCatalogProducts(null);
+            verifyNoInteractions(modelMapper);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when modelMapper throws")
+        void shouldPropagateException_whenModelMapperThrows() {
+            // Given
+            StoreProductDataModel product = new StoreProductDataModel();
+            product.setStockQuantity(10);
+            when(storeProductRepository.findCatalogProducts(null))
+                    .thenReturn(List.of(product));
+            when(modelMapper.map(product, GetCatalogItemResponseDTO.class))
+                    .thenThrow(new RuntimeException("Mapping failed"));
+
+            // When & Then
+            assertThatThrownBy(() -> useCase.getCatalog(null))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Mapping failed");
+
+            verify(storeProductRepository, times(1)).findCatalogProducts(null);
+            verify(modelMapper, times(1)).map(product, GetCatalogItemResponseDTO.class);
         }
     }
 }

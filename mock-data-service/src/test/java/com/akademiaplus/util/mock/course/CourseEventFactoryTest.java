@@ -83,7 +83,7 @@ class CourseEventFactoryTest {
             // When & Then
             assertThatThrownBy(() -> factory.generate(1))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("availableCourseIds must be set");
+                    .hasMessage(CourseEventFactory.ERROR_COURSE_IDS_NOT_SET);
         }
 
         @Test
@@ -96,7 +96,7 @@ class CourseEventFactoryTest {
             // When & Then
             assertThatThrownBy(() -> factory.generate(1))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("availableScheduleIds must be set");
+                    .hasMessage(CourseEventFactory.ERROR_SCHEDULE_IDS_NOT_SET);
         }
 
         @Test
@@ -109,7 +109,7 @@ class CourseEventFactoryTest {
             // When & Then
             assertThatThrownBy(() -> factory.generate(1))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("availableCollaboratorIds must be set");
+                    .hasMessage(CourseEventFactory.ERROR_COLLABORATOR_IDS_NOT_SET);
         }
     }
 

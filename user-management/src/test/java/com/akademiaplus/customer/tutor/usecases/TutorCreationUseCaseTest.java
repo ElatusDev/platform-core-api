@@ -500,7 +500,8 @@ class TutorCreationUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.create(tutorDto))
                     .isInstanceOf(DuplicateEntityException.class)
-                    .hasMessage("Duplicate " + PiiField.EMAIL + " for " + EntityType.TUTOR)
+                    .hasMessage(String.format(DuplicateEntityException.MESSAGE_TEMPLATE,
+                            PiiField.EMAIL, EntityType.TUTOR))
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.TUTOR);
@@ -540,7 +541,8 @@ class TutorCreationUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.create(tutorDto))
                     .isInstanceOf(DuplicateEntityException.class)
-                    .hasMessage("Duplicate " + PiiField.PHONE_NUMBER + " for " + EntityType.TUTOR)
+                    .hasMessage(String.format(DuplicateEntityException.MESSAGE_TEMPLATE,
+                            PiiField.PHONE_NUMBER, EntityType.TUTOR))
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.TUTOR);
@@ -587,7 +589,8 @@ class TutorCreationUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.createMinorStudent(minorDto))
                     .isInstanceOf(DuplicateEntityException.class)
-                    .hasMessage("Duplicate " + PiiField.EMAIL + " for " + EntityType.MINOR_STUDENT)
+                    .hasMessage(String.format(DuplicateEntityException.MESSAGE_TEMPLATE,
+                            PiiField.EMAIL, EntityType.MINOR_STUDENT))
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.MINOR_STUDENT);
@@ -634,7 +637,8 @@ class TutorCreationUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.createMinorStudent(minorDto))
                     .isInstanceOf(DuplicateEntityException.class)
-                    .hasMessage("Duplicate " + PiiField.PHONE_NUMBER + " for " + EntityType.MINOR_STUDENT)
+                    .hasMessage(String.format(DuplicateEntityException.MESSAGE_TEMPLATE,
+                            PiiField.PHONE_NUMBER, EntityType.MINOR_STUDENT))
                     .satisfies(ex -> {
                         DuplicateEntityException dee = (DuplicateEntityException) ex;
                         assertThat(dee.getEntityType()).isEqualTo(EntityType.MINOR_STUDENT);

@@ -140,7 +140,7 @@ class MockDataExecutionPlanTest {
         void shouldThrowException_whenGivenNullSet() {
             assertThatThrownBy(() -> MockDataExecutionPlan.forEntities(null))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("must not be null");
+                    .hasMessage(MockDataExecutionPlan.ERROR_NULL_ENTITY_SET);
         }
 
         @Test

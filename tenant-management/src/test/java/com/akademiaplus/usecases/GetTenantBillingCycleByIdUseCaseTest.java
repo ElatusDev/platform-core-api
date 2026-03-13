@@ -109,11 +109,8 @@ class GetTenantBillingCycleByIdUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.get(BILLING_CYCLE_ID))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .satisfies(ex -> {
-                        EntityNotFoundException enfe = (EntityNotFoundException) ex;
-                        assertThat(enfe.getEntityType()).isEqualTo(EntityType.TENANT_BILLING_CYCLE);
-                        assertThat(enfe.getEntityId()).isEqualTo(String.valueOf(BILLING_CYCLE_ID));
-                    });
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.TENANT_BILLING_CYCLE, String.valueOf(BILLING_CYCLE_ID)));
             verify(tenantContextHolder, times(1)).getTenantId();
             verify(tenantBillingCycleRepository, times(1)).findById(compositeId);
             verifyNoInteractions(modelMapper);
@@ -138,6 +135,63 @@ class GetTenantBillingCycleByIdUseCaseTest {
             verify(tenantContextHolder, times(1)).getTenantId();
             verifyNoInteractions(tenantBillingCycleRepository, modelMapper);
             verifyNoMoreInteractions(tenantContextHolder);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when tenantContextHolder.getTenantId throws")
+        void shouldPropagateException_whenGetTenantIdThrows() {
+            // Given
+            when(tenantContextHolder.getTenantId())
+                    .thenThrow(new RuntimeException("Thread-local corrupted"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.get(BILLING_CYCLE_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Thread-local corrupted");
+            verify(tenantContextHolder, times(1)).getTenantId();
+            verifyNoInteractions(tenantBillingCycleRepository, modelMapper);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when repository.findById throws")
+        void shouldPropagateException_whenFindByIdThrows() {
+            // Given
+            TenantBillingCycleDataModel.TenantBillingCycleCompositeId compositeId =
+                    new TenantBillingCycleDataModel.TenantBillingCycleCompositeId(TENANT_ID, BILLING_CYCLE_ID);
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
+            when(tenantBillingCycleRepository.findById(compositeId))
+                    .thenThrow(new RuntimeException("DB connection lost"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.get(BILLING_CYCLE_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB connection lost");
+            verify(tenantBillingCycleRepository, times(1)).findById(compositeId);
+            verifyNoInteractions(modelMapper);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when modelMapper.map throws")
+        void shouldPropagateException_whenModelMapperThrows() {
+            // Given
+            TenantBillingCycleDataModel entity = new TenantBillingCycleDataModel();
+            TenantBillingCycleDataModel.TenantBillingCycleCompositeId compositeId =
+                    new TenantBillingCycleDataModel.TenantBillingCycleCompositeId(TENANT_ID, BILLING_CYCLE_ID);
+            when(tenantContextHolder.getTenantId()).thenReturn(Optional.of(TENANT_ID));
+            when(tenantBillingCycleRepository.findById(compositeId)).thenReturn(Optional.of(entity));
+            when(modelMapper.map(entity, BillingCycleDetailsDTO.class))
+                    .thenThrow(new RuntimeException("Mapping configuration error"));
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.get(BILLING_CYCLE_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Mapping configuration error");
+            verify(modelMapper, times(1)).map(entity, BillingCycleDetailsDTO.class);
         }
     }
 }

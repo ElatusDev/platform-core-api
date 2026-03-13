@@ -29,8 +29,10 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @DisplayName("ListTasksUseCase")
@@ -171,6 +173,44 @@ class ListTasksUseCaseTest {
             // Then
             assertThat(result.getContent()).hasSize(1);
             verify(taskRepository, times(1)).findOverdueTasks(TENANT_ID, PageRequest.of(PAGE, SIZE));
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when requireTenantId throws")
+        void shouldPropagateException_whenRequireTenantIdThrows() {
+            // Given
+            RuntimeException tenantException = new RuntimeException("No tenant");
+            when(tenantContextHolder.requireTenantId()).thenThrow(tenantException);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.list(null, null, null, null, PAGE, SIZE))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("No tenant");
+
+            verify(tenantContextHolder, times(1)).requireTenantId();
+            verifyNoInteractions(taskRepository);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when findAllByTenantId throws")
+        void shouldPropagateException_whenFindAllByTenantIdThrows() {
+            // Given
+            when(tenantContextHolder.requireTenantId()).thenReturn(TENANT_ID);
+            RuntimeException dbException = new RuntimeException("DB error");
+            when(taskRepository.findAllByTenantId(TENANT_ID, PageRequest.of(PAGE, SIZE)))
+                    .thenThrow(dbException);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.list(null, null, null, null, PAGE, SIZE))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("DB error");
+
+            verify(taskRepository, times(1)).findAllByTenantId(TENANT_ID, PageRequest.of(PAGE, SIZE));
         }
     }
 }

@@ -151,8 +151,8 @@ class EmailTemplateUpdateUseCaseTest {
             // When / Then
             assertThatThrownBy(() -> useCase.update(TEMPLATE_ID, dto))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining(EntityType.EMAIL_TEMPLATE)
-                    .hasMessageContaining(String.valueOf(TEMPLATE_ID));
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.EMAIL_TEMPLATE, String.valueOf(TEMPLATE_ID)));
             verify(emailTemplateRepository, times(1)).findByTemplateId(TEMPLATE_ID);
             verifyNoInteractions(emailTemplateVariableRepository, modelMapper, applicationContext);
             verifyNoMoreInteractions(emailTemplateRepository);

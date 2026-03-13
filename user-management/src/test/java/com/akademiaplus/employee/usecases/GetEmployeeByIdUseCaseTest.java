@@ -93,7 +93,8 @@ class GetEmployeeByIdUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.get(EMPLOYEE_ID))
                     .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessage(EntityType.EMPLOYEE + " with ID " + EMPLOYEE_ID + " not found")
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.EMPLOYEE, EMPLOYEE_ID))
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.EMPLOYEE);

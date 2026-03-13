@@ -10,6 +10,7 @@ package com.akademiaplus.usecases.my;
 import com.akademiaplus.customer.minorstudent.interfaceadapters.MinorStudentRepository;
 import com.akademiaplus.internal.interfaceadapters.UserContextHolder;
 import com.akademiaplus.users.customer.MinorStudentDataModel;
+import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.my.dto.MyCourseDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -86,7 +87,9 @@ class GetMyChildCoursesUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.execute(MINOR_STUDENT_ID))
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.MINOR_STUDENT, MINOR_STUDENT_ID.toString()));
 
             // Then — interactions
             verify(userContextHolder, times(1)).requireProfileId();
@@ -104,7 +107,9 @@ class GetMyChildCoursesUseCaseTest {
 
             // When / Then
             assertThatThrownBy(() -> useCase.execute(MINOR_STUDENT_ID))
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.MINOR_STUDENT, MINOR_STUDENT_ID.toString()));
 
             // Then — interactions
             verify(minorStudentRepository, times(1)).findByTutorId(TUTOR_PROFILE_ID);

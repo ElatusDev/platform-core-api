@@ -96,6 +96,8 @@ class GetMinorStudentByIdUseCaseTest {
             // When & Then
             assertThatThrownBy(() -> useCase.get(MINOR_STUDENT_ID))
                     .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessage(String.format(EntityNotFoundException.MESSAGE_TEMPLATE,
+                            EntityType.MINOR_STUDENT, MINOR_STUDENT_ID))
                     .satisfies(ex -> {
                         EntityNotFoundException enfe = (EntityNotFoundException) ex;
                         assertThat(enfe.getEntityType()).isEqualTo(EntityType.MINOR_STUDENT);

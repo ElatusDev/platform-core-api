@@ -32,6 +32,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ScheduleCreationUseCase {
     public static final String MAP_NAME = "scheduleMap";
+    public static final String ERROR_TENANT_CONTEXT_REQUIRED = "Tenant context is required";
+    public static final String ERROR_COURSE_NOT_FOUND = "Course not found: ";
 
     private final ApplicationContext applicationContext;
     private final ScheduleRepository scheduleRepository;
@@ -66,10 +68,10 @@ public class ScheduleCreationUseCase {
         modelMapper.map(dto, model, MAP_NAME);
 
         Long tenantId = tenantContextHolder.getTenantId()
-                .orElseThrow(() -> new IllegalArgumentException("Tenant context is required"));
+                .orElseThrow(() -> new IllegalArgumentException(ERROR_TENANT_CONTEXT_REQUIRED));
         CourseDataModel course = courseRepository.findById(
                         new CourseDataModel.CourseCompositeId(tenantId, dto.getCourseId()))
-                .orElseThrow(() -> new IllegalArgumentException("Course not found: " + dto.getCourseId()));
+                .orElseThrow(() -> new IllegalArgumentException(ERROR_COURSE_NOT_FOUND + dto.getCourseId()));
         model.setCourse(course);
 
         return model;

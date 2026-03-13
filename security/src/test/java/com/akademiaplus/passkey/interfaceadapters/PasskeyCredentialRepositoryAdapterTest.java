@@ -334,4 +334,46 @@ class PasskeyCredentialRepositoryAdapterTest {
             verifyNoMoreInteractions(jpaRepository, internalAuthRepository, hashingService);
         }
     }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when hashingService throws on getCredentialIdsForUsername")
+        void shouldPropagateException_whenHashingServiceThrowsOnGetCredentialIds() {
+            // Given
+            RuntimeException cause = new RuntimeException("hash failure");
+            when(hashingService.generateHash(USERNAME)).thenThrow(cause);
+
+            // When / Then
+            assertThat(org.assertj.core.api.Assertions.catchThrowable(
+                    () -> adapter.getCredentialIdsForUsername(USERNAME)))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("hash failure");
+
+            verify(hashingService, times(1)).generateHash(USERNAME);
+            verifyNoInteractions(jpaRepository, internalAuthRepository);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when internalAuthRepository throws on getUsernameForUserHandle")
+        void shouldPropagateException_whenInternalAuthRepositoryThrows() {
+            // Given
+            when(jpaRepository.findByUserHandle(USER_HANDLE_BYTES))
+                    .thenReturn(List.of(createCredential()));
+            RuntimeException cause = new RuntimeException("db error");
+            when(internalAuthRepository.findByInternalAuthId(USER_ID)).thenThrow(cause);
+
+            // When / Then
+            assertThat(org.assertj.core.api.Assertions.catchThrowable(
+                    () -> adapter.getUsernameForUserHandle(new ByteArray(USER_HANDLE_BYTES))))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("db error");
+
+            verify(jpaRepository, times(1)).findByUserHandle(USER_HANDLE_BYTES);
+            verify(internalAuthRepository, times(1)).findByInternalAuthId(USER_ID);
+            verifyNoInteractions(hashingService);
+        }
+    }
 }

@@ -25,6 +25,12 @@ package com.akademiaplus.utilities.exceptions;
  */
 public class EntityDeletionNotAllowedException extends RuntimeException {
 
+    /** Message template for DB constraint variant: {@code "Deletion of %s with ID %s not allowed"}. */
+    public static final String MESSAGE_TEMPLATE = "Deletion of %s with ID %s not allowed";
+
+    /** Message template for business rule variant: {@code "Deletion of %s with ID %s not allowed: %s"}. */
+    public static final String MESSAGE_TEMPLATE_WITH_REASON = "Deletion of %s with ID %s not allowed: %s";
+
     private final String entityType;
     private final String entityId;
     private final String reason;
@@ -38,7 +44,7 @@ public class EntityDeletionNotAllowedException extends RuntimeException {
      * @param cause      the database exception
      */
     public EntityDeletionNotAllowedException(String entityType, String entityId, Throwable cause) {
-        super("Deletion of " + entityType + " with ID " + entityId + " not allowed", cause);
+        super(String.format(MESSAGE_TEMPLATE, entityType, entityId), cause);
         this.entityType = entityType;
         this.entityId = entityId;
         this.reason = null;
@@ -52,7 +58,7 @@ public class EntityDeletionNotAllowedException extends RuntimeException {
      * @param reason     business rule description
      */
     public EntityDeletionNotAllowedException(String entityType, String entityId, String reason) {
-        super("Deletion of " + entityType + " with ID " + entityId + " not allowed: " + reason);
+        super(String.format(MESSAGE_TEMPLATE_WITH_REASON, entityType, entityId, reason));
         this.entityType = entityType;
         this.entityId = entityId;
         this.reason = reason;

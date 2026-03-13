@@ -37,8 +37,10 @@ import java.util.Collections;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @DisplayName("TaskController")
@@ -193,6 +195,137 @@ class TaskControllerTest {
 
             // Then
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
+            verify(deleteTaskUseCase, times(1)).delete(TASK_ID);
+        }
+    }
+
+    @Nested
+    @DisplayName("User ID Extraction")
+    class UserIdExtraction {
+
+        @Test
+        @DisplayName("Should throw IllegalStateException when no authentication in context")
+        void shouldThrowIllegalStateException_whenNoAuthInContext() {
+            // Given
+            SecurityContextHolder.clearContext();
+            CreateTaskRequestDTO dto = new CreateTaskRequestDTO();
+
+            // When / Then
+            assertThatThrownBy(() -> controller.createTask(dto))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage(TaskController.ERROR_USER_ID_NOT_FOUND);
+
+            verifyNoInteractions(createTaskUseCase);
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalStateException when details is not a Map")
+        void shouldThrowIllegalStateException_whenDetailsNotMap() {
+            // Given
+            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                    "user", "pass", Collections.emptyList());
+            auth.setDetails("not-a-map");
+            SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+            ctx.setAuthentication(auth);
+            SecurityContextHolder.setContext(ctx);
+
+            CreateTaskRequestDTO dto = new CreateTaskRequestDTO();
+
+            // When / Then
+            assertThatThrownBy(() -> controller.createTask(dto))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage(TaskController.ERROR_USER_ID_NOT_FOUND);
+
+            verifyNoInteractions(createTaskUseCase);
+        }
+
+        @Test
+        @DisplayName("Should throw IllegalStateException when userId claim is missing from map")
+        void shouldThrowIllegalStateException_whenUserIdClaimMissing() {
+            // Given
+            UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                    "user", "pass", Collections.emptyList());
+            auth.setDetails(Map.of("otherClaim", "value"));
+            SecurityContext ctx = SecurityContextHolder.createEmptyContext();
+            ctx.setAuthentication(auth);
+            SecurityContextHolder.setContext(ctx);
+
+            CreateTaskRequestDTO dto = new CreateTaskRequestDTO();
+
+            // When / Then
+            assertThatThrownBy(() -> controller.createTask(dto))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage(TaskController.ERROR_USER_ID_NOT_FOUND);
+
+            verifyNoInteractions(createTaskUseCase);
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator Exception Propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when create use case throws")
+        void shouldPropagateException_whenCreateUseCaseThrows() {
+            // Given
+            setSecurityContext();
+            CreateTaskRequestDTO dto = new CreateTaskRequestDTO();
+            RuntimeException useCaseException = new RuntimeException("Creation failed");
+            when(createTaskUseCase.create(dto, USER_ID)).thenThrow(useCaseException);
+
+            // When / Then
+            assertThatThrownBy(() -> controller.createTask(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Creation failed");
+
+            verify(createTaskUseCase, times(1)).create(dto, USER_ID);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when get use case throws")
+        void shouldPropagateException_whenGetUseCaseThrows() {
+            // Given
+            RuntimeException useCaseException = new RuntimeException("Not found");
+            when(getTaskByIdUseCase.get(TASK_ID)).thenThrow(useCaseException);
+
+            // When / Then
+            assertThatThrownBy(() -> controller.getTaskById(TASK_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Not found");
+
+            verify(getTaskByIdUseCase, times(1)).get(TASK_ID);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when list use case throws")
+        void shouldPropagateException_whenListUseCaseThrows() {
+            // Given
+            RuntimeException useCaseException = new RuntimeException("List error");
+            when(listTasksUseCase.list(TaskStatusDTO.PENDING, null, null, null, 0, 20))
+                    .thenThrow(useCaseException);
+
+            // When / Then
+            assertThatThrownBy(() -> controller.listTasks(TaskStatusDTO.PENDING, null, null, null, 0, 20))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("List error");
+
+            verify(listTasksUseCase, times(1)).list(TaskStatusDTO.PENDING, null, null, null, 0, 20);
+        }
+
+        @Test
+        @DisplayName("Should propagate exception when delete use case throws")
+        void shouldPropagateException_whenDeleteUseCaseThrows() {
+            // Given
+            RuntimeException useCaseException = new RuntimeException("Delete error");
+            org.mockito.Mockito.doThrow(useCaseException)
+                    .when(deleteTaskUseCase).delete(TASK_ID);
+
+            // When / Then
+            assertThatThrownBy(() -> controller.deleteTask(TASK_ID))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Delete error");
+
             verify(deleteTaskUseCase, times(1)).delete(TASK_ID);
         }
     }

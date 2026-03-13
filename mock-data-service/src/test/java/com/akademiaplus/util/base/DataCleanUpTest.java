@@ -30,6 +30,7 @@ class DataCleanUpTest {
     @Mock private EntityManager entityManager;
     @Mock private TenantScopedRepository<AnnotatedEntity, Long> repository;
     @Mock private TenantScopedRepository<UnannotatedEntity, Long> unannotatedRepository;
+    @Mock private TenantScopedRepository<InvalidTableNameEntity, Long> invalidTableNameRepository;
     @Mock private Query nativeQuery;
 
     private DataCleanUp<AnnotatedEntity, Long> dataCleanUp;
@@ -102,7 +103,8 @@ class DataCleanUpTest {
 
             // When / Then
             assertThatThrownBy(cleanUp::clean)
-                    .isInstanceOf(UnprocessableDataModelException.class);
+                    .isInstanceOf(UnprocessableDataModelException.class)
+                    .hasMessage(DataCleanUp.ANNOTATION_MISSING);
 
             // Then — interaction assertion: deleteAllInBatch was called before the throw
             verify(unannotatedRepository, times(1)).deleteAllInBatch();
@@ -111,10 +113,34 @@ class DataCleanUpTest {
             verifyNoInteractions(nativeQuery);
             verifyNoMoreInteractions(entityManager, repository, unannotatedRepository, nativeQuery);
         }
+
+        @Test
+        @DisplayName("Should throw UnprocessableDataModelException when table name is invalid")
+        void shouldThrowUnprocessableDataModelException_whenTableNameIsInvalid() {
+            // Given
+            DataCleanUp<InvalidTableNameEntity, Long> cleanUp = new DataCleanUp<>(entityManager);
+            cleanUp.setRepository(invalidTableNameRepository);
+            cleanUp.setDataModel(InvalidTableNameEntity.class);
+
+            // When / Then
+            assertThatThrownBy(cleanUp::clean)
+                    .isInstanceOf(UnprocessableDataModelException.class)
+                    .hasMessage(DataCleanUp.INVALID_TABLE_NAME_PREFIX + "drop--table");
+
+            // Then — interaction assertion: deleteAllInBatch was called before the throw
+            verify(invalidTableNameRepository, times(1)).deleteAllInBatch();
+
+            // Then — downstream mocks not reached
+            verifyNoInteractions(nativeQuery);
+            verifyNoMoreInteractions(entityManager, invalidTableNameRepository);
+        }
     }
 
     @Table(name = "test_table")
     static class AnnotatedEntity {}
 
     static class UnannotatedEntity {}
+
+    @Table(name = "drop--table")
+    static class InvalidTableNameEntity {}
 }

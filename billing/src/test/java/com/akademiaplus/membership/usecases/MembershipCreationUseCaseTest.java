@@ -23,6 +23,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.context.ApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 @DisplayName("MembershipCreationUseCase")
@@ -147,6 +148,31 @@ class MembershipCreationUseCaseTest {
             inOrder.verify(membershipRepository, times(1)).saveAndFlush(prototypeModel);
             inOrder.verify(modelMapper, times(1)).map(savedModel, MembershipCreationResponseDTO.class);
             inOrder.verifyNoMoreInteractions();
+        }
+    }
+
+    @Nested
+    @DisplayName("Collaborator exception propagation")
+    class CollaboratorExceptionPropagation {
+
+        @Test
+        @DisplayName("Should propagate exception when repository saveAndFlush throws")
+        void shouldPropagateException_whenRepositorySaveAndFlushThrows() {
+            // Given
+            MembershipCreationRequestDTO dto = buildDto();
+            MembershipDataModel prototypeModel = new MembershipDataModel();
+            when(applicationContext.getBean(MembershipDataModel.class)).thenReturn(prototypeModel);
+            doNothing().when(modelMapper).map(dto, prototypeModel, MembershipCreationUseCase.MAP_NAME);
+            RuntimeException dbException = new RuntimeException("Database connection failed");
+            when(membershipRepository.saveAndFlush(prototypeModel)).thenThrow(dbException);
+
+            // When / Then
+            assertThatThrownBy(() -> useCase.create(dto))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessage("Database connection failed");
+
+            verify(membershipRepository, times(1)).saveAndFlush(prototypeModel);
+            verifyNoMoreInteractions(membershipRepository);
         }
     }
 }
