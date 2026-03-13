@@ -96,10 +96,17 @@ public abstract class AbstractIntegrationTest {
         registry.add("jwt.keystore.password", () -> "testpassword");
         registry.add("jwt.keystore.alias", () -> "test-jwt");
         registry.add("jwt.token.validity-ms", () -> "900000");
+        registry.add("jwt.refresh-token.validity-ms", () -> "2592000000");
         registry.add("security.encryption-key",
                 () -> "zZhnG8Pe0W9bOHWNDrqTNHC0sDIdVHEsCW/jJWPt1cI=");
         registry.add("mp.access.token",
                 () -> "TEST-0000000000000000-000000-ffffffffffffffffffffffffffffffff-000000000");
+        registry.add("security.cookie.domain", () -> "localhost");
+        registry.add("security.cookie.secure", () -> "false");
+        registry.add("security.cookie.access-token-name", () -> "access_token");
+        registry.add("security.cookie.refresh-token-name", () -> "refresh_token");
+        registry.add("security.cookie.access-token-max-age-seconds", () -> "900");
+        registry.add("security.cookie.refresh-token-max-age-seconds", () -> "2592000");
         registry.add("spring.main.allow-bean-definition-overriding", () -> "true");
     }
 }
