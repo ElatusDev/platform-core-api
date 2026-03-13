@@ -7,6 +7,7 @@
  */
 package com.akademiaplus.usecases.my;
 
+import com.akademiaplus.collaborator.interfaceadapters.CollaboratorRepository;
 import com.akademiaplus.customer.adultstudent.interfaceadapters.AdultStudentRepository;
 import com.akademiaplus.customer.interfaceadapters.TutorRepository;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
@@ -57,6 +58,7 @@ class UpdateMyProfileUseCaseTest {
     @Mock private TenantContextHolder tenantContextHolder;
     @Mock private AdultStudentRepository adultStudentRepository;
     @Mock private TutorRepository tutorRepository;
+    @Mock private CollaboratorRepository collaboratorRepository;
     @Mock private PiiNormalizer piiNormalizer;
     @Mock private HashingService hashingService;
 
@@ -65,7 +67,8 @@ class UpdateMyProfileUseCaseTest {
     @BeforeEach
     void setUp() {
         useCase = new UpdateMyProfileUseCase(userContextHolder, tenantContextHolder,
-                adultStudentRepository, tutorRepository, piiNormalizer, hashingService);
+                adultStudentRepository, tutorRepository, collaboratorRepository,
+                piiNormalizer, hashingService);
     }
 
     private PersonPIIDataModel buildPii() {

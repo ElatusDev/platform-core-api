@@ -7,6 +7,7 @@
  */
 package com.akademiaplus.passkey.usecases;
 
+import com.akademiaplus.collaborator.interfaceadapters.CollaboratorRepository;
 import com.akademiaplus.internal.interfaceadapters.InternalAuthRepository;
 import com.akademiaplus.internal.interfaceadapters.RefreshTokenRepository;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
@@ -71,6 +72,7 @@ class PasskeyAuthenticationUseCaseTest {
     @Mock private AkademiaPlusRedisSessionStore akademiaPlusRedisSessionStore;
     @Mock private RefreshTokenRepository refreshTokenRepository;
     @Mock private ApplicationContext applicationContext;
+    @Mock private CollaboratorRepository collaboratorRepository;
 
     private PasskeyAuthenticationUseCase useCase;
 
@@ -79,7 +81,8 @@ class PasskeyAuthenticationUseCaseTest {
         useCase = new PasskeyAuthenticationUseCase(
                 relyingParty, challengeStore, credentialRepository, registrationUseCase,
                 jwtTokenProvider, internalAuthRepository, hashingService,
-                akademiaPlusRedisSessionStore, refreshTokenRepository, applicationContext);
+                akademiaPlusRedisSessionStore, refreshTokenRepository, applicationContext,
+                collaboratorRepository);
     }
 
     private InternalAuthDataModel createAuthDataModel() {
