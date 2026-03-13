@@ -68,6 +68,20 @@ CREATE TABLE tenant_sequences (
     FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id)
 );
 
+CREATE TABLE tenant_branding (
+    tenant_id BIGINT NOT NULL,
+    school_name VARCHAR(200) NOT NULL,
+    logo_url VARCHAR(500),
+    primary_color VARCHAR(7) NOT NULL,
+    secondary_color VARCHAR(7) NOT NULL,
+    font_family VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id)
+);
+
 --      NOTIFICATIONS MODULE     --
 
 CREATE TABLE notifications (

@@ -68,6 +68,20 @@ CREATE TABLE tenant_sequences (
     FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id)
 );
 
+CREATE TABLE tenant_branding (
+    tenant_id BIGINT NOT NULL,
+    school_name VARCHAR(200) NOT NULL,
+    logo_url VARCHAR(500),
+    primary_color VARCHAR(7) NOT NULL,
+    secondary_color VARCHAR(7) NOT NULL,
+    font_family VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id)
+);
+
 --      NOTIFICATIONS MODULE     --
 
 CREATE TABLE notifications (
@@ -198,6 +212,27 @@ CREATE TABLE email_template_variables (
         REFERENCES email_templates (tenant_id, template_id)
 );
 
+CREATE TABLE news_feed_items (
+    tenant_id BIGINT NOT NULL,
+    news_feed_item_id BIGINT NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    body TEXT NOT NULL,
+    author_id BIGINT NOT NULL,
+    course_id BIGINT NULL,
+    image_url VARCHAR(500),
+    status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
+    published_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, news_feed_item_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
+    INDEX idx_tenant_active_news_feed (tenant_id, deleted_at),
+    INDEX idx_tenant_news_feed_status (tenant_id, status, deleted_at),
+    INDEX idx_tenant_news_feed_course (tenant_id, course_id, deleted_at),
+    INDEX idx_tenant_news_feed_published (tenant_id, published_at, deleted_at)
+);
+
 --           POS SYSTEM MODULE         --
 
 CREATE TABLE store_products (
@@ -207,6 +242,8 @@ CREATE TABLE store_products (
     description VARCHAR(500),
     price DECIMAL(10,2) NOT NULL,
     stock_quantity INT NOT NULL,
+    image_url VARCHAR(500),
+    category VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
@@ -214,7 +251,8 @@ CREATE TABLE store_products (
     FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
     UNIQUE KEY uk_store_product_name_tenant (tenant_id, product_name, deleted_at),
     INDEX idx_tenant_active_product (tenant_id, deleted_at),
-    INDEX idx_tenant_active_price (tenant_id, deleted_at, price)
+    INDEX idx_tenant_active_price (tenant_id, deleted_at, price),
+    INDEX idx_tenant_active_category (tenant_id, category, deleted_at)
 );
 
 CREATE TABLE store_transactions (

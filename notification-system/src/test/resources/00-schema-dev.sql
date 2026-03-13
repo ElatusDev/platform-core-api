@@ -198,6 +198,27 @@ CREATE TABLE email_template_variables (
         REFERENCES email_templates (tenant_id, template_id)
 );
 
+CREATE TABLE news_feed_items (
+    tenant_id BIGINT NOT NULL,
+    news_feed_item_id BIGINT NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    body TEXT NOT NULL,
+    author_id BIGINT NOT NULL,
+    course_id BIGINT NULL,
+    image_url VARCHAR(500),
+    status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
+    published_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, news_feed_item_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
+    INDEX idx_tenant_active_news_feed (tenant_id, deleted_at),
+    INDEX idx_tenant_news_feed_status (tenant_id, status, deleted_at),
+    INDEX idx_tenant_news_feed_course (tenant_id, course_id, deleted_at),
+    INDEX idx_tenant_news_feed_published (tenant_id, published_at, deleted_at)
+);
+
 --           POS SYSTEM MODULE         --
 
 CREATE TABLE store_products (

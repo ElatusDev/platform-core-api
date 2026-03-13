@@ -75,6 +75,18 @@ public class StoreProductDataModel extends TenantScoped {
     private Integer stockQuantity;
 
     /**
+     * URL of the product image for catalog display.
+     */
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
+    /**
+     * Product category for catalog filtering.
+     */
+    @Column(name = "category", length = 100)
+    private String category;
+
+    /**
      * Composite primary key class for Product entity.
      * Combines tenant ID and product ID for uniqueness across tenants.
      */

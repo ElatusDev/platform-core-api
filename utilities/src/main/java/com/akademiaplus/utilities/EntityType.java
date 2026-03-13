@@ -54,6 +54,7 @@ public final class EntityType {
     public static final String EMAIL = "entity.email";
     public static final String EMAIL_TEMPLATE = "entity.email.template";
     public static final String PUSH_DEVICE = "entity.push.device";
+    public static final String NEWS_FEED_ITEM = "entity.news.feed.item";
 
     // task
     public static final String TASK = "entity.task";
@@ -65,4 +66,5 @@ public final class EntityType {
     public static final String TENANT = "entity.tenant";
     public static final String TENANT_SUBSCRIPTION = "entity.tenant.subscription";
     public static final String TENANT_BILLING_CYCLE = "entity.tenant.billing.cycle";
+    public static final String TENANT_BRANDING = "entity.tenant.branding";
 }
