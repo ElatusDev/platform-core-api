@@ -7,11 +7,15 @@
  */
 package com.akademiaplus.config;
 
+import com.akademiaplus.newsfeed.NewsFeedItemDataModel;
 import com.akademiaplus.notification.usecases.EmailTemplateCreationUseCase;
+import com.akademiaplus.notification.usecases.NewsFeedItemCreationUseCase;
 import com.akademiaplus.notification.usecases.NotificationCreationUseCase;
+import com.akademiaplus.notification.usecases.UpdateNewsFeedItemUseCase;
 import com.akademiaplus.notifications.NotificationDataModel;
 import com.akademiaplus.notifications.email.EmailTemplateDataModel;
 import openapi.akademiaplus.domain.notification.system.dto.CreateEmailTemplateRequestDTO;
+import openapi.akademiaplus.domain.notification.system.dto.NewsFeedItemCreationRequestDTO;
 import openapi.akademiaplus.domain.notification.system.dto.NotificationCreationRequestDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Configuration;
@@ -39,6 +43,8 @@ public class NotificationModelMapperConfiguration {
 
         registerNotificationMap();
         registerEmailTemplateCreateMap();
+        registerNewsFeedItemCreateMap();
+        registerNewsFeedItemUpdateMap();
 
         modelMapper.getConfiguration().setImplicitMappingEnabled(true);
     }
@@ -63,6 +69,28 @@ public class NotificationModelMapperConfiguration {
         ).addMappings(mapper -> {
             mapper.skip(EmailTemplateDataModel::setTemplateId);
             mapper.skip(EmailTemplateDataModel::setVariables);
+        }).implicitMappings();
+    }
+
+    private void registerNewsFeedItemCreateMap() {
+        modelMapper.createTypeMap(
+                NewsFeedItemCreationRequestDTO.class,
+                NewsFeedItemDataModel.class,
+                NewsFeedItemCreationUseCase.MAP_NAME
+        ).addMappings(mapper -> {
+            mapper.skip(NewsFeedItemDataModel::setNewsFeedItemId);
+            mapper.skip(NewsFeedItemDataModel::setStatus);
+        }).implicitMappings();
+    }
+
+    private void registerNewsFeedItemUpdateMap() {
+        modelMapper.createTypeMap(
+                NewsFeedItemCreationRequestDTO.class,
+                NewsFeedItemDataModel.class,
+                UpdateNewsFeedItemUseCase.MAP_NAME
+        ).addMappings(mapper -> {
+            mapper.skip(NewsFeedItemDataModel::setNewsFeedItemId);
+            mapper.skip(NewsFeedItemDataModel::setStatus);
         }).implicitMappings();
     }
 }

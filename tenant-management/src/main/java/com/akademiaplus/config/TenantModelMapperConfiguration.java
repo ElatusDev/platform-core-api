@@ -8,13 +8,16 @@
 package com.akademiaplus.config;
 
 import com.akademiaplus.tenancy.TenantBillingCycleDataModel;
+import com.akademiaplus.tenancy.TenantBrandingDataModel;
 import com.akademiaplus.tenancy.TenantDataModel;
 import com.akademiaplus.tenancy.TenantSubscriptionDataModel;
 import com.akademiaplus.usecases.TenantBillingCycleCreationUseCase;
 import com.akademiaplus.usecases.TenantCreationUseCase;
 import com.akademiaplus.usecases.TenantSubscriptionCreationUseCase;
+import com.akademiaplus.usecases.UpdateTenantBrandingUseCase;
 import openapi.akademiaplus.domain.tenant.management.dto.BillingCycleCreateRequestDTO;
 import openapi.akademiaplus.domain.tenant.management.dto.SubscriptionCreateRequestDTO;
+import openapi.akademiaplus.domain.tenant.management.dto.TenantBrandingUpdateRequestDTO;
 import openapi.akademiaplus.domain.tenant.management.dto.TenantCreateRequestDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Configuration;
@@ -48,6 +51,7 @@ public class TenantModelMapperConfiguration {
         registerTenantMap();
         registerTenantSubscriptionMap();
         registerTenantBillingCycleMap();
+        registerTenantBrandingUpdateMap();
 
         modelMapper.getConfiguration().setImplicitMappingEnabled(true);
     }
@@ -82,5 +86,15 @@ public class TenantModelMapperConfiguration {
                 mapper.skip(TenantBillingCycleDataModel::setTenantBillingCycleId);
                 mapper.skip(TenantBillingCycleDataModel::setBillingMonth);
         }).implicitMappings();
+    }
+
+    private void registerTenantBrandingUpdateMap() {
+        modelMapper.createTypeMap(
+                TenantBrandingUpdateRequestDTO.class,
+                TenantBrandingDataModel.class,
+                UpdateTenantBrandingUseCase.MAP_NAME
+        ).addMappings(mapper ->
+                mapper.skip(TenantBrandingDataModel::setTenantId)
+        ).implicitMappings();
     }
 }

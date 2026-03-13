@@ -23,20 +23,36 @@ public class PosModuleSecurityConfiguration implements ModuleSecurityConfigurato
     private final String storeProductPathAnyPathVars;
     private final String storeTransactionPath;
     private final String storeTransactionPathAnyPathVars;
+    private final String storeCatalogPath;
+    private final String storeCatalogPathAnyPathVars;
 
     public PosModuleSecurityConfiguration(@Value("${api.pos.store-product.base-url}") String storeProductBaseUri,
-                                          @Value("${api.pos.store-transaction.base-url}") String storeTransactionBaseUri) {
+                                          @Value("${api.pos.store-transaction.base-url}") String storeTransactionBaseUri,
+                                          @Value("${api.pos.store-catalog.base-url}") String storeCatalogBaseUri) {
         String anyPathVar = "/**";
         storeProductPath = storeProductBaseUri;
         storeProductPathAnyPathVars = storeProductBaseUri + anyPathVar;
         storeTransactionPath = storeTransactionBaseUri;
         storeTransactionPathAnyPathVars = storeTransactionBaseUri + anyPathVar;
+        storeCatalogPath = storeCatalogBaseUri;
+        storeCatalogPathAnyPathVars = storeCatalogBaseUri + anyPathVar;
     }
 
     @Override
     public void configure(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) throws Exception {
+        storeCatalogPaths(auth);
         storeProductPaths(auth);
         storeTransactionPaths(auth);
+    }
+
+    private void storeCatalogPaths(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
+        auth
+                .requestMatchers(HttpMethod.GET, storeCatalogPathAnyPathVars)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name(),
+                        Role.COLLABORATOR.name(), Role.USER.name())
+                .requestMatchers(HttpMethod.GET, storeCatalogPath)
+                .hasAnyRole(Role.ADMIN.name(), Role.PRINCIPAL.name(), Role.CSR.name(),
+                        Role.COLLABORATOR.name(), Role.USER.name());
     }
 
     private void storeProductPaths(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth) {
