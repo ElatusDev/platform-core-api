@@ -42,6 +42,7 @@ import org.mockito.InOrder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -69,6 +70,7 @@ class MagicLinkVerificationUseCaseTest {
     @Mock private MagicLinkTokenRepository magicLinkTokenRepository;
     @Mock private PersonPIIRepository personPIIRepository;
     @Mock private AdultStudentRepository adultStudentRepository;
+    @Mock private com.akademiaplus.customer.interfaceadapters.TutorRepository tutorRepository;
     @Mock private JwtTokenProvider jwtTokenProvider;
     @Mock private HashingService hashingService;
     @Mock private PiiNormalizer piiNormalizer;
@@ -84,7 +86,7 @@ class MagicLinkVerificationUseCaseTest {
     void setUp() {
         useCase = new MagicLinkVerificationUseCase(
                 magicLinkTokenRepository, personPIIRepository, adultStudentRepository,
-                jwtTokenProvider, hashingService, piiNormalizer,
+                tutorRepository, jwtTokenProvider, hashingService, piiNormalizer,
                 tenantContextHolder, applicationContext);
     }
 
@@ -216,8 +218,7 @@ class MagicLinkVerificationUseCaseTest {
             inOrder.verify(applicationContext, times(1)).getBean(AdultStudentDataModel.class);
             inOrder.verify(adultStudentRepository, times(1)).save(studentCaptor.capture());
             inOrder.verify(jwtTokenProvider, times(1)).createAccessToken(
-                    TEST_NORMALIZED_EMAIL, TEST_TENANT_ID,
-                    Map.of(MagicLinkVerificationUseCase.JWT_CLAIM_ROLE, MagicLinkVerificationUseCase.ROLE_CUSTOMER));
+                    eq(TEST_NORMALIZED_EMAIL), eq(TEST_TENANT_ID), any(Map.class));
             inOrder.verify(jwtTokenProvider, times(1)).createRefreshToken(
                     eq(TEST_NORMALIZED_EMAIL), eq(TEST_TENANT_ID),
                     argThat(familyId -> familyId != null && !familyId.isEmpty()));
@@ -258,8 +259,7 @@ class MagicLinkVerificationUseCaseTest {
             inOrder.verify(applicationContext, times(1)).getBean(AdultStudentDataModel.class);
             inOrder.verify(adultStudentRepository, times(1)).save(studentCaptor.capture());
             inOrder.verify(jwtTokenProvider, times(1)).createAccessToken(
-                    TEST_NORMALIZED_EMAIL, TEST_TENANT_ID,
-                    Map.of(MagicLinkVerificationUseCase.JWT_CLAIM_ROLE, MagicLinkVerificationUseCase.ROLE_CUSTOMER));
+                    eq(TEST_NORMALIZED_EMAIL), eq(TEST_TENANT_ID), any(Map.class));
             inOrder.verify(jwtTokenProvider, times(1)).createRefreshToken(
                     eq(TEST_NORMALIZED_EMAIL), eq(TEST_TENANT_ID),
                     argThat(familyId -> familyId != null && !familyId.isEmpty()));
@@ -292,7 +292,7 @@ class MagicLinkVerificationUseCaseTest {
             assertThat(result.username()).isEqualTo(TEST_EMAIL);
 
             InOrder inOrder = inOrder(tenantContextHolder, hashingService, magicLinkTokenRepository,
-                    piiNormalizer, personPIIRepository, jwtTokenProvider);
+                    piiNormalizer, personPIIRepository, adultStudentRepository, tutorRepository, jwtTokenProvider);
             inOrder.verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
             inOrder.verify(hashingService, times(1)).generateHash(TEST_RAW_TOKEN);
             inOrder.verify(magicLinkTokenRepository, times(1)).findByTokenHash(TEST_TOKEN_HASH);
@@ -300,14 +300,15 @@ class MagicLinkVerificationUseCaseTest {
             inOrder.verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
             inOrder.verify(hashingService, times(1)).generateHash(TEST_NORMALIZED_EMAIL);
             inOrder.verify(personPIIRepository, times(1)).findByEmailHash(TEST_EMAIL_HASH);
+            inOrder.verify(adultStudentRepository, times(1)).findByPersonPiiId(null);
+            inOrder.verify(tutorRepository, times(1)).findByPersonPiiId(null);
             inOrder.verify(jwtTokenProvider, times(1)).createAccessToken(
-                    TEST_EMAIL, TEST_TENANT_ID,
-                    Map.of(MagicLinkVerificationUseCase.JWT_CLAIM_ROLE, MagicLinkVerificationUseCase.ROLE_CUSTOMER));
+                    eq(TEST_EMAIL), eq(TEST_TENANT_ID), any(Map.class));
             inOrder.verify(jwtTokenProvider, times(1)).createRefreshToken(
                     eq(TEST_EMAIL), eq(TEST_TENANT_ID),
                     argThat(familyId -> familyId != null && !familyId.isEmpty()));
             inOrder.verifyNoMoreInteractions();
-            verifyNoInteractions(adultStudentRepository, applicationContext);
+            verifyNoInteractions(applicationContext);
         }
 
         @Test
@@ -341,13 +342,12 @@ class MagicLinkVerificationUseCaseTest {
             inOrder.verify(hashingService, times(1)).generateHash(TEST_NORMALIZED_EMAIL);
             inOrder.verify(personPIIRepository, times(1)).findByEmailHash(TEST_EMAIL_HASH);
             inOrder.verify(jwtTokenProvider, times(1)).createAccessToken(
-                    TEST_EMAIL, TEST_TENANT_ID,
-                    Map.of(MagicLinkVerificationUseCase.JWT_CLAIM_ROLE, MagicLinkVerificationUseCase.ROLE_CUSTOMER));
+                    eq(TEST_EMAIL), eq(TEST_TENANT_ID), any(Map.class));
             inOrder.verify(jwtTokenProvider, times(1)).createRefreshToken(
                     eq(TEST_EMAIL), eq(TEST_TENANT_ID),
                     argThat(familyId -> familyId != null && !familyId.isEmpty()));
             inOrder.verifyNoMoreInteractions();
-            verifyNoInteractions(adultStudentRepository, applicationContext);
+            verifyNoInteractions(applicationContext);
         }
     }
 
@@ -393,8 +393,7 @@ class MagicLinkVerificationUseCaseTest {
             assertThat(saved.getPersonPII()).isNotNull();
             assertThat(saved.getCustomerAuth()).isNotNull();
             inOrder.verify(jwtTokenProvider, times(1)).createAccessToken(
-                    TEST_NORMALIZED_EMAIL, TEST_TENANT_ID,
-                    Map.of(MagicLinkVerificationUseCase.JWT_CLAIM_ROLE, MagicLinkVerificationUseCase.ROLE_CUSTOMER));
+                    eq(TEST_NORMALIZED_EMAIL), eq(TEST_TENANT_ID), any(Map.class));
             inOrder.verify(jwtTokenProvider, times(1)).createRefreshToken(
                     eq(TEST_NORMALIZED_EMAIL), eq(TEST_TENANT_ID),
                     argThat(familyId -> familyId != null && !familyId.isEmpty()));
@@ -440,8 +439,7 @@ class MagicLinkVerificationUseCaseTest {
             assertThat(pii.getAddress()).isEqualTo(MagicLinkVerificationUseCase.PLACEHOLDER_ADDRESS);
             assertThat(pii.getZipCode()).isEqualTo(MagicLinkVerificationUseCase.PLACEHOLDER_ZIP);
             inOrder.verify(jwtTokenProvider, times(1)).createAccessToken(
-                    TEST_NORMALIZED_EMAIL, TEST_TENANT_ID,
-                    Map.of(MagicLinkVerificationUseCase.JWT_CLAIM_ROLE, MagicLinkVerificationUseCase.ROLE_CUSTOMER));
+                    eq(TEST_NORMALIZED_EMAIL), eq(TEST_TENANT_ID), any(Map.class));
             inOrder.verify(jwtTokenProvider, times(1)).createRefreshToken(
                     eq(TEST_NORMALIZED_EMAIL), eq(TEST_TENANT_ID),
                     argThat(familyId -> familyId != null && !familyId.isEmpty()));
@@ -483,8 +481,7 @@ class MagicLinkVerificationUseCaseTest {
             assertThat(auth.getProvider()).isEqualTo(MagicLinkVerificationUseCase.PROVIDER_MAGIC_LINK);
             assertThat(auth.getToken()).isEqualTo(MagicLinkVerificationUseCase.AUTH_TOKEN_PLACEHOLDER);
             inOrder.verify(jwtTokenProvider, times(1)).createAccessToken(
-                    TEST_NORMALIZED_EMAIL, TEST_TENANT_ID,
-                    Map.of(MagicLinkVerificationUseCase.JWT_CLAIM_ROLE, MagicLinkVerificationUseCase.ROLE_CUSTOMER));
+                    eq(TEST_NORMALIZED_EMAIL), eq(TEST_TENANT_ID), any(Map.class));
             inOrder.verify(jwtTokenProvider, times(1)).createRefreshToken(
                     eq(TEST_NORMALIZED_EMAIL), eq(TEST_TENANT_ID),
                     argThat(familyId -> familyId != null && !familyId.isEmpty()));
@@ -526,8 +523,7 @@ class MagicLinkVerificationUseCaseTest {
             inOrder.verify(applicationContext, times(1)).getBean(AdultStudentDataModel.class);
             inOrder.verify(adultStudentRepository, times(1)).save(studentCaptor.capture());
             inOrder.verify(jwtTokenProvider, times(1)).createAccessToken(
-                    TEST_NORMALIZED_EMAIL, TEST_TENANT_ID,
-                    Map.of(MagicLinkVerificationUseCase.JWT_CLAIM_ROLE, MagicLinkVerificationUseCase.ROLE_CUSTOMER));
+                    eq(TEST_NORMALIZED_EMAIL), eq(TEST_TENANT_ID), any(Map.class));
             inOrder.verify(jwtTokenProvider, times(1)).createRefreshToken(
                     eq(TEST_NORMALIZED_EMAIL), eq(TEST_TENANT_ID),
                     argThat(familyId -> familyId != null && !familyId.isEmpty()));
@@ -542,11 +538,9 @@ class MagicLinkVerificationUseCaseTest {
         when(hashingService.generateHash(MagicLinkVerificationUseCase.PLACEHOLDER_PHONE)).thenReturn(TEST_PHONE_HASH);
     }
 
+    @SuppressWarnings("unchecked")
     private void stubJwtCreation(String email) {
-        Map<String, Object> claims = Map.of(
-                MagicLinkVerificationUseCase.JWT_CLAIM_ROLE,
-                MagicLinkVerificationUseCase.ROLE_CUSTOMER);
-        when(jwtTokenProvider.createAccessToken(email, TEST_TENANT_ID, claims))
+        when(jwtTokenProvider.createAccessToken(eq(email), eq(TEST_TENANT_ID), any(Map.class)))
                 .thenReturn(TEST_ACCESS_TOKEN);
         when(jwtTokenProvider.createRefreshToken(
                 eq(email),

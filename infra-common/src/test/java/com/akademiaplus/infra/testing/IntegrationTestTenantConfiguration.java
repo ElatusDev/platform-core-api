@@ -166,4 +166,20 @@ public class IntegrationTestTenantConfiguration {
         registration.setEnabled(false);
         return registration;
     }
+
+    /**
+     * Disables the {@code UserContextLoader} servlet filter so that
+     * integration tests set user context directly via {@code UserContextHolder}.
+     *
+     * @param filter the auto-detected {@code UserContextLoader} component
+     * @return a registration that prevents the filter from being applied
+     */
+    @Bean
+    public FilterRegistrationBean<Filter> disableUserContextLoaderForTests(
+            @Qualifier("userContextLoader") Filter filter) {
+        FilterRegistrationBean<Filter> registration =
+                new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
+    }
 }

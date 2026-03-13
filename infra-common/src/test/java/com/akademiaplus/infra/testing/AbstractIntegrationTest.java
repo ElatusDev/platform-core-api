@@ -10,8 +10,6 @@ package com.akademiaplus.infra.testing;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MariaDBContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.net.URL;
 import java.util.Objects;
@@ -23,6 +21,10 @@ import java.util.Objects;
  * development schema. All required Spring properties (datasource, JWT,
  * encryption, payment gateway) are injected dynamically so that tests
  * run without external environment variables.
+ *
+ * <p>Uses the Singleton Container Pattern so that a single MariaDB instance
+ * is shared across all test classes in the same JVM. The container starts
+ * once when this class is loaded and Testcontainers' Ryuk handles cleanup.
  *
  * <p>This class is intentionally NOT annotated with {@code @SpringBootTest}
  * — each module must add that annotation with its own application class
@@ -38,7 +40,6 @@ import java.util.Objects;
  * @author ElatusDev
  * @since 1.0
  */
-@Testcontainers
 public abstract class AbstractIntegrationTest {
 
     private static final String MARIADB_IMAGE = "mariadb:11.2";
@@ -49,12 +50,15 @@ public abstract class AbstractIntegrationTest {
 
     private static final String TEST_KEYSTORE_RESOURCE = "test-keystore.p12";
 
-    @Container
     protected static MariaDBContainer<?> mariaDB = new MariaDBContainer<>(MARIADB_IMAGE)
             .withDatabaseName(DATABASE_NAME)
             .withUsername(DATABASE_USER)
             .withPassword(DATABASE_PASSWORD)
             .withInitScript(INIT_SCRIPT);
+
+    static {
+        mariaDB.start();
+    }
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {

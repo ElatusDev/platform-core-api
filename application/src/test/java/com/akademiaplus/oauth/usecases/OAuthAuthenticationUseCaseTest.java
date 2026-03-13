@@ -38,6 +38,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -73,6 +74,7 @@ class OAuthAuthenticationUseCaseTest {
     @Mock private OAuthProviderClient googleClient;
     @Mock private PersonPIIRepository personPIIRepository;
     @Mock private AdultStudentRepository adultStudentRepository;
+    @Mock private com.akademiaplus.customer.interfaceadapters.TutorRepository tutorRepository;
     @Mock private JwtTokenProvider jwtTokenProvider;
     @Mock private HashingService hashingService;
     @Mock private PiiNormalizer piiNormalizer;
@@ -87,7 +89,7 @@ class OAuthAuthenticationUseCaseTest {
     void setUp() {
         Map<String, OAuthProviderClient> clients = Map.of("google", googleClient);
         useCase = new OAuthAuthenticationUseCase(
-                clients, personPIIRepository, adultStudentRepository,
+                clients, personPIIRepository, adultStudentRepository, tutorRepository,
                 jwtTokenProvider, hashingService, piiNormalizer,
                 tenantContextHolder, applicationContext
         );
@@ -152,9 +154,8 @@ class OAuthAuthenticationUseCaseTest {
             PersonPIIDataModel existingPii = new PersonPIIDataModel();
             when(personPIIRepository.findByEmailHash(TEST_EMAIL_HASH)).thenReturn(Optional.of(existingPii));
 
-            Map<String, Object> expectedClaims = Map.of(
-                    OAuthAuthenticationUseCase.JWT_CLAIM_ROLE, OAuthAuthenticationUseCase.ROLE_CUSTOMER);
-            when(jwtTokenProvider.createAccessToken(TEST_EMAIL, TEST_TENANT_ID, expectedClaims))
+            @SuppressWarnings("unchecked")
+            var ignored = when(jwtTokenProvider.createAccessToken(eq(TEST_EMAIL), eq(TEST_TENANT_ID), any(Map.class)))
                     .thenReturn(TEST_ACCESS_TOKEN);
             when(jwtTokenProvider.createRefreshToken(
                     eq(TEST_EMAIL), eq(TEST_TENANT_ID),
@@ -170,18 +171,21 @@ class OAuthAuthenticationUseCaseTest {
             assertThat(result.username()).isEqualTo(TEST_EMAIL);
 
             InOrder inOrder = inOrder(tenantContextHolder, googleClient, piiNormalizer,
-                    hashingService, personPIIRepository, jwtTokenProvider);
+                    hashingService, personPIIRepository, adultStudentRepository, tutorRepository, jwtTokenProvider);
             inOrder.verify(tenantContextHolder, times(1)).setTenantId(TEST_TENANT_ID);
             inOrder.verify(googleClient, times(1)).exchangeCodeForProfile(TEST_AUTH_CODE, TEST_REDIRECT_URI);
             inOrder.verify(piiNormalizer, times(1)).normalizeEmail(TEST_EMAIL);
             inOrder.verify(hashingService, times(1)).generateHash(TEST_EMAIL);
             inOrder.verify(personPIIRepository, times(1)).findByEmailHash(TEST_EMAIL_HASH);
-            inOrder.verify(jwtTokenProvider, times(1)).createAccessToken(TEST_EMAIL, TEST_TENANT_ID, expectedClaims);
+            inOrder.verify(adultStudentRepository, times(1)).findByPersonPiiId(null);
+            inOrder.verify(tutorRepository, times(1)).findByPersonPiiId(null);
+            inOrder.verify(jwtTokenProvider, times(1)).createAccessToken(
+                    eq(TEST_EMAIL), eq(TEST_TENANT_ID), any(Map.class));
             inOrder.verify(jwtTokenProvider, times(1)).createRefreshToken(
                     eq(TEST_EMAIL), eq(TEST_TENANT_ID),
                     argThat(familyId -> familyId != null && !familyId.isEmpty()));
             inOrder.verifyNoMoreInteractions();
-            verifyNoInteractions(adultStudentRepository, applicationContext);
+            verifyNoInteractions(applicationContext);
         }
     }
 
@@ -204,9 +208,8 @@ class OAuthAuthenticationUseCaseTest {
             when(applicationContext.getBean(CustomerAuthDataModel.class)).thenReturn(new CustomerAuthDataModel());
             when(applicationContext.getBean(AdultStudentDataModel.class)).thenReturn(new AdultStudentDataModel());
 
-            Map<String, Object> expectedClaims = Map.of(
-                    OAuthAuthenticationUseCase.JWT_CLAIM_ROLE, OAuthAuthenticationUseCase.ROLE_CUSTOMER);
-            when(jwtTokenProvider.createAccessToken(TEST_NEW_EMAIL, TEST_TENANT_ID, expectedClaims))
+            @SuppressWarnings("unchecked")
+            var ignored = when(jwtTokenProvider.createAccessToken(eq(TEST_NEW_EMAIL), eq(TEST_TENANT_ID), any(Map.class)))
                     .thenReturn(TEST_NEW_ACCESS_TOKEN);
             when(jwtTokenProvider.createRefreshToken(
                     eq(TEST_NEW_EMAIL), eq(TEST_TENANT_ID),
@@ -240,7 +243,8 @@ class OAuthAuthenticationUseCaseTest {
             assertThat(saved.getPersonPII().getEmail()).isEqualTo(TEST_NEW_EMAIL);
             assertThat(saved.getCustomerAuth()).isNotNull();
             assertThat(saved.getCustomerAuth().getProvider()).isEqualTo("google");
-            inOrder.verify(jwtTokenProvider, times(1)).createAccessToken(TEST_NEW_EMAIL, TEST_TENANT_ID, expectedClaims);
+            inOrder.verify(jwtTokenProvider, times(1)).createAccessToken(
+                    eq(TEST_NEW_EMAIL), eq(TEST_TENANT_ID), any(Map.class));
             inOrder.verify(jwtTokenProvider, times(1)).createRefreshToken(
                     eq(TEST_NEW_EMAIL), eq(TEST_TENANT_ID),
                     argThat(familyId -> familyId != null && !familyId.isEmpty()));

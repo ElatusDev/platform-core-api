@@ -8,8 +8,12 @@
 package com.akademiaplus.currentuser.usecases;
 
 import com.akademiaplus.collaborator.interfaceadapters.CollaboratorRepository;
+import com.akademiaplus.customer.adultstudent.interfaceadapters.AdultStudentRepository;
+import com.akademiaplus.customer.interfaceadapters.TutorRepository;
 import com.akademiaplus.employee.interfaceadapters.EmployeeRepository;
+import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.internal.interfaceadapters.InternalAuthRepository;
+import com.akademiaplus.internal.interfaceadapters.UserContextHolder;
 import com.akademiaplus.security.InternalAuthDataModel;
 import com.akademiaplus.users.base.PersonPIIDataModel;
 import com.akademiaplus.users.collaborator.CollaboratorDataModel;
@@ -75,7 +79,19 @@ class GetCurrentUserUseCaseTest {
     private CollaboratorRepository collaboratorRepository;
 
     @Mock
+    private AdultStudentRepository adultStudentRepository;
+
+    @Mock
+    private TutorRepository tutorRepository;
+
+    @Mock
     private HashingService hashingService;
+
+    @Mock
+    private UserContextHolder userContextHolder;
+
+    @Mock
+    private TenantContextHolder tenantContextHolder;
 
     private GetCurrentUserUseCase useCase;
 
@@ -85,7 +101,12 @@ class GetCurrentUserUseCaseTest {
                 internalAuthRepository,
                 employeeRepository,
                 collaboratorRepository,
-                hashingService);
+                adultStudentRepository,
+                tutorRepository,
+                hashingService,
+                userContextHolder,
+                tenantContextHolder);
+        lenient().when(userContextHolder.get()).thenReturn(Optional.empty());
     }
 
     @AfterEach
