@@ -30,4 +30,12 @@ public interface CourseEventRepository extends TenantScopedRepository<CourseEven
          + "LEFT JOIN ce.minorAttendees ma "
          + "WHERE aa.adultStudentId = :attendeeId OR ma.minorStudentId = :attendeeId")
     List<CourseEventDataModel> findByAttendeeId(@Param("attendeeId") Long attendeeId);
+
+    /**
+     * Finds course events assigned to the given collaborator (teacher).
+     *
+     * @param collaboratorId the collaborator ID
+     * @return course events where this collaborator is the assigned teacher
+     */
+    List<CourseEventDataModel> findByCollaboratorId(Long collaboratorId);
 }

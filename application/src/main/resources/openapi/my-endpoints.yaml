@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: My Endpoints API
   version: 1.0.0
-  description: Self-service endpoints for customer users (students and tutors)
+  description: Self-service endpoints for customers (students, tutors) and collaborators (teachers)
   contact:
     name: ElatusDev
     email: dev@elatusdev.com
@@ -146,6 +146,51 @@ paths:
         '403':
           description: Only tutors can access this endpoint
 
+  '/my/classes':
+    get:
+      operationId: getMyClasses
+      summary: List course events (classes) assigned to the authenticated collaborator
+      tags:
+        - MyEndpoints
+      responses:
+        '200':
+          description: Classes retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MyClass'
+        '401':
+          description: Authentication required
+
+  '/my/classes/{classId}/students':
+    get:
+      operationId: getMyClassStudents
+      summary: List students in a specific class taught by the authenticated collaborator
+      tags:
+        - MyEndpoints
+      parameters:
+        - name: classId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Students retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MyClassStudent'
+        '401':
+          description: Authentication required
+        '404':
+          description: Class not found or not assigned to this collaborator
+
   '/my/children/{minorStudentId}/courses':
     get:
       operationId: getMyChildCourses
@@ -198,6 +243,10 @@ components:
           enum:
             - ADULT_STUDENT
             - TUTOR
+            - COLLABORATOR
+        skills:
+          type: string
+          description: Collaborator skills (only present for COLLABORATOR profile type)
         firstName:
           type: string
         lastName:
@@ -323,3 +372,44 @@ components:
         entryDate:
           type: string
           format: date
+
+    MyClass:
+      type: object
+      properties:
+        classId:
+          type: integer
+          format: int64
+        eventDate:
+          type: string
+          format: date
+        eventTitle:
+          type: string
+        eventDescription:
+          type: string
+        courseId:
+          type: integer
+          format: int64
+        courseName:
+          type: string
+        scheduleDay:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+
+    MyClassStudent:
+      type: object
+      properties:
+        studentId:
+          type: integer
+          format: int64
+        firstName:
+          type: string
+        lastName:
+          type: string
+        studentType:
+          type: string
+          enum:
+            - ADULT
+            - MINOR

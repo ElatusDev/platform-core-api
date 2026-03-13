@@ -7,12 +7,14 @@
  */
 package com.akademiaplus.usecases.my;
 
+import com.akademiaplus.collaborator.interfaceadapters.CollaboratorRepository;
 import com.akademiaplus.customer.adultstudent.interfaceadapters.AdultStudentRepository;
 import com.akademiaplus.customer.interfaceadapters.TutorRepository;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.internal.interfaceadapters.UserContextHolder;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
 import com.akademiaplus.users.base.AbstractUser;
+import com.akademiaplus.users.collaborator.CollaboratorDataModel;
 import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import openapi.akademiaplus.domain.my.dto.MyProfileResponseDTO;
@@ -35,23 +37,27 @@ public class GetMyProfileUseCase {
     private final TenantContextHolder tenantContextHolder;
     private final AdultStudentRepository adultStudentRepository;
     private final TutorRepository tutorRepository;
+    private final CollaboratorRepository collaboratorRepository;
 
     /**
      * Constructs the use case with required dependencies.
      *
-     * @param userContextHolder      the user context holder
-     * @param tenantContextHolder    the tenant context holder
-     * @param adultStudentRepository the adult student repository
-     * @param tutorRepository        the tutor repository
+     * @param userContextHolder       the user context holder
+     * @param tenantContextHolder     the tenant context holder
+     * @param adultStudentRepository  the adult student repository
+     * @param tutorRepository         the tutor repository
+     * @param collaboratorRepository  the collaborator repository
      */
     public GetMyProfileUseCase(UserContextHolder userContextHolder,
                                 TenantContextHolder tenantContextHolder,
                                 AdultStudentRepository adultStudentRepository,
-                                TutorRepository tutorRepository) {
+                                TutorRepository tutorRepository,
+                                CollaboratorRepository collaboratorRepository) {
         this.userContextHolder = userContextHolder;
         this.tenantContextHolder = tenantContextHolder;
         this.adultStudentRepository = adultStudentRepository;
         this.tutorRepository = tutorRepository;
+        this.collaboratorRepository = collaboratorRepository;
     }
 
     /**
@@ -81,6 +87,11 @@ public class GetMyProfileUseCase {
                     new com.akademiaplus.users.customer.TutorDataModel.TutorCompositeId(tenantId, profileId))
                     .orElseThrow(() -> new EntityNotFoundException(EntityType.TUTOR, profileId.toString()));
         }
+        if (JwtTokenProvider.PROFILE_TYPE_COLLABORATOR.equals(profileType)) {
+            return collaboratorRepository.findById(
+                    new CollaboratorDataModel.CollaboratorCompositeId(tenantId, profileId))
+                    .orElseThrow(() -> new EntityNotFoundException(EntityType.COLLABORATOR, profileId.toString()));
+        }
         throw new EntityNotFoundException(ERROR_UNSUPPORTED_PROFILE_TYPE, profileType);
     }
 
@@ -96,6 +107,9 @@ public class GetMyProfileUseCase {
         dto.setZipCode(user.getPersonPII().getZipCode());
         dto.setBirthDate(user.getBirthDate());
         dto.setEntryDate(user.getEntryDate());
+        if (user instanceof CollaboratorDataModel collaborator) {
+            dto.setSkills(collaborator.getSkills());
+        }
         return dto;
     }
 }

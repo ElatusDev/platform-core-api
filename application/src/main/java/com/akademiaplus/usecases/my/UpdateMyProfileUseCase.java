@@ -7,6 +7,7 @@
  */
 package com.akademiaplus.usecases.my;
 
+import com.akademiaplus.collaborator.interfaceadapters.CollaboratorRepository;
 import com.akademiaplus.customer.adultstudent.interfaceadapters.AdultStudentRepository;
 import com.akademiaplus.customer.interfaceadapters.TutorRepository;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
@@ -14,6 +15,7 @@ import com.akademiaplus.internal.interfaceadapters.UserContextHolder;
 import com.akademiaplus.internal.interfaceadapters.jwt.JwtTokenProvider;
 import com.akademiaplus.users.base.AbstractUser;
 import com.akademiaplus.users.base.PersonPIIDataModel;
+import com.akademiaplus.users.collaborator.CollaboratorDataModel;
 import com.akademiaplus.utilities.EntityType;
 import com.akademiaplus.utilities.exceptions.EntityNotFoundException;
 import com.akademiaplus.utilities.security.HashingService;
@@ -39,6 +41,7 @@ public class UpdateMyProfileUseCase {
     private final TenantContextHolder tenantContextHolder;
     private final AdultStudentRepository adultStudentRepository;
     private final TutorRepository tutorRepository;
+    private final CollaboratorRepository collaboratorRepository;
     private final PiiNormalizer piiNormalizer;
     private final HashingService hashingService;
 
@@ -49,6 +52,7 @@ public class UpdateMyProfileUseCase {
      * @param tenantContextHolder    the tenant context holder
      * @param adultStudentRepository the adult student repository
      * @param tutorRepository        the tutor repository
+     * @param collaboratorRepository the collaborator repository
      * @param piiNormalizer          the PII normalizer
      * @param hashingService         the hashing service
      */
@@ -56,12 +60,14 @@ public class UpdateMyProfileUseCase {
                                    TenantContextHolder tenantContextHolder,
                                    AdultStudentRepository adultStudentRepository,
                                    TutorRepository tutorRepository,
+                                   CollaboratorRepository collaboratorRepository,
                                    PiiNormalizer piiNormalizer,
                                    HashingService hashingService) {
         this.userContextHolder = userContextHolder;
         this.tenantContextHolder = tenantContextHolder;
         this.adultStudentRepository = adultStudentRepository;
         this.tutorRepository = tutorRepository;
+        this.collaboratorRepository = collaboratorRepository;
         this.piiNormalizer = piiNormalizer;
         this.hashingService = hashingService;
     }
@@ -95,6 +101,11 @@ public class UpdateMyProfileUseCase {
             return tutorRepository.findById(
                     new com.akademiaplus.users.customer.TutorDataModel.TutorCompositeId(tenantId, profileId))
                     .orElseThrow(() -> new EntityNotFoundException(EntityType.TUTOR, profileId.toString()));
+        }
+        if (JwtTokenProvider.PROFILE_TYPE_COLLABORATOR.equals(profileType)) {
+            return collaboratorRepository.findById(
+                    new CollaboratorDataModel.CollaboratorCompositeId(tenantId, profileId))
+                    .orElseThrow(() -> new EntityNotFoundException(EntityType.COLLABORATOR, profileId.toString()));
         }
         throw new EntityNotFoundException(ERROR_UNSUPPORTED_PROFILE_TYPE, profileType);
     }
@@ -131,6 +142,9 @@ public class UpdateMyProfileUseCase {
         dto.setZipCode(user.getPersonPII().getZipCode());
         dto.setBirthDate(user.getBirthDate());
         dto.setEntryDate(user.getEntryDate());
+        if (user instanceof CollaboratorDataModel collaborator) {
+            dto.setSkills(collaborator.getSkills());
+        }
         return dto;
     }
 }
