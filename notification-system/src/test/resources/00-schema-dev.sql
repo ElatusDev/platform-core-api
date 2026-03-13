@@ -68,6 +68,20 @@ CREATE TABLE tenant_sequences (
     FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id)
 );
 
+CREATE TABLE tenant_branding (
+    tenant_id BIGINT NOT NULL,
+    school_name VARCHAR(200) NOT NULL,
+    logo_url VARCHAR(500),
+    primary_color VARCHAR(7) NOT NULL,
+    secondary_color VARCHAR(7) NOT NULL,
+    font_family VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id)
+);
+
 --      NOTIFICATIONS MODULE     --
 
 CREATE TABLE notifications (
@@ -228,6 +242,8 @@ CREATE TABLE store_products (
     description VARCHAR(500),
     price DECIMAL(10,2) NOT NULL,
     stock_quantity INT NOT NULL,
+    image_url VARCHAR(500),
+    category VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL,
@@ -235,7 +251,8 @@ CREATE TABLE store_products (
     FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
     UNIQUE KEY uk_store_product_name_tenant (tenant_id, product_name, deleted_at),
     INDEX idx_tenant_active_product (tenant_id, deleted_at),
-    INDEX idx_tenant_active_price (tenant_id, deleted_at, price)
+    INDEX idx_tenant_active_price (tenant_id, deleted_at, price),
+    INDEX idx_tenant_active_category (tenant_id, category, deleted_at)
 );
 
 CREATE TABLE store_transactions (
@@ -303,6 +320,82 @@ CREATE TABLE internal_auths (
     FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
     UNIQUE KEY uk_internal_auth_username_tenant (tenant_id, username_hash, deleted_at),
     INDEX idx_tenant_active_internal_auth (tenant_id, deleted_at)
+);
+
+CREATE TABLE refresh_tokens (
+    tenant_id              BIGINT       NOT NULL,
+    refresh_token_id       BIGINT       NOT NULL,
+    token_hash             VARCHAR(64)  NOT NULL,
+    family_id              VARCHAR(36)  NOT NULL,
+    user_id                BIGINT       NOT NULL,
+    username               VARCHAR(255) NOT NULL,
+    expires_at             TIMESTAMP(6) NOT NULL,
+    revoked_at             TIMESTAMP(6) NULL,
+    replaced_by_token_hash VARCHAR(64)  NULL,
+    created_at             TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updated_at             TIMESTAMP(6)          DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (tenant_id, refresh_token_id),
+    UNIQUE KEY uk_refresh_token_hash (token_hash),
+    INDEX idx_refresh_token_family (family_id),
+    INDEX idx_refresh_token_user (tenant_id, user_id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+CREATE TABLE passkey_credentials (
+    tenant_id             BIGINT       NOT NULL,
+    passkey_credential_id BIGINT       NOT NULL,
+    user_id               BIGINT       NOT NULL,
+    credential_id         BLOB         NOT NULL,
+    public_key            BLOB         NOT NULL,
+    sign_count            BIGINT       NOT NULL DEFAULT 0,
+    transports            VARCHAR(255),
+    created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP             DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    last_used_at          TIMESTAMP,
+    display_name          VARCHAR(255),
+    user_handle           BLOB         NOT NULL,
+    deleted_at            TIMESTAMP,
+    PRIMARY KEY (tenant_id, passkey_credential_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX idx_passkey_cred_tenant_credential
+    ON passkey_credentials (tenant_id, credential_id(255));
+
+CREATE INDEX idx_passkey_cred_tenant_user
+    ON passkey_credentials (tenant_id, user_id);
+
+CREATE INDEX idx_passkey_cred_tenant_user_handle
+    ON passkey_credentials (tenant_id, user_handle(255));
+
+CREATE TABLE magic_link_tokens (
+    tenant_id            BIGINT       NOT NULL,
+    magic_link_token_id  BIGINT       NOT NULL,
+    email                VARCHAR(500) NOT NULL,
+    token_hash           VARCHAR(64)  NOT NULL,
+    expires_at           TIMESTAMP    NOT NULL,
+    used_at              TIMESTAMP    NULL,
+    created_at           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at           TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at           TIMESTAMP    NULL,
+    PRIMARY KEY (tenant_id, magic_link_token_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
+    INDEX idx_magic_link_token_hash (tenant_id, token_hash, deleted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--          LEAD MANAGEMENT MODULE          --
+
+CREATE TABLE demo_requests (
+    demo_request_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    first_name      VARCHAR(100)  NOT NULL,
+    last_name       VARCHAR(100)  NOT NULL,
+    email           VARCHAR(255)  NOT NULL UNIQUE,
+    company_name    VARCHAR(200)  NOT NULL,
+    message         TEXT,
+    status          VARCHAR(20)   NOT NULL DEFAULT 'PENDING',
+    created_at      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at      TIMESTAMP     NULL,
+    INDEX idx_demo_request_email (email, deleted_at),
+    INDEX idx_demo_request_status (status, deleted_at)
 );
 
 --          USER MANAGEMENT MODULE          --
@@ -681,6 +774,27 @@ CREATE TABLE compensations (
     INDEX idx_tenant_active_compensation (tenant_id, deleted_at)
 );
 
+CREATE TABLE notification_read_statuses (
+    notification_read_status_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    notification_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    read_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_notification_user (notification_id, user_id),
+    INDEX idx_read_status_user (user_id)
+);
+
+CREATE TABLE push_devices (
+    push_device_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    device_token VARCHAR(255) NOT NULL UNIQUE,
+    platform VARCHAR(10) NOT NULL,
+    app_version VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_push_device_user (user_id),
+    INDEX idx_push_device_token (device_token)
+);
+
 CREATE TABLE compensation_collaborators (
     tenant_id BIGINT NOT NULL,
     compensation_id BIGINT NOT NULL,
@@ -691,4 +805,70 @@ CREATE TABLE compensation_collaborators (
     FOREIGN KEY (tenant_id, compensation_id) REFERENCES compensations(tenant_id, compensation_id),
     FOREIGN KEY (tenant_id, collaborator_id) REFERENCES collaborators(tenant_id, collaborator_id),
     INDEX idx_compensation_collaborators (tenant_id, compensation_id)
+);
+
+--          ATTENDANCE MODULE          --
+
+CREATE TABLE attendance_sessions (
+    tenant_id BIGINT NOT NULL,
+    attendance_session_id BIGINT NOT NULL,
+    course_event_id BIGINT NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    qr_secret VARCHAR(512) NOT NULL,
+    token_interval_seconds INT NOT NULL,
+    started_at TIMESTAMP NOT NULL,
+    closed_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, attendance_session_id),
+    FOREIGN KEY (tenant_id, course_event_id) REFERENCES course_events(tenant_id, course_event_id),
+    INDEX idx_tenant_active_attendance_session (tenant_id, deleted_at),
+    INDEX idx_attendance_session_event (tenant_id, course_event_id, deleted_at),
+    INDEX idx_attendance_session_status (tenant_id, status, deleted_at)
+);
+
+CREATE TABLE attendance_records (
+    tenant_id BIGINT NOT NULL,
+    attendance_record_id BIGINT NOT NULL,
+    attendance_session_id BIGINT NOT NULL,
+    student_id BIGINT NOT NULL,
+    student_type VARCHAR(20) NOT NULL,
+    verification_method VARCHAR(30) NOT NULL,
+    checked_in_at TIMESTAMP NOT NULL,
+    device_fingerprint VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, attendance_record_id),
+    FOREIGN KEY (tenant_id, attendance_session_id) REFERENCES attendance_sessions(tenant_id, attendance_session_id),
+    UNIQUE KEY uk_session_student (tenant_id, attendance_session_id, student_id, student_type, deleted_at),
+    INDEX idx_tenant_active_attendance_record (tenant_id, deleted_at),
+    INDEX idx_attendance_record_session (tenant_id, attendance_session_id, deleted_at),
+    INDEX idx_attendance_record_student (tenant_id, student_id, student_type, deleted_at)
+);
+
+-- ── TASK MODULE ──
+
+CREATE TABLE tasks (
+    tenant_id BIGINT NOT NULL,
+    task_id BIGINT NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    description VARCHAR(2000),
+    assignee_id BIGINT NOT NULL,
+    assignee_type VARCHAR(20) NOT NULL,
+    due_date DATE NOT NULL,
+    priority VARCHAR(10) NOT NULL DEFAULT 'MEDIUM',
+    status VARCHAR(15) NOT NULL DEFAULT 'PENDING',
+    created_by_user_id BIGINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    PRIMARY KEY (tenant_id, task_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
+    INDEX idx_task_assignee (tenant_id, assignee_id, assignee_type, deleted_at),
+    INDEX idx_task_status (tenant_id, status, deleted_at),
+    INDEX idx_task_priority (tenant_id, priority, deleted_at),
+    INDEX idx_task_due_date (tenant_id, due_date, status, deleted_at)
 );

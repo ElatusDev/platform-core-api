@@ -31,6 +31,7 @@ COPY audit-service/pom.xml          audit-service/
 COPY certificate-authority/pom.xml certificate-authority/
 COPY lead-management/pom.xml       lead-management/
 COPY mock-data-service/pom.xml      mock-data-service/
+COPY task-service/pom.xml          task-service/
 
 RUN apk add --no-cache maven
 ENV JAVA_HOME=/opt/java/openjdk

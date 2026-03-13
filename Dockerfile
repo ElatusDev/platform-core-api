@@ -33,6 +33,7 @@ COPY etl-service/pom.xml            etl-service/
 COPY lead-management/pom.xml       lead-management/
 COPY mock-data-service/pom.xml      mock-data-service/
 COPY pos-system/pom.xml            pos-system/
+COPY task-service/pom.xml          task-service/
 
 RUN apk add --no-cache maven
 ENV JAVA_HOME=/opt/java/openjdk
@@ -51,6 +52,7 @@ COPY billing/src                billing/src
 COPY tenant-management/src      tenant-management/src
 COPY pos-system/src             pos-system/src
 COPY lead-management/src        lead-management/src
+COPY task-service/src           task-service/src
 COPY application/src            application/src
 
 RUN mvn clean install -pl application -am -DskipTests -DskipITs -q
