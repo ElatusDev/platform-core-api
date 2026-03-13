@@ -79,7 +79,6 @@ Executable prompts for Claude Code CLI.
 
 | Prompt | Purpose | Status |
 |--------|---------|--------|
-| [collaborator-isolation-api-prompt.md](prompts/pending/collaborator-isolation-api-prompt.md) | Collaborator (teacher) data isolation — JWT claims, /v1/my/* classes/courses/students | 🟡 Ready to execute |
 | [etl-service-prompt.md](prompts/pending/etl-service-prompt.md) | ETL module — MongoDB staging, Excel/Word parsing, Claude API analysis, MariaDB load | 🟡 Ready to execute |
 
 ### Completed (`docs/prompts/completed/`)
@@ -112,6 +111,7 @@ Executable prompts for Claude Code CLI.
 | [mock-data-new-loaders-prompt.md](prompts/completed/mock-data-new-loaders-prompt.md) | 5 new mock data loaders for unseeded entities | Implemented |
 | [central-redesign-api-prompt.md](prompts/completed/central-redesign-api-prompt.md) | Task-service + analytics endpoints + 41 tests (unit, component, isolation) | Implemented |
 | [user-isolation-api-prompt.md](prompts/completed/user-isolation-api-prompt.md) | User-level data isolation — JWT claims, UserContextHolder, /v1/my/* endpoints, tests | Implemented |
+| [collaborator-isolation-api-prompt.md](prompts/completed/collaborator-isolation-api-prompt.md) | Collaborator (teacher) data isolation — JWT claims, /v1/my/* classes/courses/students | Implemented |
 
 ---
 
@@ -123,7 +123,6 @@ Step-by-step implementation plans. Referenced by prompts.
 
 | Workflow | Purpose | Status |
 |----------|---------|--------|
-| [collaborator-isolation-api-workflow.md](workflows/pending/collaborator-isolation-api-workflow.md) | Collaborator (teacher) data isolation — JWT claims, /v1/my/* classes/courses/students (3 phases) | 🟡 Ready to execute |
 | [etl-service-workflow.md](workflows/pending/etl-service-workflow.md) | ETL module — MongoDB staging, Excel/Word parsing, Claude API analysis, MariaDB load (5 phases) | 🟡 Ready to execute |
 
 ### Completed (`docs/workflows/completed/`)
@@ -157,6 +156,7 @@ Step-by-step implementation plans. Referenced by prompts.
 | [component-test-coverage-gaps-workflow.md](workflows/completed/component-test-coverage-gaps-workflow.md) | Component tests for Phase 1–4 endpoints (26 tests, 3 prod fixes) | Implemented |
 | [mock-data-new-loaders-workflow.md](workflows/completed/mock-data-new-loaders-workflow.md) | 5 new mock data loaders (attendance, demo request, push device, notification read status) | Implemented |
 | [user-isolation-api-workflow.md](workflows/completed/user-isolation-api-workflow.md) | User-level data isolation — JWT claims, UserContextHolder, /v1/my/* endpoints (3 phases) | Implemented |
+| [collaborator-isolation-api-workflow.md](workflows/completed/collaborator-isolation-api-workflow.md) | Collaborator (teacher) data isolation — JWT claims, /v1/my/* classes/courses/students (3 phases) | Implemented |
 
 ---
 
