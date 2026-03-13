@@ -487,6 +487,10 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  # ===== TENANT BRANDING ENDPOINTS =====
+  '/tenant/branding':
+    $ref: './tenant-branding.yaml#/paths/~1tenant~1branding'
+
   /tenants/{tenantId}/calculate-billing:
     post:
       tags:
@@ -887,6 +891,11 @@ components:
           minimum: 0
         notes:
           type: string
+
+    TenantBrandingUpdateRequest:
+      $ref: './tenant-branding.yaml#/components/schemas/TenantBrandingUpdateRequest'
+    GetTenantBrandingResponse:
+      $ref: './tenant-branding.yaml#/components/schemas/GetTenantBrandingResponse'
 
     Pagination:
       type: object

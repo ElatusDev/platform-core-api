@@ -1,0 +1,110 @@
+openapi: 3.0.0
+info:
+  title: Tenant Branding API
+  version: '1.0.0'
+  description: API for managing tenant branding configuration
+paths:
+  '/tenant/branding':
+    get:
+      operationId: getTenantBranding
+      summary: Get branding configuration for the current tenant
+      responses:
+        '200':
+          description: Branding configuration (returns defaults if no custom branding exists)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTenantBrandingResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      operationId: updateTenantBranding
+      summary: Create or update branding configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TenantBrandingUpdateRequest'
+      responses:
+        '200':
+          description: Branding updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTenantBrandingResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    TenantBrandingUpdateRequest:
+      type: object
+      properties:
+        schoolName:
+          type: string
+          maxLength: 200
+          description: Display name of the school
+        logoUrl:
+          type: string
+          maxLength: 500
+          nullable: true
+          description: Logo image URL
+        primaryColor:
+          type: string
+          maxLength: 7
+          pattern: '^#[0-9A-Fa-f]{6}$'
+          description: Primary hex color for theming
+        secondaryColor:
+          type: string
+          maxLength: 7
+          pattern: '^#[0-9A-Fa-f]{6}$'
+          description: Secondary hex color for theming
+        fontFamily:
+          type: string
+          maxLength: 100
+          nullable: true
+          description: CSS font family name
+      required:
+        - schoolName
+        - primaryColor
+        - secondaryColor
+    GetTenantBrandingResponse:
+      type: object
+      properties:
+        schoolName:
+          type: string
+          description: Display name of the school
+        logoUrl:
+          type: string
+          nullable: true
+          description: Logo image URL
+        primaryColor:
+          type: string
+          description: Primary hex color
+        secondaryColor:
+          type: string
+          description: Secondary hex color
+        fontFamily:
+          type: string
+          nullable: true
+          description: CSS font family name
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+    ErrorResponse:
+      type: object

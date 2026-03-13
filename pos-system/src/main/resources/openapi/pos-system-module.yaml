@@ -26,10 +26,18 @@ components:
       $ref: './store-transaction.yaml#/components/schemas/StoreTransactionCreationResponse'
     GetStoreTransactionResponse:
       $ref: './store-transaction.yaml#/components/schemas/GetStoreTransactionResponse'
+    GetCatalogItemResponse:
+      $ref: './store-catalog.yaml#/components/schemas/GetCatalogItemResponse'
     ErrorResponse:
       $ref: './store-product.yaml#/components/schemas/ErrorResponse'
 
 paths:
+  # ===== STORE CATALOG ENDPOINTS =====
+  '/store/catalog':
+    $ref: './store-catalog.yaml#/paths/~1store~1catalog'
+  '/store/catalog/{storeProductId}':
+    $ref: './store-catalog.yaml#/paths/~1store~1catalog~1{storeProductId}'
+
   '/store-products':
     $ref: './store-product.yaml#/paths/~1store-products'
   '/store-products/{storeProductId}':

@@ -66,6 +66,12 @@ paths:
   '/email/templates/{templateId}/preview':
     $ref: './email-notification.yaml#/paths/~1templates~1{templateId}~1preview'
 
+  # ===== NEWS FEED ENDPOINTS =====
+  '/news-feed':
+    $ref: './news-feed.yaml#/paths/~1news-feed'
+  '/news-feed/{newsFeedItemId}':
+    $ref: './news-feed.yaml#/paths/~1news-feed~1{newsFeedItemId}'
+
   # ===== SMS NOTIFICATION ENDPOINTS =====
   /sms:
     $ref: './sms-notification.yaml#/paths'
@@ -115,6 +121,14 @@ components:
 
     ErrorResponse:
       $ref: './sms-notification.yaml#/components/schemas/ErrorResponse'
+
+    # News Feed schemas
+    NewsFeedItemCreationRequest:
+      $ref: './news-feed.yaml#/components/schemas/NewsFeedItemCreationRequest'
+    NewsFeedItemCreationResponse:
+      $ref: './news-feed.yaml#/components/schemas/NewsFeedItemCreationResponse'
+    GetNewsFeedItemResponse:
+      $ref: './news-feed.yaml#/components/schemas/GetNewsFeedItemResponse'
 
     # Email delivery schemas
     CreateEmailDeliveryRequest:

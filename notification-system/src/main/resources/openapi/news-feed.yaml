@@ -1,0 +1,258 @@
+openapi: 3.0.0
+info:
+  title: News Feed API
+  version: '1.0.0'
+  description: API for managing news feed items within the notification system
+paths:
+  '/news-feed':
+    post:
+      operationId: createNewsFeedItem
+      summary: Create a new news feed item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewsFeedItemCreationRequest'
+      responses:
+        '201':
+          description: News feed item created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewsFeedItemCreationResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      operationId: getNewsFeedItems
+      summary: Get published news feed items
+      parameters:
+        - name: courseId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+          description: Optional course ID to filter news items
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+          description: Page number for pagination
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+          description: Number of items per page
+      responses:
+        '200':
+          description: List of published news feed items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GetNewsFeedItemResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  '/news-feed/{newsFeedItemId}':
+    get:
+      operationId: getNewsFeedItemById
+      summary: Get a news feed item by ID
+      parameters:
+        - name: newsFeedItemId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID of the news feed item to retrieve
+      responses:
+        '200':
+          description: News feed item details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetNewsFeedItemResponse'
+        '404':
+          description: News feed item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      operationId: updateNewsFeedItem
+      summary: Update a news feed item
+      parameters:
+        - name: newsFeedItemId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID of the news feed item to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewsFeedItemCreationRequest'
+      responses:
+        '200':
+          description: News feed item updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewsFeedItemCreationResponse'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: News feed item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      operationId: deleteNewsFeedItem
+      summary: Delete a news feed item
+      parameters:
+        - name: newsFeedItemId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID of the news feed item to delete
+      responses:
+        '204':
+          description: News feed item deleted successfully
+        '404':
+          description: News feed item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Deletion conflicts with current resource state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: An unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    BaseNewsFeedItem:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+          description: Title of the news feed item
+        body:
+          type: string
+          description: Rich content body of the news item
+        authorId:
+          type: integer
+          format: int64
+          description: ID of the author who created the item
+        courseId:
+          type: integer
+          format: int64
+          nullable: true
+          description: Optional course association
+        imageUrl:
+          type: string
+          maxLength: 500
+          nullable: true
+          description: Optional cover image URL
+        status:
+          type: string
+          enum:
+            - DRAFT
+            - PUBLISHED
+            - ARCHIVED
+          default: DRAFT
+          description: Lifecycle status of the news item
+      required:
+        - title
+        - body
+        - authorId
+    NewsFeedItemCreationRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseNewsFeedItem'
+    NewsFeedItemCreationResponse:
+      type: object
+      properties:
+        newsFeedItemId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: News feed item ID
+      required:
+        - newsFeedItemId
+    GetNewsFeedItemResponse:
+      allOf:
+        - $ref: '#/components/schemas/BaseNewsFeedItem'
+        - type: object
+          properties:
+            newsFeedItemId:
+              type: integer
+              format: int64
+              readOnly: true
+              description: News feed item ID
+            publishedAt:
+              type: string
+              format: date-time
+              nullable: true
+              description: Timestamp when the item was published
+            createdAt:
+              type: string
+              format: date-time
+              description: Timestamp when the item was created
+            updatedAt:
+              type: string
+              format: date-time
+              description: Timestamp when the item was last updated
+          required:
+            - newsFeedItemId
+    ErrorResponse:
+      type: object
