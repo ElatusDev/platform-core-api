@@ -19,11 +19,15 @@ import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -44,42 +48,23 @@ public class DocumentAnalysisClient {
     public static final int MAX_SAMPLE_ROWS = 15;
     public static final String ERROR_API_CALL = "Claude API call failed";
 
-    public static final String SYSTEM_PROMPT = """
-            You are a data migration analyst for an educational platform.
-            Given the document structure below, identify what entity type each sheet/table
-            represents and suggest column mappings to our schema.
-
-            Respond with a JSON array where each element represents one sheet:
-            [
-              {
-                "sheetName": "Sheet Name",
-                "detectedEntityType": "ADULT_STUDENT",
-                "confidence": 0.92,
-                "columnMappings": [
-                  {"source": "Original Column", "target": "targetField", "transform": "NONE"}
-                ],
-                "warnings": ["optional warning messages"],
-                "unmappedSourceColumns": ["columns with no match"],
-                "missingRequiredFields": ["required fields not found in source"]
-              }
-            ]
-
-            Valid entity types: EMPLOYEE, COLLABORATOR, ADULT_STUDENT, TUTOR, MINOR_STUDENT, \
-            COURSE, SCHEDULE, MEMBERSHIP, ENROLLMENT, STORE_PRODUCT
-
-            Valid transforms: NONE, SPLIT_NAME, NORMALIZE_PHONE, DATE_FROM_AGE, UPPERCASE, LOWERCASE, TRIM
-
-            IMPORTANT: Return ONLY the JSON array, no other text.""";
-
     @Value("${anthropic.api-key:}")
     private String apiKey;
 
     @Value("${anthropic.model:claude-haiku-4-5}")
     private String model;
 
+    @Value("classpath:prompts/analyze-system.txt")
+    private Resource systemPromptResource;
+
+    @Value("classpath:prompts/analyze-user.txt")
+    private Resource userPromptResource;
+
     private final SchemaContextBuilder schemaContextBuilder;
     private final ObjectMapper objectMapper;
     private AnthropicClient client;
+    private String systemPrompt;
+    private String userPromptTemplate;
 
     /**
      * Creates a new DocumentAnalysisClient.
@@ -92,7 +77,7 @@ public class DocumentAnalysisClient {
     }
 
     /**
-     * Initializes the Anthropic client after properties are injected.
+     * Initializes the Anthropic client and loads prompt templates after properties are injected.
      */
     @PostConstruct
     public void init() {
@@ -100,6 +85,16 @@ public class DocumentAnalysisClient {
             this.client = AnthropicOkHttpClient.builder()
                     .apiKey(apiKey)
                     .build();
+        }
+        this.systemPrompt = loadResource(systemPromptResource);
+        this.userPromptTemplate = loadResource(userPromptResource);
+    }
+
+    private String loadResource(Resource resource) {
+        try {
+            return resource.getContentAsString(StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to load prompt resource: " + resource.getFilename(), e);
         }
     }
 
@@ -124,7 +119,7 @@ public class DocumentAnalysisClient {
             MessageCreateParams params = MessageCreateParams.builder()
                     .model(model)
                     .maxTokens(4096L)
-                    .system(SYSTEM_PROMPT)
+                    .system(systemPrompt)
                     .addUserMessage(userPrompt)
                     .build();
 
@@ -144,28 +139,27 @@ public class DocumentAnalysisClient {
 
     private String buildUserPrompt(String fileName, List<ParsedSheet> sheets,
                                     MigrationEntityType hint) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Our entity schemas:\n");
-        sb.append(schemaContextBuilder.buildContext(hint));
-        sb.append("\n\nAnalyze this document:\n");
-        sb.append("File: ").append(fileName).append("\n");
-        sb.append("Sheets:\n");
+        String schemas = schemaContextBuilder.buildContext(hint);
 
+        StringBuilder sheetsBlock = new StringBuilder();
         for (ParsedSheet sheet : sheets) {
-            sb.append("- Sheet \"").append(sheet.name()).append("\": ");
-            sb.append("headers=").append(sheet.headers()).append(", ");
-            sb.append("sample rows=");
+            sheetsBlock.append("- Sheet \"").append(sheet.name()).append("\": ");
+            sheetsBlock.append("headers=").append(sheet.headers()).append(", ");
+            sheetsBlock.append("sample rows=");
 
             List<Map<String, String>> sampleRows = sheet.rows().size() > MAX_SAMPLE_ROWS
                     ? sheet.rows().subList(0, MAX_SAMPLE_ROWS)
                     : sheet.rows();
-            sb.append(sampleRows).append("\n");
+            sheetsBlock.append(sampleRows).append("\n");
         }
 
-        if (hint != null) {
-            sb.append("\nEntity type hint: ").append(hint.name());
-        }
-        return sb.toString();
+        String hintText = hint != null ? "\nEntity type hint: " + hint.name() : "";
+
+        return userPromptTemplate
+                .replace("{{schemas}}", schemas)
+                .replace("{{fileName}}", fileName)
+                .replace("{{sheets}}", sheetsBlock.toString())
+                .replace("{{hint}}", hintText);
     }
 
     private List<SheetAnalysis> parseAnalysisResponse(String responseText) {

@@ -160,6 +160,14 @@ Step-by-step implementation plans. Referenced by prompts.
 
 ---
 
+## Retrospectives (`docs/retrospectives/`)
+
+| Document | Feature | Completed |
+|----------|---------|-----------|
+| [collaborator-isolation-api-retrospective.md](retrospectives/collaborator-isolation-api-retrospective.md) | Collaborator (teacher) data isolation — 3 phases, 29 tests, 86% first-pass | 2026-03-12 |
+
+---
+
 ## Root-Level Documents
 
 | Document | Purpose |

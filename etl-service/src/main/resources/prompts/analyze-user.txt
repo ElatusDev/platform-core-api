@@ -1,0 +1,8 @@
+Our entity schemas:
+{{schemas}}
+
+Analyze this document:
+File: {{fileName}}
+Sheets:
+{{sheets}}
+{{hint}}
