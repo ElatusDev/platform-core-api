@@ -5,7 +5,8 @@
 # Dependency chain (mvn -pl mock-data-service -am):
 #   utilities → infra-common → multi-tenant-data → notification-system
 #   → security → user-management → course-management → billing
-#   → tenant-management → pos-system → lead-management → mock-data-service
+#   → tenant-management → pos-system → lead-management → task-service
+#   → mock-data-service
 # =============================================================================
 
 # ── Build stage ──────────────────────────────────────────────────────────────
@@ -50,6 +51,7 @@ COPY billing/src                billing/src
 COPY tenant-management/src      tenant-management/src
 COPY pos-system/src             pos-system/src
 COPY lead-management/src        lead-management/src
+COPY task-service/src           task-service/src
 COPY mock-data-service/src       mock-data-service/src
 
 RUN mvn clean install -pl mock-data-service -am -DskipTests -DskipITs -q

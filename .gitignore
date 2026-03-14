@@ -20,6 +20,7 @@ task-service/target/
 
 ### docker related ###
 .env
+docker-compose.override.yml
 
 ### secrets — never commit bootstrap tokens or CA private keys ###
 secrets/
