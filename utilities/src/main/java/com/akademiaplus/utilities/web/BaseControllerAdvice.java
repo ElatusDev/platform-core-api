@@ -16,13 +16,18 @@ import com.akademiaplus.utilities.exceptions.security.DecryptionFailureException
 import com.akademiaplus.utilities.exceptions.security.EncryptionFailureException;
 import openapi.akademiaplus.domain.utilities.dto.ErrorDetailDTO;
 import openapi.akademiaplus.domain.utilities.dto.ErrorResponseDTO;
+import org.modelmapper.MappingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageConversionException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.List;
 
@@ -66,6 +71,24 @@ public abstract class BaseControllerAdvice {
 
     /** Error code for internal server errors. */
     public static final String CODE_INTERNAL_ERROR = "INTERNAL_ERROR";
+
+    /** Message for invalid path parameter type. */
+    public static final String MSG_INVALID_PARAMETER = "Parametro invalido: '%s' no es un valor valido para '%s'";
+
+    /** Message for malformed request body. */
+    public static final String MSG_MALFORMED_REQUEST_BODY = "El cuerpo de la solicitud es invalido o no se puede leer";
+
+    /** Message for message conversion failure. */
+    public static final String MSG_MESSAGE_CONVERSION_ERROR = "Error al convertir el mensaje de la solicitud";
+
+    /** Message for illegal argument. */
+    public static final String MSG_ILLEGAL_ARGUMENT = "Argumento invalido: %s";
+
+    /** Message for incorrect result size from data access. */
+    public static final String MSG_INCORRECT_RESULT_SIZE = "Error de consistencia de datos: se esperaba un resultado unico";
+
+    /** Message for model mapping failure. */
+    public static final String MSG_MAPPING_ERROR = "Error interno al mapear datos de la solicitud";
 
     private final MessageService messageService;
 
@@ -198,6 +221,106 @@ public abstract class BaseControllerAdvice {
         ErrorResponseDTO error = new ErrorResponseDTO(messageService.getInvalidTenant());
         error.setCode(CODE_INVALID_TENANT);
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    // ── 400: Path Parameter Type Mismatch ─────────────────────────────
+
+    /**
+     * Handles path/query parameter type mismatches (e.g., string where Long expected).
+     *
+     * @param ex the type mismatch exception
+     * @return HTTP 400 with the invalid parameter details
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponseDTO> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex) {
+        String message = String.format(MSG_INVALID_PARAMETER,
+                ex.getValue(), ex.getName());
+        ErrorResponseDTO error = new ErrorResponseDTO(message);
+        error.setCode(CODE_VALIDATION_ERROR);
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    // ── 400: Malformed Request Body ───────────────────────────────────
+
+    /**
+     * Handles malformed or unreadable request bodies.
+     *
+     * @param ex the HTTP message not readable exception
+     * @return HTTP 400 with generic malformed body message
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponseDTO> handleMessageNotReadable(
+            HttpMessageNotReadableException ex) {
+        ErrorResponseDTO error = new ErrorResponseDTO(MSG_MALFORMED_REQUEST_BODY);
+        error.setCode(CODE_VALIDATION_ERROR);
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    // ── 400: Message Conversion Error ─────────────────────────────────
+
+    /**
+     * Handles HTTP message conversion errors including deserialization failures.
+     *
+     * @param ex the message conversion exception
+     * @return HTTP 400 with conversion error message
+     */
+    @ExceptionHandler(HttpMessageConversionException.class)
+    public ResponseEntity<ErrorResponseDTO> handleMessageConversion(
+            HttpMessageConversionException ex) {
+        ErrorResponseDTO error = new ErrorResponseDTO(MSG_MESSAGE_CONVERSION_ERROR);
+        error.setCode(CODE_VALIDATION_ERROR);
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    // ── 400: Illegal Argument ─────────────────────────────────────────
+
+    /**
+     * Handles illegal argument exceptions from invalid input values.
+     *
+     * @param ex the illegal argument exception
+     * @return HTTP 400 with the argument error details
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponseDTO> handleIllegalArgument(
+            IllegalArgumentException ex) {
+        String message = String.format(MSG_ILLEGAL_ARGUMENT, ex.getMessage());
+        ErrorResponseDTO error = new ErrorResponseDTO(message);
+        error.setCode(CODE_VALIDATION_ERROR);
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    // ── 500: Model Mapping Error ──────────────────────────────────────
+
+    /**
+     * Handles ModelMapper mapping failures.
+     *
+     * @param ex the mapping exception
+     * @return HTTP 500 with internal error message
+     */
+    @ExceptionHandler(MappingException.class)
+    public ResponseEntity<ErrorResponseDTO> handleMappingException(MappingException ex) {
+        LOG.error("ModelMapper mapping failed", ex);
+        ErrorResponseDTO error = new ErrorResponseDTO(MSG_MAPPING_ERROR);
+        error.setCode(CODE_INTERNAL_ERROR);
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    // ── 500: Incorrect Result Size ────────────────────────────────────
+
+    /**
+     * Handles incorrect result size from database queries (e.g., expected one row, got many).
+     *
+     * @param ex the incorrect result size exception
+     * @return HTTP 500 with data consistency error message
+     */
+    @ExceptionHandler(IncorrectResultSizeDataAccessException.class)
+    public ResponseEntity<ErrorResponseDTO> handleIncorrectResultSize(
+            IncorrectResultSizeDataAccessException ex) {
+        LOG.error("Incorrect result size from data access", ex);
+        ErrorResponseDTO error = new ErrorResponseDTO(MSG_INCORRECT_RESULT_SIZE);
+        error.setCode(CODE_INTERNAL_ERROR);
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     // ── 500: Encryption/Decryption ─────────────────────────────────────

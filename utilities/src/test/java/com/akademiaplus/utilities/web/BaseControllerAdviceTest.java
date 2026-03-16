@@ -23,12 +23,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.modelmapper.MappingException;
+import org.modelmapper.spi.ErrorMessage;
+import org.springframework.core.MethodParameter;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageConversionException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.List;
 
@@ -449,6 +456,189 @@ class BaseControllerAdviceTest {
             assertThat(response.getBody().getMessage()).isEqualTo(INTERNAL_ERROR_MESSAGE);
             verify(messageService, times(1)).getInternalErrorHighSeverity();
             verifyNoMoreInteractions(messageService);
+        }
+    }
+
+    @Nested
+    @DisplayName("MethodArgumentTypeMismatch Handling")
+    class TypeMismatchHandling {
+
+        @Test
+        @DisplayName("Should return 400 when path parameter type is invalid")
+        void shouldReturn400_whenPathParameterTypeInvalid() {
+            // Given
+            MethodArgumentTypeMismatchException ex =
+                    new MethodArgumentTypeMismatchException(
+                            "abc", Long.class, "id", (MethodParameter) null,
+                            new NumberFormatException("For input string: \"abc\""));
+
+            // When
+            ResponseEntity<ErrorResponseDTO> response = advice.handleTypeMismatch(ex);
+
+            // Then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getCode())
+                    .isEqualTo(BaseControllerAdvice.CODE_VALIDATION_ERROR);
+            verifyNoInteractions(messageService);
+        }
+
+        @Test
+        @DisplayName("Should include parameter name and value in message when type mismatch")
+        void shouldIncludeParameterDetails_whenTypeMismatch() {
+            // Given
+            MethodArgumentTypeMismatchException ex =
+                    new MethodArgumentTypeMismatchException(
+                            "abc", Long.class, "tenantId", (MethodParameter) null,
+                            new NumberFormatException("For input string: \"abc\""));
+
+            // When
+            ResponseEntity<ErrorResponseDTO> response = advice.handleTypeMismatch(ex);
+
+            // Then
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getMessage()).contains("abc");
+            assertThat(response.getBody().getMessage()).contains("tenantId");
+            verifyNoInteractions(messageService);
+        }
+    }
+
+    @Nested
+    @DisplayName("HttpMessageNotReadable Handling")
+    class MessageNotReadableHandling {
+
+        @Test
+        @DisplayName("Should return 400 when request body is malformed")
+        void shouldReturn400_whenRequestBodyMalformed() {
+            // Given
+            HttpMessageNotReadableException ex =
+                    new HttpMessageNotReadableException("JSON parse error", (org.springframework.http.HttpInputMessage) null);
+
+            // When
+            ResponseEntity<ErrorResponseDTO> response = advice.handleMessageNotReadable(ex);
+
+            // Then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getCode())
+                    .isEqualTo(BaseControllerAdvice.CODE_VALIDATION_ERROR);
+            assertThat(response.getBody().getMessage())
+                    .isEqualTo(BaseControllerAdvice.MSG_MALFORMED_REQUEST_BODY);
+            verifyNoInteractions(messageService);
+        }
+    }
+
+    @Nested
+    @DisplayName("HttpMessageConversionException Handling")
+    class MessageConversionHandling {
+
+        @Test
+        @DisplayName("Should return 400 when message conversion fails")
+        void shouldReturn400_whenMessageConversionFails() {
+            // Given
+            HttpMessageConversionException ex =
+                    new HttpMessageConversionException("Conversion failed");
+
+            // When
+            ResponseEntity<ErrorResponseDTO> response = advice.handleMessageConversion(ex);
+
+            // Then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getCode())
+                    .isEqualTo(BaseControllerAdvice.CODE_VALIDATION_ERROR);
+            assertThat(response.getBody().getMessage())
+                    .isEqualTo(BaseControllerAdvice.MSG_MESSAGE_CONVERSION_ERROR);
+            verifyNoInteractions(messageService);
+        }
+    }
+
+    @Nested
+    @DisplayName("IllegalArgument Handling")
+    class IllegalArgumentHandling {
+
+        @Test
+        @DisplayName("Should return 400 when IllegalArgumentException thrown")
+        void shouldReturn400_whenIllegalArgumentThrown() {
+            // Given
+            IllegalArgumentException ex =
+                    new IllegalArgumentException("Value must be positive");
+
+            // When
+            ResponseEntity<ErrorResponseDTO> response = advice.handleIllegalArgument(ex);
+
+            // Then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getCode())
+                    .isEqualTo(BaseControllerAdvice.CODE_VALIDATION_ERROR);
+            verifyNoInteractions(messageService);
+        }
+
+        @Test
+        @DisplayName("Should include original message in response when illegal argument")
+        void shouldIncludeOriginalMessage_whenIllegalArgument() {
+            // Given
+            IllegalArgumentException ex =
+                    new IllegalArgumentException("Value must be positive");
+
+            // When
+            ResponseEntity<ErrorResponseDTO> response = advice.handleIllegalArgument(ex);
+
+            // Then
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getMessage()).contains("Value must be positive");
+            verifyNoInteractions(messageService);
+        }
+    }
+
+    @Nested
+    @DisplayName("MappingException Handling")
+    class MappingExceptionHandling {
+
+        @Test
+        @DisplayName("Should return 500 when MappingException thrown")
+        void shouldReturn500_whenMappingExceptionThrown() {
+            // Given
+            MappingException ex = new MappingException(
+                    List.of(new ErrorMessage("Failed to map source to destination")));
+
+            // When
+            ResponseEntity<ErrorResponseDTO> response = advice.handleMappingException(ex);
+
+            // Then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getCode())
+                    .isEqualTo(BaseControllerAdvice.CODE_INTERNAL_ERROR);
+            assertThat(response.getBody().getMessage())
+                    .isEqualTo(BaseControllerAdvice.MSG_MAPPING_ERROR);
+            verifyNoInteractions(messageService);
+        }
+    }
+
+    @Nested
+    @DisplayName("IncorrectResultSize Handling")
+    class IncorrectResultSizeHandling {
+
+        @Test
+        @DisplayName("Should return 500 when IncorrectResultSizeDataAccessException thrown")
+        void shouldReturn500_whenIncorrectResultSizeThrown() {
+            // Given
+            IncorrectResultSizeDataAccessException ex =
+                    new IncorrectResultSizeDataAccessException(1, 3);
+
+            // When
+            ResponseEntity<ErrorResponseDTO> response = advice.handleIncorrectResultSize(ex);
+
+            // Then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getCode())
+                    .isEqualTo(BaseControllerAdvice.CODE_INTERNAL_ERROR);
+            assertThat(response.getBody().getMessage())
+                    .isEqualTo(BaseControllerAdvice.MSG_INCORRECT_RESULT_SIZE);
+            verifyNoInteractions(messageService);
         }
     }
 
