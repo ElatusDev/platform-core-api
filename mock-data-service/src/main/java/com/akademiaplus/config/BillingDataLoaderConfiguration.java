@@ -14,6 +14,7 @@ import com.akademiaplus.billing.membership.MembershipAdultStudentDataModel;
 import com.akademiaplus.billing.membership.MembershipDataModel;
 import com.akademiaplus.billing.membership.MembershipTutorDataModel;
 import com.akademiaplus.billing.payroll.CompensationDataModel;
+import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.membership.interfaceadapters.CardPaymentInfoRepository;
 import com.akademiaplus.membership.interfaceadapters.MembershipAdultStudentRepository;
 import com.akademiaplus.membership.interfaceadapters.MembershipRepository;
@@ -30,7 +31,13 @@ import com.akademiaplus.payroll.usecases.CompensationCreationUseCase;
 import com.akademiaplus.util.base.DataCleanUp;
 import com.akademiaplus.util.base.DataFactory;
 import com.akademiaplus.util.base.DataLoader;
+import com.akademiaplus.util.base.NativeBridgeDataCleanUp;
+import com.akademiaplus.util.base.NativeBridgeDataLoader;
 import com.akademiaplus.util.mock.billing.CardPaymentInfoFactory.CardPaymentInfoRequest;
+import com.akademiaplus.util.mock.billing.CompensationCollaboratorFactory;
+import com.akademiaplus.util.mock.billing.CompensationCollaboratorRecord;
+import com.akademiaplus.util.mock.billing.MembershipCourseFactory;
+import com.akademiaplus.util.mock.billing.MembershipCourseRecord;
 import jakarta.persistence.EntityManager;
 import openapi.akademiaplus.domain.billing.dto.CompensationCreationRequestDTO;
 import openapi.akademiaplus.domain.billing.dto.MembershipAdultStudentCreationRequestDTO;
@@ -211,5 +218,75 @@ public class BillingDataLoaderConfiguration {
         cleanup.setDataModel(CardPaymentInfoDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
+    }
+
+    // ── MembershipCourse (bridge table) ──
+
+    /**
+     * Creates the native bridge data loader for membership-course records.
+     *
+     * @param entityManager       the JPA entity manager
+     * @param tenantContextHolder the tenant context holder
+     * @param factory             the membership-course factory
+     * @return a configured native bridge data loader
+     */
+    @Bean
+    public NativeBridgeDataLoader<MembershipCourseRecord> membershipCourseDataLoader(
+            EntityManager entityManager,
+            TenantContextHolder tenantContextHolder,
+            MembershipCourseFactory factory) {
+
+        return new NativeBridgeDataLoader<>(
+                entityManager, tenantContextHolder, factory,
+                "INSERT INTO membership_courses (tenant_id, membership_id, course_id) VALUES (?, ?, ?)",
+                r -> new Object[]{r.membershipId(), r.courseId()});
+    }
+
+    /**
+     * Creates the native bridge data cleanup for the membership_courses table.
+     *
+     * @param entityManager the JPA entity manager
+     * @return a configured native bridge data cleanup
+     */
+    @Bean
+    public NativeBridgeDataCleanUp membershipCourseDataCleanUp(EntityManager entityManager) {
+        NativeBridgeDataCleanUp cleanUp = new NativeBridgeDataCleanUp(entityManager);
+        cleanUp.setTableName("membership_courses");
+        return cleanUp;
+    }
+
+    // ── CompensationCollaborator (bridge table) ──
+
+    /**
+     * Creates the native bridge data loader for compensation-collaborator records.
+     *
+     * @param entityManager       the JPA entity manager
+     * @param tenantContextHolder the tenant context holder
+     * @param factory             the compensation-collaborator factory
+     * @return a configured native bridge data loader
+     */
+    @Bean
+    public NativeBridgeDataLoader<CompensationCollaboratorRecord> compensationCollaboratorDataLoader(
+            EntityManager entityManager,
+            TenantContextHolder tenantContextHolder,
+            CompensationCollaboratorFactory factory) {
+
+        return new NativeBridgeDataLoader<>(
+                entityManager, tenantContextHolder, factory,
+                "INSERT INTO compensation_collaborators (tenant_id, compensation_id, collaborator_id, assigned_date) VALUES (?, ?, ?, ?)",
+                r -> new Object[]{r.compensationId(), r.collaboratorId(), r.assignedDate()});
+    }
+
+    /**
+     * Creates the native bridge data cleanup for the compensation_collaborators table.
+     *
+     * @param entityManager the JPA entity manager
+     * @return a configured native bridge data cleanup
+     */
+    @Bean
+    public NativeBridgeDataCleanUp compensationCollaboratorDataCleanUp(EntityManager entityManager) {
+        NativeBridgeDataCleanUp cleanUp = new NativeBridgeDataCleanUp(entityManager);
+        cleanUp.setTableName("compensation_collaborators");
+        return cleanUp;
     }
 }

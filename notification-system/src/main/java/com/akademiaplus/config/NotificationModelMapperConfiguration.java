@@ -80,6 +80,8 @@ public class NotificationModelMapperConfiguration {
         ).addMappings(mapper -> {
             mapper.skip(NewsFeedItemDataModel::setNewsFeedItemId);
             mapper.skip(NewsFeedItemDataModel::setStatus);
+            mapper.skip(NewsFeedItemDataModel::setCourseId);
+            mapper.skip(NewsFeedItemDataModel::setImageUrl);
         }).implicitMappings();
     }
 
@@ -91,6 +93,8 @@ public class NotificationModelMapperConfiguration {
         ).addMappings(mapper -> {
             mapper.skip(NewsFeedItemDataModel::setNewsFeedItemId);
             mapper.skip(NewsFeedItemDataModel::setStatus);
+            mapper.skip(NewsFeedItemDataModel::setCourseId);
+            mapper.skip(NewsFeedItemDataModel::setImageUrl);
         }).implicitMappings();
     }
 }

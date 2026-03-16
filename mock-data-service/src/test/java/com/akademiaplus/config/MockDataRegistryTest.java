@@ -13,15 +13,18 @@ import com.akademiaplus.billing.customerpayment.PaymentAdultStudentDataModel;
 import com.akademiaplus.billing.membership.MembershipAdultStudentDataModel;
 import com.akademiaplus.billing.membership.MembershipDataModel;
 import com.akademiaplus.billing.membership.MembershipTutorDataModel;
+import com.akademiaplus.billing.payroll.CompensationDataModel;
 import com.akademiaplus.billing.store.StoreProductDataModel;
 import com.akademiaplus.billing.store.StoreTransactionDataModel;
 import com.akademiaplus.collaborator.interfaceadapters.CollaboratorRepository;
-import com.akademiaplus.event.interfaceadapters.CourseEventRepository;
+import com.akademiaplus.customer.adultstudent.interfaceadapters.AdultStudentRepository;
+import com.akademiaplus.customer.interfaceadapters.TutorRepository;
+import com.akademiaplus.customer.minorstudent.interfaceadapters.MinorStudentRepository;
 import com.akademiaplus.courses.event.CourseEventDataModel;
 import com.akademiaplus.courses.program.CourseDataModel;
 import com.akademiaplus.courses.program.ScheduleDataModel;
-import com.akademiaplus.customer.adultstudent.interfaceadapters.AdultStudentRepository;
-import com.akademiaplus.customer.interfaceadapters.TutorRepository;
+import com.akademiaplus.employee.interfaceadapters.EmployeeRepository;
+import com.akademiaplus.event.interfaceadapters.CourseEventRepository;
 import com.akademiaplus.infra.persistence.config.TenantContextHolder;
 import com.akademiaplus.interfaceadapters.TenantRepository;
 import com.akademiaplus.membership.interfaceadapters.MembershipAdultStudentRepository;
@@ -29,9 +32,12 @@ import com.akademiaplus.membership.interfaceadapters.MembershipRepository;
 import com.akademiaplus.membership.interfaceadapters.MembershipTutorRepository;
 import com.akademiaplus.membership.interfaceadapters.PaymentAdultStudentRepository;
 import com.akademiaplus.notification.interfaceadapters.EmailRepository;
+import com.akademiaplus.notification.interfaceadapters.EmailTemplateRepository;
 import com.akademiaplus.notification.interfaceadapters.NotificationRepository;
 import com.akademiaplus.notifications.NotificationDataModel;
 import com.akademiaplus.notifications.email.EmailDataModel;
+import com.akademiaplus.notifications.email.EmailTemplateDataModel;
+import com.akademiaplus.payroll.interfaceadapters.CompensationRepository;
 import com.akademiaplus.program.interfaceadapters.CourseRepository;
 import com.akademiaplus.program.interfaceadapters.ScheduleRepository;
 import com.akademiaplus.security.CustomerAuthDataModel;
@@ -39,44 +45,32 @@ import com.akademiaplus.security.InternalAuthDataModel;
 import com.akademiaplus.store.interfaceadapters.StoreProductRepository;
 import com.akademiaplus.store.interfaceadapters.StoreTransactionRepository;
 import com.akademiaplus.tenancy.TenantDataModel;
-import com.akademiaplus.users.base.PersonPIIDataModel;
-import com.akademiaplus.users.collaborator.CollaboratorDataModel;
-import com.akademiaplus.users.customer.AdultStudentDataModel;
-import com.akademiaplus.users.customer.TutorDataModel;
-import com.akademiaplus.util.base.DataCleanUp;
-import com.akademiaplus.util.mock.billing.CardPaymentInfoFactory;
-import com.akademiaplus.util.mock.billing.MembershipAdultStudentFactory;
-import com.akademiaplus.util.mock.billing.MembershipTutorFactory;
-import com.akademiaplus.util.mock.billing.PaymentAdultStudentFactory;
-import com.akademiaplus.util.mock.billing.PaymentTutorFactory;
-import com.akademiaplus.util.mock.course.CourseEventFactory;
-import com.akademiaplus.util.mock.course.ScheduleFactory;
-import com.akademiaplus.util.mock.notification.EmailAttachmentFactory;
-import com.akademiaplus.util.mock.notification.EmailRecipientFactory;
-import com.akademiaplus.util.mock.attendance.AttendanceRecordFactory;
-import com.akademiaplus.util.mock.attendance.AttendanceSessionFactory;
-import com.akademiaplus.util.mock.notification.NotificationDeliveryFactory;
-import com.akademiaplus.util.mock.notification.NotificationReadStatusFactory;
-import com.akademiaplus.util.mock.notification.PushDeviceFactory;
-import com.akademiaplus.util.mock.store.StoreSaleItemFactory;
-import com.akademiaplus.util.mock.users.MinorStudentFactory;
-import com.akademiaplus.utilities.idgeneration.interfaceadapters.TenantSequence;
+import com.akademiaplus.usecases.attendance.LoadAttendanceRecordMockDataUseCase;
+import com.akademiaplus.usecases.attendance.LoadAttendanceSessionMockDataUseCase;
 import com.akademiaplus.usecases.billing.LoadCardPaymentInfoMockDataUseCase;
+import com.akademiaplus.usecases.billing.LoadCompensationCollaboratorMockDataUseCase;
 import com.akademiaplus.usecases.billing.LoadCompensationMockDataUseCase;
 import com.akademiaplus.usecases.billing.LoadMembershipAdultStudentMockDataUseCase;
+import com.akademiaplus.usecases.billing.LoadMembershipCourseMockDataUseCase;
 import com.akademiaplus.usecases.billing.LoadMembershipMockDataUseCase;
 import com.akademiaplus.usecases.billing.LoadMembershipTutorMockDataUseCase;
 import com.akademiaplus.usecases.billing.LoadPaymentAdultStudentMockDataUseCase;
 import com.akademiaplus.usecases.billing.LoadPaymentTutorMockDataUseCase;
+import com.akademiaplus.usecases.course.LoadAdultStudentCourseMockDataUseCase;
+import com.akademiaplus.usecases.course.LoadCourseAvailableCollaboratorMockDataUseCase;
+import com.akademiaplus.usecases.course.LoadCourseEventAdultStudentAttendeeMockDataUseCase;
+import com.akademiaplus.usecases.course.LoadCourseEventMinorStudentAttendeeMockDataUseCase;
 import com.akademiaplus.usecases.course.LoadCourseEventMockDataUseCase;
 import com.akademiaplus.usecases.course.LoadCourseMockDataUseCase;
+import com.akademiaplus.usecases.course.LoadMinorStudentCourseMockDataUseCase;
 import com.akademiaplus.usecases.course.LoadScheduleMockDataUseCase;
+import com.akademiaplus.usecases.leadmanagement.LoadDemoRequestMockDataUseCase;
 import com.akademiaplus.usecases.notification.LoadEmailAttachmentMockDataUseCase;
 import com.akademiaplus.usecases.notification.LoadEmailMockDataUseCase;
 import com.akademiaplus.usecases.notification.LoadEmailRecipientMockDataUseCase;
-import com.akademiaplus.usecases.attendance.LoadAttendanceRecordMockDataUseCase;
-import com.akademiaplus.usecases.attendance.LoadAttendanceSessionMockDataUseCase;
-import com.akademiaplus.usecases.leadmanagement.LoadDemoRequestMockDataUseCase;
+import com.akademiaplus.usecases.notification.LoadEmailTemplateMockDataUseCase;
+import com.akademiaplus.usecases.notification.LoadEmailTemplateVariableMockDataUseCase;
+import com.akademiaplus.usecases.notification.LoadNewsFeedItemMockDataUseCase;
 import com.akademiaplus.usecases.notification.LoadNotificationDeliveryMockDataUseCase;
 import com.akademiaplus.usecases.notification.LoadNotificationMockDataUseCase;
 import com.akademiaplus.usecases.notification.LoadNotificationReadStatusMockDataUseCase;
@@ -84,7 +78,9 @@ import com.akademiaplus.usecases.notification.LoadPushDeviceMockDataUseCase;
 import com.akademiaplus.usecases.store.LoadStoreSaleItemMockDataUseCase;
 import com.akademiaplus.usecases.store.LoadStoreProductMockDataUseCase;
 import com.akademiaplus.usecases.store.LoadStoreTransactionMockDataUseCase;
+import com.akademiaplus.usecases.task.LoadTaskMockDataUseCase;
 import com.akademiaplus.usecases.tenant.LoadTenantBillingCycleMockDataUseCase;
+import com.akademiaplus.usecases.tenant.LoadTenantBrandingMockDataUseCase;
 import com.akademiaplus.usecases.tenant.LoadTenantSubscriptionMockDataUseCase;
 import com.akademiaplus.usecases.users.LoadAdultStudentMockDataUseCase;
 import com.akademiaplus.usecases.users.LoadCollaboratorMockDataUseCase;
@@ -92,6 +88,40 @@ import com.akademiaplus.usecases.users.LoadEmployeeMockDataUseCase;
 import com.akademiaplus.usecases.users.LoadMinorStudentMockDataUseCase;
 import com.akademiaplus.usecases.users.LoadTenantMockDataUseCase;
 import com.akademiaplus.usecases.users.LoadTutorMockDataUseCase;
+import com.akademiaplus.users.base.PersonPIIDataModel;
+import com.akademiaplus.users.collaborator.CollaboratorDataModel;
+import com.akademiaplus.users.customer.AdultStudentDataModel;
+import com.akademiaplus.users.customer.MinorStudentDataModel;
+import com.akademiaplus.users.customer.TutorDataModel;
+import com.akademiaplus.users.employee.EmployeeDataModel;
+import com.akademiaplus.util.base.DataCleanUp;
+import com.akademiaplus.util.mock.attendance.AttendanceRecordFactory;
+import com.akademiaplus.util.mock.attendance.AttendanceSessionFactory;
+import com.akademiaplus.util.mock.billing.CardPaymentInfoFactory;
+import com.akademiaplus.util.mock.billing.CompensationCollaboratorFactory;
+import com.akademiaplus.util.mock.billing.MembershipAdultStudentFactory;
+import com.akademiaplus.util.mock.billing.MembershipCourseFactory;
+import com.akademiaplus.util.mock.billing.MembershipTutorFactory;
+import com.akademiaplus.util.mock.billing.PaymentAdultStudentFactory;
+import com.akademiaplus.util.mock.billing.PaymentTutorFactory;
+import com.akademiaplus.util.mock.course.AdultStudentCourseFactory;
+import com.akademiaplus.util.mock.course.CourseAvailableCollaboratorFactory;
+import com.akademiaplus.util.mock.course.CourseEventAdultStudentAttendeeFactory;
+import com.akademiaplus.util.mock.course.CourseEventFactory;
+import com.akademiaplus.util.mock.course.CourseEventMinorStudentAttendeeFactory;
+import com.akademiaplus.util.mock.course.MinorStudentCourseFactory;
+import com.akademiaplus.util.mock.course.ScheduleFactory;
+import com.akademiaplus.util.mock.notification.EmailAttachmentFactory;
+import com.akademiaplus.util.mock.notification.EmailRecipientFactory;
+import com.akademiaplus.util.mock.notification.EmailTemplateVariableFactory;
+import com.akademiaplus.util.mock.notification.NewsFeedItemFactory;
+import com.akademiaplus.util.mock.notification.NotificationDeliveryFactory;
+import com.akademiaplus.util.mock.notification.NotificationReadStatusFactory;
+import com.akademiaplus.util.mock.notification.PushDeviceFactory;
+import com.akademiaplus.util.mock.store.StoreSaleItemFactory;
+import com.akademiaplus.util.mock.task.TaskFactory;
+import com.akademiaplus.util.mock.users.MinorStudentFactory;
+import com.akademiaplus.utilities.idgeneration.interfaceadapters.TenantSequence;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -132,6 +162,11 @@ class MockDataRegistryTest {
     private static final long STORE_PRODUCT_ID_ONE = 1000L;
     private static final long NOTIFICATION_ID_ONE = 1100L;
     private static final long EMAIL_ID_ONE = 1200L;
+    private static final long MINOR_STUDENT_ID_ONE = 1300L;
+    private static final long EMPLOYEE_ID_ONE = 1400L;
+    private static final long COMPENSATION_ID_ONE = 1500L;
+    private static final long COURSE_EVENT_ID_ONE = 1600L;
+    private static final long EMAIL_TEMPLATE_ID_ONE = 1700L;
 
     // ── Users domain ──
     @Mock private LoadTenantMockDataUseCase tenantUseCase;
@@ -144,6 +179,7 @@ class MockDataRegistryTest {
     // ── Tenant domain ──
     @Mock private LoadTenantSubscriptionMockDataUseCase tenantSubscriptionUseCase;
     @Mock private LoadTenantBillingCycleMockDataUseCase tenantBillingCycleUseCase;
+    @Mock private LoadTenantBrandingMockDataUseCase tenantBrandingUseCase;
 
     // ── Course domain ──
     @Mock private LoadCourseMockDataUseCase courseUseCase;
@@ -184,6 +220,21 @@ class MockDataRegistryTest {
     @Mock private LoadNotificationReadStatusMockDataUseCase notificationReadStatusUseCase;
     @Mock private LoadPushDeviceMockDataUseCase pushDeviceUseCase;
 
+    // ── Bridge table use cases ──
+    @Mock private LoadCourseAvailableCollaboratorMockDataUseCase courseAvailableCollaboratorUseCase;
+    @Mock private LoadAdultStudentCourseMockDataUseCase adultStudentCourseUseCase;
+    @Mock private LoadMinorStudentCourseMockDataUseCase minorStudentCourseUseCase;
+    @Mock private LoadCourseEventAdultStudentAttendeeMockDataUseCase courseEventAdultStudentAttendeeUseCase;
+    @Mock private LoadCourseEventMinorStudentAttendeeMockDataUseCase courseEventMinorStudentAttendeeUseCase;
+    @Mock private LoadMembershipCourseMockDataUseCase membershipCourseUseCase;
+    @Mock private LoadCompensationCollaboratorMockDataUseCase compensationCollaboratorUseCase;
+
+    // ── Entity/config table use cases ──
+    @Mock private LoadNewsFeedItemMockDataUseCase newsFeedItemUseCase;
+    @Mock private LoadTaskMockDataUseCase taskUseCase;
+    @Mock private LoadEmailTemplateMockDataUseCase emailTemplateUseCase;
+    @Mock private LoadEmailTemplateVariableMockDataUseCase emailTemplateVariableUseCase;
+
     // ── Cleanup-only beans ──
     @Mock private DataCleanUp<TenantSequence, TenantSequence.TenantSequenceId> tenantSequenceCleanUp;
     @Mock private DataCleanUp<InternalAuthDataModel, InternalAuthDataModel.InternalAuthCompositeId> internalAuthCleanUp;
@@ -207,6 +258,10 @@ class MockDataRegistryTest {
     @Mock private EmailRepository emailRepository;
     @Mock private CourseEventRepository courseEventRepository;
     @Mock private AttendanceSessionRepository attendanceSessionRepository;
+    @Mock private EmployeeRepository employeeRepository;
+    @Mock private CompensationRepository compensationRepository;
+    @Mock private MinorStudentRepository minorStudentRepository;
+    @Mock private EmailTemplateRepository emailTemplateRepository;
 
     // ── Factories for hooks ──
     @Mock private TenantContextHolder tenantContextHolder;
@@ -226,6 +281,16 @@ class MockDataRegistryTest {
     @Mock private AttendanceRecordFactory attendanceRecordFactory;
     @Mock private NotificationReadStatusFactory notificationReadStatusFactory;
     @Mock private PushDeviceFactory pushDeviceFactory;
+    @Mock private CourseAvailableCollaboratorFactory courseAvailableCollaboratorFactory;
+    @Mock private AdultStudentCourseFactory adultStudentCourseFactory;
+    @Mock private MinorStudentCourseFactory minorStudentCourseFactory;
+    @Mock private CourseEventAdultStudentAttendeeFactory courseEventAdultStudentAttendeeFactory;
+    @Mock private CourseEventMinorStudentAttendeeFactory courseEventMinorStudentAttendeeFactory;
+    @Mock private MembershipCourseFactory membershipCourseFactory;
+    @Mock private CompensationCollaboratorFactory compensationCollaboratorFactory;
+    @Mock private NewsFeedItemFactory newsFeedItemFactory;
+    @Mock private TaskFactory taskFactory;
+    @Mock private EmailTemplateVariableFactory emailTemplateVariableFactory;
 
     private MockDataRegistry registry;
 
@@ -257,7 +322,13 @@ class MockDataRegistryTest {
                     emailUseCase, emailRecipientUseCase, emailAttachmentUseCase,
                     attendanceSessionUseCase, attendanceRecordUseCase,
                     demoRequestUseCase,
-                    notificationReadStatusUseCase, pushDeviceUseCase);
+                    notificationReadStatusUseCase, pushDeviceUseCase,
+                    courseAvailableCollaboratorUseCase, adultStudentCourseUseCase,
+                    minorStudentCourseUseCase,
+                    courseEventAdultStudentAttendeeUseCase, courseEventMinorStudentAttendeeUseCase,
+                    membershipCourseUseCase, compensationCollaboratorUseCase,
+                    tenantBrandingUseCase, newsFeedItemUseCase, taskUseCase,
+                    emailTemplateUseCase, emailTemplateVariableUseCase);
         }
 
         @Test
@@ -277,7 +348,12 @@ class MockDataRegistryTest {
                     EMAIL, EMAIL_RECIPIENT, EMAIL_ATTACHMENT,
                     ATTENDANCE_SESSION, ATTENDANCE_RECORD,
                     DEMO_REQUEST,
-                    NOTIFICATION_READ_STATUS, PUSH_DEVICE);
+                    NOTIFICATION_READ_STATUS, PUSH_DEVICE,
+                    COURSE_AVAILABLE_COLLABORATOR, ADULT_STUDENT_COURSE, MINOR_STUDENT_COURSE,
+                    COURSE_EVENT_ADULT_STUDENT_ATTENDEE, COURSE_EVENT_MINOR_STUDENT_ATTENDEE,
+                    MEMBERSHIP_COURSE, COMPENSATION_COLLABORATOR,
+                    TENANT_BRANDING, NEWS_FEED_ITEM, TASK,
+                    EMAIL_TEMPLATE, EMAIL_TEMPLATE_VARIABLE);
         }
 
         @Test
@@ -384,7 +460,13 @@ class MockDataRegistryTest {
                     customerAuthCleanUp, personPIICleanUp,
                     attendanceSessionUseCase, attendanceRecordUseCase,
                     demoRequestUseCase,
-                    notificationReadStatusUseCase, pushDeviceUseCase);
+                    notificationReadStatusUseCase, pushDeviceUseCase,
+                    courseAvailableCollaboratorUseCase, adultStudentCourseUseCase,
+                    minorStudentCourseUseCase,
+                    courseEventAdultStudentAttendeeUseCase, courseEventMinorStudentAttendeeUseCase,
+                    membershipCourseUseCase, compensationCollaboratorUseCase,
+                    tenantBrandingUseCase, newsFeedItemUseCase, taskUseCase,
+                    emailTemplateUseCase, emailTemplateVariableUseCase);
         }
 
         @Test
@@ -405,7 +487,12 @@ class MockDataRegistryTest {
                     EMAIL, EMAIL_RECIPIENT, EMAIL_ATTACHMENT,
                     ATTENDANCE_SESSION, ATTENDANCE_RECORD,
                     DEMO_REQUEST,
-                    NOTIFICATION_READ_STATUS, PUSH_DEVICE);
+                    NOTIFICATION_READ_STATUS, PUSH_DEVICE,
+                    COURSE_AVAILABLE_COLLABORATOR, ADULT_STUDENT_COURSE, MINOR_STUDENT_COURSE,
+                    COURSE_EVENT_ADULT_STUDENT_ATTENDEE, COURSE_EVENT_MINOR_STUDENT_ATTENDEE,
+                    MEMBERSHIP_COURSE, COMPENSATION_COLLABORATOR,
+                    TENANT_BRANDING, NEWS_FEED_ITEM, TASK,
+                    EMAIL_TEMPLATE, EMAIL_TEMPLATE_VARIABLE);
         }
 
         @Test
@@ -529,7 +616,14 @@ class MockDataRegistryTest {
                     courseEventRepository,
                     attendanceSessionFactory, attendanceSessionRepository,
                     attendanceRecordFactory,
-                    notificationReadStatusFactory, pushDeviceFactory);
+                    notificationReadStatusFactory, pushDeviceFactory,
+                    courseAvailableCollaboratorFactory,
+                    adultStudentCourseFactory, minorStudentCourseFactory,
+                    courseEventAdultStudentAttendeeFactory, courseEventMinorStudentAttendeeFactory,
+                    membershipCourseFactory, compensationCollaboratorFactory,
+                    newsFeedItemFactory, taskFactory, emailTemplateVariableFactory,
+                    employeeRepository, compensationRepository,
+                    minorStudentRepository, emailTemplateRepository);
         }
 
         @Test
@@ -545,7 +639,8 @@ class MockDataRegistryTest {
                     PAYMENT_ADULT_STUDENT,
                     STORE_TRANSACTION, STORE_PRODUCT,
                     NOTIFICATION, EMAIL,
-                    COURSE_EVENT, ATTENDANCE_SESSION);
+                    COURSE_EVENT, ATTENDANCE_SESSION,
+                    MINOR_STUDENT, EMPLOYEE, COMPENSATION, EMAIL_TEMPLATE);
         }
 
         @Test
@@ -609,12 +704,19 @@ class MockDataRegistryTest {
 
             // Then — interaction assertions in order: findAll → inject into factories
             InOrder inOrder = inOrder(courseRepository, scheduleFactory, courseEventFactory,
-                    membershipAdultStudentFactory, membershipTutorFactory);
+                    membershipAdultStudentFactory, membershipTutorFactory,
+                    courseAvailableCollaboratorFactory, adultStudentCourseFactory,
+                    minorStudentCourseFactory, membershipCourseFactory, newsFeedItemFactory);
             inOrder.verify(courseRepository, times(1)).findAll();
             inOrder.verify(scheduleFactory, times(1)).setAvailableCourseIds(List.of(COURSE_ID_ONE));
             inOrder.verify(courseEventFactory, times(1)).setAvailableCourseIds(List.of(COURSE_ID_ONE));
             inOrder.verify(membershipAdultStudentFactory, times(1)).setAvailableCourseIds(List.of(COURSE_ID_ONE));
             inOrder.verify(membershipTutorFactory, times(1)).setAvailableCourseIds(List.of(COURSE_ID_ONE));
+            inOrder.verify(courseAvailableCollaboratorFactory, times(1)).setAvailableCourseIds(List.of(COURSE_ID_ONE));
+            inOrder.verify(adultStudentCourseFactory, times(1)).setAvailableCourseIds(List.of(COURSE_ID_ONE));
+            inOrder.verify(minorStudentCourseFactory, times(1)).setAvailableCourseIds(List.of(COURSE_ID_ONE));
+            inOrder.verify(membershipCourseFactory, times(1)).setAvailableCourseIds(List.of(COURSE_ID_ONE));
+            inOrder.verify(newsFeedItemFactory, times(1)).setAvailableCourseIds(List.of(COURSE_ID_ONE));
             inOrder.verifyNoMoreInteractions();
         }
 
@@ -640,8 +742,8 @@ class MockDataRegistryTest {
         }
 
         @Test
-        @DisplayName("Should inject collaborator IDs into course event factory when collaborator hook executes")
-        void shouldInjectCollaboratorIds_intoCourseEventFactory_whenCollaboratorHookExecutes() {
+        @DisplayName("Should inject collaborator IDs into factories when collaborator hook executes")
+        void shouldInjectCollaboratorIds_intoFactories_whenCollaboratorHookExecutes() {
             // Given
             CollaboratorDataModel collaborator = new CollaboratorDataModel();
             collaborator.setCollaboratorId(COLLABORATOR_ID_ONE);
@@ -653,10 +755,13 @@ class MockDataRegistryTest {
             // Then — state assertion
             assertThat(hooks).containsKey(COLLABORATOR);
 
-            // Then — interaction assertions in order: findAll → inject into factory
-            InOrder inOrder = inOrder(collaboratorRepository, courseEventFactory);
+            // Then — interaction assertions in order: findAll → inject into factories
+            InOrder inOrder = inOrder(collaboratorRepository, courseEventFactory,
+                    courseAvailableCollaboratorFactory, compensationCollaboratorFactory);
             inOrder.verify(collaboratorRepository, times(1)).findAll();
             inOrder.verify(courseEventFactory, times(1)).setAvailableCollaboratorIds(List.of(COLLABORATOR_ID_ONE));
+            inOrder.verify(courseAvailableCollaboratorFactory, times(1)).setAvailableCollaboratorIds(List.of(COLLABORATOR_ID_ONE));
+            inOrder.verify(compensationCollaboratorFactory, times(1)).setAvailableCollaboratorIds(List.of(COLLABORATOR_ID_ONE));
             inOrder.verifyNoMoreInteractions();
         }
 
@@ -675,15 +780,17 @@ class MockDataRegistryTest {
             assertThat(hooks).containsKey(MEMBERSHIP);
 
             // Then — interaction assertions in order: findAll → inject into factories
-            InOrder inOrder = inOrder(membershipRepository, membershipAdultStudentFactory, membershipTutorFactory);
+            InOrder inOrder = inOrder(membershipRepository, membershipAdultStudentFactory,
+                    membershipTutorFactory, membershipCourseFactory);
             inOrder.verify(membershipRepository, times(1)).findAll();
             inOrder.verify(membershipAdultStudentFactory, times(1)).setAvailableMembershipIds(List.of(MEMBERSHIP_ID_ONE));
             inOrder.verify(membershipTutorFactory, times(1)).setAvailableMembershipIds(List.of(MEMBERSHIP_ID_ONE));
+            inOrder.verify(membershipCourseFactory, times(1)).setAvailableMembershipIds(List.of(MEMBERSHIP_ID_ONE));
             inOrder.verifyNoMoreInteractions();
         }
 
         @Test
-        @DisplayName("Should inject adult student IDs into membership adult student factory when adult student hook executes")
+        @DisplayName("Should inject adult student IDs into downstream factories when adult student hook executes")
         void shouldInjectAdultStudentIds_whenAdultStudentHookExecutes() {
             // Given
             AdultStudentDataModel adultStudent = new AdultStudentDataModel();
@@ -698,12 +805,15 @@ class MockDataRegistryTest {
 
             // Then — interaction assertions in order: findAll → inject into factories
             InOrder inOrder = inOrder(adultStudentRepository, membershipAdultStudentFactory,
-                    attendanceRecordFactory, pushDeviceFactory, notificationReadStatusFactory);
+                    attendanceRecordFactory, pushDeviceFactory, notificationReadStatusFactory,
+                    adultStudentCourseFactory, courseEventAdultStudentAttendeeFactory);
             inOrder.verify(adultStudentRepository, times(1)).findAll();
             inOrder.verify(membershipAdultStudentFactory, times(1)).setAvailableAdultStudentIds(List.of(ADULT_STUDENT_ID_ONE));
             inOrder.verify(attendanceRecordFactory, times(1)).setAvailableAdultStudentIds(List.of(ADULT_STUDENT_ID_ONE));
             inOrder.verify(pushDeviceFactory, times(1)).setAvailableUserIds(List.of(ADULT_STUDENT_ID_ONE));
             inOrder.verify(notificationReadStatusFactory, times(1)).setAvailableUserIds(List.of(ADULT_STUDENT_ID_ONE));
+            inOrder.verify(adultStudentCourseFactory, times(1)).setAvailableAdultStudentIds(List.of(ADULT_STUDENT_ID_ONE));
+            inOrder.verify(courseEventAdultStudentAttendeeFactory, times(1)).setAvailableAdultStudentIds(List.of(ADULT_STUDENT_ID_ONE));
             inOrder.verifyNoMoreInteractions();
         }
 
@@ -853,6 +963,138 @@ class MockDataRegistryTest {
             inOrder.verify(emailRepository, times(1)).findAll();
             inOrder.verify(emailRecipientFactory, times(1)).setAvailableEmailIds(List.of(EMAIL_ID_ONE));
             inOrder.verify(emailAttachmentFactory, times(1)).setAvailableEmailIds(List.of(EMAIL_ID_ONE));
+            inOrder.verifyNoMoreInteractions();
+        }
+
+        @Test
+        @DisplayName("Should inject course event IDs into downstream factories when course event hook executes")
+        void shouldInjectCourseEventIds_intoFactories_whenCourseEventHookExecutes() {
+            // Given
+            CourseEventDataModel courseEvent = new CourseEventDataModel();
+            courseEvent.setCourseEventId(COURSE_EVENT_ID_ONE);
+            when(courseEventRepository.findAll()).thenReturn(List.of(courseEvent));
+
+            // When
+            hooks.get(COURSE_EVENT).execute();
+
+            // Then — state assertion
+            assertThat(hooks).containsKey(COURSE_EVENT);
+
+            // Then — interaction assertions in order: findAll → inject into factories
+            InOrder inOrder = inOrder(courseEventRepository, attendanceSessionFactory,
+                    courseEventAdultStudentAttendeeFactory, courseEventMinorStudentAttendeeFactory);
+            inOrder.verify(courseEventRepository, times(1)).findAll();
+            inOrder.verify(attendanceSessionFactory, times(1)).setAvailableCourseEventIds(List.of(COURSE_EVENT_ID_ONE));
+            inOrder.verify(courseEventAdultStudentAttendeeFactory, times(1)).setAvailableCourseEventIds(List.of(COURSE_EVENT_ID_ONE));
+            inOrder.verify(courseEventMinorStudentAttendeeFactory, times(1)).setAvailableCourseEventIds(List.of(COURSE_EVENT_ID_ONE));
+            inOrder.verifyNoMoreInteractions();
+        }
+
+        @Test
+        @DisplayName("Should inject minor student IDs into downstream factories when minor student hook executes")
+        void shouldInjectMinorStudentIds_intoFactories_whenMinorStudentHookExecutes() {
+            // Given
+            MinorStudentDataModel minorStudent = new MinorStudentDataModel();
+            minorStudent.setMinorStudentId(MINOR_STUDENT_ID_ONE);
+            when(minorStudentRepository.findAll()).thenReturn(List.of(minorStudent));
+
+            // When
+            hooks.get(MINOR_STUDENT).execute();
+
+            // Then — state assertion
+            assertThat(hooks).containsKey(MINOR_STUDENT);
+
+            // Then — interaction assertions in order: findAll → inject into factories
+            InOrder inOrder = inOrder(minorStudentRepository, minorStudentCourseFactory,
+                    courseEventMinorStudentAttendeeFactory);
+            inOrder.verify(minorStudentRepository, times(1)).findAll();
+            inOrder.verify(minorStudentCourseFactory, times(1)).setAvailableMinorStudentIds(List.of(MINOR_STUDENT_ID_ONE));
+            inOrder.verify(courseEventMinorStudentAttendeeFactory, times(1)).setAvailableMinorStudentIds(List.of(MINOR_STUDENT_ID_ONE));
+            inOrder.verifyNoMoreInteractions();
+        }
+
+        @Test
+        @DisplayName("Should inject employee IDs into downstream factories when employee hook executes")
+        void shouldInjectEmployeeIds_intoFactories_whenEmployeeHookExecutes() {
+            // Given
+            EmployeeDataModel employee = new EmployeeDataModel();
+            employee.setEmployeeId(EMPLOYEE_ID_ONE);
+            when(employeeRepository.findAll()).thenReturn(List.of(employee));
+
+            // When
+            hooks.get(EMPLOYEE).execute();
+
+            // Then — state assertion
+            assertThat(hooks).containsKey(EMPLOYEE);
+
+            // Then — interaction assertions in order: findAll → inject into factories
+            InOrder inOrder = inOrder(employeeRepository, newsFeedItemFactory, taskFactory);
+            inOrder.verify(employeeRepository, times(1)).findAll();
+            inOrder.verify(newsFeedItemFactory, times(1)).setAvailableEmployeeIds(List.of(EMPLOYEE_ID_ONE));
+            inOrder.verify(taskFactory, times(1)).setAvailableEmployeeIds(List.of(EMPLOYEE_ID_ONE));
+            inOrder.verifyNoMoreInteractions();
+        }
+
+        @Test
+        @DisplayName("Should inject compensation IDs into factory when compensation hook executes")
+        void shouldInjectCompensationIds_intoFactory_whenCompensationHookExecutes() {
+            // Given
+            CompensationDataModel compensation = new CompensationDataModel();
+            compensation.setCompensationId(COMPENSATION_ID_ONE);
+            when(compensationRepository.findAll()).thenReturn(List.of(compensation));
+
+            // When
+            hooks.get(COMPENSATION).execute();
+
+            // Then — state assertion
+            assertThat(hooks).containsKey(COMPENSATION);
+
+            // Then — interaction assertions in order: findAll → inject into factory
+            InOrder inOrder = inOrder(compensationRepository, compensationCollaboratorFactory);
+            inOrder.verify(compensationRepository, times(1)).findAll();
+            inOrder.verify(compensationCollaboratorFactory, times(1)).setAvailableCompensationIds(List.of(COMPENSATION_ID_ONE));
+            inOrder.verifyNoMoreInteractions();
+        }
+
+        @Test
+        @DisplayName("Should inject email template IDs into factory when email template hook executes")
+        void shouldInjectEmailTemplateIds_intoFactory_whenEmailTemplateHookExecutes() {
+            // Given
+            EmailTemplateDataModel template = new EmailTemplateDataModel();
+            template.setTemplateId(EMAIL_TEMPLATE_ID_ONE);
+            when(emailTemplateRepository.findAll()).thenReturn(List.of(template));
+
+            // When
+            hooks.get(EMAIL_TEMPLATE).execute();
+
+            // Then — state assertion
+            assertThat(hooks).containsKey(EMAIL_TEMPLATE);
+
+            // Then — interaction assertions in order: findAll → inject into factory
+            InOrder inOrder = inOrder(emailTemplateRepository, emailTemplateVariableFactory);
+            inOrder.verify(emailTemplateRepository, times(1)).findAll();
+            inOrder.verify(emailTemplateVariableFactory, times(1)).setAvailableTemplateIds(List.of(EMAIL_TEMPLATE_ID_ONE));
+            inOrder.verifyNoMoreInteractions();
+        }
+
+        @Test
+        @DisplayName("Should inject attendance session IDs into record factory when attendance session hook executes")
+        void shouldInjectAttendanceSessionIds_intoRecordFactory_whenAttendanceSessionHookExecutes() {
+            // Given
+            AttendanceSessionDataModel session = new AttendanceSessionDataModel();
+            session.setAttendanceSessionId(1L);
+            when(attendanceSessionRepository.findAll()).thenReturn(List.of(session));
+
+            // When
+            hooks.get(ATTENDANCE_SESSION).execute();
+
+            // Then — state assertion
+            assertThat(hooks).containsKey(ATTENDANCE_SESSION);
+
+            // Then — interaction assertions in order: findAll → inject into factory
+            InOrder inOrder = inOrder(attendanceSessionRepository, attendanceRecordFactory);
+            inOrder.verify(attendanceSessionRepository, times(1)).findAll();
+            inOrder.verify(attendanceRecordFactory, times(1)).setAvailableAttendanceSessionIds(List.of(1L));
             inOrder.verifyNoMoreInteractions();
         }
 

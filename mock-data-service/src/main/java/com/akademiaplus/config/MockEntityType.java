@@ -104,7 +104,27 @@ public enum MockEntityType {
     NOTIFICATION_READ_STATUS(true, true, NOTIFICATION, ADULT_STUDENT),
 
     // ── Level 5: attendance record (FK → ATTENDANCE_SESSION) ──
-    ATTENDANCE_RECORD(true, true, ATTENDANCE_SESSION);
+    ATTENDANCE_RECORD(true, true, ATTENDANCE_SESSION),
+
+    // ── Bridge tables: course-people associations ──
+    COURSE_AVAILABLE_COLLABORATOR(true, true, COURSE, COLLABORATOR),
+    ADULT_STUDENT_COURSE(true, true, ADULT_STUDENT, COURSE),
+    MINOR_STUDENT_COURSE(true, true, MINOR_STUDENT, COURSE),
+    COURSE_EVENT_ADULT_STUDENT_ATTENDEE(true, true, COURSE_EVENT, ADULT_STUDENT),
+    COURSE_EVENT_MINOR_STUDENT_ATTENDEE(true, true, COURSE_EVENT, MINOR_STUDENT),
+
+    // ── Bridge tables: billing-people associations ──
+    MEMBERSHIP_COURSE(true, true, MEMBERSHIP, COURSE),
+    COMPENSATION_COLLABORATOR(true, true, COMPENSATION, COLLABORATOR),
+
+    // ── Entity tables: tenant config + content ──
+    TENANT_BRANDING(true, true, TENANT),
+    NEWS_FEED_ITEM(true, true, EMPLOYEE),
+    TASK(true, true, EMPLOYEE),
+
+    // ── Config tables: email templates ──
+    EMAIL_TEMPLATE(true, true, TENANT),
+    EMAIL_TEMPLATE_VARIABLE(true, true, EMAIL_TEMPLATE);
 
     private final boolean loadable;
     private final boolean cleanable;

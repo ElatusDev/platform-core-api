@@ -60,6 +60,13 @@ public class UpdateNewsFeedItemUseCase {
 
         modelMapper.map(dto, existing, MAP_NAME);
 
+        if (dto.getCourseId() != null && dto.getCourseId().isPresent()) {
+            existing.setCourseId(dto.getCourseId().get());
+        }
+        if (dto.getImageUrl() != null && dto.getImageUrl().isPresent()) {
+            existing.setImageUrl(dto.getImageUrl().get());
+        }
+
         if (dto.getStatus() != null) {
             NewsFeedStatus newStatus = NewsFeedStatus.valueOf(dto.getStatus().name());
             existing.setStatus(newStatus);

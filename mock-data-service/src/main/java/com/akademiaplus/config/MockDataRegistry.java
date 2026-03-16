@@ -71,23 +71,52 @@ import com.akademiaplus.users.collaborator.CollaboratorDataModel;
 import com.akademiaplus.users.customer.AdultStudentDataModel;
 import com.akademiaplus.users.customer.TutorDataModel;
 import com.akademiaplus.util.base.DataCleanUp;
+import com.akademiaplus.usecases.billing.LoadCompensationCollaboratorMockDataUseCase;
+import com.akademiaplus.usecases.billing.LoadMembershipCourseMockDataUseCase;
+import com.akademiaplus.usecases.course.LoadAdultStudentCourseMockDataUseCase;
+import com.akademiaplus.usecases.course.LoadCourseAvailableCollaboratorMockDataUseCase;
+import com.akademiaplus.usecases.course.LoadCourseEventAdultStudentAttendeeMockDataUseCase;
+import com.akademiaplus.usecases.course.LoadCourseEventMinorStudentAttendeeMockDataUseCase;
+import com.akademiaplus.usecases.course.LoadMinorStudentCourseMockDataUseCase;
+import com.akademiaplus.usecases.notification.LoadEmailTemplateMockDataUseCase;
+import com.akademiaplus.usecases.notification.LoadEmailTemplateVariableMockDataUseCase;
+import com.akademiaplus.usecases.notification.LoadNewsFeedItemMockDataUseCase;
+import com.akademiaplus.usecases.task.LoadTaskMockDataUseCase;
+import com.akademiaplus.usecases.tenant.LoadTenantBrandingMockDataUseCase;
 import com.akademiaplus.util.mock.billing.CardPaymentInfoFactory;
+import com.akademiaplus.util.mock.billing.CompensationCollaboratorFactory;
 import com.akademiaplus.util.mock.billing.MembershipAdultStudentFactory;
+import com.akademiaplus.util.mock.billing.MembershipCourseFactory;
 import com.akademiaplus.util.mock.billing.MembershipTutorFactory;
 import com.akademiaplus.util.mock.billing.PaymentAdultStudentFactory;
 import com.akademiaplus.util.mock.billing.PaymentTutorFactory;
+import com.akademiaplus.util.mock.course.AdultStudentCourseFactory;
+import com.akademiaplus.util.mock.course.CourseAvailableCollaboratorFactory;
+import com.akademiaplus.util.mock.course.CourseEventAdultStudentAttendeeFactory;
 import com.akademiaplus.util.mock.course.CourseEventFactory;
+import com.akademiaplus.util.mock.course.CourseEventMinorStudentAttendeeFactory;
+import com.akademiaplus.util.mock.course.MinorStudentCourseFactory;
 import com.akademiaplus.util.mock.course.ScheduleFactory;
 import com.akademiaplus.util.mock.attendance.AttendanceRecordFactory;
 import com.akademiaplus.util.mock.attendance.AttendanceSessionFactory;
 import com.akademiaplus.util.mock.notification.EmailAttachmentFactory;
 import com.akademiaplus.util.mock.notification.EmailRecipientFactory;
+import com.akademiaplus.util.mock.notification.EmailTemplateVariableFactory;
+import com.akademiaplus.util.mock.notification.NewsFeedItemFactory;
 import com.akademiaplus.util.mock.notification.NotificationDeliveryFactory;
 import com.akademiaplus.util.mock.notification.NotificationReadStatusFactory;
 import com.akademiaplus.util.mock.notification.PushDeviceFactory;
 import com.akademiaplus.util.mock.store.StoreSaleItemFactory;
+import com.akademiaplus.util.mock.task.TaskFactory;
 import com.akademiaplus.util.mock.users.MinorStudentFactory;
 import com.akademiaplus.utilities.idgeneration.interfaceadapters.TenantSequence;
+import com.akademiaplus.notification.interfaceadapters.EmailTemplateRepository;
+import com.akademiaplus.notifications.email.EmailTemplateDataModel;
+import com.akademiaplus.employee.interfaceadapters.EmployeeRepository;
+import com.akademiaplus.users.employee.EmployeeDataModel;
+import com.akademiaplus.payroll.interfaceadapters.CompensationRepository;
+import com.akademiaplus.users.customer.MinorStudentDataModel;
+import com.akademiaplus.customer.minorstudent.interfaceadapters.MinorStudentRepository;
 import com.akademiaplus.usecases.users.LoadAdultStudentMockDataUseCase;
 import com.akademiaplus.usecases.users.LoadCollaboratorMockDataUseCase;
 import com.akademiaplus.usecases.users.LoadEmployeeMockDataUseCase;
@@ -157,7 +186,19 @@ public class MockDataRegistry {
             LoadAttendanceRecordMockDataUseCase attendanceRecordUseCase,
             LoadDemoRequestMockDataUseCase demoRequestUseCase,
             LoadNotificationReadStatusMockDataUseCase notificationReadStatusUseCase,
-            LoadPushDeviceMockDataUseCase pushDeviceUseCase) {
+            LoadPushDeviceMockDataUseCase pushDeviceUseCase,
+            LoadCourseAvailableCollaboratorMockDataUseCase courseAvailableCollaboratorUseCase,
+            LoadAdultStudentCourseMockDataUseCase adultStudentCourseUseCase,
+            LoadMinorStudentCourseMockDataUseCase minorStudentCourseUseCase,
+            LoadCourseEventAdultStudentAttendeeMockDataUseCase courseEventAdultStudentAttendeeUseCase,
+            LoadCourseEventMinorStudentAttendeeMockDataUseCase courseEventMinorStudentAttendeeUseCase,
+            LoadMembershipCourseMockDataUseCase membershipCourseUseCase,
+            LoadCompensationCollaboratorMockDataUseCase compensationCollaboratorUseCase,
+            LoadTenantBrandingMockDataUseCase tenantBrandingUseCase,
+            LoadNewsFeedItemMockDataUseCase newsFeedItemUseCase,
+            LoadTaskMockDataUseCase taskUseCase,
+            LoadEmailTemplateMockDataUseCase emailTemplateUseCase,
+            LoadEmailTemplateVariableMockDataUseCase emailTemplateVariableUseCase) {
 
         Map<MockEntityType, IntConsumer> loaders = new EnumMap<>(MockEntityType.class);
 
@@ -212,6 +253,24 @@ public class MockDataRegistry {
         loaders.put(MockEntityType.NOTIFICATION_READ_STATUS, notificationReadStatusUseCase::load);
         loaders.put(MockEntityType.PUSH_DEVICE, pushDeviceUseCase::load);
 
+        // Bridge tables: course-people associations
+        loaders.put(MockEntityType.COURSE_AVAILABLE_COLLABORATOR, courseAvailableCollaboratorUseCase::load);
+        loaders.put(MockEntityType.ADULT_STUDENT_COURSE, adultStudentCourseUseCase::load);
+        loaders.put(MockEntityType.MINOR_STUDENT_COURSE, minorStudentCourseUseCase::load);
+        loaders.put(MockEntityType.COURSE_EVENT_ADULT_STUDENT_ATTENDEE, courseEventAdultStudentAttendeeUseCase::load);
+        loaders.put(MockEntityType.COURSE_EVENT_MINOR_STUDENT_ATTENDEE, courseEventMinorStudentAttendeeUseCase::load);
+        loaders.put(MockEntityType.MEMBERSHIP_COURSE, membershipCourseUseCase::load);
+        loaders.put(MockEntityType.COMPENSATION_COLLABORATOR, compensationCollaboratorUseCase::load);
+
+        // Entity tables: tenant config + content
+        loaders.put(MockEntityType.TENANT_BRANDING, tenantBrandingUseCase::load);
+        loaders.put(MockEntityType.NEWS_FEED_ITEM, newsFeedItemUseCase::load);
+        loaders.put(MockEntityType.TASK, taskUseCase::load);
+
+        // Config tables: email templates
+        loaders.put(MockEntityType.EMAIL_TEMPLATE, emailTemplateUseCase::load);
+        loaders.put(MockEntityType.EMAIL_TEMPLATE_VARIABLE, emailTemplateVariableUseCase::load);
+
         return Collections.unmodifiableMap(loaders);
     }
 
@@ -255,7 +314,19 @@ public class MockDataRegistry {
             LoadAttendanceRecordMockDataUseCase attendanceRecordUseCase,
             LoadDemoRequestMockDataUseCase demoRequestUseCase,
             LoadNotificationReadStatusMockDataUseCase notificationReadStatusUseCase,
-            LoadPushDeviceMockDataUseCase pushDeviceUseCase) {
+            LoadPushDeviceMockDataUseCase pushDeviceUseCase,
+            LoadCourseAvailableCollaboratorMockDataUseCase courseAvailableCollaboratorUseCase,
+            LoadAdultStudentCourseMockDataUseCase adultStudentCourseUseCase,
+            LoadMinorStudentCourseMockDataUseCase minorStudentCourseUseCase,
+            LoadCourseEventAdultStudentAttendeeMockDataUseCase courseEventAdultStudentAttendeeUseCase,
+            LoadCourseEventMinorStudentAttendeeMockDataUseCase courseEventMinorStudentAttendeeUseCase,
+            LoadMembershipCourseMockDataUseCase membershipCourseUseCase,
+            LoadCompensationCollaboratorMockDataUseCase compensationCollaboratorUseCase,
+            LoadTenantBrandingMockDataUseCase tenantBrandingUseCase,
+            LoadNewsFeedItemMockDataUseCase newsFeedItemUseCase,
+            LoadTaskMockDataUseCase taskUseCase,
+            LoadEmailTemplateMockDataUseCase emailTemplateUseCase,
+            LoadEmailTemplateVariableMockDataUseCase emailTemplateVariableUseCase) {
 
         Map<MockEntityType, Runnable> cleaners = new EnumMap<>(MockEntityType.class);
 
@@ -316,6 +387,24 @@ public class MockDataRegistry {
         cleaners.put(MockEntityType.NOTIFICATION_READ_STATUS, notificationReadStatusUseCase::clean);
         cleaners.put(MockEntityType.PUSH_DEVICE, pushDeviceUseCase::clean);
 
+        // Bridge tables
+        cleaners.put(MockEntityType.COURSE_AVAILABLE_COLLABORATOR, courseAvailableCollaboratorUseCase::clean);
+        cleaners.put(MockEntityType.ADULT_STUDENT_COURSE, adultStudentCourseUseCase::clean);
+        cleaners.put(MockEntityType.MINOR_STUDENT_COURSE, minorStudentCourseUseCase::clean);
+        cleaners.put(MockEntityType.COURSE_EVENT_ADULT_STUDENT_ATTENDEE, courseEventAdultStudentAttendeeUseCase::clean);
+        cleaners.put(MockEntityType.COURSE_EVENT_MINOR_STUDENT_ATTENDEE, courseEventMinorStudentAttendeeUseCase::clean);
+        cleaners.put(MockEntityType.MEMBERSHIP_COURSE, membershipCourseUseCase::clean);
+        cleaners.put(MockEntityType.COMPENSATION_COLLABORATOR, compensationCollaboratorUseCase::clean);
+
+        // Entity tables
+        cleaners.put(MockEntityType.TENANT_BRANDING, tenantBrandingUseCase::clean);
+        cleaners.put(MockEntityType.NEWS_FEED_ITEM, newsFeedItemUseCase::clean);
+        cleaners.put(MockEntityType.TASK, taskUseCase::clean);
+
+        // Config tables
+        cleaners.put(MockEntityType.EMAIL_TEMPLATE, emailTemplateUseCase::clean);
+        cleaners.put(MockEntityType.EMAIL_TEMPLATE_VARIABLE, emailTemplateVariableUseCase::clean);
+
         return Collections.unmodifiableMap(cleaners);
     }
 
@@ -353,7 +442,21 @@ public class MockDataRegistry {
             AttendanceSessionRepository attendanceSessionRepository,
             AttendanceRecordFactory attendanceRecordFactory,
             NotificationReadStatusFactory notificationReadStatusFactory,
-            PushDeviceFactory pushDeviceFactory) {
+            PushDeviceFactory pushDeviceFactory,
+            CourseAvailableCollaboratorFactory courseAvailableCollaboratorFactory,
+            AdultStudentCourseFactory adultStudentCourseFactory,
+            MinorStudentCourseFactory minorStudentCourseFactory,
+            CourseEventAdultStudentAttendeeFactory courseEventAdultStudentAttendeeFactory,
+            CourseEventMinorStudentAttendeeFactory courseEventMinorStudentAttendeeFactory,
+            MembershipCourseFactory membershipCourseFactory,
+            CompensationCollaboratorFactory compensationCollaboratorFactory,
+            NewsFeedItemFactory newsFeedItemFactory,
+            TaskFactory taskFactory,
+            EmailTemplateVariableFactory emailTemplateVariableFactory,
+            EmployeeRepository employeeRepository,
+            CompensationRepository compensationRepository,
+            MinorStudentRepository minorStudentRepository,
+            EmailTemplateRepository emailTemplateRepository) {
 
         Map<MockEntityType, MockDataPostLoadHook> hooks = new EnumMap<>(MockEntityType.class);
 
@@ -375,7 +478,7 @@ public class MockDataRegistry {
             membershipTutorFactory.setAvailableTutorIds(tutorIds);
         });
 
-        // After COURSE: inject course IDs into ScheduleFactory and downstream billing factories
+        // After COURSE: inject course IDs into ScheduleFactory and downstream factories
         hooks.put(MockEntityType.COURSE, () -> {
             List<Long> courseIds = courseRepository.findAll().stream()
                     .map(CourseDataModel::getCourseId)
@@ -384,6 +487,11 @@ public class MockDataRegistry {
             courseEventFactory.setAvailableCourseIds(courseIds);
             membershipAdultStudentFactory.setAvailableCourseIds(courseIds);
             membershipTutorFactory.setAvailableCourseIds(courseIds);
+            courseAvailableCollaboratorFactory.setAvailableCourseIds(courseIds);
+            adultStudentCourseFactory.setAvailableCourseIds(courseIds);
+            minorStudentCourseFactory.setAvailableCourseIds(courseIds);
+            membershipCourseFactory.setAvailableCourseIds(courseIds);
+            newsFeedItemFactory.setAvailableCourseIds(courseIds);
         });
 
         // After SCHEDULE: inject schedule IDs into CourseEventFactory
@@ -394,12 +502,14 @@ public class MockDataRegistry {
             courseEventFactory.setAvailableScheduleIds(scheduleIds);
         });
 
-        // After COLLABORATOR: inject collaborator IDs into CourseEventFactory
+        // After COLLABORATOR: inject collaborator IDs into downstream factories
         hooks.put(MockEntityType.COLLABORATOR, () -> {
             List<Long> collaboratorIds = collaboratorRepository.findAll().stream()
                     .map(CollaboratorDataModel::getCollaboratorId)
                     .toList();
             courseEventFactory.setAvailableCollaboratorIds(collaboratorIds);
+            courseAvailableCollaboratorFactory.setAvailableCollaboratorIds(collaboratorIds);
+            compensationCollaboratorFactory.setAvailableCollaboratorIds(collaboratorIds);
         });
 
         // After MEMBERSHIP: inject membership IDs into association factories
@@ -409,6 +519,7 @@ public class MockDataRegistry {
                     .toList();
             membershipAdultStudentFactory.setAvailableMembershipIds(membershipIds);
             membershipTutorFactory.setAvailableMembershipIds(membershipIds);
+            membershipCourseFactory.setAvailableMembershipIds(membershipIds);
         });
 
         // After ADULT_STUDENT: inject adult student IDs into downstream factories
@@ -420,6 +531,8 @@ public class MockDataRegistry {
             attendanceRecordFactory.setAvailableAdultStudentIds(adultStudentIds);
             pushDeviceFactory.setAvailableUserIds(adultStudentIds);
             notificationReadStatusFactory.setAvailableUserIds(adultStudentIds);
+            adultStudentCourseFactory.setAvailableAdultStudentIds(adultStudentIds);
+            courseEventAdultStudentAttendeeFactory.setAvailableAdultStudentIds(adultStudentIds);
         });
 
         // After MEMBERSHIP_ADULT_STUDENT: inject IDs into PaymentAdultStudentFactory
@@ -480,12 +593,14 @@ public class MockDataRegistry {
             emailAttachmentFactory.setAvailableEmailIds(emailIds);
         });
 
-        // After COURSE_EVENT: inject course event IDs into AttendanceSessionFactory
+        // After COURSE_EVENT: inject course event IDs into downstream factories
         hooks.put(MockEntityType.COURSE_EVENT, () -> {
             List<Long> courseEventIds = courseEventRepository.findAll().stream()
                     .map(CourseEventDataModel::getCourseEventId)
                     .toList();
             attendanceSessionFactory.setAvailableCourseEventIds(courseEventIds);
+            courseEventAdultStudentAttendeeFactory.setAvailableCourseEventIds(courseEventIds);
+            courseEventMinorStudentAttendeeFactory.setAvailableCourseEventIds(courseEventIds);
         });
 
         // After ATTENDANCE_SESSION: inject session IDs into AttendanceRecordFactory
@@ -494,6 +609,40 @@ public class MockDataRegistry {
                     .map(AttendanceSessionDataModel::getAttendanceSessionId)
                     .toList();
             attendanceRecordFactory.setAvailableAttendanceSessionIds(sessionIds);
+        });
+
+        // After MINOR_STUDENT: inject minor student IDs into downstream factories
+        hooks.put(MockEntityType.MINOR_STUDENT, () -> {
+            List<Long> minorStudentIds = minorStudentRepository.findAll().stream()
+                    .map(MinorStudentDataModel::getMinorStudentId)
+                    .toList();
+            minorStudentCourseFactory.setAvailableMinorStudentIds(minorStudentIds);
+            courseEventMinorStudentAttendeeFactory.setAvailableMinorStudentIds(minorStudentIds);
+        });
+
+        // After EMPLOYEE: inject employee IDs into NewsFeedItemFactory and TaskFactory
+        hooks.put(MockEntityType.EMPLOYEE, () -> {
+            List<Long> employeeIds = employeeRepository.findAll().stream()
+                    .map(EmployeeDataModel::getEmployeeId)
+                    .toList();
+            newsFeedItemFactory.setAvailableEmployeeIds(employeeIds);
+            taskFactory.setAvailableEmployeeIds(employeeIds);
+        });
+
+        // After COMPENSATION: inject compensation IDs into CompensationCollaboratorFactory
+        hooks.put(MockEntityType.COMPENSATION, () -> {
+            List<Long> compensationIds = compensationRepository.findAll().stream()
+                    .map(CompensationDataModel::getCompensationId)
+                    .toList();
+            compensationCollaboratorFactory.setAvailableCompensationIds(compensationIds);
+        });
+
+        // After EMAIL_TEMPLATE: inject template IDs into EmailTemplateVariableFactory
+        hooks.put(MockEntityType.EMAIL_TEMPLATE, () -> {
+            List<Long> templateIds = emailTemplateRepository.findAll().stream()
+                    .map(EmailTemplateDataModel::getTemplateId)
+                    .toList();
+            emailTemplateVariableFactory.setAvailableTemplateIds(templateIds);
         });
 
         return Collections.unmodifiableMap(hooks);

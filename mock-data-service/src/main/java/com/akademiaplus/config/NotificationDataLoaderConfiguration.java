@@ -7,9 +7,13 @@
  */
 package com.akademiaplus.config;
 
+import com.akademiaplus.newsfeed.NewsFeedItemDataModel;
 import com.akademiaplus.notification.interfaceadapters.EmailAttachmentRepository;
 import com.akademiaplus.notification.interfaceadapters.EmailRecipientRepository;
 import com.akademiaplus.notification.interfaceadapters.EmailRepository;
+import com.akademiaplus.notification.interfaceadapters.EmailTemplateRepository;
+import com.akademiaplus.notification.interfaceadapters.EmailTemplateVariableRepository;
+import com.akademiaplus.notification.interfaceadapters.NewsFeedItemRepository;
 import com.akademiaplus.notification.interfaceadapters.NotificationDeliveryRepository;
 import com.akademiaplus.notification.interfaceadapters.NotificationRepository;
 import com.akademiaplus.notification.usecases.NotificationCreationUseCase;
@@ -18,6 +22,8 @@ import com.akademiaplus.notifications.NotificationDeliveryDataModel;
 import com.akademiaplus.notifications.email.EmailAttachmentDataModel;
 import com.akademiaplus.notifications.email.EmailDataModel;
 import com.akademiaplus.notifications.email.EmailRecipientDataModel;
+import com.akademiaplus.notifications.email.EmailTemplateDataModel;
+import com.akademiaplus.notifications.email.EmailTemplateVariableDataModel;
 import com.akademiaplus.util.base.DataCleanUp;
 import com.akademiaplus.util.base.DataFactory;
 import com.akademiaplus.util.base.DataLoader;
@@ -30,6 +36,8 @@ import openapi.akademiaplus.domain.notification.system.dto.NotificationCreationR
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.function.Function;
 
 /**
  * Spring configuration for notification-related mock data loader and cleanup beans.
@@ -175,5 +183,117 @@ public class NotificationDataLoaderConfiguration {
         cleanup.setDataModel(EmailAttachmentDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
+    }
+
+    // ── NewsFeedItem ──
+
+    /**
+     * Creates the data loader for news feed item records.
+     *
+     * @param repository the news feed item repository
+     * @param factory    the news feed item data factory
+     * @return a configured data loader
+     */
+    @Bean
+    public DataLoader<NewsFeedItemDataModel, NewsFeedItemDataModel, NewsFeedItemDataModel.NewsFeedItemCompositeId>
+            newsFeedItemDataLoader(
+                    NewsFeedItemRepository repository,
+                    DataFactory<NewsFeedItemDataModel> factory) {
+
+        return new DataLoader<>(repository, Function.identity(), factory);
+    }
+
+    /**
+     * Creates the data cleanup for the news_feed_items table.
+     *
+     * @param entityManager the JPA entity manager
+     * @param repository    the news feed item repository
+     * @return a configured data cleanup
+     */
+    @Bean
+    public DataCleanUp<NewsFeedItemDataModel, NewsFeedItemDataModel.NewsFeedItemCompositeId> newsFeedItemDataCleanUp(
+            EntityManager entityManager,
+            NewsFeedItemRepository repository) {
+
+        DataCleanUp<NewsFeedItemDataModel, NewsFeedItemDataModel.NewsFeedItemCompositeId> cleanUp =
+                new DataCleanUp<>(entityManager);
+        cleanUp.setDataModel(NewsFeedItemDataModel.class);
+        cleanUp.setRepository(repository);
+        return cleanUp;
+    }
+
+    // ── EmailTemplate ──
+
+    /**
+     * Creates the data loader for email template records.
+     *
+     * @param repository the email template repository
+     * @param factory    the email template data factory
+     * @return a configured data loader
+     */
+    @Bean
+    public DataLoader<EmailTemplateDataModel, EmailTemplateDataModel, EmailTemplateDataModel.EmailTemplateCompositeId>
+            emailTemplateDataLoader(
+                    EmailTemplateRepository repository,
+                    DataFactory<EmailTemplateDataModel> factory) {
+
+        return new DataLoader<>(repository, Function.identity(), factory);
+    }
+
+    /**
+     * Creates the data cleanup for the email_templates table.
+     *
+     * @param entityManager the JPA entity manager
+     * @param repository    the email template repository
+     * @return a configured data cleanup
+     */
+    @Bean
+    public DataCleanUp<EmailTemplateDataModel, EmailTemplateDataModel.EmailTemplateCompositeId> emailTemplateDataCleanUp(
+            EntityManager entityManager,
+            EmailTemplateRepository repository) {
+
+        DataCleanUp<EmailTemplateDataModel, EmailTemplateDataModel.EmailTemplateCompositeId> cleanUp =
+                new DataCleanUp<>(entityManager);
+        cleanUp.setDataModel(EmailTemplateDataModel.class);
+        cleanUp.setRepository(repository);
+        return cleanUp;
+    }
+
+    // ── EmailTemplateVariable ──
+
+    /**
+     * Creates the data loader for email template variable records.
+     *
+     * @param repository the email template variable repository
+     * @param factory    the email template variable data factory
+     * @return a configured data loader
+     */
+    @Bean
+    public DataLoader<EmailTemplateVariableDataModel, EmailTemplateVariableDataModel, EmailTemplateVariableDataModel.EmailTemplateVariableCompositeId>
+            emailTemplateVariableDataLoader(
+                    EmailTemplateVariableRepository repository,
+                    DataFactory<EmailTemplateVariableDataModel> factory) {
+
+        return new DataLoader<>(repository, Function.identity(), factory);
+    }
+
+    /**
+     * Creates the data cleanup for the email_template_variables table.
+     *
+     * @param entityManager the JPA entity manager
+     * @param repository    the email template variable repository
+     * @return a configured data cleanup
+     */
+    @Bean
+    public DataCleanUp<EmailTemplateVariableDataModel, EmailTemplateVariableDataModel.EmailTemplateVariableCompositeId>
+            emailTemplateVariableDataCleanUp(
+                    EntityManager entityManager,
+                    EmailTemplateVariableRepository repository) {
+
+        DataCleanUp<EmailTemplateVariableDataModel, EmailTemplateVariableDataModel.EmailTemplateVariableCompositeId> cleanUp =
+                new DataCleanUp<>(entityManager);
+        cleanUp.setDataModel(EmailTemplateVariableDataModel.class);
+        cleanUp.setRepository(repository);
+        return cleanUp;
     }
 }

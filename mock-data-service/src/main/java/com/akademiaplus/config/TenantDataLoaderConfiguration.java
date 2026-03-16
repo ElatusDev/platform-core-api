@@ -8,9 +8,11 @@
 package com.akademiaplus.config;
 
 import com.akademiaplus.interfaceadapters.TenantBillingCycleRepository;
+import com.akademiaplus.interfaceadapters.TenantBrandingRepository;
 import com.akademiaplus.interfaceadapters.TenantRepository;
 import com.akademiaplus.interfaceadapters.TenantSubscriptionRepository;
 import com.akademiaplus.tenancy.TenantBillingCycleDataModel;
+import com.akademiaplus.tenancy.TenantBrandingDataModel;
 import com.akademiaplus.tenancy.TenantDataModel;
 import com.akademiaplus.tenancy.TenantSubscriptionDataModel;
 import com.akademiaplus.usecases.TenantBillingCycleCreationUseCase;
@@ -27,6 +29,8 @@ import openapi.akademiaplus.domain.tenant.management.dto.SubscriptionCreateReque
 import openapi.akademiaplus.domain.tenant.management.dto.TenantCreateRequestDTO;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.function.Function;
 
 /**
  * Spring configuration for tenant-related mock data loader and cleanup beans.
@@ -117,5 +121,40 @@ public class TenantDataLoaderConfiguration {
         cleanup.setDataModel(TenantBillingCycleDataModel.class);
         cleanup.setRepository(repository);
         return cleanup;
+    }
+
+    // ── TenantBranding ──
+
+    /**
+     * Creates the data loader for tenant branding records.
+     *
+     * @param repository the tenant branding repository
+     * @param factory    the tenant branding data factory
+     * @return a configured data loader
+     */
+    @Bean
+    public DataLoader<TenantBrandingDataModel, TenantBrandingDataModel, Long> tenantBrandingDataLoader(
+            TenantBrandingRepository repository,
+            DataFactory<TenantBrandingDataModel> factory) {
+
+        return new DataLoader<>(repository, Function.identity(), factory);
+    }
+
+    /**
+     * Creates the data cleanup for the tenant_branding table.
+     *
+     * @param entityManager the JPA entity manager
+     * @param repository    the tenant branding repository
+     * @return a configured data cleanup
+     */
+    @Bean
+    public DataCleanUp<TenantBrandingDataModel, Long> tenantBrandingDataCleanUp(
+            EntityManager entityManager,
+            TenantBrandingRepository repository) {
+
+        DataCleanUp<TenantBrandingDataModel, Long> cleanUp = new DataCleanUp<>(entityManager);
+        cleanUp.setDataModel(TenantBrandingDataModel.class);
+        cleanUp.setRepository(repository);
+        return cleanUp;
     }
 }

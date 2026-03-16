@@ -1,6 +1,6 @@
 # Documentation Manifest — AkademiaPlus Platform Core API
 
-> **Last updated**: 2026-03-12
+> **Last updated**: 2026-03-13
 > **Purpose**: Single source of truth for all project documentation status.
 
 ---
@@ -112,6 +112,7 @@ Executable prompts for Claude Code CLI.
 | [central-redesign-api-prompt.md](prompts/completed/central-redesign-api-prompt.md) | Task-service + analytics endpoints + 41 tests (unit, component, isolation) | Implemented |
 | [user-isolation-api-prompt.md](prompts/completed/user-isolation-api-prompt.md) | User-level data isolation — JWT claims, UserContextHolder, /v1/my/* endpoints, tests | Implemented |
 | [collaborator-isolation-api-prompt.md](prompts/completed/collaborator-isolation-api-prompt.md) | Collaborator (teacher) data isolation — JWT claims, /v1/my/* classes/courses/students | Implemented |
+| [mock-data-coverage-gaps-prompt.md](prompts/completed/mock-data-coverage-gaps-prompt.md) | Mock-data loaders for 12 unseeded tables — 7 bridge + 3 entity + 2 config, 63 new tests | Implemented |
 
 ---
 
@@ -157,6 +158,7 @@ Step-by-step implementation plans. Referenced by prompts.
 | [mock-data-new-loaders-workflow.md](workflows/completed/mock-data-new-loaders-workflow.md) | 5 new mock data loaders (attendance, demo request, push device, notification read status) | Implemented |
 | [user-isolation-api-workflow.md](workflows/completed/user-isolation-api-workflow.md) | User-level data isolation — JWT claims, UserContextHolder, /v1/my/* endpoints (3 phases) | Implemented |
 | [collaborator-isolation-api-workflow.md](workflows/completed/collaborator-isolation-api-workflow.md) | Collaborator (teacher) data isolation — JWT claims, /v1/my/* classes/courses/students (3 phases) | Implemented |
+| [mock-data-coverage-gaps-workflow.md](workflows/completed/mock-data-coverage-gaps-workflow.md) | Mock-data loaders for 12 unseeded tables — native SQL bridge pattern + full pipeline (7 phases) | Implemented |
 
 ---
 

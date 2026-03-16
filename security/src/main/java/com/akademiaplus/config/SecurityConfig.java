@@ -217,7 +217,7 @@ public class SecurityConfig {
 
         CorsConfiguration defaultCorsConfig = new CorsConfiguration();
         defaultCorsConfig.setAllowedOriginPatterns(List.of("http://localhost:*", "https://localhost:*"));
-        defaultCorsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        defaultCorsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         defaultCorsConfig.setAllowedHeaders(List.of("*"));
         defaultCorsConfig.setAllowCredentials(true);
 

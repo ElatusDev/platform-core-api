@@ -55,6 +55,13 @@ public class NewsFeedItemCreationUseCase {
         final NewsFeedItemDataModel model = applicationContext.getBean(NewsFeedItemDataModel.class);
         modelMapper.map(dto, model, MAP_NAME);
 
+        if (dto.getCourseId() != null && dto.getCourseId().isPresent()) {
+            model.setCourseId(dto.getCourseId().get());
+        }
+        if (dto.getImageUrl() != null && dto.getImageUrl().isPresent()) {
+            model.setImageUrl(dto.getImageUrl().get());
+        }
+
         if (dto.getStatus() != null) {
             NewsFeedStatus status = NewsFeedStatus.valueOf(dto.getStatus().name());
             model.setStatus(status);
